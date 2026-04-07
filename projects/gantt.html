@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mothership — Deliverable Roadmap</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #fff; color: #1a1a1a; padding: 32px; }
+  h1 { font-size: 18px; font-weight: 500; margin-bottom: 4px; color: #1a1a1a; }
+  .subtitle { font-size: 12px; color: #888; margin-bottom: 24px; }
+  .filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+  .fb { padding: 4px 12px; border-radius: 14px; border: 1px solid; cursor: pointer; font-size: 11px; font-weight: 500; background: transparent; transition: background 0.15s, color 0.15s; }
+  table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  th { font-size: 11px; font-weight: 500; padding: 8px 4px 10px; text-align: center; color: #888; border-bottom: 1px solid #e5e5e5; line-height: 1.4; }
+  th.lh { text-align: left; padding-left: 12px; width: 38%; }
+  th:not(.lh) { width: 15.5%; }
+  td.lc { padding: 4px 8px 4px 22px; color: #1a1a1a; font-size: 12px; line-height: 1.3; }
+  td.bc { padding: 2px 0; }
+  .note { font-size: 10px; color: #999; display: block; margin-top: 2px; }
+  .bar { height: 16px; }
+  .ph td { font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600; padding: 7px 8px 7px 10px; border-top: 1px solid #e5e5e5; border-left: 3px solid transparent; }
+  tbody tr:not(.ph):hover td { background: #fafafa; }
+  .hidden { display: none; }
+  @media print { body { padding: 16px; } .filters { display: none; } }
+</style>
+</head>
+<body>
+<h1>Mothership — Deliverable Roadmap</h1>
+<p class="subtitle">Version 1.4 (DRAFT) &nbsp;·&nbsp; Song Foundation & JCMB Ownership &nbsp;·&nbsp; July 2026 – June 2028</p>
+<div class="filters" id="filters"></div>
+<table>
+  <thead>
+    <tr>
+      <th class="lh">Deliverable</th>
+      <th>H2 2026<br><span style="font-weight:400;font-size:10px;opacity:0.75;">Jul – Dec 2026</span></th>
+      <th>H1 2027<br><span style="font-weight:400;font-size:10px;opacity:0.75;">Jan – Jun 2027</span></th>
+      <th>H2 2027<br><span style="font-weight:400;font-size:10px;opacity:0.75;">Jul – Dec 2027</span></th>
+      <th>H1 2028<br><span style="font-weight:400;font-size:10px;opacity:0.75;">Jan – Jun 2028</span></th>
+    </tr>
+  </thead>
+  <tbody id="gb"></tbody>
+</table>
+<script>
+const P=[
+  {id:'founders',label:'Founders',color:'#EF9F27',tc:'#633806',items:[
+    {l:'TC founder support pipeline',a:[1,1,1,1],n:'4 (H2 2026) → 8 (H1 2027) → ongoing'},
+    {l:'2nd TC accelerator cohort',a:[0,1,0,0]},
+    {l:'Founder community & cultural programming',a:[1,1,1,1]},
+    {l:'Formalize community programming',a:[0,1,0,0]},
+    {l:'Formal founder development program',a:[0,0,1,1],n:'24+ founders; 6 additional fundraises (H1 2028)'},
+  ]},
+  {id:'building',label:'Building & infrastructure',color:'#1D9E75',tc:'#085041',items:[
+    {l:'5th floor renovation',a:[1,1,0,0],n:'target completion: Mar 2027'},
+    {l:'Tenant alignment framework',a:[1,0,0,0],n:'complete Q4 2026'},
+    {l:'Informal programming launch',a:[1,0,0,0],n:'begin Q4 2026'},
+    {l:'Building opening & announcement',a:[0,1,0,0],n:'target Q1 2027'},
+    {l:'Building public event & activation',a:[0,0,1,0],n:'Q3 2027'},
+    {l:'Mission-aligned tenant attraction',a:[0,1,1,1]},
+    {l:'Mission-aligned tenant onboarding',a:[0,0,1,1]},
+  ]},
+  {id:'branding',label:'Branding, comms & thought leadership',color:'#7F77DD',tc:'#3C3489',items:[
+    {l:'Rebrand & brand identity',a:[1,0,0,0],n:'complete Q4 2026'},
+    {l:'Communications infrastructure',a:[1,0,0,0],n:'establish Q4 2026'},
+    {l:'Ongoing PR & media relations',a:[0,1,1,1]},
+    {l:'Theory of Change — owned publishing',a:[0,0,1,1],n:'LinkedIn, Substack, OpEds'},
+    {l:'Detroit Future City content series',a:[0,0,1,1]},
+  ]},
+  {id:'org',label:'Organizational foundation',color:'#888780',tc:'#444441',items:[
+    {l:'Governance & operations setup',a:[1,0,0,0],n:'establish Q3 2026'},
+    {l:'Financial planning & 3-year budget',a:[1,0,0,0],n:'complete Q4 2026'},
+    {l:'Initial team & contractors',a:[1,1,0,0]},
+  ]},
+  {id:'financial',label:'Financial sustainability',color:'#639922',tc:'#27500A',items:[
+    {l:'Foundation fundraising',a:[0,1,0,0],n:'50%+ secured before opening'},
+    {l:'Ongoing foundation cultivation',a:[0,0,1,1]},
+    {l:'JCMB revenue relationship assessment',a:[0,0,0,1]},
+    {l:'Earned revenue pilots',a:[0,0,0,1],n:'target: 10–15% of budget'},
+  ]},
+  {id:'programming',label:'Programming & ESO mapping',color:'#378ADD',tc:'#0C447C',items:[
+    {l:'ESO mapping — Tier 1',a:[0,1,0,0],n:'complete Q2 2027'},
+    {l:'Formal programming launch',a:[0,0,1,0],n:'if gaps identified'},
+    {l:'Whole Founder programming — formal',a:[0,0,1,1]},
+    {l:'GP training infrastructure pilot',a:[0,0,1,1]},
+    {l:'LP education pathways pilot',a:[0,0,1,1]},
+    {l:'ESO mapping — Tier 2',a:[0,0,0,1],n:'complete Q2 2028'},
+  ]},
+  {id:'partnerships',label:'Partnerships',color:'#D85A30',tc:'#712B13',items:[
+    {l:'TC & BlackOps partnership activation',a:[1,1,0,0]},
+    {l:'ESO partnerships (4 target)',a:[0,1,1,0],n:'2 local, 2 national'},
+  ]},
+  {id:'funders',label:'Funders & financiers',color:'#D4537E',tc:'#72243E',items:[
+    {l:'Emerging GP support',a:[0,0,1,0],n:'2 GPs begin fundraising'},
+    {l:'New LP development',a:[0,0,1,0],n:'4 new LPs — first investments'},
+    {l:'GP training — scale',a:[0,0,0,1]},
+    {l:'LP education — scale',a:[0,0,0,1]},
+  ]},
+];
+let af='all';
+function mkBar(color,a,i){
+  if(!a[i]) return '<td class="bc"></td>';
+  const s=i===0||!a[i-1],e=i===3||!a[i+1];
+  const br=s&&e?'4px':s?'4px 0 0 4px':e?'0 4px 4px 0':'0';
+  const ml=s?'3px':'0',mr=e?'3px':'0';
+  return `<td class="bc"><div class="bar" style="background:${color};border-radius:${br};margin:0 ${mr} 0 ${ml};"></div></td>`;
+}
+function render(){
+  let h='';
+  P.forEach(p=>{
+    const hide=af!=='all'&&af!==p.id?' hidden':'';
+    h+=`<tr class="ph${hide}"><td colspan="5" style="background:${p.color}18;color:${p.tc};border-left-color:${p.color};">${p.label}</td></tr>`;
+    p.items.forEach(it=>{
+      h+=`<tr class="${hide}"><td class="lc">${it.l}${it.n?`<span class="note">${it.n}</span>`:''}</td>`;
+      for(let i=0;i<4;i++) h+=mkBar(p.color,it.a,i);
+      h+=`</tr>`;
+    });
+  });
+  document.getElementById('gb').innerHTML=h;
+}
+function buildF(){
+  let h=`<button class="fb" id="f-all" onclick="setF('all')" style="color:#666;border-color:#ccc;">All pillars</button>`;
+  P.forEach(p=>{h+=`<button class="fb" id="f-${p.id}" onclick="setF('${p.id}')" style="color:${p.tc};border-color:${p.color};">${p.label}</button>`;});
+  document.getElementById('filters').innerHTML=h;
+  styleActive();
+}
+function styleActive(){
+  document.querySelectorAll('.fb').forEach(b=>{
+    const id=b.id.replace('f-','');
+    const p=P.find(x=>x.id===id);
+    if(id===af){b.style.background=p?p.color:'#888';b.style.color='white';b.style.borderColor=p?p.color:'#888';}
+    else{b.style.background='transparent';if(p){b.style.color=p.tc;b.style.borderColor=p.color;}else{b.style.color='#666';b.style.borderColor='#ccc';}}
+  });
+}
+function setF(id){af=id;styleActive();render();}
+buildF();render();
+</script>
+</body>
+</html>
