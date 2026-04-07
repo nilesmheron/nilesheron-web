@@ -2,6 +2,8 @@
 
 Web projects, experiments, and poetry archive for [nilesheron.com](https://nilesheron.com).
 
+Live at: **[dev.nilesheron.com](https://dev.nilesheron.com)**
+
 ## Structure
 
 ```
@@ -17,10 +19,19 @@ Web projects, experiments, and poetry archive for [nilesheron.com](https://niles
 | `dev.nilesheron.com` | This repo — experiments and projects |
 | `nilesheron.com` | Main site (Tumblr, until archive migration) |
 
+## Stack
+
+- Hosting: [Vercel](https://vercel.com) (Hobby / free tier)
+- DNS: eNom (registered via Google Workspace)
+- Repo: [nilesmheron/nilesheron-web](https://github.com/nilesmheron/nilesheron-web)
+
 ## Roadmap
 
-- [ ] Set up `dev.nilesheron.com` DNS via eNom/Google
-- [ ] Connect domain in Vercel
+- [x] Create GitHub repo
+- [x] Deploy to Vercel
+- [x] Add CNAME record in eNom (`dev` → Vercel)
+- [x] Set up `dev.nilesheron.com`
 - [ ] Build poetry archive static site
-- [ ] Migrate Tumblr archive
+- [ ] Export Tumblr archive
+- [ ] Migrate archive to `/archive`
 - [ ] Cut over `nilesheron.com` to new hosting
