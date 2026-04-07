@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>mmh — The Complete Archive</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{fontFamily:{mono:["'Menlo'","'Monaco'","'Courier New'","monospace"]}}}}</script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
+  <style>
+    :root{--color-primary:#b5793e;--color-bg:#e8e8e8;--color-text:#444444;--color-muted:#999999;--color-border:#d4d4d4;}
+    body{margin:0;padding:0;-webkit-font-smoothing:antialiased;background-color:var(--color-bg);color:var(--color-text);}
+    .font-heading{font-family:'Lora',serif;}.font-body{font-family:'Georgia',serif;}
+    .font-hand{font-family:'Caveat',cursive;}.font-mono{font-family:'Menlo','Monaco','Courier New',monospace;}
+    ::selection{background-color:rgba(181,121,62,0.2);color:var(--color-primary);}
+    .fade-in{animation:fadeIn 1.2s ease-out forwards;opacity:0;}
+    @keyframes fadeIn{to{opacity:1;}}
+    .delay-1{animation-delay:0.1s;}.delay-2{animation-delay:0.2s;}
+    .delay-3{animation-delay:0.3s;}.delay-4{animation-delay:0.4s;}
+    .no-scrollbar::-webkit-scrollbar{display:none;}
+    .no-scrollbar{-ms-overflow-style:none;scrollbar-width:none;}
+  </style>
+</head>
+<body>
+  <div class="min-h-screen relative overflow-x-hidden font-body">
+    <nav class="pt-12 pb-4 px-6 relative z-10">
+      <div class="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-center">
+        <a href="index.html" class="block mb-8 md:mb-0 group w-32">
+          <img src="https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/uploads/82bc131f-4e86-4b22-898a-8aacba6f6ce1/1775539032946-6bb5cd2d/Gemini_Generated_Image_svfatbsvfatbsvfa.png" alt="mmh" class="w-full h-auto object-contain mix-blend-multiply opacity-90 group-hover:opacity-100 transition-opacity duration-500" onerror="this.onerror=null;this.src='https://placehold.co/128x64/444/888?text=mmh';">
+        </a>
+        <ul class="flex gap-8 md:gap-12 list-none m-0 p-0">
+          <li><a href="index.html" class="font-body text-[11px] md:text-xs text-[#b5793e] transition-colors tracking-[0.15em] uppercase">The Archive</a></li>
+          <li><a href="about.html" class="font-body text-[11px] md:text-xs text-[#999999] hover:text-[#b5793e] transition-colors tracking-[0.15em] uppercase">About</a></li>
+          <li><a href="contact.html" class="font-body text-[11px] md:text-xs text-[#999999] hover:text-[#b5793e] transition-colors tracking-[0.15em] uppercase">Contact</a></li>
+        </ul>
+      </div>
+    </nav>
+    <header class="pt-16 pb-20 px-6 max-w-[1000px] mx-auto text-center relative">
+      <div class="absolute top-4 right-10 md:-right-10 font-hand text-2xl md:text-3xl text-[#b5793e] transform rotate-3 opacity-80">index</div>
+      <h1 class="font-heading text-4xl md:text-6xl lg:text-7xl leading-[1.1] text-[#444444] mb-8 italic font-light fade-in">The Complete Archive</h1>
+      <p class="font-body text-base md:text-lg text-[#666666] max-w-xl mx-auto leading-[1.8] mb-12 fade-in delay-1">A catalog of observations. 1,042 selected pieces spanning poetry, essays, prose, and visual studies.</p>
+      <div class="max-w-md mx-auto relative fade-in delay-2">
+        <iconify-icon icon="lucide:search" class="absolute left-0 top-1/2 -translate-y-1/2 text-[#999999] text-lg"></iconify-icon>
+        <input type="text" placeholder="Search titles, words, or themes..." class="w-full bg-transparent border-b border-[#d4d4d4] focus:border-[#b5793e] text-[#444444] font-body text-sm md:text-base py-3 pl-8 pr-4 outline-none transition-colors placeholder:text-[#999999]/60 italic">
+      </div>
+    </header>
+    <main class="max-w-[1400px] mx-auto px-6 pb-32 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20">
+      <aside class="lg:col-span-3 order-2 lg:order-1">
+        <div class="sticky top-12">
+          <div class="font-mono text-[10px] text-[#999999] uppercase tracking-[0.2em] mb-8 pb-4 border-b border-[#d4d4d4]">Categories</div>
+          <ul class="flex flex-col gap-4 list-none m-0 p-0 font-body text-sm">
+            <li><a href="index.html" class="text-[#b5793e] italic flex justify-between items-center"><span>All Pieces</span><span class="font-mono text-[10px] text-[#999999]">1,042</span></a></li>
+            <li><a href="poetry.html" class="text-[#666666] hover:text-[#b5793e] hover:italic transition-all flex justify-between items-center group"><span>Poetry</span><span class="font-mono text-[10px] text-[#999999] group-hover:text-[#b5793e] transition-colors">428</span></a></li>
+            <li><a href="#" class="text-[#666666] hover:text-[#b5793e] hover:italic transition-all flex justify-between items-center group"><span>Essays</span><span class="font-mono text-[10px] text-[#999999] group-hover:text-[#b5793e] transition-colors">156</span></a></li>
+            <li><a href="#" class="text-[#666666] hover:text-[#b5793e] hover:italic transition-all flex justify-between items-center group"><span>Prose</span><span class="font-mono text-[10px] text-[#999999] group-hover:text-[#b5793e] transition-colors">214</span></a></li>
+            <li><a href="#" class="text-[#666666] hover:text-[#b5793e] hover:italic transition-all flex justify-between items-center group"><span>Photography</span><span class="font-mono text-[10px] text-[#999999] group-hover:text-[#b5793e] transition-colors">189</span></a></li>
+            <li><a href="#" class="text-[#666666] hover:text-[#b5793e] hover:italic transition-all flex justify-between items-center group"><span>Mixed Media</span><span class="font-mono text-[10px] text-[#999999] group-hover:text-[#b5793e] transition-colors">32</span></a></li>
+            <li><a href="#" class="text-[#666666] hover:text-[#b5793e] hover:italic transition-all flex justify-between items-center group"><span>Translations</span><span class="font-mono text-[10px] text-[#999999] group-hover:text-[#b5793e] transition-colors">23</span></a></li>
+          </ul>
+          <div class="font-mono text-[10px] text-[#999999] uppercase tracking-[0.2em] mt-16 mb-8 pb-4 border-b border-[#d4d4d4]">Chronology</div>
+          <div class="h-48 overflow-y-auto no-scrollbar pr-4">
+            <ul class="flex flex-col gap-3 list-none m-0 p-0 font-mono text-xs">
+              <li><a href="#" class="text-[#b5793e]">2024</a></li>
+              <li><a href="#" class="text-[#999999] hover:text-[#666666]">2023</a></li>
+              <li><a href="#" class="text-[#999999] hover:text-[#666666]">2022</a></li>
+              <li><a href="#" class="text-[#999999] hover:text-[#666666]">2021</a></li>
+              <li><a href="#" class="text-[#999999] hover:text-[#666666]">2020</a></li>
+              <li><a href="#" class="text-[#999999] hover:text-[#666666]">2019</a></li>
+              <li><a href="#" class="text-[#999999] hover:text-[#666666]">2018</a></li>
+              <li><a href="#" class="text-[#999999] hover:text-[#666666]">Older...</a></li>
+            </ul>
+          </div>
+        </div>
+      </aside>
+      <div class="lg:col-span-9 order-1 lg:order-2">
+        <div class="flex justify-between items-end mb-12 pb-4 border-b border-[#d4d4d4]">
+          <span class="font-body text-sm text-[#666666] italic">Showing 1–8 of 1,042 pieces</span>
+          <div class="flex gap-4 font-mono text-[10px] text-[#999999] uppercase tracking-widest">
+            <button class="text-[#b5793e]">Newest</button>
+            <button class="hover:text-[#666666] transition-colors">A-Z</button>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-16">
+          <article class="group flex flex-col h-full cursor-pointer fade-in delay-1">
+            <a href="piece.html" class="block flex-grow flex flex-col">
+              <div class="flex items-center gap-3 mb-4"><span class="font-mono text-[10px] text-[#b5793e] uppercase tracking-[0.2em]">Poetry</span><span class="w-4 h-[1px] bg-[#d4d4d4]"></span><span class="font-mono text-[10px] text-[#999999]">142 words</span></div>
+              <h3 class="font-heading text-2xl text-[#444444] group-hover:text-[#b5793e] transition-colors mb-3 leading-tight">The Architecture of Silence</h3>
+              <p class="font-body text-[13px] text-[#666666] leading-[1.8] line-clamp-3 mb-6 flex-grow">I sat in the empty room until the dust motes became planets revolving around a singular shaft of light. It takes time for the air to settle after a door is closed...</p>
+              <div class="font-mono text-[10px] text-[#999999] tracking-wider mt-auto pt-4 border-t border-[#e2ded5]/50 group-hover:border-[#b5793e]/30 transition-colors">02.14.2024</div>
+            </a>
+          </article>
+          <article class="group flex flex-col h-full cursor-pointer fade-in delay-2">
+            <a href="piece.html" class="block flex-grow flex flex-col">
+              <div class="flex items-center gap-3 mb-4"><span class="font-mono text-[10px] text-[#b5793e] uppercase tracking-[0.2em]">Essay</span><span class="w-4 h-[1px] bg-[#d4d4d4]"></span><span class="font-mono text-[10px] text-[#999999]">1,240 words</span></div>
+              <h3 class="font-heading text-2xl text-[#444444] group-hover:text-[#b5793e] transition-colors mb-3 leading-tight italic font-light">On Negative Space</h3>
+              <p class="font-body text-[13px] text-[#666666] leading-[1.8] line-clamp-3 mb-6 flex-grow">Why the most important part of a photograph, a design, or a conversation is often the part that isn't there. We define forms not by their edges, but by what surrounds them.</p>
+              <div class="font-mono text-[10px] text-[#999999] tracking-wider mt-auto pt-4 border-t border-[#e2ded5]/50 group-hover:border-[#b5793e]/30 transition-colors">10.12.2023</div>
+            </a>
+          </article>
+          <article class="group flex flex-col h-full cursor-pointer fade-in delay-3">
+            <a href="piece.html" class="block flex-grow flex flex-col">
+              <div class="w-full aspect-[16/9] mb-4 overflow-hidden bg-[#d4d4d4]/30">
+                <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Concrete" class="w-full h-full object-cover mix-blend-multiply opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" onerror="this.onerror=null;this.src='https://placehold.co/800x450/ccc/888?text=Photography';">
+              </div>
+              <div class="flex items-center gap-3 mb-4"><span class="font-mono text-[10px] text-[#b5793e] uppercase tracking-[0.2em]">Photography</span><span class="w-4 h-[1px] bg-[#d4d4d4]"></span><span class="font-mono text-[10px] text-[#999999]">Visual Study</span></div>
+              <h3 class="font-heading text-2xl text-[#444444] group-hover:text-[#b5793e] transition-colors mb-3 leading-tight">Brutalism in Repose</h3>
+              <div class="font-mono text-[10px] text-[#999999] tracking-wider mt-auto pt-4 border-t border-[#e2ded5]/50 group-hover:border-[#b5793e]/30 transition-colors">08.05.2023</div>
+            </a>
+          </article>
+          <article class="group flex flex-col h-full cursor-pointer fade-in delay-4">
+            <a href="piece.html" class="block flex-grow flex flex-col">
+              <div class="flex items-center gap-3 mb-4"><span class="font-mono text-[10px] text-[#b5793e] uppercase tracking-[0.2em]">Prose</span><span class="w-4 h-[1px] bg-[#d4d4d4]"></span><span class="font-mono text-[10px] text-[#999999]">890 words</span></div>
+              <h3 class="font-heading text-2xl text-[#444444] group-hover:text-[#b5793e] transition-colors mb-3 leading-tight">The Train to Kyoto</h3>
+              <p class="font-body text-[13px] text-[#666666] leading-[1.8] line-clamp-3 mb-6 flex-grow">Rain streaked laterally across the window pane, blurring the neon signs into watercolor ribbons. The rhythmic clack of the tracks was a metronome for half-finished thoughts.</p>
+              <div class="font-mono text-[10px] text-[#999999] tracking-wider mt-auto pt-4 border-t border-[#e2ded5]/50 group-hover:border-[#b5793e]/30 transition-colors">04.22.2023</div>
+            </a>
+          </article>
+          <article class="group flex flex-col h-full cursor-pointer">
+            <a href="piece.html" class="block flex-grow flex flex-col">
+              <div class="flex items-center gap-3 mb-4"><span class="font-mono text-[10px] text-[#b5793e] uppercase tracking-[0.2em]">Translation</span><span class="w-4 h-[1px] bg-[#d4d4d4]"></span><span class="font-mono text-[10px] text-[#999999]">Rilke / 210 words</span></div>
+              <h3 class="font-heading text-2xl text-[#444444] group-hover:text-[#b5793e] transition-colors mb-3 leading-tight italic font-light">Letters to a Young Poet, No. 4</h3>
+              <p class="font-body text-[13px] text-[#666666] leading-[1.8] line-clamp-3 mb-6 flex-grow">Have patience with everything unresolved in your heart and to try to love the questions themselves as if they were locked rooms or books written in a very foreign language...</p>
+              <div class="font-mono text-[10px] text-[#999999] tracking-wider mt-auto pt-4 border-t border-[#e2ded5]/50 group-hover:border-[#b5793e]/30 transition-colors">01.15.2023</div>
+            </a>
+          </article>
+          <article class="group flex flex-col h-full cursor-pointer">
+            <a href="poetry.html" class="block flex-grow flex flex-col">
+              <div class="flex items-center gap-3 mb-4"><span class="font-mono text-[10px] text-[#b5793e] uppercase tracking-[0.2em]">Poetry</span><span class="w-4 h-[1px] bg-[#d4d4d4]"></span><span class="font-mono text-[10px] text-[#999999]">68 words</span></div>
+              <h3 class="font-heading text-2xl text-[#444444] group-hover:text-[#b5793e] transition-colors mb-3 leading-tight">Morning Rituals</h3>
+              <p class="font-body text-[13px] text-[#666666] leading-[1.8] line-clamp-3 mb-6 flex-grow">Coffee grounds and cold water. The hiss of the kettle. Another day beginning before the sun decides to participate.</p>
+              <div class="font-mono text-[10px] text-[#999999] tracking-wider mt-auto pt-4 border-t border-[#e2ded5]/50 group-hover:border-[#b5793e]/30 transition-colors">11.02.2022</div>
+            </a>
+          </article>
+          <article class="group flex flex-col h-full cursor-pointer">
+            <a href="piece.html" class="block flex-grow flex flex-col">
+              <div class="flex items-center gap-3 mb-4"><span class="font-mono text-[10px] text-[#b5793e] uppercase tracking-[0.2em]">Photography</span><span class="w-4 h-[1px] bg-[#d4d4d4]"></span><span class="font-mono text-[10px] text-[#999999]">Series of 12</span></div>
+              <h3 class="font-heading text-2xl text-[#444444] group-hover:text-[#b5793e] transition-colors mb-3 leading-tight italic font-light">Silent Streets</h3>
+              <p class="font-body text-[13px] text-[#666666] leading-[1.8] line-clamp-3 mb-6 flex-grow">A collection of midnight observations in damp cities. Exploring urban solitude and sodium lights reflecting off wet pavement.</p>
+              <div class="font-mono text-[10px] text-[#999999] tracking-wider mt-auto pt-4 border-t border-[#e2ded5]/50 group-hover:border-[#b5793e]/30 transition-colors">09.18.2022</div>
+            </a>
+          </article>
+          <article class="group flex flex-col h-full cursor-pointer">
+            <a href="piece.html" class="block flex-grow flex flex-col">
+              <div class="flex items-center gap-3 mb-4"><span class="font-mono text-[10px] text-[#b5793e] uppercase tracking-[0.2em]">Mixed Media</span><span class="w-4 h-[1px] bg-[#d4d4d4]"></span><span class="font-mono text-[10px] text-[#999999]">Ink &amp; Film</span></div>
+              <h3 class="font-heading text-2xl text-[#444444] group-hover:text-[#b5793e] transition-colors mb-3 leading-tight">Notes on Forgetting</h3>
+              <p class="font-body text-[13px] text-[#666666] leading-[1.8] line-clamp-3 mb-6 flex-grow">Scanned journal pages overlaid with double-exposed 35mm film. An attempt to document the physical degradation of memory over time.</p>
+              <div class="font-mono text-[10px] text-[#999999] tracking-wider mt-auto pt-4 border-t border-[#e2ded5]/50 group-hover:border-[#b5793e]/30 transition-colors">05.30.2022</div>
+            </a>
+          </article>
+        </div>
+        <div class="mt-20 pt-8 border-t border-[#d4d4d4] flex flex-col sm:flex-row justify-between items-center gap-6 font-mono text-[10px] text-[#999999] uppercase tracking-[0.2em]">
+          <button class="opacity-50 cursor-not-allowed flex items-center gap-2"><iconify-icon icon="lucide:arrow-left"></iconify-icon> Previous</button>
+          <div class="flex items-center gap-4">
+            <span class="w-6 h-6 flex items-center justify-center bg-[#b5793e] text-[#e8e8e8] rounded-full">1</span>
+            <button class="w-6 h-6 flex items-center justify-center hover:text-[#b5793e] transition-colors">2</button>
+            <button class="w-6 h-6 flex items-center justify-center hover:text-[#b5793e] transition-colors">3</button>
+            <span class="px-2">...</span>
+            <button class="w-6 h-6 flex items-center justify-center hover:text-[#b5793e] transition-colors">53</button>
+          </div>
+          <button class="hover:text-[#b5793e] transition-colors flex items-center gap-2">Next <iconify-icon icon="lucide:arrow-right"></iconify-icon></button>
+        </div>
+      </div>
+    </main>
+    <footer class="py-24 px-6 border-t border-[#d4d4d4] text-center">
+      <div class="max-w-[600px] mx-auto">
+        <div class="flex flex-col items-center gap-8">
+          <a href="index.html" class="block w-16 mb-4"><img src="https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/uploads/82bc131f-4e86-4b22-898a-8aacba6f6ce1/1775539032946-6bb5cd2d/Gemini_Generated_Image_svfatbsvfatbsvfa.png" alt="mmh" class="w-full h-auto object-contain mix-blend-multiply opacity-50" onerror="this.onerror=null;this.src='https://placehold.co/64x32/444/888?text=mmh';"></a>
+          <ul class="flex gap-8 list-none m-0 p-0 font-mono text-[10px] uppercase tracking-widest text-[#999999]">
+            <li><a href="#" class="hover:text-[#b5793e] transition-colors">Instagram</a></li>
+            <li><a href="#" class="hover:text-[#b5793e] transition-colors">Substack</a></li>
+            <li><a href="mailto:hello@example.com" class="hover:text-[#b5793e] transition-colors">Email</a></li>
+          </ul>
+          <div class="font-body text-xs text-[#999999] italic">&copy; 2024 mmh. Carefully archived.</div>
+        </div>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>
