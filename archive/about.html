@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>mmh — About the Archive</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{fontFamily:{mono:["'Menlo'","'Monaco'","'Courier New'","monospace"]}}}}</script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
+  <style>
+    :root{--color-primary:#b5793e;--color-bg:#e8e8e8;--color-text:#444444;--color-muted:#999999;--color-border:#d4d4d4;}
+    body{margin:0;padding:0;-webkit-font-smoothing:antialiased;background-color:var(--color-bg);color:var(--color-text);}
+    .font-heading{font-family:'Lora',serif;}.font-body{font-family:'Georgia',serif;}
+    .font-hand{font-family:'Caveat',cursive;}.font-mono{font-family:'Menlo','Monaco','Courier New',monospace;}
+    ::selection{background-color:rgba(181,121,62,0.2);color:var(--color-primary);}
+    .fade-in{animation:fadeIn 1.2s ease-out forwards;opacity:0;}
+    @keyframes fadeIn{to{opacity:1;}}
+    .delay-1{animation-delay:0.1s;}.delay-2{animation-delay:0.2s;}
+    .delay-3{animation-delay:0.3s;}.delay-4{animation-delay:0.4s;}
+  </style>
+</head>
+<body>
+  <div class="min-h-screen relative overflow-x-hidden font-body flex flex-col">
+    <nav class="pt-12 pb-4 px-6 relative z-10">
+      <div class="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-center">
+        <a href="index.html" class="block mb-8 md:mb-0 group w-32"><img src="https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/uploads/82bc131f-4e86-4b22-898a-8aacba6f6ce1/1775539032946-6bb5cd2d/Gemini_Generated_Image_svfatbsvfatbsvfa.png" alt="mmh" class="w-full h-auto object-contain mix-blend-multiply opacity-90 group-hover:opacity-100 transition-opacity duration-500" onerror="this.onerror=null;this.src='https://placehold.co/128x64/444/888?text=mmh';"></a>
+        <ul class="flex gap-8 md:gap-12 list-none m-0 p-0">
+          <li><a href="index.html" class="font-body text-[11px] md:text-xs text-[#999999] hover:text-[#b5793e] transition-colors tracking-[0.15em] uppercase">The Archive</a></li>
+          <li><a href="about.html" class="font-body text-[11px] md:text-xs text-[#b5793e] tracking-[0.15em] uppercase">About</a></li>
+          <li><a href="contact.html" class="font-body text-[11px] md:text-xs text-[#999999] hover:text-[#b5793e] transition-colors tracking-[0.15em] uppercase">Contact</a></li>
+        </ul>
+      </div>
+    </nav>
+    <header class="pt-20 pb-16 px-6 max-w-[900px] mx-auto text-center relative">
+      <div class="absolute top-0 right-4 md:right-10 font-hand text-2xl md:text-3xl text-[#b5793e] transform rotate-3 opacity-80 fade-in">author's note</div>
+      <h1 class="font-heading text-3xl md:text-5xl lg:text-6xl leading-[1.2] text-[#444444] mb-8 italic font-light fade-in delay-1">Documenting the quiet intervals. <br class="hidden md:block"/><span class="not-italic">Arranging words to measure the</span> <br class="hidden md:block"/>distance between things.</h1>
+    </header>
+    <main class="flex-grow max-w-[1100px] mx-auto px-6 pb-32 w-full">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-24">
+        <article class="lg:col-span-8 order-2 lg:order-1">
+          <section class="mb-16 fade-in delay-2">
+            <p class="font-body text-lg md:text-xl text-[#444444] leading-[1.9] mb-8">I am an observer by necessity, a writer by compulsion, and an archivist only recently. For over a decade, I have been writing essays, sketching poems, and taking photographs. Most of this work lived quietly in unorganized hard drives, spiral-bound notebooks, and the margins of books I was supposed to be reading.</p>
+            <p class="font-body text-base text-[#666666] leading-[1.8] mb-8">This site — The Complete Archive — is an attempt to impose a gentle order on the ephemeral. It is a digital catalog of observations. It is not designed to be a portfolio of triumphs, but rather a transparent record of attempts. Some pieces are polished; others are raw fragments caught mid-thought.</p>
+          </section>
+          <div class="flex items-center gap-4 mb-10 fade-in delay-3"><span class="font-hand text-2xl text-[#b5793e]">on curation</span><div class="h-[1px] bg-[#d4d4d4] flex-grow"></div></div>
+          <section class="fade-in delay-3">
+            <p class="font-body text-base text-[#666666] leading-[1.8] mb-8">I believe in the value of negative space. In visual art, it is the area around and between subjects that gives them shape. In writing, it is what is left unsaid that allows the reader to inhabit the work. My curation philosophy mirrors this belief: I aim to present the work plainly, without excessive framing or justification, allowing you to draw your own lines of connection between a photograph taken in Tokyo in 2022 and a poem written in London in 2024.</p>
+            <blockquote class="pl-6 py-2 border-l border-[#b5793e] my-10"><p class="font-heading italic text-xl text-[#444444] leading-[1.6]">"The archive is a living organism. It breathes, expands, and occasionally contradicts itself. That is the point."</p></blockquote>
+            <p class="font-body text-base text-[#666666] leading-[1.8] mb-8">The pieces here are categorized loosely by medium — poetry, prose, essay, photography — but these boundaries are porous. Often, a photograph is just a poem waiting for syntax, and an essay is simply a photograph rendered in syntax. Feel free to wander.</p>
+          </section>
+          <div class="mt-16 fade-in delay-4"><span class="font-hand text-3xl text-[#444444]">— mmh.</span><div class="font-mono text-[10px] text-[#999999] uppercase tracking-[0.2em] mt-2">London, 2024</div></div>
+        </article>
+        <aside class="lg:col-span-4 order-1 lg:order-2 fade-in delay-2">
+          <div class="sticky top-12">
+            <div class="border border-[#d4d4d4] bg-[#e8e8e8] p-8 shadow-[2px_2px_0px_rgba(212,212,212,0.5)] relative">
+              <div class="absolute top-0 right-0 w-8 h-8 border-l border-b border-[#d4d4d4] bg-[#e8e8e8]"></div>
+              <div class="font-mono text-[10px] text-[#999999] uppercase tracking-[0.2em] mb-8 pb-4 border-b border-[#d4d4d4]">Archive Metadata</div>
+              <ul class="flex flex-col gap-5 list-none m-0 p-0 font-body text-sm text-[#444444]">
+                <li class="flex justify-between items-end group"><span class="group-hover:text-[#b5793e] transition-colors">Total Catalogued Pieces</span><span class="font-mono text-xs text-[#b5793e]">1,042</span></li>
+                <li class="w-full border-t border-dashed border-[#d4d4d4]"></li>
+                <li class="flex justify-between items-end"><span class="text-[#666666]">Poetry &amp; Verse</span><span class="font-mono text-xs text-[#999999]">428</span></li>
+                <li class="flex justify-between items-end"><span class="text-[#666666]">Prose Fragments</span><span class="font-mono text-xs text-[#999999]">214</span></li>
+                <li class="flex justify-between items-end"><span class="text-[#666666]">Photographic Studies</span><span class="font-mono text-xs text-[#999999]">189</span></li>
+                <li class="flex justify-between items-end"><span class="text-[#666666]">Longform Essays</span><span class="font-mono text-xs text-[#999999]">156</span></li>
+                <li class="flex justify-between items-end"><span class="text-[#666666]">Mixed Media / Other</span><span class="font-mono text-xs text-[#999999]">55</span></li>
+              </ul>
+              <div class="mt-12 pt-6 border-t border-[#d4d4d4] flex justify-center"><img src="https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/uploads/82bc131f-4e86-4b22-898a-8aacba6f6ce1/1775539032946-6bb5cd2d/Gemini_Generated_Image_svfatbsvfatbsvfa.png" alt="mmh" class="w-16 h-auto object-contain mix-blend-multiply opacity-40" onerror="this.onerror=null;this.src='https://placehold.co/64x32/444/888?text=mmh';"></div>
+            </div>
+            <div class="mt-8 text-center"><a href="index.html" class="inline-flex items-center gap-2 font-mono text-[10px] text-[#999999] hover:text-[#b5793e] uppercase tracking-[0.2em] transition-colors">Enter the Archive <iconify-icon icon="lucide:arrow-right" class="text-sm"></iconify-icon></a></div>
+          </div>
+        </aside>
+      </div>
+    </main>
+    <footer class="py-24 px-6 border-t border-[#d4d4d4] text-center">
+      <div class="max-w-[600px] mx-auto"><div class="flex flex-col items-center gap-8">
+        <a href="index.html" class="block w-16 mb-4"><img src="https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/uploads/82bc131f-4e86-4b22-898a-8aacba6f6ce1/1775539032946-6bb5cd2d/Gemini_Generated_Image_svfatbsvfatbsvfa.png" alt="mmh" class="w-full h-auto object-contain mix-blend-multiply opacity-50" onerror="this.onerror=null;this.src='https://placehold.co/64x32/444/888?text=mmh';"></a>
+        <ul class="flex gap-8 list-none m-0 p-0 font-mono text-[10px] uppercase tracking-widest text-[#999999]">
+          <li><a href="#" class="hover:text-[#b5793e] transition-colors">Instagram</a></li>
+          <li><a href="#" class="hover:text-[#b5793e] transition-colors">Substack</a></li>
+          <li><a href="mailto:hello@example.com" class="hover:text-[#b5793e] transition-colors">Email</a></li>
+        </ul>
+        <div class="font-body text-xs text-[#999999] italic">&copy; 2024 mmh. Carefully archived.</div>
+      </div></div>
+    </footer>
+  </div>
+</body>
+</html>

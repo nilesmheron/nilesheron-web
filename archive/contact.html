@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact — mmh Archive</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{fontFamily:{mono:["'Menlo'","'Monaco'","'Courier New'","monospace"]}}}}</script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
+  <style>
+    :root{--color-primary:#b5793e;--color-bg:#e8e8e8;--color-text:#444444;--color-muted:#999999;--color-border:#d4d4d4;}
+    body{margin:0;padding:0;-webkit-font-smoothing:antialiased;background-color:var(--color-bg);color:var(--color-text);}
+    .font-heading{font-family:'Lora',serif;}.font-body{font-family:'Georgia',serif;}
+    .font-hand{font-family:'Caveat',cursive;}.font-mono{font-family:'Menlo','Monaco','Courier New',monospace;}
+    ::selection{background-color:rgba(181,121,62,0.2);color:var(--color-primary);}
+    .fade-in{animation:fadeIn 1.2s ease-out forwards;opacity:0;}
+    @keyframes fadeIn{to{opacity:1;}}
+    .delay-1{animation-delay:0.1s;}.delay-2{animation-delay:0.2s;}.delay-3{animation-delay:0.3s;}
+  </style>
+</head>
+<body>
+  <div class="min-h-screen relative overflow-x-hidden font-body flex flex-col">
+    <nav class="pt-12 pb-4 px-6 relative z-10">
+      <div class="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-center">
+        <a href="index.html" class="block mb-8 md:mb-0 group w-32"><img src="https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/uploads/82bc131f-4e86-4b22-898a-8aacba6f6ce1/1775539032946-6bb5cd2d/Gemini_Generated_Image_svfatbsvfatbsvfa.png" alt="mmh" class="w-full h-auto object-contain mix-blend-multiply opacity-90 group-hover:opacity-100 transition-opacity duration-500" onerror="this.onerror=null;this.src='https://placehold.co/128x64/444/888?text=mmh';"></a>
+        <ul class="flex gap-8 md:gap-12 list-none m-0 p-0">
+          <li><a href="index.html" class="font-body text-[11px] md:text-xs text-[#999999] hover:text-[#b5793e] transition-colors tracking-[0.15em] uppercase">The Archive</a></li>
+          <li><a href="about.html" class="font-body text-[11px] md:text-xs text-[#999999] hover:text-[#b5793e] transition-colors tracking-[0.15em] uppercase">About</a></li>
+          <li><a href="contact.html" class="font-body text-[11px] md:text-xs text-[#b5793e] tracking-[0.15em] uppercase">Contact</a></li>
+        </ul>
+      </div>
+    </nav>
+    <main class="flex-grow max-w-[800px] mx-auto w-full px-6 pt-20 pb-32 flex flex-col">
+      <header class="mb-20 text-center relative fade-in">
+        <div class="absolute -top-6 right-10 md:right-32 font-hand text-2xl text-[#b5793e] transform rotate-[6deg] opacity-70">hello</div>
+        <h1 class="font-heading text-4xl md:text-5xl lg:text-6xl text-[#444444] mb-8 italic font-light">Get In Touch</h1>
+        <p class="font-body text-base text-[#666666] leading-[1.8] max-w-md mx-auto">For inquiries, collaborations, or simply to leave a thought across the distance.</p>
+      </header>
+      <div class="w-full max-w-[500px] mx-auto fade-in delay-1">
+        <form class="flex flex-col gap-10">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+            <div class="flex flex-col gap-2 group"><label for="form-name" class="font-mono text-[10px] uppercase tracking-[0.2em] text-[#999999] group-focus-within:text-[#b5793e] transition-colors">Name</label><input type="text" id="form-name" required class="w-full bg-transparent border-b border-[#d4d4d4] focus:border-[#b5793e] text-[#444444] font-body text-base py-2 outline-none transition-colors rounded-none"></div>
+            <div class="flex flex-col gap-2 group"><label for="form-email" class="font-mono text-[10px] uppercase tracking-[0.2em] text-[#999999] group-focus-within:text-[#b5793e] transition-colors">Email</label><input type="email" id="form-email" required class="w-full bg-transparent border-b border-[#d4d4d4] focus:border-[#b5793e] text-[#444444] font-body text-base py-2 outline-none transition-colors rounded-none"></div>
+          </div>
+          <div class="flex flex-col gap-2 group"><label for="form-subject" class="font-mono text-[10px] uppercase tracking-[0.2em] text-[#999999] group-focus-within:text-[#b5793e] transition-colors">Subject <span class="lowercase tracking-normal italic font-body opacity-60">(optional)</span></label><input type="text" id="form-subject" class="w-full bg-transparent border-b border-[#d4d4d4] focus:border-[#b5793e] text-[#444444] font-body text-base py-2 outline-none transition-colors rounded-none"></div>
+          <div class="flex flex-col gap-2 group"><label for="form-message" class="font-mono text-[10px] uppercase tracking-[0.2em] text-[#999999] group-focus-within:text-[#b5793e] transition-colors">Message</label><textarea id="form-message" rows="5" required class="w-full bg-transparent border-b border-[#d4d4d4] focus:border-[#b5793e] text-[#444444] font-body text-base py-2 outline-none transition-colors resize-none rounded-none"></textarea></div>
+          <div class="mt-4 flex items-center justify-between">
+            <span class="font-hand text-[#999999] text-xl opacity-50">* carefully read</span>
+            <button type="submit" class="font-heading italic text-lg text-[#444444] hover:text-[#b5793e] transition-colors relative inline-block pb-1 group">Send Message<span class="absolute bottom-0 left-0 w-0 h-[1px] bg-[#b5793e] transition-all duration-500 ease-out group-hover:w-full"></span></button>
+          </div>
+        </form>
+      </div>
+      <div class="mt-32 text-center fade-in delay-2">
+        <div class="inline-block w-12 h-[1px] bg-[#d4d4d4] mb-12"></div>
+        <p class="font-mono text-[10px] uppercase tracking-[0.2em] text-[#999999] mb-8">Or find me elsewhere</p>
+        <ul class="flex flex-wrap justify-center gap-x-12 gap-y-6 list-none m-0 p-0 font-mono text-[11px] uppercase tracking-widest text-[#666666]">
+          <li><a href="#" class="hover:text-[#b5793e] transition-colors relative group py-1">Instagram<span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[1px] bg-[#b5793e] transition-all duration-300 group-hover:w-full"></span></a></li>
+          <li><a href="#" class="hover:text-[#b5793e] transition-colors relative group py-1">Substack<span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[1px] bg-[#b5793e] transition-all duration-300 group-hover:w-full"></span></a></li>
+          <li><a href="mailto:hello@example.com" class="hover:text-[#b5793e] transition-colors relative group py-1">Email Direct<span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[1px] bg-[#b5793e] transition-all duration-300 group-hover:w-full"></span></a></li>
+        </ul>
+      </div>
+    </main>
+    <footer class="py-24 px-6 border-t border-[#d4d4d4] text-center">
+      <div class="max-w-[600px] mx-auto"><div class="flex flex-col items-center gap-8">
+        <a href="index.html" class="block w-16 mb-4"><img src="https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/uploads/82bc131f-4e86-4b22-898a-8aacba6f6ce1/1775539032946-6bb5cd2d/Gemini_Generated_Image_svfatbsvfatbsvfa.png" alt="mmh" class="w-full h-auto object-contain mix-blend-multiply opacity-50" onerror="this.onerror=null;this.src='https://placehold.co/64x32/444/888?text=mmh';"></a>
+        <ul class="flex gap-8 list-none m-0 p-0 font-mono text-[10px] uppercase tracking-widest text-[#999999]">
+          <li><a href="#" class="hover:text-[#b5793e] transition-colors">Instagram</a></li>
+          <li><a href="#" class="hover:text-[#b5793e] transition-colors">Substack</a></li>
+          <li><a href="mailto:hello@example.com" class="hover:text-[#b5793e] transition-colors">Email</a></li>
+        </ul>
+        <div class="font-body text-xs text-[#999999] italic">&copy; 2024 mmh. Carefully archived.</div>
+      </div></div>
+    </footer>
+  </div>
+</body>
+</html>

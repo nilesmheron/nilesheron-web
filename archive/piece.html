@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>On Negative Space — mmh Archive</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{fontFamily:{mono:["'Menlo'","'Monaco'","'Courier New'","monospace"]}}}}</script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
+  <style>
+    :root{--color-primary:#b5793e;--color-bg:#e8e8e8;--color-text:#444444;--color-muted:#999999;--color-border:#d4d4d4;}
+    body{margin:0;padding:0;-webkit-font-smoothing:antialiased;background-color:var(--color-bg);color:var(--color-text);}
+    .font-heading{font-family:'Lora',serif;}.font-body{font-family:'Georgia',serif;}
+    .font-hand{font-family:'Caveat',cursive;}.font-mono{font-family:'Menlo','Monaco','Courier New',monospace;}
+    ::selection{background-color:rgba(181,121,62,0.2);color:var(--color-primary);}
+    .fade-in{animation:fadeIn 1.2s ease-out forwards;opacity:0;}
+    @keyframes fadeIn{to{opacity:1;}}
+    .delay-1{animation-delay:0.1s;}.delay-2{animation-delay:0.2s;}
+    .drop-cap::first-letter{float:left;font-family:'Lora',serif;font-size:5.5rem;line-height:0.8;padding-top:0.1rem;padding-right:0.5rem;color:var(--color-primary);font-weight:400;}
+  </style>
+</head>
+<body>
+  <div class="min-h-screen relative overflow-x-hidden font-body bg-[#e8e8e8]">
+    <nav class="pt-12 pb-4 px-6 relative z-10">
+      <div class="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-center">
+        <a href="index.html" class="block mb-8 md:mb-0 group w-32"><img src="https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/uploads/82bc131f-4e86-4b22-898a-8aacba6f6ce1/1775539032946-6bb5cd2d/Gemini_Generated_Image_svfatbsvfatbsvfa.png" alt="mmh" class="w-full h-auto object-contain mix-blend-multiply opacity-90 group-hover:opacity-100 transition-opacity duration-500" onerror="this.onerror=null;this.src='https://placehold.co/128x64/444/888?text=mmh';"></a>
+        <ul class="flex gap-8 md:gap-12 list-none m-0 p-0">
+          <li><a href="index.html" class="font-body text-[11px] md:text-xs text-[#b5793e] tracking-[0.15em] uppercase">The Archive</a></li>
+          <li><a href="about.html" class="font-body text-[11px] md:text-xs text-[#999999] hover:text-[#b5793e] transition-colors tracking-[0.15em] uppercase">About</a></li>
+          <li><a href="contact.html" class="font-body text-[11px] md:text-xs text-[#999999] hover:text-[#b5793e] transition-colors tracking-[0.15em] uppercase">Contact</a></li>
+        </ul>
+      </div>
+    </nav>
+    <main class="max-w-[840px] mx-auto px-6 pt-12 pb-32 fade-in delay-1">
+      <div class="mb-16"><a href="index.html" class="inline-flex items-center gap-2 font-mono text-[10px] md:text-xs text-[#999999] hover:text-[#b5793e] uppercase tracking-widest transition-colors"><iconify-icon icon="lucide:arrow-left"></iconify-icon> Back to Archive</a></div>
+      <header class="mb-20 text-center relative">
+        <div class="absolute -top-6 right-0 md:-right-12 font-hand text-3xl text-[#b5793e] transform rotate-6 opacity-60">no. 156</div>
+        <div class="font-mono text-[10px] md:text-xs text-[#b5793e] uppercase tracking-[0.2em] mb-8">Essay</div>
+        <h1 class="font-heading text-4xl md:text-6xl text-[#444444] leading-[1.15] mb-10 italic font-light">On Negative Space</h1>
+        <div class="flex flex-wrap items-center justify-center gap-y-2 gap-x-4 md:gap-x-6 font-mono text-[10px] md:text-xs text-[#999999] uppercase tracking-widest">
+          <span>10.12.2023</span><span class="w-[3px] h-[3px] rounded-full bg-[#d4d4d4]"></span><span>1,240 words</span><span class="w-[3px] h-[3px] rounded-full bg-[#d4d4d4]"></span><span class="flex items-center gap-1"><iconify-icon icon="lucide:clock" class="text-sm"></iconify-icon> 5 min read</span>
+        </div>
+      </header>
+      <div class="flex justify-center mb-20"><span class="w-12 h-[1px] bg-[#d4d4d4]"></span></div>
+      <article class="font-body text-lg md:text-[21px] text-[#444444] leading-[1.9] md:leading-[2.1]">
+        <p class="drop-cap mb-10">Why the most important part of a photograph, a design, or a conversation is often the part that isn't there. We define forms not by their edges, but by what surrounds them. This is the architecture of absence, the silent scaffolding that holds meaning upright.</p>
+        <p class="mb-10">Consider the pauses between notes in a musical composition. Without silence, sound is merely noise. The interval gives the melody its rhythm, its tension, and its eventual release. The same principle applies to visual arts. A canvas entirely saturated with paint leaves no room for the eye to rest, no entry point for the viewer's imagination to participate in the creation of the image.</p>
+        <div class="my-16 pl-8 border-l-2 border-[#b5793e]/40 py-2 italic text-[#666666] font-heading text-2xl md:text-3xl leading-snug">"We define forms not by their edges, but by what surrounds them. This is the architecture of absence."</div>
+        <p class="mb-10">In Japanese aesthetics, there is a concept called <em>Ma</em> (間), which loosely translates to "gap," "space," or "pause." It is not simply a void, but a conscious emptiness — a spatial or temporal interval that gives shape to the whole. When arranging flowers in Ikebana, the space between the stems is as meticulously considered as the blossoms themselves.</p>
+        <p class="mb-10">I find this increasingly difficult to practice in modern life. Our digital environments abhor a vacuum. Every pixel must be monetized, every second of attention captured. We scroll to fill the gaps. We speak to fill the silence. Yet, it is precisely in those neglected margins where deep work happens. When we stop crowding our thoughts with inputs, the sediment settles, and clarity emerges.</p>
+        <p class="mb-10">To design with negative space is an act of restraint. It requires the confidence to let the subject breathe, trusting that the absence will amplify the presence. It is a silent invitation to the observer: <em>Here is room for you.</em></p>
+      </article>
+      <div class="mt-24 border-t border-[#d4d4d4] pt-12 flex flex-col items-center justify-center opacity-80">
+        <div class="font-hand text-4xl text-[#b5793e] mb-4">***</div>
+        <div class="font-mono text-[10px] text-[#999999] uppercase tracking-[0.2em] mb-8">End of Piece</div>
+        <button onclick="navigator.clipboard.writeText(window.location.href)" class="text-[#999999] hover:text-[#b5793e] transition-colors flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest"><iconify-icon icon="lucide:link" class="text-base"></iconify-icon> Copy Link</button>
+      </div>
+    </main>
+    <section class="bg-[#e2ded5]/40 border-t border-[#d4d4d4] py-24 px-6 fade-in delay-2">
+      <div class="max-w-[1400px] mx-auto">
+        <div class="flex flex-col md:flex-row justify-between items-center md:items-end mb-16 pb-4 border-b border-[#d4d4d4]/60 gap-4">
+          <h2 class="font-heading text-2xl md:text-3xl text-[#444444] italic font-light">More from the Archive</h2>
+          <a href="index.html" class="font-mono text-[10px] text-[#999999] hover:text-[#b5793e] uppercase tracking-widest transition-colors flex items-center gap-1">View Essay Archive <iconify-icon icon="lucide:arrow-right"></iconify-icon></a>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-x-12 gap-y-16">
+          <article class="group flex flex-col h-full cursor-pointer"><a href="piece.html" class="block flex-grow flex flex-col"><div class="flex items-center gap-3 mb-4"><span class="font-mono text-[10px] text-[#b5793e] uppercase tracking-[0.2em]">Essay</span><span class="w-4 h-[1px] bg-[#d4d4d4]"></span><span class="font-mono text-[10px] text-[#999999]">980 words</span></div><h3 class="font-heading text-2xl text-[#444444] group-hover:text-[#b5793e] transition-colors mb-3 leading-tight italic font-light">Tools of Constraint</h3><p class="font-body text-[13px] text-[#666666] leading-[1.8] line-clamp-3 mb-6 flex-grow">Shooting exclusively with a 35mm lens for a year changed how I approach composition digitally. Limitation breeds creativity.</p><div class="font-mono text-[10px] text-[#999999] tracking-wider mt-auto pt-4 border-t border-[#e2ded5]/50 group-hover:border-[#b5793e]/30 transition-colors">09.04.2023</div></a></article>
+          <article class="group flex flex-col h-full cursor-pointer"><a href="piece.html" class="block flex-grow flex flex-col"><div class="flex items-center gap-3 mb-4"><span class="font-mono text-[10px] text-[#b5793e] uppercase tracking-[0.2em]">Notes</span><span class="w-4 h-[1px] bg-[#d4d4d4]"></span><span class="font-mono text-[10px] text-[#999999]">450 words</span></div><h3 class="font-heading text-2xl text-[#444444] group-hover:text-[#b5793e] transition-colors mb-3 leading-tight">Archiving the Ephemeral</h3><p class="font-body text-[13px] text-[#666666] leading-[1.8] line-clamp-3 mb-6 flex-grow">The impossible task of organizing hard drives spanning a decade of unedited raw files, and deciding what deserves to survive.</p><div class="font-mono text-[10px] text-[#999999] tracking-wider mt-auto pt-4 border-t border-[#e2ded5]/50 group-hover:border-[#b5793e]/30 transition-colors">07.22.2023</div></a></article>
+          <article class="group flex flex-col h-full cursor-pointer"><a href="piece.html" class="block flex-grow flex flex-col"><div class="flex items-center gap-3 mb-4"><span class="font-mono text-[10px] text-[#b5793e] uppercase tracking-[0.2em]">Essay</span><span class="w-4 h-[1px] bg-[#d4d4d4]"></span><span class="font-mono text-[10px] text-[#999999]">1,420 words</span></div><h3 class="font-heading text-2xl text-[#444444] group-hover:text-[#b5793e] transition-colors mb-3 leading-tight italic font-light">The Distance Between</h3><p class="font-body text-[13px] text-[#666666] leading-[1.8] line-clamp-3 mb-6 flex-grow">An exploration of physical and emotional isolation in vast landscapes, heavily influenced by the winter spent in Hokkaido.</p><div class="font-mono text-[10px] text-[#999999] tracking-wider mt-auto pt-4 border-t border-[#e2ded5]/50 group-hover:border-[#b5793e]/30 transition-colors">03.18.2023</div></a></article>
+        </div>
+      </div>
+    </section>
+    <footer class="py-24 px-6 border-t border-[#d4d4d4] text-center"><div class="max-w-[600px] mx-auto"><div class="flex flex-col items-center gap-8">
+      <a href="index.html" class="block w-16 mb-4"><img src="https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/uploads/82bc131f-4e86-4b22-898a-8aacba6f6ce1/1775539032946-6bb5cd2d/Gemini_Generated_Image_svfatbsvfatbsvfa.png" alt="mmh" class="w-full h-auto object-contain mix-blend-multiply opacity-50" onerror="this.onerror=null;this.src='https://placehold.co/64x32/444/888?text=mmh';"></a>
+      <ul class="flex gap-8 list-none m-0 p-0 font-mono text-[10px] uppercase tracking-widest text-[#999999]"><li><a href="#" class="hover:text-[#b5793e] transition-colors">Instagram</a></li><li><a href="#" class="hover:text-[#b5793e] transition-colors">Substack</a></li><li><a href="mailto:hello@example.com" class="hover:text-[#b5793e] transition-colors">Email</a></li></ul>
+      <div class="font-body text-xs text-[#999999] italic">&copy; 2024 mmh. Carefully archived.</div>
+    </div></div></footer>
+  </div>
+</body>
+</html>
