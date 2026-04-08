@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cross-Platform Context Packager — dev.nilesheron.com</title>
+  <style>
+    body { font-family: Georgia, serif; max-width: 660px; margin: 80px auto; padding: 0 24px; color: #1a1a1a; background: #fafafa; }
+    h1 { font-size: 1.4rem; font-weight: normal; margin-bottom: 4px; }
+    h2 { font-size: 1.1rem; font-weight: normal; margin-top: 48px; margin-bottom: 6px; border-bottom: 1px solid #e8e8e8; padding-bottom: 8px; }
+    h3 { font-size: 0.95rem; font-weight: bold; margin-top: 28px; margin-bottom: 6px; }
+    p { color: #444; line-height: 1.75; margin: 0 0 16px; }
+    a { color: #1a1a1a; }
+    .meta { color: #999; font-size: 0.85rem; margin-bottom: 48px; }
+    ul, ol { color: #444; line-height: 1.75; padding-left: 20px; }
+    li { margin-bottom: 6px; }
+    code { font-family: 'Courier New', monospace; font-size: 0.85rem; background: #f0f0f0; padding: 2px 5px; border-radius: 3px; }
+    pre { background: #f4f4f4; border: 1px solid #e0e0e0; border-radius: 4px; padding: 16px 20px; overflow-x: auto; font-size: 0.82rem; line-height: 1.6; }
+    pre code { background: none; padding: 0; }
+    hr { border: none; border-top: 1px solid #e8e8e8; margin: 48px 0; }
+    .card { border: 1px solid #e0e0e0; border-radius: 6px; padding: 24px 28px; margin-bottom: 32px; background: #fff; }
+    .card-title { font-size: 1rem; font-weight: bold; margin: 0 0 6px; }
+    .card-desc { font-size: 0.9rem; color: #555; line-height: 1.6; margin: 0 0 16px; }
+    .card-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn { display: inline-block; padding: 8px 16px; font-size: 0.85rem; font-family: Georgia, serif; border-radius: 4px; text-decoration: none; cursor: pointer; border: 1px solid #1a1a1a; background: #1a1a1a; color: #fff; }
+    .btn-outline { background: transparent; color: #1a1a1a; }
+    .btn-copy-success { background: #2d6a2d; border-color: #2d6a2d; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin: 20px 0; }
+    th { text-align: left; padding: 8px 12px; background: #f4f4f4; border: 1px solid #e0e0e0; font-weight: bold; }
+    td { padding: 8px 12px; border: 1px solid #e0e0e0; color: #444; vertical-align: top; }
+  </style>
+</head>
+<body>
+
+  <h1>Cross-Platform Context Packager</h1>
+  <p class="meta"><a href="/templates">← templates</a></p>
+
+  <p>Claude holds commit authority on your GitHub corpus. ChatGPT and Gemini don't — but they can still read your context if Claude packages it for them first. This guide explains the handoff pattern and how to trigger it.</p>
+
+  <div class="card">
+    <p class="card-title">Context Packager Guide</p>
+    <p class="card-desc">Covers how to send work to Gemini or ChatGPT with full context, bring outputs back into Claude, and keep GitHub as the single source of truth across platforms.</p>
+    <div class="card-actions">
+      <button class="btn" id="copyBtn" onclick="copyGuide()">Copy guide for Claude</button>
+      <a class="btn btn-outline" href="#guide">Read guide</a>
+    </div>
+    <p style="font-size:0.8rem;color:#999;margin:12px 0 0;">Paste into Claude and say: <em>"Load this and set up my cross-platform workflow."</em></p>
+  </div>
+
+  <hr>
+
+  <div id="guide">
+
+    <h2>Why This Exists</h2>
+
+    <p>Different AI platforms have different strengths. Claude handles strategic writing, document creation, and GitHub commits. Gemini has native Google Workspace integration, making it fast for Gmail-heavy tasks and Google Docs. ChatGPT has certain coding and browsing strengths depending on the task. You shouldn't have to pick one and stay there.</p>
+
+    <p>The problem is context. Your GitHub corpus — your profile, your task context, your project background — lives in a private repo. Other platforms can't read it natively. Every time you switch, you either lose your context or spend time re-explaining it.</p>
+
+    <p>The solution is packaging. Claude reads your repo, bundles the relevant context into a self-contained prompt, and hands it off. You paste it into the other platform. The other platform does the work. You bring the output back to Claude, which updates the context file and commits everything to GitHub. Claude stays as the hub; the other platforms are task-specific spokes.</p>
+
+    <hr>
+
+    <h2>Platform Roles</h2>
+
+    <table>
+      <tr>
+        <th>Platform</th>
+        <th>Role</th>
+        <th>Best for</th>
+      </tr>
+      <tr>
+        <td>Claude</td>
+        <td>Hub — reads and commits to GitHub</td>
+        <td>Strategic writing, document creation, task management, stakeholder communication</td>
+      </tr>
+      <tr>
+        <td>Gemini</td>
+        <td>Spoke — read-only via packaged prompt</td>
+        <td>Gmail-integrated workflows, Google Docs drafts, OKR development, grant documentation</td>
+      </tr>
+      <tr>
+        <td>ChatGPT</td>
+        <td>Spoke — can connect directly to GitHub for reading</td>
+        <td>Task-specific co-work, visual design iterations, coding tasks</td>
+      </tr>
+      <tr>
+        <td>Perplexity</td>
+        <td>Research spoke</td>
+        <td>Citation-heavy research, competitive analysis, industry context</td>
+      </tr>
+    </table>
+
+    <hr>
+
+    <h2>The Handoff Pattern</h2>
+
+    <h3>Sending work to Gemini</h3>
+
+    <p>Say to Claude: <strong>"Prepare a Gemini session for task [#]."</strong></p>
+
+    <p>Claude will package a self-contained prompt containing:</p>
+    <ul>
+      <li>Your condensed AI profile (communication preferences, tone, collaboration mode)</li>
+      <li>The full task context entry from <code>task_context.md</code></li>
+      <li>Any relevant reference material from the repo</li>
+      <li>Working instructions for Gemini, including what to produce and how to format outputs for bringing back to Claude</li>
+    </ul>
+
+    <p>You copy the packaged prompt, open Gemini, paste it in, and work. When you're done, copy the output and bring it back to Claude: <strong>"Here's the Gemini output for task [#]. Update the context file and commit."</strong></p>
+
+    <h3>Sending work to ChatGPT</h3>
+
+    <p>ChatGPT can connect to your GitHub repo directly via its GitHub integration (Settings → Connected apps → GitHub). Once connected, it can read files from your repo without needing a packaged prompt.</p>
+
+    <p>Still say to Claude first: <strong>"Prepare a ChatGPT session for task [#]."</strong> Claude will produce a shorter handoff note — the task context summary and instructions — since ChatGPT can read the repo itself for background.</p>
+
+    <p>When you bring outputs back, same pattern: give them to Claude to update the context file and commit.</p>
+
+    <h3>The return flow matters</h3>
+
+    <p>This only works if outputs come back to Claude. If you do good work in Gemini and never bring it back, the context file goes stale and GitHub stops being the source of truth. The habit is: anything that moves a task forward gets committed. Claude handles that step — you just need to paste the output in and ask it to update.</p>
+
+    <hr>
+
+    <h2>Setting Up the Trigger</h2>
+
+    <p>Add this to your AI interaction profile under collaboration mode or notes:</p>
+
+    <pre><code>cross_platform:
+  packager_trigger: "Prepare a [platform] session for task [#]"
+  return_trigger: "Here's the [platform] output for task [#]"
+  commit_authority: "Claude only"
+  platforms:
+    gemini:
+      access: "Packaged prompt — no direct repo access"
+      best_for: "Gmail workflows, Google Docs, OKR development"
+    chatgpt:
+      access: "GitHub OAuth connector (read-only)"
+      best_for: "Task co-work, coding, visual iteration"
+    perplexity:
+      access: "Read-only via packaged context"
+      best_for: "Research, citations, competitive analysis"</code></pre>
+
+    <hr>
+
+    <h2>What a Packaged Prompt Looks Like</h2>
+
+    <p>When you say "Prepare a Gemini session for task 12," Claude produces something like this — a fully self-contained prompt you paste directly into Gemini:</p>
+
+    <pre><code>## Context for this session
+
+You are helping [Name] with a specific task. Here is the context you need.
+
+### About [Name]
+[Condensed profile: role, org, communication preferences, tone guidance, things to avoid]
+
+### Task: [Task Name]
+[Full context entry from task_context.md: what it is, audience, constraints, success criteria, background]
+
+### Your job in this session
+[Specific instruction: what to produce, format, length, what to flag]
+
+### When you're done
+Produce your output clearly labeled so it can be copied and brought back to Claude
+for context file update and GitHub commit. Note any assumptions you made.
+</code></pre>
+
+    <p>The packaged prompt carries everything the other platform needs. It doesn't require the model to have any prior context — each session is self-contained.</p>
+
+    <hr>
+
+    <h2>When to Use Which Platform</h2>
+
+    <h3>Use Gemini when</h3>
+    <ul>
+      <li>The task involves Gmail deeply — drafting replies, processing a thread, summarizing an inbox</li>
+      <li>You're working in Google Docs and want inline assistance</li>
+      <li>Grant reporting that benefits from Google Workspace integration</li>
+      <li>OKR development where you want to export directly into Sheets</li>
+    </ul>
+
+    <h3>Use ChatGPT when</h3>
+    <ul>
+      <li>You need to iterate on visual or design outputs (ChatGPT has DALL-E built in)</li>
+      <li>The task involves significant code and you want browser/code execution</li>
+      <li>You want to read directly from your GitHub repo without a packaged prompt</li>
+    </ul>
+
+    <h3>Use Perplexity when</h3>
+    <ul>
+      <li>You need cited, sourced research — competitive analysis, industry context, regulatory background</li>
+      <li>You want real-time web search with citations rather than Claude's training data</li>
+      <li>The output is research that Claude will then use to draft something</li>
+    </ul>
+
+    <h3>Keep it in Claude when</h3>
+    <ul>
+      <li>Strategic writing, stakeholder communication, executive-level documents</li>
+      <li>Anything that needs to be committed to GitHub</li>
+      <li>Task management and session work</li>
+      <li>Anything where the context is rich enough that a packaged prompt would lose nuance</li>
+    </ul>
+
+    <hr>
+
+    <h2>Keeping GitHub as Source of Truth</h2>
+
+    <p>The system breaks down if outputs from other platforms don't come back. Three rules that keep it working:</p>
+
+    <ol>
+      <li><strong>Always return outputs to Claude.</strong> Even if the work happened in Gemini, Claude is the one that updates the context file and commits. The other platform never writes to the repo.</li>
+      <li><strong>Commit after every meaningful session.</strong> If work moved forward — a draft was produced, a decision was made, context was developed — it gets committed. Not at the end of the week. At the end of the session.</li>
+      <li><strong>Context file is the handoff layer.</strong> The context entry in <code>task_context.md</code> is what carries work between sessions and platforms. Keep it current. When you bring outputs back to Claude, ask it to update the working notes in the context entry before committing.</li>
+    </ol>
+
+  </div>
+
+  <hr>
+  <p style="font-size:0.85rem;color:#999;"><a href="/templates">← templates</a> &nbsp;·&nbsp; <a href="https://dev.nilesheron.com">dev.nilesheron.com</a></p>
+
+  <textarea id="rawGuide" style="position:absolute;left:-9999px;top:-9999px;" aria-hidden="true">
+# =============================================================================
+# CROSS-PLATFORM CONTEXT PACKAGER GUIDE
+# Instructions for AI Assistant
+# =============================================================================
+#
+# This guide sets up the cross-platform handoff workflow. Claude packages
+# context for other LLMs (Gemini, ChatGPT, Perplexity), those platforms do
+# task-specific work, outputs come back to Claude for context update and commit.
+#
+# Prerequisites: GitHub corpus set up, profile loading, ideally task management
+# system also in place.
+#
+# Session flow:
+# 1. Confirm their platforms — which ones do they use or want to try?
+# 2. Update their AI profile with platform roles and trigger phrases
+# 3. Demonstrate a real packaged prompt for one of their active tasks
+# 4. Confirm the return flow — how to bring outputs back
+# 5. Connect ChatGPT to GitHub if they want direct repo access
+#
+# When ready to begin, say:
+# "Let's set up your multi-platform workflow. Which AI tools do you use besides
+# Claude — Gemini, ChatGPT, Perplexity, something else?"
+#
+# =============================================================================
+
+
+# SECTION 1: PLATFORM INTAKE
+
+Ask:
+- Which platforms do you use or want to use? (Gemini, ChatGPT, Perplexity, other)
+- For each one: what have you used it for, or what would you want to use it for?
+- Do you have a ChatGPT account? If so, have you connected it to GitHub?
+
+Use their answers to customize the platform roles section of the profile update.
+
+
+# SECTION 2: PROFILE UPDATE
+
+Add this block to their AI interaction profile:
+
+cross_platform:
+  packager_trigger: "Prepare a [platform] session for task [#]"
+  return_trigger: "Here's the [platform] output for task [#]"
+  commit_authority: "Claude only — other platforms read, never write to GitHub"
+
+  platforms:
+    [fill in only what they confirmed]:
+
+    gemini:
+      access: "Packaged prompt — no direct repo access"
+      best_for: "[their use case from intake]"
+      note: "Claude packages context prompt; user pastes into Gemini; returns output to Claude"
+
+    chatgpt:
+      access: "GitHub OAuth connector (read-only) or packaged prompt"
+      best_for: "[their use case from intake]"
+      note: "Can connect directly to repo via ChatGPT GitHub integration"
+
+    perplexity:
+      access: "Packaged context — read only"
+      best_for: "Research, citations, competitive analysis"
+
+
+# SECTION 3: DEMONSTRATE A REAL PACKAGE
+
+Pick one of their active co-work tasks from the dashboard.
+Say: "Let me show you what a packaged prompt looks like. I'll build one
+for task [#] — you don't need to paste it anywhere, just so you can see
+what it contains."
+
+Build the packaged prompt in this structure:
+
+---
+## Context for this session
+
+You are helping [Name] with a specific task. Read all of this before beginning.
+
+### About [Name]
+[Pull key items from their condensed profile: role, org, communication preferences,
+tone guidance, things to avoid. Keep it under 200 words.]
+
+### Task: [Task Name]
+**What it is**: [from context entry]
+**Audience**: [from context entry]
+**Constraints**: [from context entry]
+**Success criteria**: [from context entry]
+**Background**: [from context entry]
+
+### Your job in this session
+[Specific instruction for the platform: what to produce, format, length, what to flag]
+
+### When you're done
+Clearly label your output so it can be copied and returned to Claude for
+context file update and GitHub commit. Note any assumptions you made.
+---
+
+Show it to them. Ask: "Does this look like it captures what you'd need?
+Is there anything missing that you'd want Gemini to know?"
+
+
+# SECTION 4: ESTABLISH THE RETURN FLOW
+
+Explain and confirm:
+
+When they bring an output back from another platform, they say:
+"Here's the [platform] output for task [#]."
+
+Claude should then:
+1. Review the output
+2. Update the Working notes section of the task's context entry in task_context.md
+3. If the task is complete, move it to Recently Completed in the dashboard
+4. Commit both files to GitHub
+5. Ask: "Do you want to keep working on this or move on?"
+
+Make sure they understand: the other platform never commits. Claude is always the one that writes back to GitHub.
+
+
+# SECTION 5: CHATGPT GITHUB CONNECTION (if they use ChatGPT)
+
+If they want to connect ChatGPT directly to their repo:
+
+1. In ChatGPT: Settings → Connected apps → GitHub
+2. Authorize via OAuth
+3. Select their [username]-ai-management repo
+4. Grant read access (read-only is fine — ChatGPT doesn't need write)
+
+With this connected, ChatGPT can read their profile and task context directly
+without needing a fully packaged prompt. Claude still packages a shorter
+handoff note pointing to the relevant files.
+
+Test: "In ChatGPT, try: 'Read my profile from github.com/[username]/[username]-ai-management,
+path profile/profile-v1.0-full.md, and confirm you've loaded it.'"
+
+
+# SECTION 6: CLOSE
+
+Confirm:
+- [ ] Profile updated with platform roles and trigger phrases
+- [ ] Packager trigger phrase understood ("Prepare a [platform] session for task [#]")
+- [ ] Return flow understood ("Here's the [platform] output for task [#]")
+- [ ] ChatGPT connected to GitHub if applicable
+
+Remind them: this workflow only pays off if outputs come back. The packaged
+prompt is easy — the discipline is the return. Every meaningful output from
+another platform should come back to Claude and get committed before the
+session ends.
+  </textarea>
+
+  <script>
+    function copyGuide() {
+      const btn = document.getElementById('copyBtn');
+      const text = document.getElementById('rawGuide').value.trim();
+      navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = 'Copied!';
+        btn.classList.add('btn-copy-success');
+        setTimeout(() => { btn.textContent = 'Copy guide for Claude'; btn.classList.remove('btn-copy-success'); }, 2500);
+      });
+    }
+  </script>
+
+</body>
+</html>
