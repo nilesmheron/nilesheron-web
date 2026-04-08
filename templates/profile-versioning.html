@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile Versioning Guide — dev.nilesheron.com</title>
+  <style>
+    body { font-family: Georgia, serif; max-width: 660px; margin: 80px auto; padding: 0 24px; color: #1a1a1a; background: #fafafa; }
+    h1 { font-size: 1.4rem; font-weight: normal; margin-bottom: 4px; }
+    h2 { font-size: 1.1rem; font-weight: normal; margin-top: 48px; margin-bottom: 6px; border-bottom: 1px solid #e8e8e8; padding-bottom: 8px; }
+    h3 { font-size: 0.95rem; font-weight: bold; margin-top: 28px; margin-bottom: 6px; }
+    p { color: #444; line-height: 1.75; margin: 0 0 16px; }
+    a { color: #1a1a1a; }
+    .meta { color: #999; font-size: 0.85rem; margin-bottom: 48px; }
+    ul, ol { color: #444; line-height: 1.75; padding-left: 20px; }
+    li { margin-bottom: 6px; }
+    code { font-family: 'Courier New', monospace; font-size: 0.85rem; background: #f0f0f0; padding: 2px 5px; border-radius: 3px; }
+    pre { background: #f4f4f4; border: 1px solid #e0e0e0; border-radius: 4px; padding: 16px 20px; overflow-x: auto; font-size: 0.82rem; line-height: 1.6; }
+    pre code { background: none; padding: 0; }
+    hr { border: none; border-top: 1px solid #e8e8e8; margin: 48px 0; }
+    .card { border: 1px solid #e0e0e0; border-radius: 6px; padding: 24px 28px; margin-bottom: 32px; background: #fff; }
+    .card-title { font-size: 1rem; font-weight: bold; margin: 0 0 6px; }
+    .card-desc { font-size: 0.9rem; color: #555; line-height: 1.6; margin: 0 0 16px; }
+    .card-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn { display: inline-block; padding: 8px 16px; font-size: 0.85rem; font-family: Georgia, serif; border-radius: 4px; text-decoration: none; cursor: pointer; border: 1px solid #1a1a1a; background: #1a1a1a; color: #fff; }
+    .btn-outline { background: transparent; color: #1a1a1a; }
+    .btn-copy-success { background: #2d6a2d; border-color: #2d6a2d; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin: 20px 0; }
+    th { text-align: left; padding: 8px 12px; background: #f4f4f4; border: 1px solid #e0e0e0; font-weight: bold; }
+    td { padding: 8px 12px; border: 1px solid #e0e0e0; color: #444; vertical-align: top; }
+  </style>
+</head>
+<body>
+
+  <h1>Profile Versioning Guide</h1>
+  <p class="meta"><a href="/templates">← templates</a></p>
+
+  <p>Your AI interaction profile is a living document. Version 1.0 is a starting point, not a destination. This guide explains when to update it, what to change, how to version properly, and how to know when a light edit vs. a structural overhaul is warranted.</p>
+
+  <div class="card">
+    <p class="card-title">Profile Audit Guide</p>
+    <p class="card-desc">Load this into Claude for an interactive profile audit. Claude will review your current profile, flag what's stale or missing, and help you update it to a new version.</p>
+    <div class="card-actions">
+      <button class="btn" id="copyBtn" onclick="copyGuide()">Copy guide for Claude</button>
+      <a class="btn btn-outline" href="#guide">Read guide</a>
+    </div>
+    <p style="font-size:0.8rem;color:#999;margin:12px 0 0;">Paste into Claude and say: <em>"Load this and audit my profile."</em></p>
+  </div>
+
+  <hr>
+
+  <div id="guide">
+
+    <h2>Why Profiles Go Stale</h2>
+
+    <p>A profile written at the start of a new role won't reflect what you're actually doing six months in. Projects change. Priorities shift. You learn things about how you want AI to work with you that you couldn't articulate before. The profile needs to keep up.</p>
+
+    <p>A stale profile is worse than no profile in one specific way: it gives Claude confident but wrong context. It'll write in a tone you've moved past, reference projects that are done, or apply preferences you've since changed. You'll notice it as friction — outputs that feel slightly off, context that doesn't quite apply.</p>
+
+    <h2>Signals That It's Time to Update</h2>
+
+    <h3>Update immediately when</h3>
+    <ul>
+      <li>Your role, title, or primary organization changes</li>
+      <li>A major project launches, ends, or pivots significantly</li>
+      <li>A key stakeholder relationship changes — new contact, departed colleague, shifted dynamic</li>
+      <li>You catch Claude repeatedly doing something you've corrected more than twice</li>
+      <li>You add a new tool integration (Granola, Slack, a new platform)</li>
+    </ul>
+
+    <h3>Update on a regular cadence (monthly or quarterly) for</h3>
+    <ul>
+      <li>Active projects list — add new ones, mark completed ones for removal</li>
+      <li>Current priorities — what you're focused on changes even if the role doesn't</li>
+      <li>Communication preferences — these evolve as you use AI more; things that annoyed you early may be less important now, and new patterns will emerge</li>
+      <li>Collaboration mode notes — how you want AI to work with you deepens over time</li>
+    </ul>
+
+    <h3>Signs the profile is working well (no update needed)</h3>
+    <ul>
+      <li>Claude's first draft on a new task is close enough to edit rather than rewrite</li>
+      <li>Tone feels like you without prompting</li>
+      <li>Claude flags the right things proactively — asks the right clarifying questions</li>
+      <li>You rarely need to re-explain context that should already be there</li>
+    </ul>
+
+    <hr>
+
+    <h2>Version Numbering</h2>
+
+    <table>
+      <tr>
+        <th>Change type</th>
+        <th>Version bump</th>
+        <th>Example</th>
+      </tr>
+      <tr>
+        <td>Fix a typo, update a date, add one project</td>
+        <td>Patch: 1.0 → 1.0.1</td>
+        <td>Added new client project</td>
+      </tr>
+      <tr>
+        <td>Update preferences, revise communication notes, refresh projects list</td>
+        <td>Minor: 1.0 → 1.1</td>
+        <td>Tightened tone guidance, removed completed projects</td>
+      </tr>
+      <tr>
+        <td>Role change, significant rewrite of multiple sections, structural overhaul</td>
+        <td>Major: 1.x → 2.0</td>
+        <td>New organization, new primary use cases, different collaboration style</td>
+      </tr>
+    </table>
+
+    <p>The filename stays the same — <code>profile-v1.0-full.md</code> becomes <code>profile-v1.1-full.md</code>. Update your <code>userPreferences</code> in Claude settings to point to the new filename when you do a minor or major bump. For patch updates, you can keep the same filename and just update the version header inside the file.</p>
+
+    <h3>Version header format</h3>
+    <p>Every profile file should have this at the top:</p>
+    <pre><code>version: "1.1"
+last_updated: "2026-05-12"
+changelog:
+  - "1.1 (2026-05-12): Updated active projects, tightened tone guidance, added Granola integration"
+  - "1.0 (2026-04-08): Initial profile"</code></pre>
+
+    <hr>
+
+    <h2>What to Actually Change</h2>
+
+    <h3>Communication preferences — the highest-leverage section</h3>
+    <p>This is where most of the value lives. After a few months of working with Claude, you'll have concrete examples of things that work and things that don't. Be specific. "Avoid overly smooth prose" is less useful than "Don't soften direct feedback into something that reads as diplomatic hedging." Real examples from your actual outputs are the best raw material for updating this section.</p>
+
+    <p>Ask Claude to help you articulate it: "Here's an output I liked. Here's one that missed. What's the difference?" It can identify patterns you haven't consciously named yet.</p>
+
+    <h3>Active projects — keep it current</h3>
+    <p>This should reflect what you're actually working on right now, not a historical record. Completed projects should come out. New ones go in with a brief description and the key stakeholders Claude needs to know. Projects that are paused but will resume can stay with a note.</p>
+
+    <h3>Collaboration mode — update as trust builds</h3>
+    <p>Early profiles tend toward more checking in and confirmation steps. As you develop a working rhythm with Claude, you'll find places where you want it to move faster and execute more directly. Update the collaboration mode notes to reflect where you've landed — what you want challenged, what you want executed without a lot of back-and-forth.</p>
+
+    <h3>Stakeholders — prune and add</h3>
+    <p>If you've added notes about someone who's no longer in the picture, remove them. If a new relationship has become important enough that Claude should know the context going in, add a brief entry. Keep it to relationships where the context actually changes how Claude should approach something — not just a contact list.</p>
+
+    <hr>
+
+    <h2>Updating the Condensed Version</h2>
+
+    <p>When you update the full profile, update the condensed version too. The condensed version is what loads on mobile and in quick sessions — if it's out of sync with the full profile, you'll get inconsistent behavior depending on the device.</p>
+
+    <p>The condensed version should always have current role, current communication preferences, and current collaboration mode. Everything else is secondary. When in doubt: if it would meaningfully change how Claude works with you, it belongs in the condensed version.</p>
+
+    <p>Update the Gist too — that's what actually loads from the URL in your userPreferences fallback. Updating the file in GitHub without updating the Gist means the mobile fallback is still running the old version.</p>
+
+    <hr>
+
+    <h2>Doing an Audit with Claude</h2>
+
+    <p>The fastest way to update a profile is to ask Claude to audit it. The interactive guide at the top of this page runs that session. What it does:</p>
+    <ol>
+      <li>Reads your current profile from GitHub</li>
+      <li>Asks you a series of targeted questions: what's changed, what's felt off, what's been missing</li>
+      <li>Flags sections that look stale based on your answers</li>
+      <li>Proposes specific changes — you approve, modify, or reject each one</li>
+      <li>Drafts the updated profile and commits it</li>
+      <li>Updates the condensed version and reminds you to update the Gist</li>
+    </ol>
+
+    <p>Plan for about 20-30 minutes for a minor update, longer for a major revision. The changelog entry at the top of the profile should summarize what changed — write it like a commit message, not a diary entry.</p>
+
+    <hr>
+
+    <h2>One Rule</h2>
+
+    <p>Don't let the profile get more than three months behind reality. If you're using Claude regularly and haven't touched the profile in that long, something important has changed that isn't reflected. Set a calendar reminder if that's what it takes. The maintenance cost is low; the cost of a stale profile compounds quietly until you notice you've stopped trusting the outputs.</p>
+
+  </div>
+
+  <hr>
+  <p style="font-size:0.85rem;color:#999;"><a href="/templates">← templates</a> &nbsp;·&nbsp; <a href="https://dev.nilesheron.com">dev.nilesheron.com</a></p>
+
+  <textarea id="rawGuide" style="position:absolute;left:-9999px;top:-9999px;" aria-hidden="true">
+# =============================================================================
+# PROFILE AUDIT GUIDE
+# Instructions for AI Assistant
+# =============================================================================
+#
+# Run this as an interactive profile audit session. The goal is to help the
+# person identify what's stale or missing in their AI interaction profile,
+# make targeted updates, and commit a new version.
+#
+# Session flow:
+# 1. Load their current profile from GitHub
+# 2. Run the audit interview
+# 3. Propose specific changes based on their answers
+# 4. Draft the updated profile — get approval before committing
+# 5. Update the condensed version
+# 6. Commit both, remind them to update their Gist
+#
+# When ready to begin, say:
+# "Let's audit your profile. I'll load your current version and ask you some
+# targeted questions — this usually takes about 20-30 minutes. Ready?"
+#
+# =============================================================================
+
+
+# SECTION 1: LOAD CURRENT PROFILE
+
+Load their profile from GitHub:
+repo: [their-username]/[username]-ai-management
+path: profile/[current profile filename]
+
+If you're not sure of the filename, check the profile/ directory first.
+Tell them the current version number and last updated date before continuing.
+
+
+# SECTION 2: AUDIT INTERVIEW
+
+Ask these one at a time. Take notes — you'll use the answers to propose changes.
+
+Role and context:
+- Has your role, title, or primary organization changed since you wrote this profile?
+- Are there new organizations or ventures you're working with that aren't reflected here?
+
+Projects:
+- Looking at your active projects list — what's completed and should come out?
+- What's missing? What have you been spending significant time on that isn't here?
+- Any key stakeholders we should add or remove?
+
+Communication preferences:
+- Can you think of a recent Claude output that felt really right — close to how you'd say it?
+- Any recent outputs that felt off? What specifically was wrong?
+- Has anything shifted in how you want AI to talk to you? Tone, formality, structure?
+
+Collaboration mode:
+- Are there types of tasks where you want Claude to move faster and just execute?
+- Anything where you want more checking in than the profile currently calls for?
+
+Integrations and tools:
+- Any new tools connected since you wrote this? (Granola, Slack, task management, etc.)
+- Anything in the integrations section that's no longer accurate?
+
+General:
+- Is there anything Claude consistently gets wrong that you haven't seen fixed by the profile?
+- Anything you find yourself re-explaining in sessions that should just be in the profile?
+
+
+# SECTION 3: PROPOSE CHANGES
+
+Based on the audit answers, present a clear list of proposed changes:
+
+Format:
+SECTION: [section name]
+CHANGE: [what you're proposing to change]
+REASON: [what they said that prompted this]
+PROPOSED TEXT: [the actual new text]
+
+Ask them to approve, modify, or skip each one before drafting.
+Don't make changes they haven't approved.
+
+
+# SECTION 4: VERSION AND COMMIT
+
+Determine the right version bump:
+- Patch (x.x.1): typo fix, one project added, minor date update
+- Minor (x.1): preferences updated, projects refreshed, new integrations added
+- Major (x+1.0): role change, significant structural rewrite
+
+Update the version header inside the file:
+version: "[new version]"
+last_updated: "[today's date YYYY-MM-DD]"
+changelog:
+  - "[new version] ([date]): [summary of what changed]"
+  - [prior entries preserved]
+
+If minor or major bump: new filename (profile-v[X.X]-full.md)
+If patch: same filename, updated version header only
+
+Commit the updated full profile.
+
+Then update the condensed version:
+- Keep: current role, current communication preferences, current collaboration mode
+- Update to match the full profile changes
+- Commit as profile-v[X.X]-condensed.md
+
+Remind them: "Update your Gist with the new condensed version — that's what
+loads in your userPreferences fallback on mobile."
+
+If the filename changed, remind them to update userPreferences in Claude settings
+to point to the new profile path.
+
+
+# SECTION 5: CLOSE
+
+Confirm:
+- [ ] Full profile committed with new version header and changelog
+- [ ] Condensed version committed
+- [ ] userPreferences updated (if filename changed)
+- [ ] Gist updated (manual step — remind them)
+
+Tell them: "Set a reminder to do this again in about 3 months, or sooner
+if your role or priorities shift significantly."
+  </textarea>
+
+  <script>
+    function copyGuide() {
+      const btn = document.getElementById('copyBtn');
+      const text = document.getElementById('rawGuide').value.trim();
+      navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = 'Copied!';
+        btn.classList.add('btn-copy-success');
+        setTimeout(() => { btn.textContent = 'Copy guide for Claude'; btn.classList.remove('btn-copy-success'); }, 2500);
+      });
+    }
+  </script>
+
+</body>
+</html>
