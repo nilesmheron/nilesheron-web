@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Start Studio: ID - 2026 Program Calendar</title>
+<style>
+:root{
+  --color-text-primary:#1C1C1C;
+  --color-text-secondary:#555;
+  --color-text-warning:#BA7517;
+  --color-text-info:#185FA5;
+  --color-text-success:#3B6D11;
+  --color-text-danger:#A32D2D;
+  --color-background-secondary:#F5F3EE;
+  --color-border-tertiary:rgba(0,0,0,0.12);
+  --border-radius-md:8px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--color-text-primary)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+</style>
+</head>
+<body style="background:var(--color-background-secondary);padding:2rem 1rem;min-height:100vh">
+<h2 class="sr-only">Start Studio ID 2026 program calendar</h2>
+<div style="max-width:900px;margin:0 auto;font-size:13px">
+  <div style="padding-bottom:14px;border-bottom:0.5px solid var(--color-border-tertiary)">
+    <div style="font-size:16px;font-weight:500;color:var(--color-text-primary)">Start Studio: ID &#8212; 2026 program calendar</div>
+    <div style="font-size:13px;color:var(--color-text-secondary);margin-top:3px">Three-path architecture &#183; hover events for details &#183; TechTown Detroit</div>
+  </div>
+  <div style="overflow-x:auto"><div id="gantt" style="min-width:680px"></div></div>
+  <div style="display:flex;flex-wrap:wrap;gap:16px;padding:14px 0;border-top:0.5px solid var(--color-border-tertiary)">
+    <div style="display:flex;align-items:center;gap:7px"><div style="width:8px;height:8px;border-radius:50%;background:var(--color-text-info);flex-shrink:0"></div><span style="font-size:12px;color:var(--color-text-secondary)">Orientation</span></div>
+    <div style="display:flex;align-items:center;gap:7px"><div style="width:8px;height:8px;border-radius:2px;background:var(--color-text-info);flex-shrink:0"></div><span style="font-size:12px;color:var(--color-text-secondary)">App review</span></div>
+    <div style="display:flex;align-items:center;gap:7px"><div style="width:8px;height:8px;border-radius:50%;background:var(--color-text-warning);flex-shrink:0"></div><span style="font-size:12px;color:var(--color-text-secondary)">Checkpoint</span></div>
+    <div style="display:flex;align-items:center;gap:7px"><div style="width:8px;height:8px;border-radius:2px;background:var(--color-text-danger);flex-shrink:0"></div><span style="font-size:12px;color:var(--color-text-secondary)">Thesis defense</span></div>
+    <div style="display:flex;align-items:center;gap:7px"><div style="width:8px;height:8px;border-radius:50%;background:var(--color-text-success);flex-shrink:0"></div><span style="font-size:12px;color:var(--color-text-secondary)">Lecture</span></div>
+    <div style="display:flex;align-items:center;gap:7px"><div style="width:8px;height:8px;border-radius:2px;background:var(--color-text-success);flex-shrink:0"></div><span style="font-size:12px;color:var(--color-text-secondary)">Showcase</span></div>
+  </div>
+</div>
+<script>
+(function(){
+var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var dim=[31,28,31,30,31,30,31,31,30,31,30,31];
+var lanes=[
+  {label:'Intake path',sub:'Quarterly clock',col:'info',events:[
+    {m:0,d:27,t:'c',lbl:'Orientation - Jan 27',c:'info'},{m:2,d:2,t:'s',lbl:'App review - Mar 2',c:'info'},
+    {m:3,d:14,t:'c',lbl:'Orientation - Apr 14',c:'info'},{m:4,d:4,t:'s',lbl:'App review - May 4',c:'info'},
+    {m:6,d:14,t:'c',lbl:'Orientation - Jul 14',c:'info'},{m:7,d:3,t:'s',lbl:'App review - Aug 3',c:'info'},
+    {m:9,d:13,t:'c',lbl:'Orientation - Oct 13',c:'info'},{m:10,d:2,t:'s',lbl:'App review - Nov 2',c:'info'}
+  ]},
+  {label:'Progress path',sub:'Always-on clock',col:'warning',events:[
+    {m:0,d:14,t:'c',lbl:'Checkpoint - Jan 14',c:'warning'},{m:0,d:28,t:'c',lbl:'Checkpoint - Jan 28',c:'warning'},
+    {m:1,d:11,t:'c',lbl:'Checkpoint - Feb 11',c:'warning'},{m:1,d:25,t:'c',lbl:'Checkpoint - Feb 25',c:'warning'},
+    {m:2,d:11,t:'c',lbl:'Checkpoint - Mar 11',c:'warning'},{m:2,d:17,t:'s',lbl:'Thesis defense - Mar 17',c:'danger'},{m:2,d:25,t:'c',lbl:'Checkpoint - Mar 25',c:'warning'},
+    {m:3,d:8,t:'c',lbl:'Checkpoint - Apr 8',c:'warning'},{m:3,d:22,t:'c',lbl:'Checkpoint - Apr 22',c:'warning'},
+    {m:4,d:13,t:'c',lbl:'Checkpoint - May 13',c:'warning'},{m:4,d:27,t:'c',lbl:'Checkpoint - May 27',c:'warning'},
+    {m:5,d:10,t:'c',lbl:'Checkpoint - Jun 10',c:'warning'},{m:5,d:16,t:'s',lbl:'Thesis defense - Jun 16',c:'danger'},{m:5,d:24,t:'c',lbl:'Checkpoint - Jun 24',c:'warning'},
+    {m:6,d:8,t:'c',lbl:'Checkpoint - Jul 8',c:'warning'},{m:6,d:22,t:'c',lbl:'Checkpoint - Jul 22',c:'warning'},
+    {m:7,d:12,t:'c',lbl:'Checkpoint - Aug 12',c:'warning'},{m:7,d:26,t:'c',lbl:'Checkpoint - Aug 26',c:'warning'},
+    {m:8,d:9,t:'c',lbl:'Checkpoint - Sep 9',c:'warning'},{m:8,d:15,t:'s',lbl:'Thesis defense - Sep 15',c:'danger'},{m:8,d:23,t:'c',lbl:'Checkpoint - Sep 23',c:'warning'},
+    {m:9,d:14,t:'c',lbl:'Checkpoint - Oct 14',c:'warning'},{m:9,d:28,t:'c',lbl:'Checkpoint - Oct 28',c:'warning'},
+    {m:10,d:11,t:'c',lbl:'Checkpoint - Nov 11',c:'warning'},{m:10,d:25,t:'c',lbl:'Checkpoint - Nov 25',c:'warning'},
+    {m:11,d:9,t:'c',lbl:'Checkpoint - Dec 9',c:'warning'},{m:11,d:15,t:'s',lbl:'Thesis defense - Dec 15',c:'danger'},{m:11,d:16,t:'c',lbl:'Checkpoint - Dec 16',c:'warning'}
+  ]},
+  {label:'Public path',sub:'Monthly clock',col:'success',events:[
+    {m:0,d:21,t:'c',lbl:'Lecture - Jan 21',c:'success'},{m:1,d:18,t:'c',lbl:'Lecture - Feb 18',c:'success'},
+    {m:2,d:19,t:'c',lbl:'Lecture - Mar 19',c:'success'},{m:3,d:15,t:'c',lbl:'Lecture - Apr 15',c:'success'},
+    {m:4,d:20,t:'c',lbl:'Lecture - May 20',c:'success'},{m:5,d:3,t:'s',lbl:'Showcase - Jun 3',c:'success'},
+    {m:5,d:17,t:'c',lbl:'Lecture - Jun 17',c:'success'},{m:7,d:19,t:'c',lbl:'Lecture - Aug 19',c:'success'},
+    {m:8,d:16,t:'c',lbl:'Lecture - Sep 16',c:'success'},{m:9,d:21,t:'c',lbl:'Lecture - Oct 21',c:'success'},
+    {m:10,d:4,t:'s',lbl:'Showcase - Nov 4',c:'success'},{m:10,d:18,t:'c',lbl:'Lecture - Nov 18',c:'success'}
+  ]}
+];
+var g=document.getElementById('gantt');
+var LW=130;
+var hr=document.createElement('div');
+hr.style.cssText='display:grid;grid-template-columns:'+LW+'px repeat(12,1fr);padding:8px 0 6px;border-bottom:0.5px solid var(--color-border-tertiary)';
+hr.appendChild(document.createElement('div'));
+months.forEach(function(m){var c=document.createElement('div');c.textContent=m;c.style.cssText='font-size:11px;font-weight:500;color:var(--color-text-secondary);text-align:center';hr.appendChild(c);});
+g.appendChild(hr);
+lanes.forEach(function(lane){
+  var row=document.createElement('div');
+  row.style.cssText='display:grid;grid-template-columns:'+LW+'px repeat(12,1fr);min-height:56px;border-bottom:0.5px solid var(--color-border-tertiary);align-items:stretch';
+  var lbl=document.createElement('div');
+  lbl.style.cssText='display:flex;flex-direction:column;justify-content:center;padding:8px 12px 8px 0;border-right:0.5px solid var(--color-border-tertiary)';
+  lbl.innerHTML='<div style="font-size:13px;font-weight:500;color:var(--color-text-primary)">'+lane.label+'</div><div style="font-size:11px;color:var(--color-text-'+lane.col+');margin-top:2px">'+lane.sub+'</div>';
+  row.appendChild(lbl);
+  var cells=[];
+  for(var m=0;m<12;m++){var c=document.createElement('div');c.style.cssText='position:relative;border-right:0.5px solid var(--color-border-tertiary)';row.appendChild(c);cells.push(c);}
+  lane.events.forEach(function(ev){
+    var pct=((ev.d-0.5)/dim[ev.m])*100;
+    var sq=ev.t==='s';
+    var dot=document.createElement('div');
+    dot.title=ev.lbl;
+    dot.style.cssText='position:absolute;top:50%;left:'+pct+'%;transform:translate(-50%,-50%);width:'+(sq?8:7)+'px;height:'+(sq?8:7)+'px;border-radius:'+(sq?'2px':'50%')+';background:var(--color-text-'+ev.c+');cursor:default;transition:transform 0.1s';
+    dot.onmouseenter=function(){this.style.transform='translate(-50%,-50%) scale(1.7)';};
+    dot.onmouseleave=function(){this.style.transform='translate(-50%,-50%)';};
+    cells[ev.m].appendChild(dot);
+  });
+  g.appendChild(row);
+});
+})();
+</script>
+</body>
+</html>

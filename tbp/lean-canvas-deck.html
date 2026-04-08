@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Start Studio: ID - Lean Canvas Deck</title>
+<style>
+:root{
+  --color-text-primary:#1C1C1C;
+  --color-text-secondary:#555;
+  --color-text-tertiary:#888;
+  --color-text-warning:#BA7517;
+  --color-text-info:#185FA5;
+  --color-text-success:#3B6D11;
+  --color-background-primary:#fff;
+  --color-background-secondary:#F5F3EE;
+  --color-border-tertiary:rgba(0,0,0,0.12);
+  --color-border-secondary:rgba(0,0,0,0.25);
+  --color-border-warning:rgba(186,117,23,0.55);
+  --color-border-info:rgba(24,95,165,0.55);
+  --color-border-success:rgba(59,109,17,0.55);
+  --border-radius-md:8px;
+  --border-radius-lg:12px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--color-text-primary)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+button{font-family:inherit;cursor:pointer;background:transparent;border:0.5px solid var(--color-border-secondary);color:var(--color-text-secondary);padding:6px 14px;border-radius:var(--border-radius-md)}
+button:hover:not(:disabled){border-color:var(--color-border-warning);color:var(--color-text-warning)}
+button:disabled{opacity:.35;cursor:default}
+</style>
+</head>
+<body style="background:var(--color-background-secondary);padding:2rem 1rem;min-height:100vh">
+<h2 class="sr-only">Lean Canvas pitch deck template: 11 slides for Start Studio ID founders</h2>
+<div style="max-width:820px;margin:0 auto">
+  <div id="nav-bar" style="display:none;align-items:center;gap:12px;padding-bottom:12px;border-bottom:0.5px solid var(--color-border-tertiary);margin-bottom:16px">
+    <button id="prevBtn" onclick="nav(-1)">&#8592; Prev</button>
+    <span style="flex:1;text-align:center;font-size:13px;color:var(--color-text-secondary)" id="counter"></span>
+    <button id="nextBtn" onclick="nav(1)">Next &#8594;</button>
+  </div>
+  <div id="slides"></div>
+  <div id="prog" style="display:none;justify-content:center;gap:6px;padding-top:14px"></div>
+</div>
+<script>
+(function(){
+var sections=[
+  {type:'cover'},
+  {num:1,name:'Problem',col:'warning',desc:"Identify the top 3 problems your target customer faces and how they're solving them today.",qs:['What are the top 3 problems your customer is experiencing?','How are they trying to solve this today? What are the existing alternatives?','How painful is this problem - is it a vitamin or a painkiller?','Have customers confirmed this problem exists in their own words?'],ev:['10+ customer discovery interviews completed','Problem confirmed by majority of interviewees','Top 3 problems ranked by frequency and severity','Existing alternatives documented']},
+  {num:2,name:'Customer segments',col:'info',desc:'Define who experiences this problem most acutely and identify your early adopters.',qs:['Who experiences this problem most acutely? Who is your ideal customer?','Who are your early adopters - the subset most eager for a solution right now?','How large is this market? Is it a segment you can reach and serve?','What characteristics make this segment specific and distinct?'],ev:['Early adopter profile clearly defined','Customer segment described in specific, non-generic terms','Reachability of segment assessed','Market sizing estimation complete']},
+  {num:3,name:'Unique value proposition',col:'warning',desc:"Your single, clear, compelling message that explains why you're different.",qs:['What is your one clear, compelling message that explains why you are different?','What outcome or transformation do you deliver - not the feature, the result?','What is your high-level concept? (X for Y, or: The only X that...)','Does this resonate when you say it to a stranger in one sentence?'],ev:['UVP articulated in one clear sentence','Tested with at least 5 potential customers for resonance','Clearly differentiated from existing alternatives','Headline and tagline drafted for customer-facing use']},
+  {num:4,name:'Solution',col:'info',desc:'The top 3 features of your solution - each one mapped directly to a problem.',qs:['What are the top 3 features or capabilities of your solution?','Does each feature directly map to one of the top 3 problems?','Have you shown or described this solution to potential customers? What was the reaction?','What is the minimum feature set needed to test your hypothesis?'],ev:['Top 3 features explicitly mapped to top 3 problems','Solution concept tested with potential customers','Mockup, prototype, or description built and reviewed','MVP scope defined - what is in, what is out']},
+  {num:5,name:'Channels',col:'success',desc:'How you will reach your customer segments at launch and at scale.',qs:['How will you reach your customer segments? What is your go-to-market path?','What channels will you use at launch vs. at scale - are they the same?','How have you already reached early adopters? What worked?','What is the estimated cost to acquire a customer through each channel?'],ev:['At least 2 viable channels identified and described','Launch channel vs. scale channel distinguished','Initial channel experiments conducted or planned','Rough customer acquisition cost (CAC) estimated']},
+  {num:6,name:'Revenue streams',col:'warning',desc:'How you will make money - your model, pricing, and the willingness-to-pay evidence behind it.',qs:['How will you make money? What is the revenue model?','What will you charge, and why at that price point?','Have customers confirmed they would pay - and at what price?','What is your lifetime value (LTV) estimate compared to your CAC?'],ev:['Revenue model selected (SaaS, transaction, service, etc.)','Pricing tested with potential customers','Willingness to pay confirmed by at least 3 customers','LTV:CAC ratio estimated at target scale']},
+  {num:7,name:'Cost structure',col:'info',desc:'Your fixed and variable costs and the math that shows the path to break-even.',qs:['What are your fixed costs? What are your variable costs?','What does it cost to run this business at launch vs. at scale?','At what revenue level do you reach break-even?','What is the riskiest cost assumption in your model?'],ev:['Fixed and variable costs identified and categorized','Year 1 cost model built out','Break-even calculation completed','Key cost assumptions flagged and ranked by risk']},
+  {num:8,name:'Key metrics',col:'success',desc:"The one number that tells the story of your business's health and the indicators that drive it.",qs:["What is the one number (north star metric) that tells the story of your business's health?",'What activities drive that number? What do you measure at each stage?','What is your current baseline, and what does success look like in 12 months?','How will you know when a hypothesis has been validated vs. disproved?'],ev:['North star metric identified','Leading indicators that drive it defined','12-month success criteria articulated','Measurement method and tracking plan described']},
+  {num:9,name:'Unfair advantage',col:'warning',desc:'What you have that cannot easily be copied or bought - your competitive moat.',qs:['What do you have that cannot easily be copied or bought by a competitor?','Is it insider knowledge, a unique network, proprietary data, or a regulatory advantage?','If you do not have one yet - what are you building toward, and what is the path?','Has a trusted advisor stress-tested this claim? Did it hold up?'],ev:['Unfair advantage articulated in concrete, specific terms','Stress-tested with at least one trusted advisor','Differentiated from generic first mover advantage claims','Path to building moat described if the advantage is nascent']},
+  {type:'defense'}
+];
+function makeSlide(s){
+  var el=document.createElement('div');
+  el.style.cssText='border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:24px 28px;background:var(--color-background-primary)';
+  if(s.type==='cover'){
+    el.style.borderLeft='3px solid var(--color-border-warning)';el.style.borderRadius='0';
+    el.innerHTML='<div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:8px">TechTown Detroit &#8212; Start Studio: ID</div>'
+      +'<div style="font-size:22px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px">Business model canvas</div>'
+      +'<div style="font-size:15px;color:var(--color-text-secondary);margin-bottom:28px">Ideation &amp; Discovery &#183; Lean Canvas presentation</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding-top:20px;border-top:0.5px solid var(--color-border-tertiary)">'
+      +'<div><div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:4px">Founder</div><div style="font-size:14px;font-weight:500;color:var(--color-text-warning);border-bottom:1px dashed var(--color-border-secondary);padding-bottom:2px">[Your name]</div></div>'
+      +'<div><div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:4px">Venture</div><div style="font-size:14px;font-weight:500;color:var(--color-text-warning);border-bottom:1px dashed var(--color-border-secondary);padding-bottom:2px">[Venture name]</div></div>'
+      +'<div><div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:4px">Date</div><div style="font-size:14px;font-weight:500;color:var(--color-text-warning);border-bottom:1px dashed var(--color-border-secondary);padding-bottom:2px">[Date]</div></div>'
+      +'</div>';
+  } else if(s.type==='defense'){
+    el.style.background='var(--color-background-secondary)';
+    var cards=sections.filter(function(x){return x.num;}).map(function(x){return '<div style="border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:12px"><div style="font-size:11px;font-weight:500;color:var(--color-text-warning);margin-bottom:6px">'+x.num+'. '+x.name+'</div><div style="font-size:12px;color:var(--color-text-tertiary);line-height:1.5">[Summarize your answer here]</div></div>';}).join('');
+    el.innerHTML='<div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:6px">Start Studio: ID &#8212; Thesis defense</div>'
+      +'<div style="font-size:18px;font-weight:500;color:var(--color-text-primary);margin-bottom:18px">Business model summary</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">'+cards+'</div>';
+  } else {
+    var qs=s.qs.map(function(q){return '<li style="font-size:13px;line-height:1.65;color:var(--color-text-secondary);padding:6px 0 6px 16px;border-bottom:0.5px solid var(--color-border-tertiary);position:relative;list-style:none"><span style="position:absolute;left:0;color:var(--color-text-'+s.col+')">&#8594;</span>'+q+'</li>';}).join('');
+    var ev=s.ev.map(function(e){return '<li style="font-size:12px;line-height:1.6;color:var(--color-text-secondary);padding:5px 0 5px 16px;border-bottom:0.5px solid var(--color-border-tertiary);position:relative;list-style:none"><span style="position:absolute;left:0;font-size:10px;color:var(--color-text-success)">&#10003;</span>'+e+'</li>';}).join('');
+    el.innerHTML='<div style="font-size:11px;color:var(--color-text-'+s.col+');margin-bottom:4px">Section '+s.num+' of 9</div>'
+      +'<div style="font-size:20px;font-weight:500;color:var(--color-text-primary);margin-bottom:6px">'+s.name+'</div>'
+      +'<div style="font-size:13px;color:var(--color-text-secondary);margin-bottom:16px;line-height:1.5">'+s.desc+'</div>'
+      +'<div style="display:grid;grid-template-columns:1.1fr 0.9fr;gap:20px">'
+      +'<div><div style="font-size:11px;font-weight:500;color:var(--color-text-'+s.col+');border-bottom:1px solid var(--color-border-'+s.col+');padding-bottom:5px;margin-bottom:8px">Key questions</div><ul style="padding:0;margin:0">'+qs+'</ul></div>'
+      +'<div><div style="font-size:11px;font-weight:500;color:var(--color-text-success);border-bottom:1px solid var(--color-border-success);padding-bottom:5px;margin-bottom:8px">Evidence to advance</div><ul style="padding:0;margin:0">'+ev+'</ul></div>'
+      +'</div>';
+  }
+  return el;
+}
+var cur=0;
+var container=document.getElementById('slides');
+var navBar=document.getElementById('nav-bar');
+var prog=document.getElementById('prog');
+var allSlides=[];
+sections.forEach(function(s,i){
+  var el=makeSlide(s);container.appendChild(el);allSlides.push(el);
+  var dot=document.createElement('div');
+  dot.style.cssText='width:6px;height:6px;border-radius:50%;background:var(--color-border-secondary);cursor:pointer;transition:background 0.2s;flex-shrink:0';
+  dot.onclick=(function(idx){return function(){goTo(idx);};})(i);
+  prog.appendChild(dot);
+});
+function goTo(n){
+  allSlides[cur].style.display='none';prog.children[cur].style.background='var(--color-border-secondary)';
+  cur=n;allSlides[cur].style.display='block';prog.children[cur].style.background='var(--color-text-warning)';
+  document.getElementById('counter').textContent=(cur+1)+' of '+allSlides.length;
+  document.getElementById('prevBtn').disabled=cur===0;
+  document.getElementById('nextBtn').disabled=cur===allSlides.length-1;
+}
+function nav(d){var n=cur+d;if(n>=0&&n<allSlides.length)goTo(n);}
+allSlides.slice(1).forEach(function(el){el.style.display='none';});
+prog.children[0].style.background='var(--color-text-warning)';
+document.getElementById('counter').textContent='1 of '+allSlides.length;
+document.getElementById('prevBtn').disabled=true;
+navBar.style.display='flex';prog.style.display='flex';
+document.addEventListener('keydown',function(e){if(e.key==='ArrowRight')nav(1);if(e.key==='ArrowLeft')nav(-1);});
+})();
+</script>
+</body>
+</html>
