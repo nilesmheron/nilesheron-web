@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task Management System — dev.nilesheron.com</title>
+  <style>
+    body { font-family: Georgia, serif; max-width: 660px; margin: 80px auto; padding: 0 24px; color: #1a1a1a; background: #fafafa; }
+    h1 { font-size: 1.4rem; font-weight: normal; margin-bottom: 4px; }
+    h2 { font-size: 1.1rem; font-weight: normal; margin-top: 48px; margin-bottom: 6px; border-bottom: 1px solid #e8e8e8; padding-bottom: 8px; }
+    h3 { font-size: 0.95rem; font-weight: bold; margin-top: 28px; margin-bottom: 6px; }
+    p { color: #444; line-height: 1.75; margin: 0 0 16px; }
+    a { color: #1a1a1a; }
+    .meta { color: #999; font-size: 0.85rem; margin-bottom: 48px; }
+    ul, ol { color: #444; line-height: 1.75; padding-left: 20px; }
+    li { margin-bottom: 4px; }
+    code { font-family: 'Courier New', monospace; font-size: 0.85rem; background: #f0f0f0; padding: 2px 5px; border-radius: 3px; }
+    pre { background: #f4f4f4; border: 1px solid #e0e0e0; border-radius: 4px; padding: 16px 20px; overflow-x: auto; font-size: 0.82rem; line-height: 1.6; }
+    pre code { background: none; padding: 0; }
+    hr { border: none; border-top: 1px solid #e8e8e8; margin: 48px 0; }
+    .card { border: 1px solid #e0e0e0; border-radius: 6px; padding: 24px 28px; margin-bottom: 32px; background: #fff; }
+    .card-title { font-size: 1rem; font-weight: bold; margin: 0 0 6px; }
+    .card-desc { font-size: 0.9rem; color: #555; line-height: 1.6; margin: 0 0 16px; }
+    .card-actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    .btn { display: inline-block; padding: 8px 16px; font-size: 0.85rem; font-family: Georgia, serif; border-radius: 4px; text-decoration: none; cursor: pointer; border: 1px solid #1a1a1a; background: #1a1a1a; color: #fff; }
+    .btn-outline { background: transparent; color: #1a1a1a; }
+    .btn-copy-success { background: #2d6a2d; border-color: #2d6a2d; }
+    .callout { background: #f7f7f7; border: 1px solid #ddd; border-radius: 6px; padding: 16px 20px; margin: 20px 0; font-size: 0.9rem; color: #333; }
+    .callout p { margin-bottom: 6px; color: #333; }
+  </style>
+</head>
+<body>
+
+  <h1>Task Management System</h1>
+  <p class="meta"><a href="/templates">← templates</a></p>
+
+  <p>A GitHub-based task system where Claude holds commit authority and pulls inputs from Slack, Gmail, and Granola. Built on how Niles Heron manages work across multiple organizations. Load the guide into Claude and it'll walk you through setup interactively.</p>
+
+  <div class="card">
+    <p class="card-title">Task Management Setup Guide</p>
+    <p class="card-desc">Sets up your task dashboard, context file, inbox, and session workflow. Covers the two-line task format, co-work vs. solo classification, Granola note routing, and session start/end protocol. Requires a GitHub corpus already set up.</p>
+    <div class="card-actions">
+      <button class="btn" id="copyBtn" onclick="copyGuide()">Copy guide for Claude</button>
+      <a class="btn btn-outline" href="#guide">Read guide</a>
+    </div>
+    <p style="font-size:0.8rem;color:#999;margin:12px 0 0;">Paste into Claude and say: <em>"Load this and set up my task management system."</em></p>
+  </div>
+
+  <hr>
+
+  <div id="guide">
+
+    <h2>What This System Is</h2>
+
+    <p>Your GitHub repo already stores your AI profile. This extends it into a live task management system — a <code>task_dashboard.md</code> file that Claude reads at the start of every session, updates throughout, and commits back at the end. GitHub is the source of truth. Claude is the interface.</p>
+
+    <p>Inputs flow in from wherever you already work: Slack, Gmail, Granola meeting notes, or just talking to Claude directly. At the start of each session, Claude checks all of them, surfaces anything new, and shows you the full dashboard before asking what you want to work on.</p>
+
+    <h3>What you'll have by the end</h3>
+    <ul>
+      <li>A <code>task_dashboard.md</code> file structured for Claude to read and update</li>
+      <li>A <code>task_context.md</code> file with working briefs for co-work tasks</li>
+      <li>A session startup trigger phrase Claude responds to</li>
+      <li>An inbox section for quick mobile captures</li>
+      <li>Connected inputs from whichever of Slack, Gmail, and Granola you use</li>
+    </ul>
+
+    <hr>
+
+    <h2>Step 1 — Create the Dashboard File</h2>
+
+    <p>In your <code>[username]-ai-management</code> repo, navigate to the <code>tasks/</code> folder and create <code>task_dashboard.md</code>. Paste the template below as your starting point — Claude will help you populate it.</p>
+
+    <h3>Dashboard template</h3>
+    <pre><code># [Your Name]'s Task Dashboard
+*Last Updated: [DATE]*
+
+---
+
+## SYSTEM INSTRUCTIONS
+
+### Trigger phrase
+When the user says "Start task session," execute the session startup sequence below.
+
+### Session startup sequence
+1. Read this file from GitHub
+2. Process any items in the INBOX section — convert to proper tasks, ask clarifying questions, clear the inbox
+3. Move tasks in RECENTLY COMPLETED older than 72 hours to COMPLETED ARCHIVE
+4. Check Gmail ([your-email], label: claude_tasks) for new forwarded tasks
+5. Check Slack ([#your-inbox-channel]) for new messages
+6. Query Granola for action items from the last 10 days
+7. Display the current dashboard
+8. Ask: "What do you want to work on?"
+
+### Session end
+1. Commit updated dashboard and task_context.md to GitHub
+2. Post session summary to Slack [#your-inbox-channel]
+3. Confirm both completed
+
+### Task format (two lines)
+Line 1: **[#]. [Task Name]** | [Priority: High/Med/Low] | [Timeline]
+Line 2: Co-work or Solo | [RP: Name — if applicable]
+
+### Co-work vs. Solo
+- Co-work: Tasks you and Claude work on together. Always have an entry in task_context.md.
+- Solo: Tasks you handle independently. Dashboard only — no context entry needed.
+
+### Inbox
+Drop raw task captures here anytime (especially from mobile). Claude formats and files them at session start.
+Format: Task name | Project | Priority (optional) | Deadline (optional)
+
+### Completed tasks
+- Completed within 72 hours → RECENTLY COMPLETED (visible)
+- Older than 72 hours → COMPLETED ARCHIVE (stored, not displayed)
+- Format: **Task name** (Completed YYYY-MM-DD)
+
+### GitHub is source of truth
+Always read the latest file from GitHub at session start.
+Never recreate — only read and update.
+Always commit at session end.
+
+---
+
+## INBOX — Quick Add
+&lt;!-- Drop tasks here. Claude processes at next session start. --&gt;
+
+
+
+---
+
+## ACTIVE TASKS
+
+### [Project or Organization Name]
+
+#### High Priority
+
+**1. [Task Name]** | High | [Timeline]
+Co-work or Solo
+
+#### Medium Priority
+
+#### Low Priority / Ongoing
+
+---
+
+## RECENTLY COMPLETED (Last 3 Days)
+
+*No recent completions*
+
+---
+
+## COMPLETED ARCHIVE
+**Stored for historical queries — not shown in summaries**
+
+---
+
+## SYSTEM HEALTH
+- **Total active tasks**: 0
+- **Urgent**: 0
+- **Co-work tasks**: 0
+- **Solo tasks**: 0</code></pre>
+
+    <hr>
+
+    <h2>Step 2 — Create the Context File</h2>
+
+    <p><code>task_context.md</code> holds working briefs for co-work tasks — the background, constraints, audience, and success criteria Claude needs before it can do meaningful work on a task. You don't fill it out for every task, only the ones you'll actually work on with Claude.</p>
+
+    <h3>How it works</h3>
+    <p>When you say "Work on task [#]" or "Pull context for [Task Name]," Claude reads this file and finds the entry. The status field tells it what to do next:</p>
+    <ul>
+      <li><strong>Pre-filled</strong> — context is ready, Claude reads and begins</li>
+      <li><strong>Needs interview</strong> — Claude runs an intake interview before any work starts</li>
+      <li><strong>Partial</strong> — Claude reviews what exists, fills gaps, then begins</li>
+    </ul>
+
+    <h3>Context file template</h3>
+    <pre><code># Task Context File
+*Working briefs for co-work tasks. Pull on demand.*
+
+---
+
+## [#]. [Task Name]
+**Status**: Needs interview / Pre-filled / Partial
+**Last updated**: [DATE]
+
+**What it is**: [1-2 sentence description]
+**Audience**: [Who will see or use this output]
+**Constraints**: [Tone, length, format, things to avoid]
+**Success criteria**: [What done looks like]
+**Background**: [Anything Claude needs to know — stakeholder context, prior work, sensitivities]
+**Working notes**: [Evolving notes from sessions]
+
+---</code></pre>
+
+    <h3>When to add a context entry</h3>
+    <p>Add one when you're about to work on something. You don't need to fill out every field before starting — status "Needs interview" tells Claude to ask you what it needs. The context file grows as you work, not before.</p>
+
+    <hr>
+
+    <h2>Step 3 — Set Your Trigger Phrase</h2>
+
+    <p>Add the following to your <code>userPreferences</code> in Claude.ai (Settings → Profile), below your profile load instructions:</p>
+
+    <pre><code>Task management trigger: "Start task session"
+When I say this, read tasks/task_dashboard.md from GitHub and run the session startup sequence defined in the file's SYSTEM INSTRUCTIONS.</code></pre>
+
+    <p>That's it. From now on, saying "Start task session" in any Claude conversation kicks off the full sequence — GitHub read, inbox processing, integrations check, dashboard display.</p>
+
+    <hr>
+
+    <h2>Step 4 — Organize Your Projects</h2>
+
+    <p>The dashboard organizes tasks by project or organization, then by priority within each. There's no fixed list — use whatever project groupings match your actual work. Niles uses: TechTown Detroit, Hyde Park, Verse and Hook, LCR Detroit, Other, Personal.</p>
+
+    <p>Within each project: High Priority, Medium Priority, Low Priority / Ongoing. Tasks move up and down as things shift — Claude handles the re-sorting when you tell it a priority has changed.</p>
+
+    <hr>
+
+    <h2>Step 5 — Connect Your Inputs</h2>
+
+    <p>The system pulls new tasks from three sources at session start. Connect whichever ones you use.</p>
+
+    <h3>Gmail</h3>
+    <p>Create a label called <code>claude_tasks</code> in Gmail. When you want Claude to action an email — a follow-up you need to track, a commitment you made on a call — apply that label. Claude checks it at session start and suggests converting flagged emails into tasks.</p>
+
+    <h3>Slack inbox channel</h3>
+    <p>Your <code>#[firstname]-claude-inbox</code> channel serves double duty: it's where you drop quick task captures throughout the day, and where Claude posts session summaries at the end. Drop anything there — a task name, a note, a link — and Claude will process it into a proper task at your next session.</p>
+
+    <h3>Granola</h3>
+    <p>Claude queries Granola for the last 10 days of meeting notes at session start and surfaces anything that looks like an action item. It'll suggest adding them to the dashboard — you approve or skip each one. Meeting notes can also be committed to <code>tasks/notes/[project]/</code> for reference.</p>
+
+    <hr>
+
+    <h2>Running a Session</h2>
+
+    <h3>Starting</h3>
+    <p>Say: <strong>"Start task session."</strong> Claude reads GitHub, processes your inbox, checks integrations, and shows you the dashboard. Then: "What do you want to work on?"</p>
+
+    <h3>Working on a task</h3>
+    <p>Say: "Work on task 4" or "Pull context for [task name]." Claude loads the context entry and begins. If there's no context entry yet, it runs a short intake interview first.</p>
+
+    <h3>Adding tasks mid-session</h3>
+    <p>Just say it: "Add a task — follow up with [person] about [thing], medium priority, TechTown." Claude formats it and adds it to the dashboard immediately.</p>
+
+    <h3>Completing tasks</h3>
+    <p>"Mark task 7 complete." Claude moves it to Recently Completed with today's date.</p>
+
+    <h3>Ending</h3>
+    <p>When you're done, Claude commits the updated dashboard and context file to GitHub and posts a summary to your Slack inbox channel. If you forget to end formally, you can say "Wrap up the session" at any point.</p>
+
+    <hr>
+
+    <h2>The Two-Line Task Format</h2>
+
+    <p>Every task follows the same two-line structure. This is what makes the dashboard machine-readable as well as human-readable.</p>
+
+    <pre><code>**[#]. [Task Name]** | [Priority] | [Timeline]
+Co-work or Solo | [RP: Name]</code></pre>
+
+    <p>Examples:</p>
+    <pre><code>**1. Q2 Investor Update Deck** | High | Due Apr 15
+Co-work
+
+**2. Send contract to vendor** | Med | ASAP
+Solo | [RP: Jordan]
+
+**3. Annual report draft** | High | May
+Co-work | [RP: Sam]</code></pre>
+
+    <p>The responsible party (<code>[RP: Name]</code>) marks who owns execution — useful when you're tracking delegated work. Timeline uses plain language: "ASAP," "This week," "Apr 15," "TBD," "May."</p>
+
+    <hr>
+
+    <h2>Granola Note Routing</h2>
+
+    <p>When Claude surfaces a Granola meeting note, it analyzes the content, suggests which project folder it belongs in, and asks for your approval before committing:</p>
+
+    <pre><code>tasks/notes/[project]/YYYY-MM-DD-meeting-title.md</code></pre>
+
+    <p>You say yes, or redirect it to a different folder. Claude commits. The notes are then available as reference material in future sessions when you're working on related tasks.</p>
+
+    <hr>
+
+    <h2>Profile Update — Adding Task Management</h2>
+
+    <p>Add this block to your AI interaction profile under integrations, so Claude always knows where your task files live:</p>
+
+    <pre><code>task_management:
+  dashboard: "tasks/task_dashboard.md"
+  context: "tasks/task_context.md"
+  trigger: "Start task session"
+  inbox_channel: "#[firstname]-claude-inbox"
+  gmail_label: "claude_tasks"
+  granola: true
+  commit_authority: "Claude only"
+  note: "GitHub is source of truth. Never recreate files — read and update only."</code></pre>
+
+    <hr>
+
+    <h2>System Health and Maintenance</h2>
+
+    <p>The bottom of your dashboard has a System Health section — a quick count of active tasks by project, how many are urgent, how many are co-work vs. solo. Claude updates this automatically at session end.</p>
+
+    <p>A few maintenance habits worth keeping:</p>
+    <ul>
+      <li>If the dashboard hasn't been updated in more than a week, start a session just to process the inbox and re-sync — stale dashboards drift fast</li>
+      <li>Context entries should be updated after each working session, not just before — "Working notes" in the context file is where the live thinking goes</li>
+      <li>The completed archive is searchable: "What did I complete in March?" works as a query</li>
+      <li>Tasks that have been sitting on the dashboard for more than a month with no movement are either low-priority-forever or should be deleted — Claude can help with a periodic cleanup pass</li>
+    </ul>
+
+  </div>
+
+  <hr>
+  <p style="font-size:0.85rem;color:#999;"><a href="/templates">← templates</a> &nbsp;·&nbsp; <a href="https://dev.nilesheron.com">dev.nilesheron.com</a></p>
+
+  <textarea id="rawGuide" style="position:absolute;left:-9999px;top:-9999px;" aria-hidden="true">
+# =============================================================================
+# TASK MANAGEMENT SYSTEM SETUP GUIDE
+# Instructions for AI Assistant
+# =============================================================================
+#
+# Run this as an interactive setup session. Walk the person through building
+# their task management system on top of their existing GitHub corpus.
+#
+# Prerequisites: They should already have a GitHub repo set up with a profile
+# loaded in Claude. If not, point them to the onboarding guide first.
+#
+# Session flow:
+# 1. Confirm prerequisites (GitHub repo + profile working)
+# 2. Ask about their projects/organizations and how they currently track work
+# 3. Create task_dashboard.md from the template, customized to their projects
+# 4. Create task_context.md
+# 5. Set the trigger phrase in userPreferences
+# 6. Walk through connecting inputs (Gmail, Slack, Granola)
+# 7. Run a test session together
+# 8. Add task management block to their AI profile
+#
+# When ready to begin, say:
+# "Let's set up your task management system. Quick check first — do you have
+# your GitHub repo set up and your AI profile loading in Claude? If yes,
+# this should take about 20 minutes."
+#
+# =============================================================================
+
+
+# SECTION 1: INTAKE
+
+Ask these before building anything:
+
+- How do you currently track your work? (Notion, notes app, memory, spreadsheet, nothing?)
+- What are the main projects or organizations you work across?
+  (These become the top-level sections in your dashboard)
+- Do you work with teammates or delegates you'd want to track tasks for?
+- Which inputs do you want connected? (Gmail, Slack, Granola — ask about each)
+- Do you already have a Slack inbox channel set up from the onboarding guide?
+
+
+# SECTION 2: TASK DASHBOARD
+
+Create tasks/task_dashboard.md in their repo. Use this structure,
+replacing [bracketed items] with their actual project names from the intake:
+
+---
+
+# [Name]'s Task Dashboard
+*Last Updated: [DATE]*
+
+---
+
+## SYSTEM INSTRUCTIONS
+
+### Trigger phrase
+When the user says "Start task session," execute the session startup sequence.
+
+### Session startup sequence
+1. Read this file from GitHub (GitHub MCP preferred; raw URL fallback)
+2. Process INBOX — convert items to proper tasks, ask clarifying questions, clear inbox
+3. Move RECENTLY COMPLETED tasks older than 72 hours to COMPLETED ARCHIVE
+4. Check Gmail ([their email], label: claude_tasks) for new task emails
+5. Check Slack ([#their-inbox-channel]) for new messages
+6. Query Granola for action items from the last 10 days
+7. Display the current dashboard
+8. Ask: "What do you want to work on?"
+
+### Session end
+1. Commit updated dashboard and task_context.md to GitHub with descriptive commit message
+2. Post session summary to Slack [#their-inbox-channel]
+3. Confirm both completed. If either fails, explain and ask user to do it manually.
+
+### Task format (two lines)
+Line 1: **[#]. [Task Name]** | [Priority: High/Med/Low] | [Timeline]
+Line 2: Co-work or Solo | [RP: Name — if applicable]
+
+### Co-work vs. Solo
+- Co-work: Tasks you and Claude work on together — always have a context entry in task_context.md
+- Solo: Tasks you handle independently — dashboard only, no context entry needed
+
+### Working on a co-work task
+User says "Work on task [#]" or "Pull context for [Task Name]"
+Claude reads tasks/task_context.md and finds the entry:
+- Status: Pre-filled → read and begin
+- Status: Needs interview → run intake before work starts
+- Status: Partial → review, fill gaps, then begin
+
+### Inbox
+Drop raw task captures here from mobile or wherever. Claude formats and files at session start.
+Format: Task name | Project | Priority (optional) | Deadline (optional)
+
+### Completed tasks
+- Within 72 hours → RECENTLY COMPLETED
+- Older than 72 hours → COMPLETED ARCHIVE (stored, not displayed in summaries)
+- Format: **Task name** (Completed YYYY-MM-DD)
+
+### GitHub is source of truth
+Always read latest from GitHub at session start.
+Never recreate files — only read and update.
+Always commit at session end.
+
+---
+
+## INBOX — Quick Add
+<!-- Drop tasks here. Claude processes at next session start. -->
+
+
+
+---
+
+## ACTIVE TASKS
+
+### [Project 1]
+
+#### High Priority
+
+#### Medium Priority
+
+#### Low Priority / Ongoing
+
+---
+
+### [Project 2]
+
+#### High Priority
+
+#### Medium Priority
+
+---
+
+## RECENTLY COMPLETED (Last 3 Days)
+
+*No recent completions*
+
+---
+
+## COMPLETED ARCHIVE
+**Stored for historical queries — not shown in dashboard summaries**
+
+---
+
+## SYSTEM HEALTH
+- **Total active tasks**: 0
+- **Urgent (ASAP/this week)**: 0
+- **Co-work tasks**: 0
+- **Solo tasks**: 0
+
+---
+
+
+# SECTION 3: TASK CONTEXT FILE
+
+Create tasks/task_context.md:
+
+---
+
+# Task Context File
+*Working briefs for co-work tasks. Claude pulls on demand.*
+*Add an entry when you're about to work on a task, not before.*
+
+---
+
+## Template for each entry
+
+### [#]. [Task Name]
+**Status**: Needs interview / Pre-filled / Partial
+**Last updated**: [DATE]
+
+**What it is**: [1-2 sentences]
+**Audience**: [Who sees or uses this output]
+**Constraints**: [Tone, format, length, things to avoid]
+**Success criteria**: [What done looks like]
+**Background**: [Stakeholder context, prior work, sensitivities]
+**Working notes**: [Evolving notes from sessions — updated as you go]
+
+---
+
+
+# SECTION 4: TRIGGER PHRASE
+
+Add to their userPreferences (Settings → Profile), below the profile load instructions:
+
+Task management trigger: "Start task session"
+When I say this, read tasks/task_dashboard.md from GitHub and run the session startup sequence in the SYSTEM INSTRUCTIONS section of that file.
+
+
+# SECTION 5: PROFILE UPDATE
+
+Add this block to their AI interaction profile under integrations:
+
+task_management:
+  dashboard: "tasks/task_dashboard.md"
+  context: "tasks/task_context.md"
+  trigger: "Start task session"
+  gmail_label: "claude_tasks"
+  granola: true
+  commit_authority: "Claude only — other LLMs read, never write"
+  note: "GitHub is source of truth. Never recreate files — only read and update."
+
+
+# SECTION 6: TEST SESSION
+
+Once everything is set up, run a test together:
+
+1. Say "Start task session"
+2. Claude should: read GitHub → check inbox (empty) → check integrations → display empty dashboard
+3. Add 2-3 real tasks conversationally
+4. Mark one complete
+5. End the session — Claude should commit and post to Slack
+6. Confirm the commit appears in GitHub
+
+If anything breaks, troubleshoot before closing.
+
+
+# SECTION 7: HABITS TO ESTABLISH
+
+Tell them:
+
+- Start every working session with "Start task session" — that's the anchor
+- Drop anything into the Slack inbox channel or Gmail claude_tasks label throughout the day
+- For co-work tasks, the context entry doesn't need to be perfect before you start —
+  "Needs interview" tells Claude to ask you what it needs
+- The completed archive is searchable: "What did I complete last month?" works
+- Do a cleanup pass once a month — tasks that haven't moved in 30+ days are
+  either permanently low priority or should be cut
+  </textarea>
+
+  <script>
+    function copyGuide() {
+      const btn = document.getElementById('copyBtn');
+      const text = document.getElementById('rawGuide').value.trim();
+      navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = 'Copied!';
+        btn.classList.add('btn-copy-success');
+        setTimeout(() => { btn.textContent = 'Copy guide for Claude'; btn.classList.remove('btn-copy-success'); }, 2500);
+      });
+    }
+  </script>
+
+</body>
+</html>
