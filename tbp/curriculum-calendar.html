@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Start Studio: ID - Curriculum Calendar</title>
+<style>
+:root{
+  --color-text-primary:#1C1C1C;
+  --color-text-secondary:#555;
+  --color-text-tertiary:#888;
+  --color-text-warning:#BA7517;
+  --color-text-info:#185FA5;
+  --color-text-success:#3B6D11;
+  --color-text-danger:#A32D2D;
+  --color-background-primary:#fff;
+  --color-background-secondary:#F5F3EE;
+  --color-background-warning:#FAF4E8;
+  --color-background-info:#EEF4FB;
+  --color-background-success:#EEF6E2;
+  --color-background-danger:#FCEBEB;
+  --color-border-tertiary:rgba(0,0,0,0.12);
+  --color-border-secondary:rgba(0,0,0,0.25);
+  --color-border-warning:rgba(186,117,23,0.55);
+  --color-border-info:rgba(24,95,165,0.55);
+  --color-border-success:rgba(59,109,17,0.55);
+  --color-border-danger:rgba(163,45,45,0.55);
+  --border-radius-md:8px;
+  --border-radius-lg:12px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--color-text-primary)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media print{body{background:#fff!important;padding:0!important}}
+</style>
+</head>
+<body style="background:var(--color-background-secondary);padding:2rem 1rem;min-height:100vh">
+<h2 class="sr-only">Start Studio ID curriculum calendar &mdash; pitch deck pacing guide</h2>
+<div style="max-width:900px;margin:0 auto;font-size:13px" id="root"></div>
+<script>
+var TOTAL=22;
+var LW=192;
+
+var phases=[
+  {
+    name:'Phase 1 &mdash; Problem validation',col:'warning',
+    modules:[
+      {name:'Problem',deck:'Pitch deck &middot; section 1',wks:4,col:'warning'},
+      {name:'Customer segments',deck:'Pitch deck &middot; section 2',wks:2,col:'info'}
+    ]
+  },
+  {
+    name:'Phase 2 &mdash; Product definition',col:'info',
+    modules:[
+      {name:'Solution',deck:'Pitch deck &middot; section 4',wks:2,col:'info'},
+      {name:'Channels / GTM strategy',deck:'Pitch deck &middot; section 5',wks:2,col:'success'},
+      {name:'Product roadmap',deck:'Technical diligence',wks:2,col:'warning'}
+    ]
+  },
+  {
+    name:'Phase 3 &mdash; Business model',col:'success',
+    modules:[
+      {name:'Revenue strategy',deck:'Pitch deck &middot; section 6',wks:2,col:'warning'},
+      {name:'Cost structure',deck:'Pitch deck &middot; section 7',wks:2,col:'info'},
+      {name:'Key metrics',deck:'Pitch deck &middot; section 8',wks:2,col:'success'}
+    ]
+  },
+  {
+    name:'Phase 4 &mdash; Synthesis &amp; defense',col:'danger',
+    modules:[
+      {name:'Unique value proposition',deck:'Pitch deck &middot; section 3',wks:2,col:'warning'},
+      {name:'Final pitch prep',deck:'Defense preparation',wks:2,col:'danger'}
+    ]
+  }
+];
+
+var offset=0;
+phases.forEach(function(ph){
+  ph.modules.forEach(function(m){
+    m.offset=offset;
+    offset+=m.wks;
+  });
+});
+
+var root=document.getElementById('root');
+
+var hdr=document.createElement('div');
+hdr.style.cssText='padding-bottom:14px;border-bottom:0.5px solid var(--color-border-tertiary)';
+hdr.innerHTML='<div style="font-size:16px;font-weight:500;color:var(--color-text-primary)">Start Studio: ID &mdash; curriculum calendar</div>'
+  +'<div style="font-size:13px;color:var(--color-text-secondary);margin-top:3px">Pitch deck pacing guide &middot; 22 weeks total &middot; TechTown Detroit</div>';
+root.appendChild(hdr);
+
+var chartWrap=document.createElement('div');
+chartWrap.style.cssText='overflow-x:auto;margin-top:4px';
+var chart=document.createElement('div');
+chart.style.cssText='min-width:600px';
+chartWrap.appendChild(chart);
+root.appendChild(chartWrap);
+
+function makeRow(labelContent,timelineEl){
+  var row=document.createElement('div');
+  row.style.cssText='display:flex;align-items:center';
+  var lc=document.createElement('div');
+  lc.style.cssText='width:'+LW+'px;flex-shrink:0;padding-right:14px';
+  lc.innerHTML=labelContent;
+  row.appendChild(lc);
+  row.appendChild(timelineEl);
+  return row;
+}
+
+function makeTimeline(h){
+  var t=document.createElement('div');
+  t.style.cssText='flex:1;position:relative;height:'+h+'px';
+  return t;
+}
+
+function addGridLines(container){
+  for(var g=0;g<=TOTAL;g++){
+    var gl=document.createElement('div');
+    gl.style.cssText='position:absolute;top:0;bottom:0;left:'+((g/TOTAL)*100)+'%;width:0.5px;background:var(--color-border-tertiary)';
+    container.appendChild(gl);
+  }
+}
+
+var monthTl=makeTimeline(18);
+var months=[
+  {label:'Month 1',start:0,span:4},
+  {label:'Month 2',start:4,span:4},
+  {label:'Month 3',start:8,span:4},
+  {label:'Month 4',start:12,span:4},
+  {label:'Month 5',start:16,span:4},
+  {label:'Month 6',start:20,span:2}
+];
+months.forEach(function(m){
+  var el=document.createElement('div');
+  el.style.cssText='position:absolute;left:'+((m.start/TOTAL)*100)+'%;width:'+((m.span/TOTAL)*100)+'%;'
+    +'font-size:9px;font-weight:500;color:var(--color-text-tertiary);text-align:center;text-transform:uppercase;letter-spacing:0.05em;line-height:18px';
+  el.textContent=m.label;
+  monthTl.appendChild(el);
+});
+chart.appendChild(makeRow('',monthTl));
+
+var wkTl=makeTimeline(16);
+for(var w=1;w<=TOTAL;w++){
+  var wEl=document.createElement('div');
+  wEl.style.cssText='position:absolute;left:'+(((w-1)/TOTAL)*100)+'%;width:'+((1/TOTAL)*100)+'%;'
+    +'font-size:9px;color:var(--color-text-tertiary);text-align:center;line-height:16px';
+  wEl.textContent=w;
+  wkTl.appendChild(wEl);
+}
+var wkRow=makeRow('',wkTl);
+wkRow.style.borderBottom='0.5px solid var(--color-border-tertiary)';
+wkRow.style.paddingBottom='4px';
+chart.appendChild(wkRow);
+
+var bgMap={
+  warning:'var(--color-background-warning)',
+  info:'var(--color-background-info)',
+  success:'var(--color-background-success)',
+  danger:'var(--color-background-danger)'
+};
+
+phases.forEach(function(ph){
+  var phRow=document.createElement('div');
+  phRow.style.cssText='display:flex;align-items:center;padding:10px 0 5px';
+  var phLbl=document.createElement('div');
+  phLbl.style.cssText='width:'+LW+'px;flex-shrink:0;font-size:9.5px;font-weight:500;'
+    +'color:var(--color-text-'+ph.col+');text-transform:uppercase;letter-spacing:0.05em;padding-right:14px';
+  phLbl.innerHTML=ph.name;
+  phRow.appendChild(phLbl);
+  var phLine=document.createElement('div');
+  phLine.style.cssText='flex:1;height:1px;background:var(--color-border-'+ph.col+')';
+  phRow.appendChild(phLine);
+  chart.appendChild(phRow);
+
+  ph.modules.forEach(function(m){
+    var tl=makeTimeline(38);
+    addGridLines(tl);
+
+    var bar=document.createElement('div');
+    var bl=(m.offset/TOTAL)*100;
+    var bw=(m.wks/TOTAL)*100;
+    bar.style.cssText='position:absolute;top:4px;bottom:4px;left:'+bl+'%;width:'+bw+'%;'
+      +'background:'+bgMap[m.col]+';border-left:3px solid var(--color-border-'+m.col+');'
+      +'border-radius:0;display:flex;align-items:center;padding:0 8px;gap:6px;overflow:hidden';
+
+    var bTxt=document.createElement('span');
+    bTxt.style.cssText='font-size:11px;font-weight:500;color:var(--color-text-'+m.col+');white-space:nowrap';
+    bTxt.textContent=m.wks+(m.wks===1?' wk':' wks');
+    bar.appendChild(bTxt);
+    tl.appendChild(bar);
+
+    var lbl='<div style="font-size:13px;font-weight:500;color:var(--color-text-primary)">'+m.name+'</div>'
+      +'<div style="font-size:10px;color:var(--color-text-tertiary);margin-top:1px">'+m.deck+'</div>';
+    var moduleRow=makeRow(lbl,tl);
+    moduleRow.style.marginBottom='5px';
+    chart.appendChild(moduleRow);
+  });
+});
+
+var endLine=document.createElement('div');
+endLine.style.cssText='border-top:0.5px solid var(--color-border-tertiary);margin-top:2px';
+chart.appendChild(endLine);
+
+var stats=document.createElement('div');
+stats.style.cssText='display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:16px';
+var statItems=[
+  {label:'Total duration',val:'22 weeks',sub:'~5.5 months'},
+  {label:'Modules',val:'9 + 1',sub:'Canvas sections + pitch prep'},
+  {label:'Problem phase',val:'4 weeks',sub:'Longest &mdash; hardest to validate'},
+  {label:'All other modules',val:'2 weeks each',sub:'Biweekly checkpoint cadence'}
+];
+statItems.forEach(function(s){
+  var card=document.createElement('div');
+  card.style.cssText='background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:12px';
+  card.innerHTML='<div style="font-size:10px;color:var(--color-text-secondary);margin-bottom:4px">'+s.label+'</div>'
+    +'<div style="font-size:15px;font-weight:500;color:var(--color-text-primary)">'+s.val+'</div>'
+    +'<div style="font-size:10px;color:var(--color-text-tertiary);margin-top:2px">'+s.sub+'</div>';
+  stats.appendChild(card);
+});
+root.appendChild(stats);
+
+var note=document.createElement('div');
+note.style.cssText='margin-top:14px;border-left:3px solid var(--color-border-warning);border-radius:0;padding:10px 14px;background:var(--color-background-warning)';
+note.innerHTML='<div style="font-size:11px;font-weight:500;color:var(--color-text-warning);margin-bottom:4px">Pacing note</div>'
+  +'<p style="font-size:12px;line-height:1.7;color:var(--color-text-secondary)">'
+  +'Problem gets 4 weeks because it is the hardest assumption to validate and the foundation everything else depends on. '
+  +'UVP comes last &mdash; not because it is less important, but because you cannot write a defensible unique value proposition until you have worked through who your customer is, what you are building, how you will sell it, and how you will make money. '
+  +'Final pitch prep is not new content. It is synthesis, rehearsal, and defense preparation.'
+  +'</p>';
+root.appendChild(note);
+
+var footer=document.createElement('div');
+footer.style.cssText='display:flex;justify-content:space-between;padding-top:14px;margin-top:14px;border-top:0.5px solid var(--color-border-tertiary)';
+footer.innerHTML='<div style="font-size:12px;font-weight:500;color:var(--color-text-primary)">TechTown Detroit &middot; Start Studio: ID</div>'
+  +'<div style="font-size:12px;color:var(--color-text-secondary)">techtown.org &middot; Detroit, MI</div>';
+root.appendChild(footer);
+</script>
+</body>
+</html>
