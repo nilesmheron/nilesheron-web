@@ -38,7 +38,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--color
 <h2 class="sr-only">Start Studio ID curriculum calendar &mdash; pitch deck pacing guide</h2>
 <div style="max-width:900px;margin:0 auto;font-size:13px" id="root"></div>
 <script>
-var TOTAL=22;
+var TOTAL=24;
 var LW=192;
 
 var phases=[
@@ -54,7 +54,8 @@ var phases=[
     modules:[
       {name:'Solution',deck:'Pitch deck &middot; section 4',wks:2,col:'info'},
       {name:'Channels / GTM strategy',deck:'Pitch deck &middot; section 5',wks:2,col:'success'},
-      {name:'Product roadmap',deck:'Technical diligence',wks:2,col:'warning'}
+      {name:'Product roadmap',deck:'Technical diligence',wks:2,col:'warning'},
+      {name:'Technical feasibility',deck:'Technical diligence',wks:2,col:'info'}
     ]
   },
   {
@@ -87,7 +88,7 @@ var root=document.getElementById('root');
 var hdr=document.createElement('div');
 hdr.style.cssText='padding-bottom:14px;border-bottom:0.5px solid var(--color-border-tertiary)';
 hdr.innerHTML='<div style="font-size:16px;font-weight:500;color:var(--color-text-primary)">Start Studio: ID &mdash; curriculum calendar</div>'
-  +'<div style="font-size:13px;color:var(--color-text-secondary);margin-top:3px">Pitch deck pacing guide &middot; 22 weeks total &middot; TechTown Detroit</div>';
+  +'<div style="font-size:13px;color:var(--color-text-secondary);margin-top:3px">Pitch deck pacing guide &middot; 24 weeks total &middot; TechTown Detroit</div>';
 root.appendChild(hdr);
 
 var chartWrap=document.createElement('div');
@@ -129,7 +130,7 @@ var months=[
   {label:'Month 3',start:8,span:4},
   {label:'Month 4',start:12,span:4},
   {label:'Month 5',start:16,span:4},
-  {label:'Month 6',start:20,span:2}
+  {label:'Month 6',start:20,span:4}
 ];
 months.forEach(function(m){
   var el=document.createElement('div');
@@ -205,8 +206,8 @@ chart.appendChild(endLine);
 var stats=document.createElement('div');
 stats.style.cssText='display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:16px';
 var statItems=[
-  {label:'Total duration',val:'22 weeks',sub:'~5.5 months'},
-  {label:'Modules',val:'9 + 1',sub:'Canvas sections + pitch prep'},
+  {label:'Total duration',val:'24 weeks',sub:'~6 months'},
+  {label:'Modules',val:'10 + 1',sub:'Canvas sections + pitch prep'},
   {label:'Problem phase',val:'4 weeks',sub:'Longest &mdash; hardest to validate'},
   {label:'All other modules',val:'2 weeks each',sub:'Biweekly checkpoint cadence'}
 ];
@@ -225,6 +226,7 @@ note.style.cssText='margin-top:14px;border-left:3px solid var(--color-border-war
 note.innerHTML='<div style="font-size:11px;font-weight:500;color:var(--color-text-warning);margin-bottom:4px">Pacing note</div>'
   +'<p style="font-size:12px;line-height:1.7;color:var(--color-text-secondary)">'
   +'Problem gets 4 weeks because it is the hardest assumption to validate and the foundation everything else depends on. '
+  +'Product roadmap and technical feasibility are treated as a two-part technical diligence block &mdash; roadmap covers what you are building and when, feasibility confirms it can actually be built by your team with available resources. '
   +'UVP comes last &mdash; not because it is less important, but because you cannot write a defensible unique value proposition until you have worked through who your customer is, what you are building, how you will sell it, and how you will make money. '
   +'Final pitch prep is not new content. It is synthesis, rehearsal, and defense preparation.'
   +'</p>';
