@@ -6,27 +6,15 @@
 <title>Start Studio: ID - Curriculum Calendar</title>
 <style>
 :root{
-  --color-text-primary:#1C1C1C;
-  --color-text-secondary:#555;
-  --color-text-tertiary:#888;
-  --color-text-warning:#BA7517;
-  --color-text-info:#185FA5;
-  --color-text-success:#3B6D11;
-  --color-text-danger:#A32D2D;
-  --color-background-primary:#fff;
-  --color-background-secondary:#F5F3EE;
-  --color-background-warning:#FAF4E8;
-  --color-background-info:#EEF4FB;
-  --color-background-success:#EEF6E2;
-  --color-background-danger:#FCEBEB;
-  --color-border-tertiary:rgba(0,0,0,0.12);
-  --color-border-secondary:rgba(0,0,0,0.25);
-  --color-border-warning:rgba(186,117,23,0.55);
-  --color-border-info:rgba(24,95,165,0.55);
-  --color-border-success:rgba(59,109,17,0.55);
-  --color-border-danger:rgba(163,45,45,0.55);
-  --border-radius-md:8px;
-  --border-radius-lg:12px;
+  --color-text-primary:#1C1C1C;--color-text-secondary:#555;--color-text-tertiary:#888;
+  --color-text-warning:#BA7517;--color-text-info:#185FA5;--color-text-success:#3B6D11;--color-text-danger:#A32D2D;
+  --color-background-primary:#fff;--color-background-secondary:#F5F3EE;
+  --color-background-warning:#FAF4E8;--color-background-info:#EEF4FB;
+  --color-background-success:#EEF6E2;--color-background-danger:#FCEBEB;
+  --color-border-tertiary:rgba(0,0,0,0.12);--color-border-secondary:rgba(0,0,0,0.25);
+  --color-border-warning:rgba(186,117,23,0.55);--color-border-info:rgba(24,95,165,0.55);
+  --color-border-success:rgba(59,109,17,0.55);--color-border-danger:rgba(163,45,45,0.55);
+  --border-radius-md:8px;--border-radius-lg:12px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--color-text-primary)}
@@ -35,53 +23,86 @@ body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--color
 </style>
 </head>
 <body style="background:var(--color-background-secondary);padding:2rem 1rem;min-height:100vh">
-<h2 class="sr-only">Start Studio ID curriculum calendar — 16-week pitch deck pacing guide with parallel sprint</h2>
+<h2 class="sr-only">Start Studio ID curriculum calendar — 16-week pitch deck pacing guide with expandable section details</h2>
 <div style="max-width:900px;margin:0 auto;font-size:13px" id="root"></div>
 <script>
-var TOTAL=16;
-var LW=192;
-var SPRINT_START=14;
+var TOTAL=16,LW=192,SPRINT_START=14,_mid=0;
+var bgMap={warning:'var(--color-background-warning)',info:'var(--color-background-info)',success:'var(--color-background-success)',danger:'var(--color-background-danger)'};
 
 var phases=[
-  {
-    name:'Phase 1 &mdash; Problem validation',col:'warning',parallel:false,
-    modules:[
-      {name:'Problem',deck:'Pitch deck &middot; section 1',wks:4,offset:0,col:'warning'},
-      {name:'Customer segments',deck:'Pitch deck &middot; section 2',wks:2,offset:4,col:'info'}
-    ]
-  },
-  {
-    name:'Phase 2 &mdash; Product definition',col:'info',parallel:false,
-    modules:[
-      {name:'Solution',deck:'Pitch deck &middot; section 4',wks:2,offset:6,col:'info'},
-      {name:'Channels / GTM strategy',deck:'Pitch deck &middot; section 5',wks:2,offset:8,col:'success'},
-      {name:'Product roadmap',deck:'Technical diligence',wks:2,offset:10,col:'warning'},
-      {name:'Technical feasibility',deck:'Technical diligence',wks:2,offset:12,col:'info'}
-    ]
-  },
-  {
-    name:'Phase 3 &mdash; Business model',col:'success',parallel:true,
-    modules:[
-      {name:'Revenue strategy',deck:'Pitch deck &middot; section 6',wks:2,offset:14,col:'warning'},
-      {name:'Cost structure',deck:'Pitch deck &middot; section 7',wks:2,offset:14,col:'info'},
-      {name:'Key metrics',deck:'Pitch deck &middot; section 8',wks:2,offset:14,col:'success'}
-    ]
-  },
-  {
-    name:'Phase 4 &mdash; Synthesis &amp; defense',col:'danger',parallel:true,
-    modules:[
-      {name:'Unique value proposition',deck:'Pitch deck &middot; section 3',wks:2,offset:14,col:'warning'},
-      {name:'Final pitch prep',deck:'Defense preparation',wks:2,offset:14,col:'danger'}
-    ]
-  }
+  {name:'Phase 1 &mdash; Problem validation',col:'warning',parallel:false,modules:[
+    {name:'Problem',deck:'Pitch deck &middot; section 1',wks:4,offset:0,col:'warning',
+     desc:'Identify the top 3 problems your target customer faces and how they are solving them today. This is the foundational assumption of your entire model &mdash; if you get this wrong, everything else falls apart.',
+     qs:['What are the top 3 problems your customer is experiencing?','How are they solving this today? What are the existing alternatives?','How painful is this problem &mdash; vitamin or painkiller?','Have customers confirmed this problem exists in their own words?'],
+     ev:['10+ customer discovery interviews completed','Problem confirmed by majority of interviewees','Top 3 problems ranked by frequency and severity','Existing alternatives documented']},
+    {name:'Customer segments',deck:'Pitch deck &middot; section 2',wks:2,offset:4,col:'info',
+     desc:'Define who experiences this problem most acutely and identify your early adopters &mdash; the specific subset most eager for a solution right now.',
+     qs:['Who experiences this problem most acutely? Who is your ideal customer?','Who are your early adopters &mdash; the subset most eager right now?','How large is this market? Can you reach and serve it?','What characteristics make this segment specific and distinct?'],
+     ev:['Early adopter profile clearly defined','Segment described in specific, non-generic terms','Reachability of segment assessed','Market sizing estimation complete']}
+  ]},
+  {name:'Phase 2 &mdash; Product definition',col:'info',parallel:false,modules:[
+    {name:'Solution',deck:'Pitch deck &middot; section 4',wks:2,offset:6,col:'info',
+     desc:'The top 3 features of your solution, each mapped directly to a problem. Not what is technically interesting to build &mdash; what is minimally necessary to test your core hypothesis.',
+     qs:['What are the top 3 features of your solution?','Does each feature map directly to one of the top 3 problems?','Have you described this to potential customers? What was the reaction?','What is the minimum feature set needed to test your hypothesis?'],
+     ev:['Top 3 features explicitly mapped to top 3 problems','Solution concept tested with potential customers','Mockup, prototype, or description built and reviewed','MVP scope defined']},
+    {name:'Channels / GTM strategy',deck:'Pitch deck &middot; section 5',wks:2,offset:8,col:'success',
+     desc:'How you will reach your customer segments at launch and at scale. Channels are the specific paths through which customers find you, try you, and buy from you.',
+     qs:['How will you reach your customer segments?','What channels will you use at launch vs. at scale?','How have you already reached early adopters? What worked?','What is the estimated cost to acquire a customer per channel?'],
+     ev:['At least 2 viable channels identified and described','Launch vs. scale channel distinguished','Initial channel experiments conducted or planned','Rough CAC estimated']},
+    {name:'Product roadmap',deck:'Technical diligence',wks:2,offset:10,col:'warning',
+     desc:'Map out what you are building and when &mdash; the sequenced plan from MVP to product. A roadmap is not a wish list; it is a prioritized, customer-validated sequence of build decisions.',
+     qs:['What is the MVP and what comes after it?','What are the key milestones from MVP to v1?','What dependencies or blockers exist in the build sequence?','Does the roadmap reflect customer-validated priorities, not founder assumptions?'],
+     ev:['MVP scope locked and documented','Post-MVP phases outlined at high level','Key milestones with rough timelines defined','Roadmap reviewed with at least one technical advisor']},
+    {name:'Technical feasibility',deck:'Technical diligence',wks:2,offset:12,col:'info',
+     desc:'Demonstrate that what you are proposing can actually be built &mdash; by your team, in your timeframe, with available resources. Feasibility is not just about technology; it is about team capability and build risk.',
+     qs:['Can this be built with current technology? What are the key technical risks?','What is the minimum viable technical stack?','Who on your team can build this? What gaps exist?','What is the build timeline for MVP, and what could delay it?'],
+     ev:['Core technical approach defined and validated','Key technical risks identified and ranked','Build vs. buy decisions made for core components','Team capability assessed against technical requirements']}
+  ]},
+  {name:'Phase 3 &mdash; Business model',col:'success',parallel:true,modules:[
+    {name:'Revenue strategy',deck:'Pitch deck &middot; section 6',wks:2,offset:14,col:'warning',
+     desc:'How you will make money &mdash; your model, pricing, and the willingness-to-pay evidence behind it. Revenue strategy is not guessing at price; it is testing whether customers will actually pay.',
+     qs:['How will you make money? What is the revenue model?','What will you charge, and why at that price point?','Have customers confirmed they would pay &mdash; and at what price?','What is your LTV estimate compared to your CAC?'],
+     ev:['Revenue model selected (SaaS, transaction, service, etc.)','Pricing tested with potential customers','Willingness to pay confirmed by at least 3 customers','LTV:CAC ratio estimated at target scale']},
+    {name:'Cost structure',deck:'Pitch deck &middot; section 7',wks:2,offset:14,col:'info',
+     desc:'Your fixed and variable costs and the math that shows the path to break-even. Cost structure is where optimism meets arithmetic.',
+     qs:['What are your fixed costs? What are your variable costs?','What does it cost at launch vs. at scale?','At what revenue level do you reach break-even?','What is the riskiest cost assumption in your model?'],
+     ev:['Fixed and variable costs identified and categorized','Year 1 cost model built out','Break-even calculation completed','Key cost assumptions flagged and ranked by risk']},
+    {name:'Key metrics',deck:'Pitch deck &middot; section 8',wks:2,offset:14,col:'success',
+     desc:'The one number that tells the story of your business health &mdash; and the indicators that drive it. Metrics are not a dashboard; they are the decisions you make about what to measure and why.',
+     qs:['What is your north star metric?','What activities drive that number?','What does success look like in 12 months?','How will you know when a hypothesis is validated vs. disproved?'],
+     ev:['North star metric identified','Leading indicators defined','12-month success criteria articulated','Measurement method and tracking plan described']}
+  ]},
+  {name:'Phase 4 &mdash; Synthesis &amp; defense',col:'danger',parallel:true,modules:[
+    {name:'Unique value proposition',deck:'Pitch deck &middot; section 3',wks:2,offset:14,col:'warning',
+     desc:'Your single, clear, compelling message that explains why you are different. UVP comes last because you cannot write a defensible one until you have validated the problem, customer, solution, and business model.',
+     qs:['What is your one clear message explaining why you are different?','What outcome do you deliver &mdash; not the feature, the result?','What is your high-level concept? (X for Y, or: The only X that...)','Does this resonate when you say it to a stranger in one sentence?'],
+     ev:['UVP articulated in one clear sentence','Tested with at least 5 potential customers for resonance','Clearly differentiated from existing alternatives','Headline and tagline drafted for customer-facing use']},
+    {name:'Final pitch prep',deck:'Defense preparation',wks:2,offset:14,col:'danger',
+     desc:'Synthesis, rehearsal, and defense preparation. This is not new content &mdash; it is putting everything together and making it defensible before a panel of investors and ecosystem leaders.',
+     qs:['Can you present your full canvas in under 10 minutes?','Can you answer hard questions on any section without notes?','Where are the weakest assumptions in your model?','What will an investor or mentor push back hardest on?'],
+     ev:['Full deck rehearsed at least twice end-to-end','Weak assumptions identified, addressed or acknowledged','Coach has signed off on readiness','Thesis defense date confirmed and scheduled']}
+  ]}
 ];
+
+function toggleDetail(id){
+  var d=document.getElementById('detail-'+id);
+  var t=document.getElementById('toggle-'+id);
+  if(!d||!t)return;
+  var open=d.style.display!=='none';
+  d.style.display=open?'none':'block';
+  t.textContent=open?'+':'\u2212';
+}
+
+function makeTimeline(h){var t=document.createElement('div');t.style.cssText='flex:1;position:relative;height:'+h+'px';return t;}
+function addGridLines(c){for(var g=0;g<=TOTAL;g++){var gl=document.createElement('div');gl.style.cssText='position:absolute;top:0;bottom:0;left:'+((g/TOTAL)*100)+'%;width:0.5px;background:var(--color-border-tertiary)';c.appendChild(gl);}}
+function addSprintHL(c){var sh=document.createElement('div');sh.style.cssText='position:absolute;top:0;bottom:0;left:'+((SPRINT_START/TOTAL)*100)+'%;width:'+((2/TOTAL)*100)+'%;background:rgba(186,117,23,0.07);pointer-events:none';c.appendChild(sh);}
 
 var root=document.getElementById('root');
 
 var hdr=document.createElement('div');
 hdr.style.cssText='padding-bottom:14px;border-bottom:0.5px solid var(--color-border-tertiary)';
 hdr.innerHTML='<div style="font-size:16px;font-weight:500;color:var(--color-text-primary)">Start Studio: ID &mdash; curriculum calendar</div>'
-  +'<div style="font-size:13px;color:var(--color-text-secondary);margin-top:3px">Pitch deck pacing guide &middot; 16 weeks total &middot; TechTown Detroit</div>';
+  +'<div style="font-size:13px;color:var(--color-text-secondary);margin-top:3px">Pitch deck pacing guide &middot; 16 weeks &middot; click any module to expand &middot; TechTown Detroit</div>';
 root.appendChild(hdr);
 
 var chartWrap=document.createElement('div');
@@ -91,122 +112,81 @@ chart.style.cssText='min-width:600px';
 chartWrap.appendChild(chart);
 root.appendChild(chartWrap);
 
-function makeRow(labelContent,timelineEl){
-  var row=document.createElement('div');
-  row.style.cssText='display:flex;align-items:center';
-  var lc=document.createElement('div');
-  lc.style.cssText='width:'+LW+'px;flex-shrink:0;padding-right:14px';
-  lc.innerHTML=labelContent;
-  row.appendChild(lc);
-  row.appendChild(timelineEl);
-  return row;
-}
-
-function makeTimeline(h){
-  var t=document.createElement('div');
-  t.style.cssText='flex:1;position:relative;height:'+h+'px';
-  return t;
-}
-
-function addGridLines(container){
-  for(var g=0;g<=TOTAL;g++){
-    var gl=document.createElement('div');
-    gl.style.cssText='position:absolute;top:0;bottom:0;left:'+((g/TOTAL)*100)+'%;width:0.5px;background:var(--color-border-tertiary)';
-    container.appendChild(gl);
-  }
-}
-
-function addSprintHighlight(container){
-  var sh=document.createElement('div');
-  sh.style.cssText='position:absolute;top:0;bottom:0;left:'+((SPRINT_START/TOTAL)*100)+'%;width:'+((2/TOTAL)*100)+'%;background:rgba(186,117,23,0.07);pointer-events:none';
-  container.appendChild(sh);
-}
-
 var monthTl=makeTimeline(18);
-var months=[
-  {label:'Month 1',start:0,span:4},
-  {label:'Month 2',start:4,span:4},
-  {label:'Month 3',start:8,span:4},
-  {label:'Month 4',start:12,span:4}
-];
-months.forEach(function(m){
+[{l:'Month 1',s:0,sp:4},{l:'Month 2',s:4,sp:4},{l:'Month 3',s:8,sp:4},{l:'Month 4',s:12,sp:4}].forEach(function(m){
   var el=document.createElement('div');
-  el.style.cssText='position:absolute;left:'+((m.start/TOTAL)*100)+'%;width:'+((m.span/TOTAL)*100)+'%;'
-    +'font-size:9px;font-weight:500;color:var(--color-text-tertiary);text-align:center;text-transform:uppercase;letter-spacing:0.05em;line-height:18px';
-  el.textContent=m.label;
-  monthTl.appendChild(el);
+  el.style.cssText='position:absolute;left:'+((m.s/TOTAL)*100)+'%;width:'+((m.sp/TOTAL)*100)+'%;font-size:9px;font-weight:500;color:var(--color-text-tertiary);text-align:center;text-transform:uppercase;letter-spacing:0.05em;line-height:18px';
+  el.textContent=m.l;monthTl.appendChild(el);
 });
-var sprintMonthLabel=document.createElement('div');
-var sprintLeft=((SPRINT_START/TOTAL)*100);
-var sprintWidth=((2/TOTAL)*100);
-sprintMonthLabel.style.cssText='position:absolute;left:'+sprintLeft+'%;width:'+sprintWidth+'%;'
-  +'font-size:8px;font-weight:500;color:var(--color-text-warning);text-align:center;text-transform:uppercase;letter-spacing:0.05em;top:0;line-height:18px;'
-  +'border-left:1px solid var(--color-border-warning);border-right:1px solid var(--color-border-warning)';
-sprintMonthLabel.textContent='Sprint';
-monthTl.appendChild(sprintMonthLabel);
-chart.appendChild(makeRow('',monthTl));
+var spLbl=document.createElement('div');
+spLbl.style.cssText='position:absolute;left:'+((SPRINT_START/TOTAL)*100)+'%;width:'+((2/TOTAL)*100)+'%;font-size:8px;font-weight:500;color:var(--color-text-warning);text-align:center;text-transform:uppercase;letter-spacing:0.05em;top:0;line-height:18px;border-left:1px solid var(--color-border-warning);border-right:1px solid var(--color-border-warning)';
+spLbl.textContent='Sprint';monthTl.appendChild(spLbl);
+var mhRow=document.createElement('div');mhRow.style.cssText='display:flex;align-items:center';
+var mhLc=document.createElement('div');mhLc.style.cssText='width:'+LW+'px;flex-shrink:0;padding-right:14px';
+mhRow.appendChild(mhLc);mhRow.appendChild(monthTl);chart.appendChild(mhRow);
 
 var wkTl=makeTimeline(16);
 for(var w=1;w<=TOTAL;w++){
   var wEl=document.createElement('div');
-  var isSprint=(w===15||w===16);
-  wEl.style.cssText='position:absolute;left:'+(((w-1)/TOTAL)*100)+'%;width:'+((1/TOTAL)*100)+'%;'
-    +'font-size:9px;color:'+(isSprint?'var(--color-text-warning)':'var(--color-text-tertiary)')+';'
-    +'font-weight:'+(isSprint?'500':'400')+';text-align:center;line-height:16px';
-  wEl.textContent=w;
-  wkTl.appendChild(wEl);
+  var isSp=(w===15||w===16);
+  wEl.style.cssText='position:absolute;left:'+(((w-1)/TOTAL)*100)+'%;width:'+((1/TOTAL)*100)+'%;font-size:9px;color:'+(isSp?'var(--color-text-warning)':'var(--color-text-tertiary)')+';font-weight:'+(isSp?'500':'400')+';text-align:center;line-height:16px';
+  wEl.textContent=w;wkTl.appendChild(wEl);
 }
-var wkRow=makeRow('',wkTl);
-wkRow.style.borderBottom='0.5px solid var(--color-border-tertiary)';
-wkRow.style.paddingBottom='4px';
-chart.appendChild(wkRow);
-
-var bgMap={
-  warning:'var(--color-background-warning)',
-  info:'var(--color-background-info)',
-  success:'var(--color-background-success)',
-  danger:'var(--color-background-danger)'
-};
+var wkRow=document.createElement('div');
+wkRow.style.cssText='display:flex;align-items:center;border-bottom:0.5px solid var(--color-border-tertiary);padding-bottom:4px';
+var wkLc=document.createElement('div');wkLc.style.cssText='width:'+LW+'px;flex-shrink:0;padding-right:14px';
+wkRow.appendChild(wkLc);wkRow.appendChild(wkTl);chart.appendChild(wkRow);
 
 phases.forEach(function(ph){
   var phRow=document.createElement('div');
   phRow.style.cssText='display:flex;align-items:center;padding:10px 0 5px';
   var phLbl=document.createElement('div');
-  phLbl.style.cssText='width:'+LW+'px;flex-shrink:0;font-size:9.5px;font-weight:500;'
-    +'color:var(--color-text-'+ph.col+');text-transform:uppercase;letter-spacing:0.05em;padding-right:14px;display:flex;align-items:center;gap:6px';
-  phLbl.innerHTML=ph.name
-    +(ph.parallel
-      ? ' <span style="font-size:8.5px;font-weight:500;color:var(--color-text-warning);background:var(--color-background-warning);border:0.5px solid var(--color-border-warning);border-radius:3px;padding:1px 5px;white-space:nowrap;text-transform:none;letter-spacing:0">&#8597; parallel</span>'
-      : '');
+  phLbl.style.cssText='width:'+LW+'px;flex-shrink:0;font-size:9.5px;font-weight:500;color:var(--color-text-'+ph.col+');text-transform:uppercase;letter-spacing:0.05em;padding-right:14px;display:flex;align-items:center;gap:6px';
+  phLbl.innerHTML=ph.name+(ph.parallel?' <span style="font-size:8.5px;font-weight:500;color:var(--color-text-warning);background:var(--color-background-warning);border:0.5px solid var(--color-border-warning);border-radius:3px;padding:1px 5px;white-space:nowrap;text-transform:none;letter-spacing:0">&#8597; parallel</span>':'');
   phRow.appendChild(phLbl);
-  var phLine=document.createElement('div');
-  phLine.style.cssText='flex:1;height:1px;background:var(--color-border-'+ph.col+')';
-  phRow.appendChild(phLine);
-  chart.appendChild(phRow);
+  var phLine=document.createElement('div');phLine.style.cssText='flex:1;height:1px;background:var(--color-border-'+ph.col+')';
+  phRow.appendChild(phLine);chart.appendChild(phRow);
 
   ph.modules.forEach(function(m){
-    var tl=makeTimeline(38);
-    if(ph.parallel) addSprintHighlight(tl);
+    var mid=_mid++;
+    var tl=makeTimeline(36);
+    if(ph.parallel)addSprintHL(tl);
     addGridLines(tl);
-
     var bar=document.createElement('div');
-    var bl=(m.offset/TOTAL)*100;
-    var bw=(m.wks/TOTAL)*100;
-    bar.style.cssText='position:absolute;top:4px;bottom:4px;left:'+bl+'%;width:'+bw+'%;'
-      +'background:'+bgMap[m.col]+';border-left:3px solid var(--color-border-'+m.col+');'
-      +'border-radius:0;display:flex;align-items:center;padding:0 8px;overflow:hidden';
-
+    var bl=(m.offset/TOTAL)*100,bw=(m.wks/TOTAL)*100;
+    bar.style.cssText='position:absolute;top:4px;bottom:4px;left:'+bl+'%;width:'+bw+'%;background:'+bgMap[m.col]+';border-left:3px solid var(--color-border-'+m.col+');border-radius:0;display:flex;align-items:center;padding:0 8px;overflow:hidden';
     var bTxt=document.createElement('span');
     bTxt.style.cssText='font-size:11px;font-weight:500;color:var(--color-text-'+m.col+');white-space:nowrap';
     bTxt.textContent=m.wks+(m.wks===1?' wk':' wks');
-    bar.appendChild(bTxt);
-    tl.appendChild(bar);
+    bar.appendChild(bTxt);tl.appendChild(bar);
 
-    var lbl='<div style="font-size:13px;font-weight:500;color:var(--color-text-primary)">'+m.name+'</div>'
+    var lc=document.createElement('div');
+    lc.style.cssText='width:'+LW+'px;flex-shrink:0;padding-right:14px;cursor:pointer;display:flex;align-items:flex-start;justify-content:space-between;gap:6px';
+    var tp=document.createElement('div');tp.style.cssText='flex:1';
+    tp.innerHTML='<div style="font-size:13px;font-weight:500;color:var(--color-text-primary)">'+m.name+'</div>'
       +'<div style="font-size:10px;color:var(--color-text-tertiary);margin-top:1px">'+m.deck+'</div>';
-    var moduleRow=makeRow(lbl,tl);
-    moduleRow.style.marginBottom='5px';
-    chart.appendChild(moduleRow);
+    var icon=document.createElement('span');
+    icon.id='toggle-'+mid;
+    icon.style.cssText='flex-shrink:0;font-size:13px;font-weight:400;color:var(--color-text-'+m.col+');margin-top:3px;line-height:1;user-select:none';
+    icon.textContent='+';
+    lc.appendChild(tp);lc.appendChild(icon);
+    lc.addEventListener('click',(function(id){return function(){toggleDetail(id);};})(mid));
+
+    var mr=document.createElement('div');
+    mr.style.cssText='display:flex;align-items:center;margin-bottom:2px';
+    mr.appendChild(lc);mr.appendChild(tl);chart.appendChild(mr);
+
+    var det=document.createElement('div');
+    det.id='detail-'+mid;
+    det.style.cssText='display:none;margin-bottom:8px;border-left:3px solid var(--color-border-'+m.col+');border-radius:0;padding:12px 14px;background:'+bgMap[m.col];
+    var qList=m.qs.map(function(q){return '<li style="font-size:12px;line-height:1.6;color:var(--color-text-secondary);padding:4px 0 4px 14px;border-bottom:0.5px solid var(--color-border-tertiary);position:relative;list-style:none"><span style="position:absolute;left:0;color:var(--color-text-'+m.col+')">&#8594;</span>'+q+'</li>';}).join('');
+    var evList=m.ev.map(function(e){return '<li style="font-size:12px;line-height:1.6;color:var(--color-text-secondary);padding:4px 0 4px 14px;border-bottom:0.5px solid var(--color-border-tertiary);position:relative;list-style:none"><span style="position:absolute;left:0;font-size:10px;color:var(--color-text-success)">&#10003;</span>'+e+'</li>';}).join('');
+    det.innerHTML='<p style="font-size:12px;line-height:1.65;color:var(--color-text-secondary);margin-bottom:10px">'+m.desc+'</p>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">'
+      +'<div><div style="font-size:10px;font-weight:500;color:var(--color-text-'+m.col+');border-bottom:1px solid var(--color-border-'+m.col+');padding-bottom:4px;margin-bottom:7px">Key questions</div><ul style="padding:0;margin:0">'+qList+'</ul></div>'
+      +'<div><div style="font-size:10px;font-weight:500;color:var(--color-text-success);border-bottom:1px solid var(--color-border-success);padding-bottom:4px;margin-bottom:7px">Evidence to advance</div><ul style="padding:0;margin:0">'+evList+'</ul></div>'
+      +'</div>';
+    chart.appendChild(det);
   });
 });
 
@@ -216,18 +196,10 @@ chart.appendChild(endLine);
 
 var stats=document.createElement('div');
 stats.style.cssText='display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:16px';
-var statItems=[
-  {label:'Total duration',val:'16 weeks',sub:'~4 months'},
-  {label:'Modules',val:'10 + 1',sub:'Canvas sections + pitch prep'},
-  {label:'Phases 1&ndash;2',val:'Sequential',sub:'14 weeks, one module at a time'},
-  {label:'Phases 3&ndash;4',val:'Parallel sprint',sub:'5 modules, weeks 15&ndash;16'}
-];
-statItems.forEach(function(s){
+[{label:'Total duration',val:'16 weeks',sub:'~4 months'},{label:'Modules',val:'10 + 1',sub:'Canvas sections + pitch prep'},{label:'Phases 1&ndash;2',val:'Sequential',sub:'14 weeks, one module at a time'},{label:'Phases 3&ndash;4',val:'Parallel sprint',sub:'5 modules, weeks 15&ndash;16'}].forEach(function(s){
   var card=document.createElement('div');
   card.style.cssText='background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:12px';
-  card.innerHTML='<div style="font-size:10px;color:var(--color-text-secondary);margin-bottom:4px">'+s.label+'</div>'
-    +'<div style="font-size:15px;font-weight:500;color:var(--color-text-primary)">'+s.val+'</div>'
-    +'<div style="font-size:10px;color:var(--color-text-tertiary);margin-top:2px">'+s.sub+'</div>';
+  card.innerHTML='<div style="font-size:10px;color:var(--color-text-secondary);margin-bottom:4px">'+s.label+'</div><div style="font-size:15px;font-weight:500;color:var(--color-text-primary)">'+s.val+'</div><div style="font-size:10px;color:var(--color-text-tertiary);margin-top:2px">'+s.sub+'</div>';
   stats.appendChild(card);
 });
 root.appendChild(stats);
@@ -235,19 +207,12 @@ root.appendChild(stats);
 var note=document.createElement('div');
 note.style.cssText='margin-top:14px;border-left:3px solid var(--color-border-warning);border-radius:0;padding:10px 14px;background:var(--color-background-warning)';
 note.innerHTML='<div style="font-size:11px;font-weight:500;color:var(--color-text-warning);margin-bottom:4px">Pacing note</div>'
-  +'<p style="font-size:12px;line-height:1.7;color:var(--color-text-secondary)">'
-  +'Phases 1 and 2 remain sequential &mdash; each module builds directly on the last, and compression here would undermine the validation work. '
-  +'Phases 3 and 4 are parallel-pathed as a two-week synthesis sprint in weeks 15 and 16. '
-  +'By that point, founders have done the hard discovery and product definition work, so the business model and synthesis sections can be developed simultaneously rather than in sequence. '
-  +'UVP, revenue, cost, metrics, and final prep all run in the same sprint window. '
-  +'Coaches should expect heavier support load in weeks 15 and 16.'
-  +'</p>';
+  +'<p style="font-size:12px;line-height:1.7;color:var(--color-text-secondary)">Phases 1 and 2 remain sequential &mdash; each module builds directly on the last, and compression here would undermine the validation work. Phases 3 and 4 are parallel-pathed as a two-week synthesis sprint in weeks 15 and 16. By that point, founders have done the hard discovery and product definition work, so business model and synthesis sections can be developed simultaneously. Coaches should expect heavier support load in weeks 15 and 16.</p>';
 root.appendChild(note);
 
 var footer=document.createElement('div');
 footer.style.cssText='display:flex;justify-content:space-between;padding-top:14px;margin-top:14px;border-top:0.5px solid var(--color-border-tertiary)';
-footer.innerHTML='<div style="font-size:12px;font-weight:500;color:var(--color-text-primary)">TechTown Detroit &middot; Start Studio: ID</div>'
-  +'<div style="font-size:12px;color:var(--color-text-secondary)">techtown.org &middot; Detroit, MI</div>';
+footer.innerHTML='<div style="font-size:12px;font-weight:500;color:var(--color-text-primary)">TechTown Detroit &middot; Start Studio: ID</div><div style="font-size:12px;color:var(--color-text-secondary)">techtown.org &middot; Detroit, MI</div>';
 root.appendChild(footer);
 </script>
 </body>
