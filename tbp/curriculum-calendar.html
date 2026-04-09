@@ -23,10 +23,10 @@ body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--color
 </style>
 </head>
 <body style="background:var(--color-background-secondary);padding:2rem 1rem;min-height:100vh">
-<h2 class="sr-only">Start Studio ID curriculum calendar — 16-week pitch deck pacing guide with expandable section details</h2>
+<h2 class="sr-only">Start Studio ID curriculum calendar &mdash; 18-week pitch deck pacing guide</h2>
 <div style="max-width:900px;margin:0 auto;font-size:13px" id="root"></div>
 <script>
-var TOTAL=16,LW=192,SPRINT_START=14,_mid=0;
+var TOTAL=18,LW=192,_mid=0;
 var bgMap={warning:'var(--color-background-warning)',info:'var(--color-background-info)',success:'var(--color-background-success)',danger:'var(--color-background-danger)'};
 
 var phases=[
@@ -38,46 +38,46 @@ var phases=[
     {name:'Customer segments',deck:'Pitch deck &middot; section 2',wks:2,offset:4,col:'info',
      desc:'Define who experiences this problem most acutely and identify your early adopters &mdash; the specific subset most eager for a solution right now.',
      qs:['Who experiences this problem most acutely? Who is your ideal customer?','Who are your early adopters &mdash; the subset most eager right now?','How large is this market? Can you reach and serve it?','What characteristics make this segment specific and distinct?'],
-     ev:['Early adopter profile clearly defined','Segment described in specific, non-generic terms','Reachability of segment assessed','Market sizing estimation complete']}
-  ]},
-  {name:'Phase 2 &mdash; Product definition',col:'info',parallel:false,modules:[
+     ev:['Early adopter profile clearly defined','Segment described in specific, non-generic terms','Reachability of segment assessed','Market sizing estimation complete']},
     {name:'Solution',deck:'Pitch deck &middot; section 4',wks:2,offset:6,col:'info',
      desc:'The top 3 features of your solution, each mapped directly to a problem. Not what is technically interesting to build &mdash; what is minimally necessary to test your core hypothesis.',
      qs:['What are the top 3 features of your solution?','Does each feature map directly to one of the top 3 problems?','Have you described this to potential customers? What was the reaction?','What is the minimum feature set needed to test your hypothesis?'],
-     ev:['Top 3 features explicitly mapped to top 3 problems','Solution concept tested with potential customers','Mockup, prototype, or description built and reviewed','MVP scope defined']},
-    {name:'Channels / GTM strategy',deck:'Pitch deck &middot; section 5',wks:2,offset:8,col:'success',
+     ev:['Top 3 features explicitly mapped to top 3 problems','Solution concept tested with potential customers','Mockup, prototype, or description built and reviewed','MVP scope defined']}
+  ]},
+  {name:'Phase 2 &mdash; Product definition',col:'info',parallel:true,modules:[
+    {name:'Channels / GTM strategy',deck:'Pitch deck &middot; section 5',wks:4,offset:8,col:'success',
      desc:'How you will reach your customer segments at launch and at scale. Channels are the specific paths through which customers find you, try you, and buy from you.',
      qs:['How will you reach your customer segments?','What channels will you use at launch vs. at scale?','How have you already reached early adopters? What worked?','What is the estimated cost to acquire a customer per channel?'],
      ev:['At least 2 viable channels identified and described','Launch vs. scale channel distinguished','Initial channel experiments conducted or planned','Rough CAC estimated']},
-    {name:'Product roadmap',deck:'Technical diligence',wks:2,offset:10,col:'warning',
+    {name:'Product roadmap',deck:'Technical diligence',wks:4,offset:8,col:'warning',
      desc:'Map out what you are building and when &mdash; the sequenced plan from MVP to product. A roadmap is not a wish list; it is a prioritized, customer-validated sequence of build decisions.',
      qs:['What is the MVP and what comes after it?','What are the key milestones from MVP to v1?','What dependencies or blockers exist in the build sequence?','Does the roadmap reflect customer-validated priorities, not founder assumptions?'],
      ev:['MVP scope locked and documented','Post-MVP phases outlined at high level','Key milestones with rough timelines defined','Roadmap reviewed with at least one technical advisor']},
-    {name:'Technical feasibility',deck:'Technical diligence',wks:2,offset:12,col:'info',
+    {name:'Technical feasibility',deck:'Technical diligence',wks:4,offset:8,col:'info',
      desc:'Demonstrate that what you are proposing can actually be built &mdash; by your team, in your timeframe, with available resources. Feasibility is not just about technology; it is about team capability and build risk.',
      qs:['Can this be built with current technology? What are the key technical risks?','What is the minimum viable technical stack?','Who on your team can build this? What gaps exist?','What is the build timeline for MVP, and what could delay it?'],
      ev:['Core technical approach defined and validated','Key technical risks identified and ranked','Build vs. buy decisions made for core components','Team capability assessed against technical requirements']}
   ]},
   {name:'Phase 3 &mdash; Business model',col:'success',parallel:true,modules:[
-    {name:'Revenue strategy',deck:'Pitch deck &middot; section 6',wks:2,offset:14,col:'warning',
+    {name:'Revenue strategy',deck:'Pitch deck &middot; section 6',wks:4,offset:12,col:'warning',
      desc:'How you will make money &mdash; your model, pricing, and the willingness-to-pay evidence behind it. Revenue strategy is not guessing at price; it is testing whether customers will actually pay.',
      qs:['How will you make money? What is the revenue model?','What will you charge, and why at that price point?','Have customers confirmed they would pay &mdash; and at what price?','What is your LTV estimate compared to your CAC?'],
      ev:['Revenue model selected (SaaS, transaction, service, etc.)','Pricing tested with potential customers','Willingness to pay confirmed by at least 3 customers','LTV:CAC ratio estimated at target scale']},
-    {name:'Cost structure',deck:'Pitch deck &middot; section 7',wks:2,offset:14,col:'info',
+    {name:'Cost structure',deck:'Pitch deck &middot; section 7',wks:4,offset:12,col:'info',
      desc:'Your fixed and variable costs and the math that shows the path to break-even. Cost structure is where optimism meets arithmetic.',
      qs:['What are your fixed costs? What are your variable costs?','What does it cost at launch vs. at scale?','At what revenue level do you reach break-even?','What is the riskiest cost assumption in your model?'],
      ev:['Fixed and variable costs identified and categorized','Year 1 cost model built out','Break-even calculation completed','Key cost assumptions flagged and ranked by risk']},
-    {name:'Key metrics',deck:'Pitch deck &middot; section 8',wks:2,offset:14,col:'success',
+    {name:'Key metrics',deck:'Pitch deck &middot; section 8',wks:4,offset:12,col:'success',
      desc:'The one number that tells the story of your business health &mdash; and the indicators that drive it. Metrics are not a dashboard; they are the decisions you make about what to measure and why.',
      qs:['What is your north star metric?','What activities drive that number?','What does success look like in 12 months?','How will you know when a hypothesis is validated vs. disproved?'],
-     ev:['North star metric identified','Leading indicators defined','12-month success criteria articulated','Measurement method and tracking plan described']}
-  ]},
-  {name:'Phase 4 &mdash; Synthesis &amp; defense',col:'danger',parallel:true,modules:[
-    {name:'Unique value proposition',deck:'Pitch deck &middot; section 3',wks:2,offset:14,col:'warning',
-     desc:'Your single, clear, compelling message that explains why you are different. UVP comes last because you cannot write a defensible one until you have validated the problem, customer, solution, and business model.',
+     ev:['North star metric identified','Leading indicators defined','12-month success criteria articulated','Measurement method and tracking plan described']},
+    {name:'Unique value proposition',deck:'Pitch deck &middot; section 3',wks:4,offset:12,col:'warning',
+     desc:'Your single, clear, compelling message that explains why you are different. By Phase 3 you have validated the problem, customer, and solution &mdash; now you can write a UVP that is actually defensible.',
      qs:['What is your one clear message explaining why you are different?','What outcome do you deliver &mdash; not the feature, the result?','What is your high-level concept? (X for Y, or: The only X that...)','Does this resonate when you say it to a stranger in one sentence?'],
-     ev:['UVP articulated in one clear sentence','Tested with at least 5 potential customers for resonance','Clearly differentiated from existing alternatives','Headline and tagline drafted for customer-facing use']},
-    {name:'Final pitch prep',deck:'Defense preparation',wks:2,offset:14,col:'danger',
+     ev:['UVP articulated in one clear sentence','Tested with at least 5 potential customers for resonance','Clearly differentiated from existing alternatives','Headline and tagline drafted for customer-facing use']}
+  ]},
+  {name:'Final sprint',col:'danger',parallel:false,modules:[
+    {name:'Final pitch prep',deck:'Defense preparation',wks:2,offset:16,col:'danger',
      desc:'Synthesis, rehearsal, and defense preparation. This is not new content &mdash; it is putting everything together and making it defensible before a panel of investors and ecosystem leaders.',
      qs:['Can you present your full canvas in under 10 minutes?','Can you answer hard questions on any section without notes?','Where are the weakest assumptions in your model?','What will an investor or mentor push back hardest on?'],
      ev:['Full deck rehearsed at least twice end-to-end','Weak assumptions identified, addressed or acknowledged','Coach has signed off on readiness','Thesis defense date confirmed and scheduled']}
@@ -95,14 +95,14 @@ function toggleDetail(id){
 
 function makeTimeline(h){var t=document.createElement('div');t.style.cssText='flex:1;position:relative;height:'+h+'px';return t;}
 function addGridLines(c){for(var g=0;g<=TOTAL;g++){var gl=document.createElement('div');gl.style.cssText='position:absolute;top:0;bottom:0;left:'+((g/TOTAL)*100)+'%;width:0.5px;background:var(--color-border-tertiary)';c.appendChild(gl);}}
-function addSprintHL(c){var sh=document.createElement('div');sh.style.cssText='position:absolute;top:0;bottom:0;left:'+((SPRINT_START/TOTAL)*100)+'%;width:'+((2/TOTAL)*100)+'%;background:rgba(186,117,23,0.07);pointer-events:none';c.appendChild(sh);}
+function addSprintHL(c,off,span){var sh=document.createElement('div');sh.style.cssText='position:absolute;top:0;bottom:0;left:'+((off/TOTAL)*100)+'%;width:'+((span/TOTAL)*100)+'%;background:rgba(186,117,23,0.07);pointer-events:none';c.appendChild(sh);}
 
 var root=document.getElementById('root');
 
 var hdr=document.createElement('div');
 hdr.style.cssText='padding-bottom:14px;border-bottom:0.5px solid var(--color-border-tertiary)';
 hdr.innerHTML='<div style="font-size:16px;font-weight:500;color:var(--color-text-primary)">Start Studio: ID &mdash; curriculum calendar</div>'
-  +'<div style="font-size:13px;color:var(--color-text-secondary);margin-top:3px">Pitch deck pacing guide &middot; 16 weeks &middot; click any module to expand &middot; TechTown Detroit</div>';
+  +'<div style="font-size:13px;color:var(--color-text-secondary);margin-top:3px">Pitch deck pacing guide &middot; 18 weeks &middot; click any module to expand &middot; TechTown Detroit</div>';
 root.appendChild(hdr);
 
 var chartWrap=document.createElement('div');
@@ -113,14 +113,11 @@ chartWrap.appendChild(chart);
 root.appendChild(chartWrap);
 
 var monthTl=makeTimeline(18);
-[{l:'Month 1',s:0,sp:4},{l:'Month 2',s:4,sp:4},{l:'Month 3',s:8,sp:4},{l:'Month 4',s:12,sp:4}].forEach(function(m){
+[{l:'Month 1',s:0,sp:4},{l:'Month 2',s:4,sp:4},{l:'Month 3',s:8,sp:4},{l:'Month 4',s:12,sp:4},{l:'Month 5',s:16,sp:2}].forEach(function(m){
   var el=document.createElement('div');
   el.style.cssText='position:absolute;left:'+((m.s/TOTAL)*100)+'%;width:'+((m.sp/TOTAL)*100)+'%;font-size:9px;font-weight:500;color:var(--color-text-tertiary);text-align:center;text-transform:uppercase;letter-spacing:0.05em;line-height:18px';
   el.textContent=m.l;monthTl.appendChild(el);
 });
-var spLbl=document.createElement('div');
-spLbl.style.cssText='position:absolute;left:'+((SPRINT_START/TOTAL)*100)+'%;width:'+((2/TOTAL)*100)+'%;font-size:8px;font-weight:500;color:var(--color-text-warning);text-align:center;text-transform:uppercase;letter-spacing:0.05em;top:0;line-height:18px;border-left:1px solid var(--color-border-warning);border-right:1px solid var(--color-border-warning)';
-spLbl.textContent='Sprint';monthTl.appendChild(spLbl);
 var mhRow=document.createElement('div');mhRow.style.cssText='display:flex;align-items:center';
 var mhLc=document.createElement('div');mhLc.style.cssText='width:'+LW+'px;flex-shrink:0;padding-right:14px';
 mhRow.appendChild(mhLc);mhRow.appendChild(monthTl);chart.appendChild(mhRow);
@@ -128,8 +125,9 @@ mhRow.appendChild(mhLc);mhRow.appendChild(monthTl);chart.appendChild(mhRow);
 var wkTl=makeTimeline(16);
 for(var w=1;w<=TOTAL;w++){
   var wEl=document.createElement('div');
-  var isSp=(w===15||w===16);
-  wEl.style.cssText='position:absolute;left:'+(((w-1)/TOTAL)*100)+'%;width:'+((1/TOTAL)*100)+'%;font-size:9px;color:'+(isSp?'var(--color-text-warning)':'var(--color-text-tertiary)')+';font-weight:'+(isSp?'500':'400')+';text-align:center;line-height:16px';
+  var wCol=w>=17?'var(--color-text-danger)':w>=13?'var(--color-text-success)':w>=9?'var(--color-text-info)':'var(--color-text-tertiary)';
+  var wBold=w>=9?'500':'400';
+  wEl.style.cssText='position:absolute;left:'+(((w-1)/TOTAL)*100)+'%;width:'+((1/TOTAL)*100)+'%;font-size:9px;color:'+wCol+';font-weight:'+wBold+';text-align:center;line-height:16px';
   wEl.textContent=w;wkTl.appendChild(wEl);
 }
 var wkRow=document.createElement('div');
@@ -150,7 +148,7 @@ phases.forEach(function(ph){
   ph.modules.forEach(function(m){
     var mid=_mid++;
     var tl=makeTimeline(36);
-    if(ph.parallel)addSprintHL(tl);
+    if(ph.parallel)addSprintHL(tl,m.offset,m.wks);
     addGridLines(tl);
     var bar=document.createElement('div');
     var bl=(m.offset/TOTAL)*100,bw=(m.wks/TOTAL)*100;
@@ -196,7 +194,7 @@ chart.appendChild(endLine);
 
 var stats=document.createElement('div');
 stats.style.cssText='display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:16px';
-[{label:'Total duration',val:'16 weeks',sub:'~4 months'},{label:'Modules',val:'10 + 1',sub:'Canvas sections + pitch prep'},{label:'Phases 1&ndash;2',val:'Sequential',sub:'14 weeks, one module at a time'},{label:'Phases 3&ndash;4',val:'Parallel sprint',sub:'5 modules, weeks 15&ndash;16'}].forEach(function(s){
+[{label:'Total duration',val:'18 weeks',sub:'~4.5 months'},{label:'Phase 1',val:'8 weeks',sub:'Sequential &mdash; Problem, Customer, Solution'},{label:'Phases 2 &amp; 3',val:'4 weeks each',sub:'Parallel stacks &mdash; 3 and 4 tracks'},{label:'Final sprint',val:'2 weeks',sub:'Thesis defense preparation'}].forEach(function(s){
   var card=document.createElement('div');
   card.style.cssText='background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:12px';
   card.innerHTML='<div style="font-size:10px;color:var(--color-text-secondary);margin-bottom:4px">'+s.label+'</div><div style="font-size:15px;font-weight:500;color:var(--color-text-primary)">'+s.val+'</div><div style="font-size:10px;color:var(--color-text-tertiary);margin-top:2px">'+s.sub+'</div>';
@@ -207,7 +205,7 @@ root.appendChild(stats);
 var note=document.createElement('div');
 note.style.cssText='margin-top:14px;border-left:3px solid var(--color-border-warning);border-radius:0;padding:10px 14px;background:var(--color-background-warning)';
 note.innerHTML='<div style="font-size:11px;font-weight:500;color:var(--color-text-warning);margin-bottom:4px">Pacing note</div>'
-  +'<p style="font-size:12px;line-height:1.7;color:var(--color-text-secondary)">Phases 1 and 2 remain sequential &mdash; each module builds directly on the last, and compression here would undermine the validation work. Phases 3 and 4 are parallel-pathed as a two-week synthesis sprint in weeks 15 and 16. By that point, founders have done the hard discovery and product definition work, so business model and synthesis sections can be developed simultaneously. Coaches should expect heavier support load in weeks 15 and 16.</p>';
+  +'<p style="font-size:12px;line-height:1.7;color:var(--color-text-secondary)">Phase 1 is sequential: Problem, Customer, and Solution build directly on each other and cannot be compressed without sacrificing the validation work. Phases 2 and 3 are each 4-week parallel stacks &mdash; multiple tracks run simultaneously within the phase window. Phase 3 includes UVP because by that point founders have the customer clarity and solution definition needed to write a defensible one. Final pitch prep is a standalone 2-week sprint focused entirely on synthesis, rehearsal, and defense preparation.</p>';
 root.appendChild(note);
 
 var footer=document.createElement('div');
