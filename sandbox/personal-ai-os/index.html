@@ -31,7 +31,7 @@
   button#send { background: var(--text); color: var(--bg); border: none; border-radius: 10px; padding: 10px 18px; font-size: 14px; font-family: inherit; font-weight: 500; cursor: pointer; flex-shrink: 0; height: 44px; transition: opacity 0.15s; }
   button#send:disabled { opacity: 0.3; cursor: default; }
   button#send:hover:not(:disabled) { opacity: 0.85; }
-  #blueprint { display: none; max-width: 640px; width: 100%; margin: 0 auto; padding-bottom: 2rem; }
+  #assessment { display: none; max-width: 640px; width: 100%; margin: 0 auto; padding-bottom: 2rem; }
   .bp-meta { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1.25rem; }
   .bp-label { font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); }
   .bp-name { font-size: 12px; color: var(--text-dim); }
@@ -51,7 +51,7 @@
 </header>
 <main id="main">
   <div id="messages"></div>
-  <div id="blueprint"></div>
+  <div id="assessment"></div>
 </main>
 <footer id="footer">
   <div class="input-row">
@@ -60,13 +60,14 @@
   </div>
 </footer>
 <script>
-var INTAKE_SYS = "You are a warm, genuinely curious intake assistant. Your job is to understand this person well enough to generate a personalized blueprint for how AI can work for them. The goal is a good blueprint, not a long conversation. Move efficiently.\n\nThree phases. Keep responses short. One or two questions at a time, never three.\n\nPHASE 1 - WHO THEY ARE (3-4 exchanges max)\nLearn what they do, who they do it for, whether they like it. Probe warmly when answers are thin, but move on once you have a clear picture. Don't keep digging once you understand the person.\n- I'm in sales: Cool - what kind? Do you like it?\n- Medical device sales: Got it - so mostly doctors and hospital systems?\n\nPHASE 2 - THEIR RELATIONSHIP WITH AI (2-3 exchanges max)\nShift naturally to how they use AI - not yes/no, but how and how it feels. Once you have a real answer, move to the checkpoint. Don't keep probing once you understand their relationship with AI.\n- I use ChatGPT sometimes: For what mostly? Does it actually help or feel hit or miss?\n- Haven't used it: What's held you back - skepticism, or just no reason to dig in yet?\n\nTRUST CHECKPOINT\nAfter Phase 2, mirror back what you've learned in 3-4 tight sentences. Ask if it lands. A simple yes or that's right is enough - move on immediately.\n\nPHASE 3 - THE PROBLEM AND AMBITION (2-3 exchanges max, then trigger)\nOnly after trust checkpoint confirmed. Ask ONE question covering what they're trying to solve and where the friction is. Listen. Ask ONE follow-up only if genuinely needed. Then ask what success looks like in 12 months. That is the complete Phase 3 - three questions maximum.\n\nDo NOT ask about solutions, timelines, tech stacks, budgets, team size, or how they would build anything. That is the blueprint's job. Your job ends when you know the problem and the ambition.\n\nWHEN READY\nThe moment you have: who they are, their AI relationship, what they're solving, where the friction is, and what success looks like - trigger immediately. Do not ask more questions. End your message with this marker on its own line:\n[BLUEPRINT_READY]\n\nSTYLE: Warm not effusive. Never say Great! Short responses. Prose only, no bullets. Mirror before probing. Lowercase is fine. Resist the urge to keep exploring once you have what you need.";
+var INTAKE_SYS = "You are a warm, curious intake assistant. Your purpose — which you state clearly at the start — is to help this person understand what AI could be doing for them, and give them a real plan for how to get there. You are building toward an honest assessment: what they currently use, what already exists that could help them, and what could be built for them specifically.\n\nMove through four phases naturally. Keep responses short. One or two questions at a time, never three. Do not over-explain. Do not stay in any phase longer than needed.\n\nPHASE 1 - WHO THEY ARE (2-3 exchanges)\nLearn what they do and who they do it for. Probe once if the answer is thin, then move on. You need enough to understand their context, not their life story.\n\nPHASE 2 - THEIR CURRENT SYSTEMS (3-4 exchanges)\nThis is the diagnostic core. After you understand who they are, shift to how they actually manage their work and life right now. Ask what tools and systems they use - email, task management, calendar, communication, note-taking, anything. Ask where those systems are breaking down or costing them the most time and energy. Be specific. This is the most important phase - you need a real picture of their current setup to produce a useful assessment.\n- What does your current setup look like for managing your work?\n- Where does stuff fall through the cracks most often?\n- What tool or process frustrates you most right now?\n\nPHASE 2B - THE AI BARRIER (1-2 exchanges)\nAsk directly why they are not doing more with AI tools already. Frame it as a genuine question, not an accusation. The answer is almost always trust or capacity - they either don't believe it will help them specifically, or they don't have the time or knowledge to figure it out. This answer directly shapes the recommendations.\n- Is it more that you haven't had time to figure it out, or that you're not sure it would actually help?\n- What would need to be true for you to feel confident using AI as part of how you work?\n\nTRUST CHECKPOINT\nMirror back what you've learned in 3-4 tight sentences covering who they are, their current setup, where it's breaking down, and what's held them back from AI. Ask if it lands. Move on as soon as they confirm.\n\nPHASE 3 - THE AMBITION (1-2 exchanges)\nOnly after trust checkpoint confirmed. One question: what does their work life look like if this actually gets solved? What's the version of their day they're trying to get to? That's all you need. Then trigger.\n\nWHEN READY\nThe moment you have all four phases complete and trust checkpoint confirmed, end your message with this marker on its own line:\n[ASSESSMENT_READY]\n\nSTYLE: Warm, direct, not effusive. Never say Great! or That's fascinating! Short responses only. Prose, no bullets. Mirror before probing. Lowercase is fine. Move on when you have what you need - do not keep exploring.";
 
-var BLUEPRINT_SYS = "You are generating a personalized AI OS blueprint based on a completed intake conversation. Be specific to what this person shared - no generic advice.\n\nUse exactly these five sections. Format each header as **SECTION NAME** on its own line with nothing else on that line.\n\n**WHO YOU ARE**\n2-3 sentences synthesizing who this person is. Written directly to them. Make them feel seen.\n\n**WHERE YOU ARE WITH AI**\nHonest read of their current relationship with AI. No judgment.\n\n**WHERE AI CAN GIVE YOU LEVERAGE**\n3-4 highest-impact places AI can help. Specific to what they shared. Numbered.\n\n**YOUR FIRST MOVE**\nOne concrete thing to build or try first. Specific enough to start today. Explain why this one.\n\n**YOUR 12-MONTH THESIS**\nOne paragraph. If they build systematically, what does their work life look like. Grounded, not a sales pitch.\n\nTight, direct, no corporate language. Write like a trusted advisor who just spent 20 minutes listening.";
+var ASSESSMENT_SYS = "You are generating a personalized AI systems assessment based on a completed intake conversation. Your job is to be genuinely useful - not to sell AI, but to give an honest read of where this person is, what already exists that could help them, and what a bespoke build would look like.\n\nUse exactly these five sections. Format each header as **SECTION NAME** on its own line with nothing else on that line.\n\n**WHERE YOU ARE NOW**\nAn honest, specific read of their current setup based on what they shared. Name the actual tools and systems they mentioned. Identify the real gaps - not generic productivity problems, but the specific ways their current setup is failing them.\n\n**WHAT ALREADY EXISTS THAT COULD HELP**\nSpecific existing tools or platforms that address their actual gaps. For each one, say what it does, why it fits their situation, and what the honest trade-off is. Do not list every AI tool - only the ones genuinely relevant to what they shared. Be direct about limitations.\n\n**WHAT A BESPOKE BUILD COULD LOOK LIKE**\nBased on their situation, describe what a custom-built solution would look like - the components, what it would automate or connect, and roughly what effort level we're talking about. Be honest about whether this is worth it given what already exists, or whether it fills a gap that off-the-shelf tools can't.\n\n**YOUR FIRST MOVE**\nOne specific thing to do first - either try a specific existing tool or build one specific thing. Concrete enough to start this week. Explain why this one before anything else, especially in light of what's held them back from AI so far.\n\n**IF YOU BUILD THIS OUT**\nOne paragraph. If they systematically close the gaps you've identified, what does their work life actually look like? Grounded and specific to what they shared - not a generic productivity pitch.\n\nWrite like a trusted advisor who actually listened. Direct, no corporate language, no AI cheerleading.";
 
-var OPENER = "hey - glad you're here. before we get into anything else, tell me a bit about yourself. what do you do?";
+var OPENER = "hey - glad you're here. quick thing before we start: i'm going to ask you some questions about how you work and what you're dealing with, and at the end i'll give you an honest assessment of what AI could actually be doing for you - what tools exist, what could be built for you specifically, and where to start. it only works if you're honest with me, so don't worry about sounding polished.\n\nfirst question: what do you do?";
+
 var PRIMING = [
-  { role: "user", content: INTAKE_SYS + "\n\nBegin the conversation now." },
+  { role: "user", content: INTAKE_SYS + "\n\nBegin the conversation now with the opener." },
   { role: "assistant", content: OPENER }
 ];
 
@@ -106,14 +107,14 @@ function handleMessage(userMsg) {
   var msgs = PRIMING.concat(convo);
   callAPI({ model: "claude-haiku-4-5-20251001", max_tokens: 400, messages: msgs })
     .then(function(text) {
-      var ready = text.indexOf("[BLUEPRINT_READY]") !== -1;
-      text = text.replace(/\[BLUEPRINT_READY\]/g, "").trim();
+      var ready = text.indexOf("[ASSESSMENT_READY]") !== -1;
+      text = text.replace(/\[ASSESSMENT_READY\]/g, "").trim();
       convo.push({ role: "assistant", content: text });
       hideTyping();
       addMsg("ai", text);
       exchanges++;
-      setProgress(Math.min(82, 4 + exchanges * 9));
-      if (ready) { done = true; setTimeout(function() { generateBlueprint(); }, 700); }
+      setProgress(Math.min(82, 4 + exchanges * 8));
+      if (ready) { done = true; setTimeout(function() { generateAssessment(); }, 700); }
       else unlock();
     })
     .catch(function(e) {
@@ -124,24 +125,24 @@ function handleMessage(userMsg) {
     });
 }
 
-function generateBlueprint() {
+function generateAssessment() {
   setProgress(88);
-  addNote("generating your blueprint...");
+  addNote("building your assessment...");
   showTyping();
   var transcript = convo.map(function(m) {
     return (m.role === "user" ? "Person" : "Interviewer") + ": " + m.content;
   }).join("\n\n");
   callAPI({
     model: "claude-sonnet-4-6",
-    max_tokens: 1200,
-    messages: [{ role: "user", content: BLUEPRINT_SYS + "\n\nFull conversation:\n\n" + transcript + "\n\nGenerate the blueprint." }]
+    max_tokens: 1400,
+    messages: [{ role: "user", content: ASSESSMENT_SYS + "\n\nFull conversation:\n\n" + transcript + "\n\nGenerate the assessment." }]
   }).then(function(text) {
     hideTyping();
     setProgress(100);
-    showBlueprint(text);
+    showAssessment(text);
   }).catch(function(e) {
     hideTyping();
-    addMsg("ai", "blueprint generation failed: " + e.message);
+    addMsg("ai", "assessment generation failed: " + e.message);
   });
 }
 
@@ -153,20 +154,20 @@ function parseSections(text) {
     else if (cur) cur.b.push(lines[i]);
   }
   if (cur) out.push(cur);
-  return out.length ? out : [{ h: "Your Blueprint", b: lines }];
+  return out.length ? out : [{ h: "Your Assessment", b: lines }];
 }
 
-function showBlueprint(text) {
+function showAssessment(text) {
   document.getElementById("messages").style.display = "none";
   document.getElementById("footer").style.display = "none";
-  var bp = document.getElementById("blueprint");
-  bp.style.display = "block";
+  var el = document.getElementById("assessment");
+  el.style.display = "block";
   var firstMsg = null;
   for (var i = 0; i < convo.length; i++) { if (convo[i].role === "user") { firstMsg = convo[i]; break; } }
   var nameMatch = firstMsg ? firstMsg.content.match(/\b([A-Z][a-z]{2,12})\b/) : null;
   var firstName = nameMatch ? nameMatch[1] : "";
   var sections = parseSections(text);
-  var html = '<div class="bp-meta"><span class="bp-label">Your AI OS Blueprint</span><span class="bp-name">' + firstName + '</span></div><div class="bp-divider"></div>';
+  var html = '<div class="bp-meta"><span class="bp-label">Your AI Assessment</span><span class="bp-name">' + firstName + '</span></div><div class="bp-divider"></div>';
   for (var j = 0; j < sections.length; j++) {
     html += '<div class="bp-section-head"' + (j === 0 ? ' style="margin-top:0"' : '') + '>' + sections[j].h + '</div><div class="bp-body">';
     var body = sections[j].b.filter(function(l) { return l.trim(); });
@@ -174,7 +175,7 @@ function showBlueprint(text) {
     html += '</div>';
   }
   html += '<div class="restart-btn"><button onclick="location.reload()">Start over</button></div>';
-  bp.innerHTML = html;
+  el.innerHTML = html;
   document.getElementById("main").scrollTop = 0;
 }
 
