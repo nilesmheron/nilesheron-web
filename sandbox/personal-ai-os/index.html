@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Personal AI OS</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --bg: #0f0f0f; --surface: #1a1a1a; --border: rgba(255,255,255,0.1); --border-strong: rgba(255,255,255,0.2); --text: #f0f0f0; --text-muted: #888; --text-dim: #555; --user-bg: #1e1e1e; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 15px; line-height: 1.6; min-height: 100vh; display: flex; flex-direction: column; }
+  header { padding: 1.25rem 1.5rem; border-bottom: 0.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .wordmark { font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); }
+  .progress-wrap { width: 80px; height: 2px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--text-muted); border-radius: 2px; transition: width 0.5s ease; width: 3%; }
+  main { flex: 1; overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; }
+  #messages { max-width: 640px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; padding-bottom: 1rem; }
+  .msg { max-width: 82%; padding: 11px 15px; border-radius: 16px; font-size: 15px; line-height: 1.65; }
+  .msg.ai { align-self: flex-start; background: var(--surface); color: var(--text); border-bottom-left-radius: 4px; }
+  .msg.user { align-self: flex-end; background: var(--user-bg); border: 0.5px solid var(--border-strong); color: var(--text); border-bottom-right-radius: 4px; }
+  .msg.note { align-self: center; background: none; font-size: 12px; color: var(--text-dim); padding: 2px 0; max-width: 100%; }
+  .typing { display: flex; gap: 5px; align-items: center; padding: 14px 16px; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-dim); animation: bounce 1.2s ease-in-out infinite; }
+  .dot:nth-child(2) { animation-delay: 0.18s; } .dot:nth-child(3) { animation-delay: 0.36s; }
+  @keyframes bounce { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-5px); } }
+  footer { flex-shrink: 0; border-top: 0.5px solid var(--border); padding: 1rem 1.5rem; }
+  .input-row { max-width: 640px; margin: 0 auto; display: flex; gap: 10px; align-items: flex-end; }
+  textarea { flex: 1; background: var(--surface); border: 0.5px solid var(--border-strong); border-radius: 12px; color: var(--text); font-size: 15px; font-family: inherit; line-height: 1.5; padding: 10px 14px; resize: none; min-height: 44px; max-height: 160px; overflow-y: auto; }
+  textarea:focus { outline: none; border-color: rgba(255,255,255,0.35); }
+  textarea::placeholder { color: var(--text-dim); }
+  textarea:disabled { opacity: 0.4; }
+  button#send { background: var(--text); color: var(--bg); border: none; border-radius: 10px; padding: 10px 18px; font-size: 14px; font-family: inherit; font-weight: 500; cursor: pointer; flex-shrink: 0; height: 44px; transition: opacity 0.15s; }
+  button#send:disabled { opacity: 0.3; cursor: default; }
+  button#send:hover:not(:disabled) { opacity: 0.85; }
+  #blueprint { display: none; max-width: 640px; width: 100%; margin: 0 auto; padding-bottom: 2rem; }
+  .bp-meta { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1.25rem; }
+  .bp-label { font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); }
+  .bp-name { font-size: 12px; color: var(--text-dim); }
+  .bp-divider { height: 0.5px; background: var(--border); margin-bottom: 1.25rem; }
+  .bp-section-head { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin: 22px 0 7px; }
+  .bp-section-head:first-child { margin-top: 0; }
+  .bp-body p { margin: 0 0 8px; line-height: 1.7; color: var(--text); font-size: 15px; }
+  .restart-btn { margin-top: 2rem; padding-top: 1.25rem; border-top: 0.5px solid var(--border); }
+  .restart-btn button { background: transparent; border: 0.5px solid var(--border-strong); border-radius: 8px; color: var(--text-muted); font-size: 13px; font-family: inherit; padding: 8px 18px; cursor: pointer; }
+  .restart-btn button:hover { background: var(--surface); }
+</style>
+</head>
+<body>
+<header>
+  <span class="wordmark">Personal AI OS</span>
+  <div class="progress-wrap"><div class="progress-fill" id="pbar"></div></div>
+</header>
+<main id="main">
+  <div id="messages"></div>
+  <div id="blueprint"></div>
+</main>
+<footer id="footer">
+  <div class="input-row">
+    <textarea id="input" placeholder="Type your response..." rows="1"></textarea>
+    <button id="send" disabled>Send</button>
+  </div>
+</footer>
+<script>
+var INTAKE_SYS = "You are a warm, genuinely curious intake assistant. Your job is to get to know this person well enough to generate a personalized blueprint for how AI can work for them.\n\nMove through three phases naturally like a good conversation, not a form. Keep responses short. One or two questions at a time, never three.\n\nPHASE 1 - WHO THEY ARE\nLearn about them as a person. What they do, who they do it for, whether they like it. Probe warmly when answers are thin. Follow threads.\n- I'm in sales: Cool - what kind? Do you like it?\n- Medical device sales: Got it - so mostly doctors and hospital systems? Or somewhere else?\n\nPHASE 2 - THEIR RELATIONSHIP WITH AI\nOnce you know who they are, shift naturally to how they currently use AI. Not yes/no - how, and how it feels.\n- I use ChatGPT sometimes: For what mostly? Does it actually help or feel hit or miss?\n- Haven't really used it: What's held you back - skepticism, or just no reason to dig in yet?\n\nTRUST CHECKPOINT\nAfter Phase 2, mirror back what you have learned in 3-4 sentences. Something like: okay, so here's what I've got - [summary]. does that feel right? anything I'm getting wrong? Wait for confirmation before continuing.\n\nPHASE 3 - THE PROBLEM AND AMBITION\nOnly after trust checkpoint confirmed. What they're trying to build or solve. Where the friction is. What success looks like in 12 months.\n\nWHEN READY\nWhen you have solid understanding across all three phases and trust checkpoint is confirmed, end your final message with this marker on its own line:\n[BLUEPRINT_READY]\n\nSTYLE: Warm not effusive. Never say Great! Short responses. Prose only, no bullets. Mirror before probing. Lowercase is fine.";
+
+var BLUEPRINT_SYS = "You are generating a personalized AI OS blueprint based on a completed intake conversation. Be specific to what this person shared - no generic advice.\n\nUse exactly these five sections. Format each header as **SECTION NAME** on its own line with nothing else on that line.\n\n**WHO YOU ARE**\n2-3 sentences synthesizing who this person is. Written directly to them. Make them feel seen.\n\n**WHERE YOU ARE WITH AI**\nHonest read of their current relationship with AI. No judgment.\n\n**WHERE AI CAN GIVE YOU LEVERAGE**\n3-4 highest-impact places AI can help. Specific to what they shared. Numbered.\n\n**YOUR FIRST MOVE**\nOne concrete thing to build or try first. Specific enough to start today. Explain why this one.\n\n**YOUR 12-MONTH THESIS**\nOne paragraph. If they build systematically, what does their work life look like. Grounded, not a sales pitch.\n\nTight, direct, no corporate language. Write like a trusted advisor who just spent 20 minutes listening.";
+
+var OPENER = "hey - glad you're here. before we get into anything else, tell me a bit about yourself. what do you do?";
+var PRIMING = [
+  { role: "user", content: INTAKE_SYS + "\n\nBegin the conversation now." },
+  { role: "assistant", content: OPENER }
+];
+
+var convo = [], exchanges = 0, busy = false, done = false;
+var msgsEl = document.getElementById("messages");
+var inputEl = document.getElementById("input");
+var sendBtn = document.getElementById("send");
+var pbar = document.getElementById("pbar");
+
+function scroll() { setTimeout(function() { var m = document.getElementById("main"); m.scrollTop = m.scrollHeight; }, 60); }
+function addMsg(role, text) { var d = document.createElement("div"); d.className = "msg " + role; d.textContent = text; msgsEl.appendChild(d); scroll(); }
+function addNote(text) { var d = document.createElement("div"); d.className = "msg note"; d.textContent = text; msgsEl.appendChild(d); scroll(); }
+function showTyping() { var d = document.createElement("div"); d.className = "msg ai typing"; d.id = "typing"; d.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>'; msgsEl.appendChild(d); scroll(); }
+function hideTyping() { var t = document.getElementById("typing"); if (t) t.remove(); }
+function setProgress(p) { pbar.style.width = p + "%"; }
+function lock() { busy = true; inputEl.disabled = true; sendBtn.disabled = true; }
+function unlock() { busy = false; inputEl.disabled = false; sendBtn.disabled = !inputEl.value.trim(); inputEl.focus(); }
+
+function callAPI(body) {
+  return fetch("/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  }).then(function(res) {
+    return res.json();
+  }).then(function(data) {
+    if (data.error) throw new Error(data.error.message || data.error);
+    return (data.content || []).map(function(b) { return b.text || ""; }).join("");
+  });
+}
+
+function handleMessage(userMsg) {
+  if (busy || done) return;
+  lock();
+  convo.push({ role: "user", content: userMsg });
+  showTyping();
+  var msgs = PRIMING.concat(convo);
+  callAPI({ model: "claude-haiku-4-5-20251001", max_tokens: 400, messages: msgs })
+    .then(function(text) {
+      var ready = text.indexOf("[BLUEPRINT_READY]") !== -1;
+      text = text.replace(/\[BLUEPRINT_READY\]/g, "").trim();
+      convo.push({ role: "assistant", content: text });
+      hideTyping();
+      addMsg("ai", text);
+      exchanges++;
+      setProgress(Math.min(82, 4 + exchanges * 9));
+      if (ready) { done = true; setTimeout(function() { generateBlueprint(); }, 700); }
+      else unlock();
+    })
+    .catch(function(e) {
+      hideTyping();
+      convo.pop();
+      addMsg("ai", "something went wrong - " + e.message + ". try again.");
+      unlock();
+    });
+}
+
+function generateBlueprint() {
+  setProgress(88);
+  addNote("generating your blueprint...");
+  showTyping();
+  var transcript = convo.map(function(m) {
+    return (m.role === "user" ? "Person" : "Interviewer") + ": " + m.content;
+  }).join("\n\n");
+  callAPI({
+    model: "claude-sonnet-4-6",
+    max_tokens: 1200,
+    messages: [{ role: "user", content: BLUEPRINT_SYS + "\n\nFull conversation:\n\n" + transcript + "\n\nGenerate the blueprint." }]
+  }).then(function(text) {
+    hideTyping();
+    setProgress(100);
+    showBlueprint(text);
+  }).catch(function(e) {
+    hideTyping();
+    addMsg("ai", "blueprint generation failed: " + e.message);
+  });
+}
+
+function parseSections(text) {
+  var lines = text.split("\n"), out = [], cur = null;
+  for (var i = 0; i < lines.length; i++) {
+    var m = lines[i].match(/^\*\*([^*]+)\*\*\s*$/);
+    if (m) { if (cur) out.push(cur); cur = { h: m[1], b: [] }; }
+    else if (cur) cur.b.push(lines[i]);
+  }
+  if (cur) out.push(cur);
+  return out.length ? out : [{ h: "Your Blueprint", b: lines }];
+}
+
+function showBlueprint(text) {
+  document.getElementById("messages").style.display = "none";
+  document.getElementById("footer").style.display = "none";
+  var bp = document.getElementById("blueprint");
+  bp.style.display = "block";
+  var firstMsg = null;
+  for (var i = 0; i < convo.length; i++) { if (convo[i].role === "user") { firstMsg = convo[i]; break; } }
+  var nameMatch = firstMsg ? firstMsg.content.match(/\b([A-Z][a-z]{2,12})\b/) : null;
+  var firstName = nameMatch ? nameMatch[1] : "";
+  var sections = parseSections(text);
+  var html = '<div class="bp-meta"><span class="bp-label">Your AI OS Blueprint</span><span class="bp-name">' + firstName + '</span></div><div class="bp-divider"></div>';
+  for (var j = 0; j < sections.length; j++) {
+    html += '<div class="bp-section-head"' + (j === 0 ? ' style="margin-top:0"' : '') + '>' + sections[j].h + '</div><div class="bp-body">';
+    var body = sections[j].b.filter(function(l) { return l.trim(); });
+    for (var k = 0; k < body.length; k++) { html += '<p>' + body[k] + '</p>'; }
+    html += '</div>';
+  }
+  html += '<div class="restart-btn"><button onclick="location.reload()">Start over</button></div>';
+  bp.innerHTML = html;
+  document.getElementById("main").scrollTop = 0;
+}
+
+inputEl.addEventListener("input", function() {
+  sendBtn.disabled = busy || !inputEl.value.trim();
+  inputEl.style.height = "auto";
+  inputEl.style.height = Math.min(inputEl.scrollHeight, 160) + "px";
+});
+
+inputEl.addEventListener("keydown", function(e) {
+  if (e.key === "Enter" && !e.shiftKey && !busy) {
+    e.preventDefault();
+    var val = inputEl.value.trim();
+    if (!val) return;
+    addMsg("user", val);
+    inputEl.value = "";
+    inputEl.style.height = "auto";
+    handleMessage(val);
+  }
+});
+
+sendBtn.addEventListener("click", function() {
+  var val = inputEl.value.trim();
+  if (!val || busy) return;
+  addMsg("user", val);
+  inputEl.value = "";
+  inputEl.style.height = "auto";
+  handleMessage(val);
+});
+
+addMsg("ai", OPENER);
+inputEl.focus();
+</script>
+</body>
+</html>
