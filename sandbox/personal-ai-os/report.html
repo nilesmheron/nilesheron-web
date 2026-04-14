@@ -40,6 +40,9 @@
 <div id="report-body" style="display:none"></div>
 
 <script>
+var SUPABASE_URL = 'https://xszhfxzfybubdlivbfxp.supabase.co';
+var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzemhmeHpmeWJ1YmRsaXZiZnhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMzIyODUsImV4cCI6MjA5MTcwODI4NX0.H0YORIA303Xxt-aLmZDjlMrCbwwQSK5hhdwurlB8f2w';
+
 var reportId = new URLSearchParams(window.location.search).get('id');
 var reportData = null;
 
@@ -48,23 +51,26 @@ if (!reportId) {
   document.getElementById('error').style.display = 'block';
   document.getElementById('error').textContent = 'No report ID found. Go back and use the Save / Share report button to generate a link.';
 } else {
-  fetch('/api/report?id=' + encodeURIComponent(reportId))
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      if (data.error) throw new Error(data.error);
-      reportData = data;
-      renderReport(data);
-    })
-    .catch(function(e) {
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('error').style.display = 'block';
-      document.getElementById('error').textContent = 'Could not load report: ' + e.message;
-    });
+  fetch(SUPABASE_URL + '/rest/v1/reports?id=eq.' + encodeURIComponent(reportId) + '&select=id,name,assessment,created_at', {
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+    }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(rows) {
+    if (!rows.length) throw new Error('Report not found');
+    reportData = rows[0];
+    renderReport(rows[0]);
+  })
+  .catch(function(e) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('error').style.display = 'block';
+    document.getElementById('error').textContent = 'Could not load report: ' + e.message;
+  });
 }
 
-function shortId(id) {
-  return id ? id.substring(0, 8) : '';
-}
+function shortId(id) { return id ? id.substring(0, 8) : ''; }
 
 function renderReport(data) {
   var sid = shortId(data.id);
@@ -99,17 +105,11 @@ function renderReport(data) {
 }
 
 function renderSections(text) {
-  var lines = text.split('\n');
-  var html = '';
-  var inSection = false;
+  var lines = text.split('\n'), html = '', inSection = false;
   for (var i = 0; i < lines.length; i++) {
     var m = lines[i].match(/^\*\*([^*]+)\*\*\s*$/);
-    if (m) {
-      html += '<h2>' + escHtml(m[1]) + '</h2>';
-      inSection = true;
-    } else if (lines[i].trim() && inSection) {
-      html += '<p>' + escHtml(lines[i]) + '</p>';
-    }
+    if (m) { html += '<h2>' + escHtml(m[1]) + '</h2>'; inSection = true; }
+    else if (lines[i].trim() && inSection) { html += '<p>' + escHtml(lines[i]) + '</p>'; }
   }
   return html || '<p>' + escHtml(text) + '</p>';
 }
@@ -124,11 +124,6 @@ function copyLink() {
     btn.textContent = 'Copied!';
     btn.classList.add('btn-success');
     setTimeout(function() { btn.textContent = 'Copy link'; btn.classList.remove('btn-success'); }, 2500);
-  }).catch(function() {
-    var url = document.getElementById('share-url-display');
-    url.style.background = '#fffde7';
-    url.style.padding = '6px 8px';
-    url.title = 'Copy this URL';
   });
 }
 
@@ -136,50 +131,42 @@ function buildMd() {
   if (!reportData) return '';
   var sid = shortId(reportData.id);
   var date = new Date(reportData.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-  var lines = [];
-  lines.push('# Personal AI OS — Assessment Report');
-  lines.push('**Session:** #' + sid);
-  lines.push('**Generated:** ' + date);
-  lines.push('**Source:** ' + window.location.href);
-  lines.push('');
-  lines.push('---');
-  lines.push('');
-  lines.push('## How to use this file');
-  lines.push('');
-  lines.push('This assessment was written for Claude but any LLM should be able to parse it.');
-  lines.push('');
-  lines.push('**To use with Claude:** Upload this file to a Claude Project, or paste its contents into a conversation. Then ask: *"Help me implement the recommendations in this assessment, starting with the first move."*');
-  lines.push('');
-  lines.push('**To use with any other LLM:** Paste the contents into a new conversation and ask the same thing. The structure is plain markdown and works with ChatGPT, Gemini, or any other assistant.');
-  lines.push('');
-  lines.push('---');
-  lines.push('');
+  var lines = [
+    '# Personal AI OS — Assessment Report',
+    '**Session:** #' + sid,
+    '**Generated:** ' + date,
+    '**Source:** ' + window.location.href,
+    '',
+    '---',
+    '',
+    '## How to use this file',
+    '',
+    'This assessment was written for Claude but any LLM should be able to parse it.',
+    '',
+    '**To use with Claude:** Upload this file to a Claude Project, or paste its contents into a conversation. Then ask: *"Help me implement the recommendations in this assessment, starting with the first move."*',
+    '',
+    '**To use with any other LLM:** Paste the contents into a new conversation and ask the same thing. The structure is plain markdown and works with ChatGPT, Gemini, or any other assistant.',
+    '',
+    '---',
+    ''
+  ];
   var assessment = reportData.assessment || '';
-  var cleanedLines = assessment.split('\n');
-  for (var i = 0; i < cleanedLines.length; i++) {
-    var m = cleanedLines[i].match(/^\*\*([^*]+)\*\*\s*$/);
-    if (m) {
-      lines.push('## ' + m[1]);
-      lines.push('');
-    } else if (cleanedLines[i].trim()) {
-      lines.push(cleanedLines[i]);
-      lines.push('');
-    }
-  }
-  lines.push('---');
-  lines.push('');
-  lines.push('*Generated by Personal AI OS — dev.nilesheron.com/sandbox/personal-ai-os*');
+  assessment.split('\n').forEach(function(line) {
+    var m = line.match(/^\*\*([^*]+)\*\*\s*$/);
+    if (m) { lines.push('## ' + m[1]); lines.push(''); }
+    else if (line.trim()) { lines.push(line); lines.push(''); }
+  });
+  lines.push('---', '', '*Generated by Personal AI OS — dev.nilesheron.com/sandbox/personal-ai-os*');
   return lines.join('\n');
 }
 
 function downloadMd() {
   var content = buildMd();
   var sid = shortId(reportData && reportData.id);
-  var filename = 'ai-assessment-' + sid + '.md';
   var blob = new Blob([content], { type: 'text/markdown' });
   var url = URL.createObjectURL(blob);
   var a = document.createElement('a');
-  a.href = url; a.download = filename; a.click();
+  a.href = url; a.download = 'ai-assessment-' + sid + '.md'; a.click();
   URL.revokeObjectURL(url);
 }
 </script>
