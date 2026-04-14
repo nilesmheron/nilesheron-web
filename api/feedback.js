@@ -10,7 +10,25 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Supabase not configured' });
   }
 
-  const { name, feedback, assessment, transcript } = req.body || {};
+  const {
+    name,
+    feedback,
+    completed,
+    share_report,
+    share_transcript,
+    assessment,
+    transcript
+  } = req.body || {};
+
+  const row = {
+    name: name || null,
+    feedback: feedback || null,
+    completed: completed === true,
+    share_report: share_report === true,
+    share_transcript: share_transcript === true,
+    assessment: share_report === true ? (assessment || null) : null,
+    transcript: share_transcript === true ? (transcript || null) : null
+  };
 
   try {
     const response = await fetch(`${supabaseUrl}/rest/v1/feedback`, {
@@ -21,7 +39,7 @@ export default async function handler(req, res) {
         'Authorization': `Bearer ${supabaseKey}`,
         'Prefer': 'return=minimal'
       },
-      body: JSON.stringify({ name, feedback, assessment, transcript })
+      body: JSON.stringify(row)
     });
 
     if (!response.ok) {
