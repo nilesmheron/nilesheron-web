@@ -83,8 +83,9 @@
   .feedback-ta::placeholder { color: var(--text-dim); }
   .share-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
   .share-btn { background: var(--text); color: var(--bg); border: none; border-radius: 9px; padding: 10px 22px; font-size: 14px; font-family: inherit; font-weight: 500; cursor: pointer; transition: opacity 0.15s; }
-  .share-btn:hover { opacity: 0.85; }
-  .share-fine { font-size: 12px; color: var(--text-dim); }
+  .share-btn:hover:not(:disabled) { opacity: 0.85; }
+  .share-btn:disabled { opacity: 0.35; cursor: default; }
+  .share-confirm { font-size: 13px; color: var(--text-muted); }
   .restart-link { font-size: 13px; color: var(--text-dim); background: none; border: none; cursor: pointer; padding: 10px 0; font-family: inherit; text-decoration: underline; text-underline-offset: 3px; }
   .restart-link:hover { color: var(--text-muted); }
 </style>
@@ -196,6 +197,7 @@ var PRIMING = [
 var convo = [], exchanges = 0, busy = false, done = false;
 var lastAssessmentRaw = "";
 var lastTranscript = "";
+var lastFirstName = "";
 var msgsEl = document.getElementById("messages");
 var inputEl = document.getElementById("input");
 var sendBtn = document.getElementById("send");
@@ -268,27 +270,40 @@ function parseSections(text) {
   return out.length ? out : [{ h: "Your Assessment", b: lines }];
 }
 
-function openShareEmail() {
-  var feedback = document.getElementById("feedback-ta").value.trim();
-  var firstName = document.getElementById("share-name").getAttribute("data-name") || "";
-  var subject = "AI Assessment" + (firstName ? " — " + firstName : "") + " | Personal AI OS";
-
-  var transcriptSnippet = lastTranscript;
-  if (transcriptSnippet.length > 3000) {
-    transcriptSnippet = transcriptSnippet.substring(0, 3000) + "\n\n[transcript truncated for email length]";
-  }
-
-  var body = "";
-  if (feedback) { body += "FEEDBACK FROM " + (firstName || "USER") + ":\n" + feedback + "\n\n---\n\n"; }
-  body += "ASSESSMENT:\n\n" + lastAssessmentRaw + "\n\n---\n\nFULL CONVERSATION:\n\n" + transcriptSnippet;
-
-  var mailto = "mailto:niles@verseandhook.com?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
-  window.location.href = mailto;
-
+function submitFeedback() {
   var btn = document.getElementById("share-submit-btn");
-  btn.textContent = "Opening your email client...";
+  var status = document.getElementById("share-status");
+  var feedback = document.getElementById("feedback-ta").value.trim();
+
   btn.disabled = true;
-  setTimeout(function() { btn.textContent = "Send →"; btn.disabled = false; }, 3000);
+  btn.textContent = "Sending...";
+  status.textContent = "";
+
+  fetch("/api/feedback", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: lastFirstName || null,
+      feedback: feedback || null,
+      assessment: lastAssessmentRaw,
+      transcript: lastTranscript
+    })
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    if (data.ok) {
+      btn.textContent = "Sent ✓";
+      status.textContent = "Got it — thank you.";
+      document.getElementById("feedback-ta").disabled = true;
+    } else {
+      throw new Error(data.error || "unknown error");
+    }
+  })
+  .catch(function(e) {
+    btn.disabled = false;
+    btn.textContent = "Send →";
+    status.textContent = "Something went wrong — " + e.message + ". Try again.";
+  });
 }
 
 function showAssessment(text) {
@@ -298,10 +313,10 @@ function showAssessment(text) {
   var firstMsg = null;
   for (var i = 0; i < convo.length; i++) { if (convo[i].role === "user") { firstMsg = convo[i]; break; } }
   var nameMatch = firstMsg ? firstMsg.content.match(/\b([A-Z][a-z]{2,12})\b/) : null;
-  var firstName = nameMatch ? nameMatch[1] : "";
+  lastFirstName = nameMatch ? nameMatch[1] : "";
   var sections = parseSections(text);
 
-  var html = '<div class="bp-meta"><span class="bp-label">Your AI Assessment</span><span class="bp-name" id="share-name" data-name="' + firstName + '">' + firstName + '</span></div><div class="bp-divider"></div>';
+  var html = '<div class="bp-meta"><span class="bp-label">Your AI Assessment</span><span class="bp-name">' + lastFirstName + '</span></div><div class="bp-divider"></div>';
   for (var j = 0; j < sections.length; j++) {
     html += '<div class="bp-section-head"' + (j===0?' style="margin-top:0"':'') + '>' + sections[j].h + '</div><div class="bp-body">';
     sections[j].b.filter(function(l){return l.trim();}).forEach(function(l){html+='<p>'+l+'</p>';});
@@ -310,11 +325,11 @@ function showAssessment(text) {
 
   html += '<div class="share-panel">';
   html += '<p class="share-panel-label">Send this back</p>';
-  html += '<p class="share-panel-body">If you found this useful — or if it missed something, got something wrong, or sparked a thought — send it back. Your assessment and conversation will be included automatically. Any feedback helps make this better.</p>';
-  html += '<textarea id="feedback-ta" class="feedback-ta" placeholder="Was this helpful? Did it get your situation right? Anything you\'d add or push back on?"></textarea>';
+  html += '<p class="share-panel-body">If this was useful — or if it missed the mark, got something wrong, or sparked a thought — send it back. Helps make this better for the next person.</p>';
+  html += '<textarea id="feedback-ta" class="feedback-ta" placeholder="Was this helpful? Did it get your situation right? Anything you\'d add or push back on? (Optional)"></textarea>';
   html += '<div class="share-row">';
-  html += '<button id="share-submit-btn" class="share-btn" onclick="openShareEmail()">Send to Niles →</button>';
-  html += '<span class="share-fine">Opens your email client — pre-addressed to niles@verseandhook.com</span>';
+  html += '<button id="share-submit-btn" class="share-btn" onclick="submitFeedback()">Send →</button>';
+  html += '<span id="share-status" class="share-confirm"></span>';
   html += '</div>';
   html += '</div>';
 
