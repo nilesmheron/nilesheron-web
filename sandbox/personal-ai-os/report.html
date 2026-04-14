@@ -62,13 +62,20 @@ if (!reportId) {
     });
 }
 
+function shortId(id) {
+  return id ? id.substring(0, 8) : '';
+}
+
 function renderReport(data) {
-  var name = data.name || '';
+  var sid = shortId(data.id);
   var date = new Date(data.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
-  if (name) document.title = 'AI Assessment — ' + name + ' | Personal AI OS';
-  document.getElementById('report-title').textContent = name ? 'AI Assessment — ' + name : 'AI Assessment Report';
-  document.getElementById('report-meta').innerHTML = '<a href="/sandbox/personal-ai-os">← Personal AI OS</a> &nbsp;·&nbsp; Generated ' + date;
+  document.title = 'AI Assessment #' + sid + ' | Personal AI OS';
+  document.getElementById('report-title').textContent = 'AI Assessment';
+  document.getElementById('report-meta').innerHTML =
+    '<a href="/sandbox/personal-ai-os">← Personal AI OS</a>' +
+    ' &nbsp;·&nbsp; Session #' + sid +
+    ' &nbsp;·&nbsp; ' + date;
 
   document.getElementById('loading').style.display = 'none';
   var body = document.getElementById('report-body');
@@ -127,11 +134,11 @@ function copyLink() {
 
 function buildMd() {
   if (!reportData) return '';
-  var name = reportData.name || '';
+  var sid = shortId(reportData.id);
   var date = new Date(reportData.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   var lines = [];
   lines.push('# Personal AI OS — Assessment Report');
-  if (name) lines.push('**Name:** ' + name);
+  lines.push('**Session:** #' + sid);
   lines.push('**Generated:** ' + date);
   lines.push('**Source:** ' + window.location.href);
   lines.push('');
@@ -167,8 +174,8 @@ function buildMd() {
 
 function downloadMd() {
   var content = buildMd();
-  var name = (reportData && reportData.name) ? reportData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'assessment';
-  var filename = 'ai-assessment-' + name + '.md';
+  var sid = shortId(reportData && reportData.id);
+  var filename = 'ai-assessment-' + sid + '.md';
   var blob = new Blob([content], { type: 'text/markdown' });
   var url = URL.createObjectURL(blob);
   var a = document.createElement('a');
