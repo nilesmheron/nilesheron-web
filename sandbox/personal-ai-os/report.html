@@ -28,6 +28,20 @@
   #error { color: #c0392b; }
   .footer-nav { font-size: 0.82rem; color: #999; margin-top: 48px; }
   .footer-nav a { color: #999; }
+  .guide-intro { font-size: 0.9rem; color: #666; line-height: 1.65; margin: 0 0 20px; }
+  .option-card { border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 10px; background: #fff; overflow: hidden; }
+  .option-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; cursor: pointer; user-select: none; }
+  .option-header:hover { background: #f8f8f8; }
+  .option-title { font-size: 0.92rem; font-weight: bold; font-family: Georgia, serif; color: #1a1a1a; margin: 0; }
+  .option-meta { font-size: 0.78rem; color: #999; margin-top: 2px; }
+  .option-chevron { font-size: 0.8rem; color: #aaa; flex-shrink: 0; margin-left: 12px; transition: transform 0.2s; display: inline-block; }
+  .option-card.open .option-chevron { transform: rotate(180deg); }
+  .option-body { display: none; padding: 0 20px 18px; border-top: 1px solid #f0f0f0; }
+  .option-card.open .option-body { display: block; }
+  .option-desc { font-size: 0.88rem; color: #666; line-height: 1.65; margin: 14px 0 16px; }
+  .step { display: flex; gap: 14px; margin-bottom: 12px; align-items: flex-start; }
+  .step-num { width: 22px; height: 22px; border-radius: 50%; border: 1px solid #ddd; background: #f8f8f8; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; color: #999; flex-shrink: 0; margin-top: 2px; font-family: -apple-system, sans-serif; }
+  .step-text { font-size: 0.9rem; color: #333; line-height: 1.65; }
 </style>
 </head>
 <body>
@@ -41,7 +55,7 @@
 
 <script>
 var SUPABASE_URL = 'https://xszhfxzfybubdlivbfxp.supabase.co';
-var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzemhmeHpmeWJ1YmRsaXZiZnhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMzIyODUsImV4cCI6MjA5MTcwODI4NX0.H0YORIA303Xxt-aLmZDjlMrCbwwQSK5hhdwurlB8f2w';
+var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzemhmeHpmeWJ1YmJsaXZiZnhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMzIyODUsImV4cCI6MjA5MTcwODI4NX0.H0YORIA303Xxt-aLmZDjlMrCbwwQSK5hhdwurlB8f2w';
 
 var reportId = new URLSearchParams(window.location.search).get('id');
 var reportData = null;
@@ -70,7 +84,6 @@ if (!reportId) {
 function shortId(id) { return id ? id.substring(0, 8) : ''; }
 
 function parseAssessmentSections(text) {
-  // Only parse content before [SETUP_GUIDE_START]
   var guideIdx = text.indexOf('[SETUP_GUIDE_START]');
   var body = guideIdx !== -1 ? text.substring(0, guideIdx) : text;
   var lines = body.split('\n'), sections = [], cur = null;
@@ -91,63 +104,103 @@ function extractGuide(text) {
   return raw.trim();
 }
 
+function parseGuideOptions(guideText) {
+  var lines = guideText.split('\n');
+  var intro = '';
+  var options = [];
+  var cur = null;
+  var inDesc = true;
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    var headerMatch = line.match(/^\*\*([^*]+)\*\*\s*$/);
+    if (headerMatch) {
+      var htext = headerMatch[1];
+      if (htext.toUpperCase().indexOf('WHICH VERSION') !== -1) { inDesc = true; continue; }
+      var optionMatch = htext.match(/^OPTION\s+[A-C]\s*[\u2014\u2013-]\s*(.+)$/i);
+      if (optionMatch) {
+        if (cur) options.push(cur);
+        var titleFull = optionMatch[1];
+        var parenMatch = titleFull.match(/^(.+?)\s*\((.+)\)\s*$/);
+        cur = { title: parenMatch ? parenMatch[1] : titleFull, meta: parenMatch ? parenMatch[2] : '', desc: '', steps: [] };
+        inDesc = true; continue;
+      }
+    }
+    if (!cur) {
+      if (line.trim()) intro += (intro ? ' ' : '') + line.trim();
+    } else {
+      var stepMatch = line.match(/^Step\s+(\d+):\s*(.+)$/i);
+      if (stepMatch) { inDesc = false; cur.steps.push({ num: stepMatch[1], text: stepMatch[2] }); }
+      else if (inDesc && line.trim()) cur.desc += (cur.desc ? ' ' : '') + line.trim();
+    }
+  }
+  if (cur) options.push(cur);
+  return { intro: intro, options: options };
+}
+
+function renderGuide(guideText) {
+  var parsed = parseGuideOptions(guideText);
+  var html = '<h2 style="margin-top:48px;">Your setup guide</h2>';
+  if (parsed.intro) html += '<p class="guide-intro">' + escHtml(parsed.intro) + '</p>';
+  parsed.options.forEach(function(opt, idx) {
+    var cardId = 'opt-' + idx;
+    html += '<div class="option-card" id="' + cardId + '">';
+    html += '<div class="option-header" onclick="toggleOption(\'' + cardId + '\')">';
+    html += '<div><div class="option-title">' + escHtml(opt.title) + '</div>';
+    if (opt.meta) html += '<div class="option-meta">' + escHtml(opt.meta) + '</div>';
+    html += '</div><span class="option-chevron">▼</span></div>';
+    html += '<div class="option-body">';
+    if (opt.desc) html += '<p class="option-desc">' + escHtml(opt.desc) + '</p>';
+    opt.steps.forEach(function(step) {
+      html += '<div class="step"><div class="step-num">' + escHtml(step.num) + '</div><div class="step-text">' + escHtml(step.text) + '</div></div>';
+    });
+    html += '</div></div>';
+  });
+  return html;
+}
+
+function toggleOption(id) {
+  var card = document.getElementById(id);
+  if (card) card.classList.toggle('open');
+}
+
 function renderReport(data) {
   var sid = shortId(data.id);
   var date = new Date(data.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   var hasGuide = data.assessment && data.assessment.indexOf('[SETUP_GUIDE_START]') !== -1;
-
   document.title = 'AI Assessment #' + sid + ' | Personal AI OS';
   document.getElementById('report-title').textContent = 'AI Assessment';
-  document.getElementById('report-meta').innerHTML =
-    '<a href="/sandbox/personal-ai-os">← Personal AI OS</a>' +
-    ' &nbsp;·&nbsp; Session #' + sid +
-    ' &nbsp;·&nbsp; ' + date;
-
+  document.getElementById('report-meta').innerHTML = '<a href="/sandbox/personal-ai-os">← Personal AI OS</a> &nbsp;·&nbsp; Session #' + sid + ' &nbsp;·&nbsp; ' + date;
   document.getElementById('loading').style.display = 'none';
   var body = document.getElementById('report-body');
   body.style.display = 'block';
-
   var shareUrl = window.location.href;
   var mdLabel = hasGuide ? 'Download setup guide (.md)' : 'Download .md';
-
   var sectionsHtml = '';
   var sections = parseAssessmentSections(data.assessment || '');
   if (sections.length) {
-    sections.forEach(function(s, idx) {
-      sectionsHtml += '<h2>' + escHtml(s.h) + '</h2>';
-      s.b.forEach(function(line) { sectionsHtml += '<p>' + escHtml(line) + '</p>'; });
-    });
+    sections.forEach(function(s) { sectionsHtml += '<h2>' + escHtml(s.h) + '</h2>'; s.b.forEach(function(l) { sectionsHtml += '<p>' + escHtml(l) + '</p>'; }); });
   } else {
-    // Fallback: render raw text line by line
-    (data.assessment || '').split('\n').filter(function(l) { return l.trim() && l.indexOf('[SETUP_GUIDE') === -1; }).forEach(function(l) {
-      sectionsHtml += '<p>' + escHtml(l) + '</p>';
-    });
+    (data.assessment || '').split('\n').filter(function(l) { return l.trim() && l.indexOf('[SETUP_GUIDE') === -1; }).forEach(function(l) { sectionsHtml += '<p>' + escHtml(l) + '</p>'; });
   }
-
+  var guideHtml = '';
+  if (hasGuide) { var g = extractGuide(data.assessment); if (g) guideHtml = renderGuide(g); }
   body.innerHTML =
-    '<div class="card">' +
-    '<p class="card-title">Save / Share this report</p>' +
-    '<p class="card-desc">Copy the link to share, or download the .md file' + (hasGuide ? ' — which includes your full step-by-step setup guide' : '') + '.</p>' +
-    '<div class="card-actions">' +
-    '<button class="btn" id="copy-link-btn" onclick="copyLink()">Copy link</button>' +
-    '<button class="btn btn-outline" onclick="downloadMd()">' + mdLabel + '</button>' +
-    '</div>' +
-    '<p class="share-url" id="share-url-display">' + shareUrl + '</p>' +
-    '</div>' +
-    '<div class="disclaimer">This assessment was generated by <a href="/sandbox/personal-ai-os">Personal AI OS</a>.' + (hasGuide ? ' The .md file contains your personalized setup guide formatted for use with Claude or any AI assistant.' : ' The .md file is formatted for Claude but any LLM should be able to parse it.') + '</div>' +
+    '<div class="card"><p class="card-title">Save / Share this report</p>' +
+    '<p class="card-desc">Copy the link to share, or download the .md file' + (hasGuide ? ' — it includes the full setup guide formatted for Claude or any AI assistant' : '') + '.</p>' +
+    '<div class="card-actions"><button class="btn" id="copy-link-btn" onclick="copyLink()">Copy link</button><button class="btn btn-outline" onclick="downloadMd()">' + mdLabel + '</button></div>' +
+    '<p class="share-url" id="share-url-display">' + shareUrl + '</p></div>' +
+    '<div class="disclaimer">This assessment was generated by <a href="/sandbox/personal-ai-os">Personal AI OS</a>. The .md file is formatted for Claude but works with any AI assistant.</div>' +
     '<div id="sections">' + sectionsHtml + '</div>' +
-    '<p class="footer-nav"><a href="/sandbox/personal-ai-os">← Get your own assessment</a></p>';
+    guideHtml +
+    '<p class="footer-nav" style="margin-top:40px;"><a href="/sandbox/personal-ai-os">← Get your own assessment</a></p>';
 }
 
-function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 function copyLink() {
   var btn = document.getElementById('copy-link-btn');
   navigator.clipboard.writeText(window.location.href).then(function() {
-    btn.textContent = 'Copied!';
-    btn.classList.add('btn-success');
+    btn.textContent = 'Copied!'; btn.classList.add('btn-success');
     setTimeout(function() { btn.textContent = 'Copy link'; btn.classList.remove('btn-success'); }, 2500);
   });
 }
@@ -159,93 +212,45 @@ function buildMd() {
   var assessment = reportData.assessment || '';
   var guide = extractGuide(assessment);
   var lines = [];
-
   if (guide) {
-    // Setup guide document
     lines.push('# Personal AI OS — Your Setup Guide');
     lines.push('**Session:** #' + sid);
     lines.push('**Generated:** ' + date);
     lines.push('**Source:** ' + window.location.href);
-    lines.push('');
-    lines.push('---');
-    lines.push('');
-    lines.push('## How to use this file');
-    lines.push('');
-    lines.push('This setup guide was written for Claude but any LLM should be able to parse it.');
-    lines.push('');
-    lines.push('**To use with Claude:** Upload this file to a Claude Project, or paste it into a conversation and say: *"I want to implement this system. Walk me through Option A first."*');
-    lines.push('');
-    lines.push('**To use with any other LLM:** Paste the contents into a new conversation and ask the same thing. Works with ChatGPT, Gemini, or any other assistant.');
-    lines.push('');
-    lines.push('---');
-    lines.push('');
-    // Write the guide content, converting **OPTION X** headers to ## headers
+    lines.push(''); lines.push('---'); lines.push('');
+    lines.push('## How to use this file'); lines.push('');
+    lines.push('This setup guide was written for Claude but any LLM should be able to parse it.'); lines.push('');
+    lines.push('**To use with Claude:** Upload this file to a Claude Project, or paste it into a conversation and say: *"I want to implement this system. Walk me through Option A first."*'); lines.push('');
+    lines.push('**To use with any other LLM:** Paste the contents into a new conversation and ask the same thing. Works with ChatGPT, Gemini, or any other assistant.'); lines.push('');
+    lines.push('---'); lines.push('');
     guide.split('\n').forEach(function(line) {
-      var optionMatch = line.match(/^\*\*([^*]+)\*\*\s*$/);
-      if (optionMatch) {
-        lines.push('');
-        lines.push('## ' + optionMatch[1]);
-        lines.push('');
-      } else {
-        lines.push(line);
-      }
+      var m = line.match(/^\*\*([^*]+)\*\*\s*$/);
+      if (m) { lines.push(''); lines.push('## ' + m[1]); lines.push(''); } else { lines.push(line); }
     });
-    lines.push('');
-    lines.push('---');
-    lines.push('');
-    lines.push('## Your Assessment Summary');
-    lines.push('');
-    // Append a condensed version of the assessment for context
-    var sections = parseAssessmentSectionsForMd(assessment);
-    sections.forEach(function(s) {
-      lines.push('### ' + s.h);
-      lines.push('');
-      s.b.forEach(function(l) { if (l.trim()) lines.push(l); });
-      lines.push('');
+    lines.push(''); lines.push('---'); lines.push('');
+    lines.push('## Your Assessment Summary'); lines.push('');
+    parseAssessmentSections(assessment).forEach(function(s) {
+      lines.push('### ' + s.h); lines.push('');
+      s.b.forEach(function(l) { if (l.trim()) lines.push(l); }); lines.push('');
     });
-    lines.push('---');
-    lines.push('');
+    lines.push('---'); lines.push('');
     lines.push('*Generated by Personal AI OS — dev.nilesheron.com/sandbox/personal-ai-os*');
   } else {
-    // Fallback: plain assessment document (old format)
     lines.push('# Personal AI OS — Assessment Report');
-    lines.push('**Session:** #' + sid);
-    lines.push('**Generated:** ' + date);
-    lines.push('**Source:** ' + window.location.href);
-    lines.push('');
-    lines.push('---');
-    lines.push('');
-    lines.push('## How to use this file');
-    lines.push('');
-    lines.push('This assessment was written for Claude but any LLM should be able to parse it.');
-    lines.push('');
+    lines.push('**Session:** #' + sid); lines.push('**Generated:** ' + date); lines.push('**Source:** ' + window.location.href);
+    lines.push(''); lines.push('---'); lines.push('');
+    lines.push('## How to use this file'); lines.push('');
+    lines.push('This assessment was written for Claude but any LLM should be able to parse it.'); lines.push('');
     lines.push('**To use with Claude:** Upload to a Claude Project or paste into a conversation. Ask: *"Help me implement the recommendations in this assessment, starting with the first move."*');
-    lines.push('');
-    lines.push('---');
-    lines.push('');
+    lines.push(''); lines.push('---'); lines.push('');
     assessment.split('\n').forEach(function(line) {
       var m = line.match(/^\*\*([^*]+)\*\*\s*$/);
-      if (m) { lines.push('## ' + m[1]); lines.push(''); }
-      else if (line.trim()) { lines.push(line); lines.push(''); }
+      if (m) { lines.push('## ' + m[1]); lines.push(''); } else if (line.trim()) { lines.push(line); lines.push(''); }
     });
-    lines.push('---');
-    lines.push('');
+    lines.push('---'); lines.push('');
     lines.push('*Generated by Personal AI OS — dev.nilesheron.com/sandbox/personal-ai-os*');
   }
   return lines.join('\n');
-}
-
-function parseAssessmentSectionsForMd(text) {
-  var guideIdx = text.indexOf('[SETUP_GUIDE_START]');
-  var body = guideIdx !== -1 ? text.substring(0, guideIdx) : text;
-  var lines = body.split('\n'), sections = [], cur = null;
-  for (var i = 0; i < lines.length; i++) {
-    var m = lines[i].match(/^\*\*([^*]+)\*\*\s*$/);
-    if (m) { if (cur) sections.push(cur); cur = { h: m[1], b: [] }; }
-    else if (cur && lines[i].trim()) cur.b.push(lines[i]);
-  }
-  if (cur) sections.push(cur);
-  return sections;
 }
 
 function downloadMd() {
@@ -255,8 +260,7 @@ function downloadMd() {
   var filename = (hasGuide ? 'ai-setup-guide-' : 'ai-assessment-') + sid + '.md';
   var blob = new Blob([content], { type: 'text/markdown' });
   var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
-  a.href = url; a.download = filename; a.click();
+  var a = document.createElement('a'); a.href = url; a.download = filename; a.click();
   URL.revokeObjectURL(url);
 }
 </script>
