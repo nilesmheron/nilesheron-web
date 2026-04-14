@@ -75,7 +75,17 @@
   .bp-section-head:first-child { margin-top: 0; }
   .bp-body p { margin: 0 0 8px; line-height: 1.7; color: var(--text); font-size: 15px; }
 
-  .share-panel { margin-top: 2.5rem; padding: 1.5rem; background: var(--surface); border: 0.5px solid var(--border-strong); border-radius: 12px; }
+  .self-send-panel { margin-top: 2.5rem; padding: 1.5rem; background: var(--surface); border: 0.5px solid var(--border-strong); border-radius: 12px; }
+  .self-send-label { font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+  .self-send-body { font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-bottom: 14px; }
+  .email-row { display: flex; gap: 8px; align-items: center; }
+  .email-input { flex: 1; background: var(--bg); border: 0.5px solid var(--border-strong); border-radius: 9px; color: var(--text); font-size: 14px; font-family: inherit; padding: 9px 12px; height: 40px; }
+  .email-input:focus { outline: none; border-color: rgba(255,255,255,0.3); }
+  .email-input::placeholder { color: var(--text-dim); }
+  .email-btn { background: transparent; border: 0.5px solid var(--border-strong); border-radius: 9px; color: var(--text-muted); font-size: 13px; font-family: inherit; padding: 0 16px; height: 40px; cursor: pointer; white-space: nowrap; transition: background 0.1s; flex-shrink: 0; }
+  .email-btn:hover { background: var(--surface2); color: var(--text); }
+
+  .share-panel { margin-top: 1rem; padding: 1.5rem; background: var(--surface); border: 0.5px solid var(--border-strong); border-radius: 12px; }
   .share-panel-label { font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
   .share-panel-body { font-size: 14px; color: var(--text-muted); line-height: 1.65; margin-bottom: 1.25rem; }
   .feedback-ta { width: 100%; background: var(--bg); border: 0.5px solid var(--border-strong); border-radius: 10px; color: var(--text); font-size: 14px; font-family: inherit; line-height: 1.55; padding: 10px 13px; resize: none; min-height: 80px; margin-bottom: 14px; }
@@ -287,6 +297,18 @@ function parseSections(text) {
   return out.length ? out : [{ h: "Your Assessment", b: lines }];
 }
 
+function sendToSelf() {
+  var email = document.getElementById("self-email").value.trim();
+  if (!email) { document.getElementById("self-email").focus(); return; }
+  var subject = "Your AI Assessment" + (lastFirstName ? " — " + lastFirstName : "") + " | Personal AI OS";
+  var body = lastAssessmentRaw;
+  window.location.href = "mailto:" + encodeURIComponent(email) + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
+  var btn = document.getElementById("self-send-btn");
+  var orig = btn.textContent;
+  btn.textContent = "Opening email client...";
+  setTimeout(function() { btn.textContent = orig; }, 3000);
+}
+
 function submitFeedback() {
   var btn = document.getElementById("share-submit-btn");
   var status = document.getElementById("share-status");
@@ -349,6 +371,15 @@ function showAssessment(text) {
     html += '</div>';
   }
 
+  html += '<div class="self-send-panel">';
+  html += '<p class="self-send-label">Email this to yourself</p>';
+  html += '<p class="self-send-body">Enter your email and we\'ll open a draft with your full assessment ready to send.</p>';
+  html += '<div class="email-row">';
+  html += '<input type="email" id="self-email" class="email-input" placeholder="your@email.com">';
+  html += '<button id="self-send-btn" class="email-btn" onclick="sendToSelf()">Send to me →</button>';
+  html += '</div>';
+  html += '</div>';
+
   html += '<div class="share-panel">';
   html += '<p class="share-panel-label">Send this back</p>';
   html += '<p class="share-panel-body">If this was useful — or if it missed the mark, got something wrong, or sparked a thought — send it back. Any feedback helps make this better for the next person.</p>';
@@ -370,6 +401,10 @@ function showAssessment(text) {
 
   document.getElementById("assessment").innerHTML = html;
   av.scrollTop = 0;
+
+  document.getElementById("self-email").addEventListener("keydown", function(e) {
+    if (e.key === "Enter") { e.preventDefault(); sendToSelf(); }
+  });
 }
 
 inputEl.addEventListener("input", function() {
