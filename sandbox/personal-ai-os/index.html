@@ -67,9 +67,9 @@
   .bp-label { font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); }
   .bp-name { font-size: 12px; color: var(--text-dim); }
   .bp-divider { height: 0.5px; background: var(--border); margin-bottom: 1.25rem; }
-  .bp-section-head { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin: 22px 0 7px; }
+  .bp-section-head { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin: 28px 0 10px; }
   .bp-section-head:first-child { margin-top: 0; }
-  .bp-body p { margin: 0 0 8px; line-height: 1.7; color: var(--text); font-size: 15px; }
+  .bp-body p { margin: 0 0 10px; line-height: 1.75; color: var(--text); font-size: 15px; }
   .save-panel { margin-top: 2.5rem; padding: 1.5rem; background: var(--surface); border: 0.5px solid var(--border-strong); border-radius: 12px; }
   .save-panel-label { font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
   .save-panel-body { font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-bottom: 14px; }
@@ -120,24 +120,22 @@
   <div class="land-section">
     <p class="land-section-label">How it works</p>
     <div class="steps">
-      <div class="step"><div class="step-num">1</div><div class="step-text"><strong>A short conversation.</strong> An AI asks you about what you do, the tools you use, where things fall apart, and what’s stopped you from doing more with AI. It follows your lead — if you want to explore, it’ll stay with you.</div></div>
-      <div class="step"><div class="step-num">2</div><div class="step-text"><strong>A real assessment.</strong> Not generic advice. Based on what you actually shared: a read of your current setup, specific tools that could help, what a custom build would look like, and where to start given your actual situation.</div></div>
-      <div class="step"><div class="step-num">3</div><div class="step-text"><strong>Something you can act on.</strong> The goal isn’t to impress you with AI. It’s to give you one clear next move that makes sense for where you are right now.</div></div>
+      <div class="step"><div class="step-num">1</div><div class="step-text"><strong>A short conversation.</strong> An AI asks you about what you do, the tools you use, where things fall apart, and what’s stopped you from doing more with AI.</div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-text"><strong>A real assessment.</strong> What we heard, and what we suggest — specific tools, a clear first move, and a step-by-step setup guide tailored to your situation.</div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-text"><strong>Something you can act on.</strong> Download your setup guide and bring it into Claude or any AI assistant to start building.</div></div>
     </div>
   </div>
   <div class="land-divider"></div>
   <div class="land-section">
     <p class="land-section-label">Example output</p>
-    <p style="font-size:14px;color:var(--text-muted);margin-bottom:1.25rem;line-height:1.6;">Jordan is a founder building a new infrastructure venture. She’s constantly creating documents — investor updates, partnership briefs, staff communications — but her process is fragmented, slow, and she doesn’t trust putting sensitive deal information into AI tools. Here’s what her assessment looked like.</p>
+    <p style="font-size:14px;color:var(--text-muted);margin-bottom:1.25rem;line-height:1.6;">Jordan is a founder constantly creating documents — investor updates, partnership briefs, staff communications — but her process is fragmented and she doesn’t trust putting sensitive deal info into AI tools.</p>
     <div class="example-card">
       <div class="example-header"><span class="example-label">AI Assessment</span><span class="example-name">Jordan</span></div>
       <div class="example-body">
-        <div class="ex-section"><div class="ex-section-head">Where you are now</div><div class="ex-section-body">You’re running your document workflow across Google Docs, email drafts, and your own memory — which works until it doesn’t. The real gap isn’t that you can’t write; it’s that every document starts from scratch with no shared context. The privacy concern is legitimate. But that concern has also kept you from using AI for anything, including the parts where it would be completely safe and genuinely useful.</div></div>
+        <div class="ex-section"><div class="ex-section-head">What we heard</div><div class="ex-section-body">You’re running your document workflow across Google Docs, email drafts, and your own memory. Every document starts from scratch with no shared context. The privacy concern is legitimate — but it’s also kept you from using AI for things where it would be completely safe.</div></div>
         <div class="ex-section" id="example-more" style="display:none;">
-          <div class="ex-section-head">What already exists that could help</div>
-          <div class="ex-section-body" style="margin-bottom:14px;"><strong style="color:var(--text);">Claude Projects</strong> — A private workspace where you upload your own documents and Claude uses only that context to help you write. Nothing leaves your project.<br><br><strong style="color:var(--text);">Notion AI</strong> — If you’re willing to move document management into Notion, its AI layer can draft and summarize directly inside your workspace.<br><br><strong style="color:var(--text);">A private GitHub repo</strong> — Keeping master documents in a version-controlled private repo means you always have a clean, current source to pull from.</div>
-          <div class="ex-section-head" style="margin-top:8px;">Where to start</div>
-          <div class="ex-section-body">Start with Claude Projects this week, not a build. Trust first, complexity second.</div>
+          <div class="ex-section-head">What we suggest</div>
+          <div class="ex-section-body" style="margin-bottom:14px;"><strong style="color:var(--text);">Claude Projects</strong> — A private workspace where Claude uses only your documents. Nothing leaves your project. Start here.<br><br><strong style="color:var(--text);">Notion AI</strong> — If you move to Notion, its AI layer drafts and summarizes inside your workspace. Real switching cost, but high payoff.<br><br>The setup guide (in your .md download) walks you through three versions: quick wins this week, off-the-shelf stack over a weekend, and a fully connected system.</div>
         </div>
       </div>
       <button class="example-toggle" id="example-toggle" onclick="toggleExample()">Show full assessment ↓</button>
@@ -162,9 +160,9 @@
 var SUPABASE_URL = 'https://xszhfxzfybubdlivbfxp.supabase.co';
 var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzemhmeHpmeWJ1YmRsaXZiZnhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMzIyODUsImV4cCI6MjA5MTcwODI4NX0.H0YORIA303Xxt-aLmZDjlMrCbwwQSK5hhdwurlB8f2w';
 
-var INTAKE_SYS = "You are a warm, curious intake assistant. Your purpose is to get to know this person and suggest ways they can be more efficient using AI. You are not owned by any company and have no preference toward any particular solution - your only goal is to help them find something that helps them do more, better, with less personal cost.\n\nYou are building toward a real assessment: what they currently use, what already exists that could help them, and what could be built specifically for them. That assessment comes at the end - your job right now is to gather the right information through genuine conversation.\n\nMove through four phases. Keep responses short. One or two questions at a time. Let the conversation breathe if the person is exploring - follow their energy. Move on when you have what you need.\n\nPHASE 1 - WHO THEY ARE (2-3 exchanges)\nLearn what they do and who they do it for. Probe once if the answer is thin. When you have a clear enough picture, signal the shift naturally: let them know you're going to play back what you heard, and then ask about how they actually get things done day to day.\n\nPHASE 2 - THEIR CURRENT SYSTEMS (3-4 exchanges)\nThis is the diagnostic core. Ask what tools and systems they actually use to manage their work and life - email, calendar, task management, notes, communication, anything. Ask where those systems are breaking down or costing them the most time and energy.\n\nPHASE 2B - THE AI BARRIER (1-2 exchanges)\nAsk directly what they think stops them from doing more with AI tools. Not accusatory - genuinely curious.\n\nTRUST CHECKPOINT\nMirror back everything you've learned in 3-4 tight sentences. Ask if it lands. Move on when confirmed.\n\nPHASE 3 - THE AMBITION (1-2 exchanges)\nOnly after trust checkpoint confirmed. One question: what does their work life look like if this actually gets solved? Then trigger immediately after they answer.\n\nWHEN READY\nEnd your message with this marker on its own line:\n[ASSESSMENT_READY]\n\nSTYLE: Warm, direct, not effusive. Never say Great! Short responses. Prose only, no bullets. Mirror before probing. Lowercase is fine.";
+var INTAKE_SYS = "You are a warm, curious intake assistant. Your purpose is to get to know this person and suggest ways they can be more efficient using AI. You are not owned by any company and have no preference toward any particular solution.\n\nMove through four phases. Keep responses short. One or two questions at a time.\n\nPHASE 1 - WHO THEY ARE (2-3 exchanges)\nLearn what they do and who they do it for. Probe once if thin. Signal the shift naturally when ready.\n\nPHASE 2 - THEIR CURRENT SYSTEMS (3-4 exchanges)\nAsk what tools and systems they actually use. Where things break down and cost them time and energy.\n\nPHASE 2B - THE AI BARRIER (1-2 exchanges)\nAsk directly what stops them from doing more with AI. The answer is almost always trust or capacity or both.\n\nTRUST CHECKPOINT\nMirror back in 3-4 tight sentences. Ask if it lands. Move on when confirmed.\n\nPHASE 3 - THE AMBITION (1-2 exchanges)\nOnly after trust checkpoint. What does their work life look like if this gets solved? Then trigger immediately.\n\nWHEN READY\nEnd your message with this marker on its own line:\n[ASSESSMENT_READY]\n\nSTYLE: Warm, direct. Never say Great! Short responses. Prose only. Mirror before probing. Lowercase is fine.";
 
-var ASSESSMENT_SYS = "You are generating a personalized AI systems assessment based on a completed intake conversation. Your job is to be genuinely useful - give an honest read of where this person is, name real tools that could help them, and describe what a custom build would look like.\n\nDraw on your knowledge of current AI tools, productivity platforms, automation software, and workflow systems to make specific, real recommendations. Name actual products. Only recommend things directly relevant to what they shared.\n\nUse exactly these five sections. Format each header as **SECTION NAME** on its own line.\n\n**WHERE YOU ARE NOW**\nHonest, specific read of their current setup. Name actual tools they mentioned. Identify real gaps.\n\n**WHAT ALREADY EXISTS THAT COULD HELP**\nNamed tools with: what it does, why it fits their situation, honest trade-off. Consider: Notion AI, Linear, Motion, Reclaim.ai, Zapier, Make, n8n, Superhuman, SaneBox, Mem, Granola, Claude Projects, ChatGPT with memory, others relevant to their situation.\n\n**WHAT A BESPOKE BUILD COULD LOOK LIKE**\nWhat a custom solution would look like for them specifically. Honest about whether building is worth it vs using what exists.\n\n**WHERE TO START**\nThe single best first step accounting for their actual barrier. If trust is the issue: build trust before complexity. If capacity: fast to implement with immediate payoff.\n\n**IF YOU BUILD THIS OUT**\nOne paragraph. If they systematically close the gaps, what does their work life look like. Grounded and honest.\n\nWrite like a trusted advisor who actually listened. Direct, no corporate language, no AI cheerleading.";
+var ASSESSMENT_SYS = "You are generating a personalized AI systems assessment based on a completed intake conversation. Be genuinely useful. Name real tools. Be specific to what this person shared.\n\nUse exactly this structure. Format each main header as **HEADER NAME** on its own line.\n\n**WHAT WE HEARD**\nA cohesive, specific synthesis of what you learned. Cover: who they are, the tools they're actually using, where those systems are breaking down, what has held them back from AI specifically (trust, capacity, or both), and what success looks like in their own words. This is a mirror, not a recommendation section. Name the actual tools they mentioned. Reflect their language. Be specific about the failures. 2-3 tight paragraphs.\n\n**WHAT WE SUGGEST**\nThe recommendations written as a coherent system. Name actual tools with why they fit this person specifically and what the honest limitation is. Describe how the pieces connect. Be explicit about the single best first move and why, accounting for their actual barrier. Close with one paragraph on what their work life looks like if they build this.\n\n[SETUP_GUIDE_START]\n**WHICH VERSION OF THE SYSTEM DO YOU WANT TO BUILD?**\n\nPick the version that fits where you are right now. You can always start with Option A and move up.\n\n**OPTION A \u2014 QUICK WINS (a few hours, no new tools)**\nUse what you already have differently. The right starting point if you want to see what AI can do for your specific situation before committing to anything new.\n\nStep 1: [specific action using existing tools or free options based on what they shared]\nStep 2: [specific action]\nStep 3: [specific action]\n\n**OPTION B \u2014 OFF-THE-SHELF STACK (a weekend, no code)**\nInstall and configure the recommended tools. No automation yet. The right level if you want something that materially changes how you work.\n\nStep 1: [specific tool setup action, referencing actual tools recommended above]\nStep 2: [specific configuration step]\nStep 3: [specific step]\n\n**OPTION C \u2014 CONNECTED SYSTEM (ongoing, some setup time)**\nThe full build: tools connected through automation so information moves without you touching it.\n\nStep 1: [foundation step]\nStep 2: [first automation or connection]\nStep 3: [next connection or workflow]\n[SETUP_GUIDE_END]\n\nWrite like a trusted advisor who actually listened. Direct, no corporate language, no AI cheerleading.";
 
 var OPENER = "hey - glad you're here. what do you do?";
 var PRIMING = [
@@ -223,18 +221,21 @@ function handleMessage(userMsg) {
 function generateAssessment() {
   setProgress(88); addNote("building your assessment..."); showTyping();
   lastTranscript = convo.map(function(m) { return (m.role === "user" ? "Person" : "Interviewer") + ": " + m.content; }).join("\n\n");
-  callAPI({ model: "claude-sonnet-4-6", max_tokens: 1400, messages: [{ role: "user", content: ASSESSMENT_SYS + "\n\nFull conversation:\n\n" + lastTranscript + "\n\nGenerate the assessment." }] })
+  callAPI({ model: "claude-sonnet-4-6", max_tokens: 2000, messages: [{ role: "user", content: ASSESSMENT_SYS + "\n\nFull conversation:\n\n" + lastTranscript + "\n\nGenerate the assessment." }] })
     .then(function(text) { hideTyping(); setProgress(100); lastAssessmentRaw = text; showAssessment(text); })
     .catch(function(e) { hideTyping(); addMsg("ai", "assessment generation failed: " + e.message); });
 }
-function parseSections(text) {
+function parseSections(rawText) {
+  // Only parse content before [SETUP_GUIDE_START]
+  var guideIdx = rawText.indexOf('[SETUP_GUIDE_START]');
+  var text = guideIdx !== -1 ? rawText.substring(0, guideIdx) : rawText;
   var lines = text.split("\n"), out = [], cur = null;
   for (var i = 0; i < lines.length; i++) {
     var m = lines[i].match(/^\*\*([^*]+)\*\*\s*$/);
     if (m) { if (cur) out.push(cur); cur = { h: m[1], b: [] }; } else if (cur) cur.b.push(lines[i]);
   }
   if (cur) out.push(cur);
-  return out.length ? out : [{ h: "Your Assessment", b: lines }];
+  return out.length ? out : [{ h: "Your Assessment", b: text.split("\n") }];
 }
 function saveReport() {
   var btn = document.getElementById("save-report-btn");
@@ -242,12 +243,7 @@ function saveReport() {
   btn.disabled = true; btn.textContent = "Saving...";
   fetch(SUPABASE_URL + '/rest/v1/reports', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'apikey': SUPABASE_ANON_KEY,
-      'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
-      'Prefer': 'return=representation'
-    },
+    headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY, 'Prefer': 'return=representation' },
     body: JSON.stringify({ name: lastFirstName || null, assessment: lastAssessmentRaw })
   })
   .then(function(r) { return r.json(); })
@@ -263,16 +259,12 @@ function saveReport() {
     document.getElementById('copy-url-btn').style.display = 'inline-block';
     document.getElementById('copy-url-btn').onclick = function() {
       navigator.clipboard.writeText(url).then(function() {
-        var cb = document.getElementById('copy-url-btn');
-        cb.textContent = 'Copied!'; setTimeout(function() { cb.textContent = 'Copy link'; }, 2000);
+        var cb = document.getElementById('copy-url-btn'); cb.textContent = 'Copied!'; setTimeout(function() { cb.textContent = 'Copy link'; }, 2000);
       });
     };
     status.textContent = '';
   })
-  .catch(function(e) {
-    btn.disabled = false; btn.textContent = 'Save / Share report';
-    status.textContent = 'Something went wrong \u2014 ' + e.message;
-  });
+  .catch(function(e) { btn.disabled = false; btn.textContent = 'Save / Share report'; status.textContent = 'Something went wrong \u2014 ' + e.message; });
 }
 function submitFeedback() {
   var btn = document.getElementById("share-submit-btn"), status = document.getElementById("share-status");
@@ -303,15 +295,19 @@ function showAssessment(text) {
   lastFirstName = nameMatch ? nameMatch[1] : "";
   ping({ completed: true, name: lastFirstName || null });
   var sections = parseSections(text);
+  var hasGuide = text.indexOf('[SETUP_GUIDE_START]') !== -1;
   var html = '<div class="bp-meta"><span class="bp-label">Your AI Assessment</span><span class="bp-name">' + lastFirstName + '</span></div><div class="bp-divider"></div>';
   for (var j = 0; j < sections.length; j++) {
     html += '<div class="bp-section-head"' + (j===0?' style="margin-top:0"':'') + '>' + sections[j].h + '</div><div class="bp-body">';
     sections[j].b.filter(function(l){return l.trim();}).forEach(function(l){html+='<p>'+l+'</p>';});
     html += '</div>';
   }
-  html += '<div class="save-panel">';
+  if (hasGuide) {
+    html += '<div style="margin-top:1.5rem;padding:14px 16px;background:rgba(255,255,255,0.04);border:0.5px solid var(--border-strong);border-radius:10px;font-size:13px;color:var(--text-muted);line-height:1.6;">Your setup guide is included in the <strong style="color:var(--text);">downloadable .md file</strong> \u2014 save your report below to access it.</div>';
+  }
+  html += '<div class="save-panel" style="margin-top:1.5rem;">';
   html += '<p class="save-panel-label">Save / Share report</p>';
-  html += '<p class="save-panel-body">Save your report to get a permanent link you can share or return to. You can also download a .md file to upload into Claude or any AI assistant.</p>';
+  html += '<p class="save-panel-body">Save your report to get a permanent link. The .md download includes your full setup guide with step-by-step instructions for building your system.</p>';
   html += '<div class="save-actions">';
   html += '<button id="save-report-btn" class="save-btn" onclick="saveReport()">Save / Share report</button>';
   html += '<button id="open-report-btn" class="save-btn-outline" style="display:none">Open report \u2197</button>';
@@ -322,7 +318,7 @@ function showAssessment(text) {
   html += '</div>';
   html += '<div class="share-panel">';
   html += '<p class="share-panel-label">Send this back</p>';
-  html += '<p class="share-panel-body">If this was useful \u2014 or if it missed the mark, got something wrong, or sparked a thought \u2014 send it back.</p>';
+  html += '<p class="share-panel-body">If this was useful \u2014 or if it missed the mark \u2014 send it back.</p>';
   html += '<textarea id="feedback-ta" class="feedback-ta" placeholder="Was this helpful? Did it get your situation right? Anything you\'d add or push back on? (optional)"></textarea>';
   html += '<div class="opt-in-block"><p class="opt-in-nudge"><strong>Including your report and conversation helps us make this more useful</strong> \u2014 if you don\'t mind, please check the boxes!</p>';
   html += '<label class="opt-in-row"><input type="checkbox" id="chk-report"> <span>Share my assessment report</span></label>';
