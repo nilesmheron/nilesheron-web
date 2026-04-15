@@ -1,4 +1,1 @@
-{
-  "cleanUrls": true,
-  "trailingSlash": false
-}
+{\n  \"cleanUrls\": true,\n  \"trailingSlash\": false,\n  \"headers\": [\n    {\n      \"source\": \"/(.*)\",\n      \"headers\": [\n        {\n          \"key\": \"Content-Security-Policy\",\n          \"value\": \"frame-ancestors 'self' https://niles-task-dashboard.vercel.app https://tasks.nilesheron.com\"\n        }\n      ]\n    }\n  ]\n}\n
