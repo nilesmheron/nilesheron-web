@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Colleague AI Onboarding Guide — dev.nilesheron.com</title>
+  <style>
+    body { font-family: Georgia, serif; max-width: 660px; margin: 80px auto; padding: 0 24px; color: #1a1a1a; background: #fafafa; }
+    h1 { font-size: 1.4rem; font-weight: normal; margin-bottom: 4px; }
+    h2 { font-size: 1.1rem; font-weight: normal; margin-top: 48px; margin-bottom: 6px; border-bottom: 1px solid #e8e8e8; padding-bottom: 8px; }
+    h3 { font-size: 0.95rem; font-weight: bold; margin-top: 28px; margin-bottom: 6px; }
+    p { color: #444; line-height: 1.75; margin: 0 0 16px; }
+    a { color: #1a1a1a; }
+    .meta { color: #999; font-size: 0.85rem; margin-bottom: 48px; }
+    ul, ol { color: #444; line-height: 1.75; padding-left: 20px; }
+    li { margin-bottom: 4px; }
+    code { font-family: 'Courier New', monospace; font-size: 0.85rem; background: #f0f0f0; padding: 2px 5px; border-radius: 3px; }
+    pre { background: #f4f4f4; border: 1px solid #e0e0e0; border-radius: 4px; padding: 16px 20px; overflow-x: auto; font-size: 0.82rem; line-height: 1.6; }
+    pre code { background: none; padding: 0; }
+    hr { border: none; border-top: 1px solid #e8e8e8; margin: 48px 0; }
+    .card { border: 1px solid #e0e0e0; border-radius: 6px; padding: 24px 28px; margin-bottom: 32px; background: #fff; }
+    .card-title { font-size: 1rem; font-weight: bold; margin: 0 0 6px; }
+    .card-desc { font-size: 0.9rem; color: #555; line-height: 1.6; margin: 0 0 16px; }
+    .card-actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    .btn { display: inline-block; padding: 8px 16px; font-size: 0.85rem; font-family: Georgia, serif; border-radius: 4px; text-decoration: none; cursor: pointer; border: 1px solid #1a1a1a; background: #1a1a1a; color: #fff; }
+    .btn-outline { background: transparent; color: #1a1a1a; }
+    .btn-copy-success { background: #2d6a2d; border-color: #2d6a2d; }
+    .tag { display: inline-block; font-size: 0.75rem; padding: 2px 8px; border-radius: 10px; background: #f0f0f0; color: #666; margin-right: 6px; }
+    .callout { background: #f7f7f7; border: 1px solid #ddd; border-radius: 6px; padding: 16px 20px; margin: 20px 0; }
+    .callout p { margin-bottom: 6px; color: #333; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+
+  <h1>Colleague AI Onboarding Guide</h1>
+  <p class="meta"><a href="/templates">← templates</a></p>
+
+  <p>A guided session for building your own GitHub-based AI corpus — profile, repo structure, Claude integration, and tool connections. Load this into Claude and it'll walk you through the whole setup interactively. Takes about 30–45 minutes depending on how many integrations you want.</p>
+
+  <div class="card">
+    <p class="card-title">Run this guide with Claude</p>
+    <p class="card-desc">Copy the guide, paste it into a new Claude conversation, and say: <em>"Load this and run the onboarding."</em> Claude will interview you, build your profile from your answers, and walk you through each step one at a time.</p>
+    <div style="margin-bottom: 14px;">
+      <span class="tag">GitHub</span>
+      <span class="tag">Claude</span>
+      <span class="tag">Gmail</span>
+      <span class="tag">Granola</span>
+      <span class="tag">Vercel / v0</span>
+      <span class="tag">Google Drive</span>
+      <span class="tag">Slack</span>
+    </div>
+    <div class="card-actions">
+      <button class="btn" id="copyBtn" onclick="copyGuide()">Copy guide for Claude</button>
+      <a class="btn btn-outline" href="#guide">Read guide</a>
+    </div>
+  </div>
+
+  <hr>
+
+  <div id="guide">
+
+    <h2>What This Is</h2>
+    <p>Niles Heron (your colleague at Verse and Hook) uses a private GitHub repository as persistent memory for his AI workflow. Instead of re-explaining context at the start of every session, that context lives in a structured repo that Claude — and other AI tools — can load on demand.</p>
+    <p>The repo holds an AI interaction profile, a task dashboard and working context for active projects, deliverables and reference material organized by project, and connections to the tools you already use. By the end of this session you'll have your own version.</p>
+
+    <h2>How to Use This Guide</h2>
+    <div class="callout">
+      <p><strong>Option A — Let Claude run the session (recommended)</strong></p>
+      <p>Click "Copy guide for Claude" above, paste into a new Claude conversation, and say: <code>"Load this and run the onboarding."</code> Claude interviews you, builds your profile, and walks you through each step.</p>
+    </div>
+    <div class="callout">
+      <p><strong>Option B — Follow it yourself</strong></p>
+      <p>Read through the sections below and complete each step on your own. Ask Claude for help on individual steps as needed.</p>
+    </div>
+
+    <hr>
+
+    <h2>Step 1 — GitHub Setup</h2>
+    <h3>Create an account (if needed)</h3>
+    <p>Go to <a href="https://github.com">github.com</a> and sign up with your work email. Free tier includes private repos. Choose a professional username — <code>firstnamelastname</code> works well.</p>
+    <h3>Create your repo</h3>
+    <ol>
+      <li>From your GitHub dashboard, click "+" → "New repository"</li>
+      <li>Name it <code>[username]-ai-management</code></li>
+      <li>Set to <strong>Private</strong>, check "Add a README file"</li>
+      <li>Click "Create repository"</li>
+    </ol>
+    <h3>Set up the folder structure</h3>
+    <p>GitHub doesn't store empty folders. Create each one via the web UI: "Add file" → "Create new file" → type <code>profile/.gitkeep</code>. The slash creates the folder. Repeat for each:</p>
+    <pre><code>[username]-ai-management/
+├── profile/
+├── tasks/
+├── deliverables/
+├── reference/
+├── context/
+└── templates/</code></pre>
+
+    <hr>
+
+    <h2>Step 2 — Build Your AI Profile</h2>
+    <p>The profile tells Claude who you are and how to work with you. If loading this into Claude, it'll interview you and build the profile from your answers.</p>
+    <p>What the profile covers: professional context (role, org, projects, stakeholders), communication preferences (tone, voice, AI habits that annoy you), collaboration mode (thinking partner vs. executor), integrations, and notes for AI.</p>
+    <p>Keep a <strong>full version</strong> (<code>profile-v1.0-full.md</code>) and a <strong>condensed version</strong> (~40% of the length) for mobile sessions. Condensed keeps role, communication prefs, and collaboration mode — cuts the detailed project and stakeholder lists.</p>
+
+    <hr>
+
+    <h2>Step 3 — Connect Claude</h2>
+    <h3>Connect GitHub to Claude.ai</h3>
+    <ol>
+      <li>Go to claude.ai → Settings → Connected Apps</li>
+      <li>Find GitHub and click Connect</li>
+      <li>Authorize via OAuth — select your <code>[username]-ai-management</code> repo</li>
+      <li>Grant read <em>and</em> write access (write lets Claude commit back)</li>
+      <li>Confirm it shows as active</li>
+    </ol>
+    <p style="font-size: 0.85rem; color: #777;">Note: GitHub MCP may not work on iPad/iPhone even after authorization — a known limitation. The Gist fallback below handles this.</p>
+    <h3>Set up userPreferences</h3>
+    <p>Claude.ai → Settings → Profile. Paste the following, filling in your details:</p>
+    <pre><code>Load my AI interaction profile before starting significant work.
+
+Primary source (GitHub):
+repo: [github-username]/[username]-ai-management
+path: profile/profile-v1.0-full.md
+
+If GitHub is unavailable (e.g., mobile):
+Load condensed version from this URL:
+[GIST URL — see next step]
+
+Before significant co-work, load the full profile and confirm you've loaded it.</code></pre>
+    <h3>Create a Gist fallback</h3>
+    <ol>
+      <li>Go to <a href="https://gist.github.com">gist.github.com</a></li>
+      <li>Create a new <strong>public</strong> Gist</li>
+      <li>Paste in your condensed profile, name the file <code>profile-condensed.md</code></li>
+      <li>Save, click "Raw," copy that URL from the browser</li>
+      <li>Paste it into your userPreferences block above</li>
+    </ol>
+    <h3>Test it</h3>
+    <p>Open a new Claude conversation and say: <code>"Load my profile."</code> Claude should load from GitHub and confirm. If it fails, test the Gist URL directly.</p>
+
+    <hr>
+
+    <h2>Step 4 — Integrations</h2>
+    <p>Connect only what you actively use. All via Claude.ai → Settings → Connected Apps.</p>
+    <h3>Gmail</h3>
+    <p>Create a Gmail label called <code>claude_tasks</code> — apply it to emails you want Claude to act on. In sessions: <em>"Check my Gmail for the claude_tasks label."</em></p>
+    <h3>Google Drive</h3>
+    <p>Claude can search and read Drive files. Read-focused — doesn't write back to Drive.</p>
+    <h3>Granola</h3>
+    <p>Install <a href="https://granola.ai">Granola</a>, let it run during meetings, connect via Connected Apps. At session start: <em>"Check Granola for recent action items."</em></p>
+    <h3>Slack</h3>
+    <p>Create a private channel called <code>#[firstname]-claude-inbox</code>. Drop tasks and notes there throughout the day — Claude processes them at the start of your next session. Find the channel ID in the browser URL: <code>app.slack.com/client/[workspace]/[CHANNEL-ID]</code>.</p>
+    <h3>Vercel / v0</h3>
+    <p><a href="https://v0.dev">v0.dev</a> generates working HTML and React components from a description. <a href="https://vercel.com">Vercel</a> deploys them live. Claude generates the code, commits to your public repo, Vercel deploys, you get a URL.</p>
+    <ol>
+      <li>Create accounts at v0.dev and vercel.com (GitHub login for both)</li>
+      <li>Connect your GitHub account to Vercel for one-click deploys</li>
+      <li>Connect Vercel in Claude.ai → Connected Apps if available</li>
+    </ol>
+    <h3>Other platforms</h3>
+    <p>Check Claude.ai Connected Apps for anything else you use — Google Calendar, Notion, Linear, Asana, Monday.com.</p>
+
+    <hr>
+
+    <h2>Step 5 — Public Repo for HTML Files (Optional)</h2>
+    <p>Niles hosts lightweight pages at <a href="https://dev.nilesheron.com">dev.nilesheron.com</a> via GitHub Pages. Claude produces HTML, commits it, Pages serves it at a stable URL automatically.</p>
+    <ol>
+      <li>New public GitHub repo — name it <code>[username]-pages</code>, initialize with README</li>
+      <li>Repo → Settings → Pages → "Deploy from a branch" → <code>main</code> → <code>/</code> root → Save</li>
+      <li>Your URL: <code>https://[username].github.io/[repo-name]/</code></li>
+    </ol>
+    <p>Optional custom domain: DNS CNAME pointing your subdomain to <code>[username].github.io</code>, then set it in repo Settings → Pages → Custom domain. Enable HTTPS.</p>
+    <p>Add to your profile:</p>
+    <pre><code>github:
+  public_repo: "[username]/[public-repo-name]"
+  public_url: "https://[your-url]/"</code></pre>
+
+    <hr>
+
+    <h2>Keeping It Useful</h2>
+    <ul>
+      <li>At the end of meaningful sessions, ask Claude to commit a context note</li>
+      <li>New project → add <code>reference/[project-name]/</code></li>
+      <li>Role or priorities shift → update the profile</li>
+      <li>Use your Slack inbox or Gmail label for quick captures throughout the day</li>
+    </ul>
+    <p>Niles is on version 1.8 after about a year of iteration. Deeper layers — task management, multi-platform routing, agentic automation — are in the other guides at <a href="/templates">dev.nilesheron.com/templates</a>.</p>
+
+  </div>
+
+  <hr>
+  <p style="font-size:0.85rem;color:#999;"><a href="/templates">← templates</a> &nbsp;·&nbsp; <a href="https://dev.nilesheron.com">dev.nilesheron.com</a></p>
+
+  <textarea id="rawGuide" style="position:absolute;left:-9999px;top:-9999px;" aria-hidden="true">
+# =============================================================================
+# INSTRUCTIONS FOR AI ASSISTANT (Read This First)
+# =============================================================================
+# This is a guided onboarding session. Walk the person through building their
+# own GitHub corpus and Claude integration, step by step, interactively.
+# Do not dump the whole document at them at once.
+#
+# Session flow:
+# 1. Short intro (2-3 sentences)
+# 2. Intake interview — SECTION 2, one question at a time
+# 3. Draft their AI profile — SECTION 3, read back before moving on
+# 4. GitHub repo setup — SECTION 4
+# 5. Connect Claude and load profile — SECTION 5
+# 6. Integrations they confirmed — SECTION 6
+# 7. Public HTML repo if they want it — SECTION 7
+# 8. Close with checklist — SECTION 8
+#
+# Pacing: one step at a time, confirm before moving forward.
+# Match energy. Tone: direct, warm, capable. Colleague onboarding, not a tutorial.
+#
+# Begin with:
+# "Let's get your setup built. I'll ask you a few questions first so I understand
+# how you work — then we'll put it all together. Usually takes 30-45 minutes
+# depending on how many integrations you want. Ready?"
+# =============================================================================
+
+# SECTION 1: WHAT THIS IS
+
+Niles Heron (your colleague at Verse and Hook) uses a private GitHub repository
+as persistent memory for his AI workflow. Instead of re-explaining context at the
+start of every session, that context lives in a structured repo Claude can load on demand.
+
+The repo holds: an AI interaction profile, a task dashboard, deliverables and
+reference material, and connections to the tools you already use.
+
+By the end of this session you'll have your own version.
+
+
+# SECTION 2: INTAKE INTERVIEW
+# Ask one at a time. Use answers to build the profile.
+
+- What's your name and what do you do at Verse and Hook (or more broadly)?
+- Primary email? Any secondary work addresses?
+- GitHub username, or do you need to create an account?
+- How would you describe your working style?
+- What types of work do you most often need AI help with?
+- What does a typical week look like in terms of output?
+- When AI helps you write, what tone do you want it to hit?
+- Are there things AI does that annoy you? Be specific — this goes in your profile.
+- Any phrases or voice habits distinctly yours to preserve?
+- What are your main projects or workstreams right now?
+- Any recurring stakeholders AI should know about?
+- Which tools do you use? Go through each:
+  Gmail, Google Drive, GitHub, Granola, Slack, Vercel/v0, others?
+- Do you produce HTML files or pages you'd want hosted publicly?
+
+
+# SECTION 3: AI INTERACTION PROFILE
+# Draft from their answers. Flag gaps with [TBD]. Read back before moving on.
+
+version: "1.0"
+last_updated: "[DATE]"
+profile_owner: "[FIRST NAME]"
+
+professional_context:
+  name: "[FULL NAME]"
+  primary_role: "[TITLE]"
+  organization: "Verse and Hook"
+  email: "[PRIMARY EMAIL]"
+  active_projects:
+    # [2-4 from intake — project name + 1-line description]
+  key_responsibilities:
+    # [from intake]
+  key_stakeholders:
+    # [contacts where context changes how Claude should approach something]
+
+communication_preferences:
+  tone: "[their words]"
+  writing_voice:
+    ai_tells_to_avoid:
+      # [their flags + standard: excessive em dashes, buzzwords,
+      # over-smoothed prose, hollow affirmations, sycophantic openers]
+    preserve:
+      # [voice elements to keep verbatim]
+  response_style:
+    default: "[prose or bullets]"
+    length: "[concise / balanced / detailed]"
+
+collaboration_mode:
+  default: "Collaborator"
+  note: |
+    Ask before executing on high-stakes work. Think alongside, don't just produce.
+    When task is clear and stakes are low, execute directly.
+    Flag assumptions rather than making them silently.
+
+integrations:
+  github:
+    repo: "[github-username]/[username]-ai-management"
+    profile_path: "profile/profile-v1.0-full.md"
+    condensed_path: "profile/profile-v1.0-condensed.md"
+  # [add only confirmed integrations — delete the rest]
+  gmail:
+    account: "[email]"
+    task_label: "claude_tasks"
+  google_drive:
+    account: "[google account]"
+  granola:
+    enabled: true
+  slack:
+    inbox_channel: "#[firstname]-claude-inbox"
+    channel_id: "[CHANNEL ID]"
+  vercel:
+    enabled: true
+
+notes_for_ai:
+  - "Profile v1.0 — will be refined over time."
+  - "When in doubt, ask rather than assume."
+
+
+# SECTION 4: GITHUB REPO SETUP
+
+Step 1: Create github.com account if needed. Work email. Free tier. Professional username.
+Step 2: New repo [username]-ai-management. Private. Initialize with README.
+Step 3: Create folders via web UI (Add file > Create new file > type path like profile/.gitkeep):
+  profile/, tasks/, deliverables/, reference/, context/, templates/
+Step 4: Commit profile to profile/profile-v1.0-full.md
+  Message: "Add initial AI interaction profile v1.0"
+Step 5: Condensed version (~40% length — keep role, prefs, collab mode; cut details).
+  Commit to profile/profile-v1.0-condensed.md
+
+
+# SECTION 5: CONNECTING CLAUDE
+
+Step 1: claude.ai > Settings > Connected Apps > Connect GitHub
+  OAuth. Select ai-management repo. Read AND write access.
+  Known issue: may not work on iPad/iPhone — Gist fallback handles it.
+
+Step 2: userPreferences (Settings > Profile):
+  Load my AI interaction profile before starting significant work.
+  Primary (GitHub): repo: [username]/[username]-ai-management | path: profile/profile-v1.0-full.md
+  If unavailable: load condensed from [GIST URL]
+  Before co-work, load full profile and confirm.
+
+Step 3: Gist fallback at gist.github.com
+  New public Gist. Paste condensed profile. Name: profile-condensed.md.
+  Save > Raw > copy URL > paste into userPreferences.
+
+Step 4: Test — new conversation: "Load my profile." Confirm from GitHub.
+  If fails, test Gist URL directly. Fix before moving on.
+
+
+# SECTION 6: INTEGRATIONS
+# Walk through only confirmed integrations. Test each one.
+
+Gmail: Connected Apps > Connect Gmail. Create label claude_tasks.
+  Test: "Summarize my last 5 emails from [person]"
+
+Google Drive: Connected Apps > Connect Google Drive.
+  Test: "Find [doc] in my Drive" — read only.
+
+Granola: Install granola.ai. Connected Apps > Connect Granola.
+  Test: "Show me Granola notes from last 7 days"
+
+Slack: Connected Apps > Connect Slack. Create private #[firstname]-claude-inbox.
+  Channel ID in browser URL. Test: "Read my inbox channel"
+
+Vercel/v0: Accounts at v0.dev and vercel.com (GitHub login). Connect GitHub to Vercel.
+
+Other: Check Connected Apps for anything else they mentioned.
+
+
+# SECTION 7: PUBLIC REPO FOR HTML FILES
+# Only if they said yes.
+
+Step 1: New GitHub repo — Public. Name: [username]-pages. Initialize with README.
+Step 2: Repo > Settings > Pages > Deploy from main root.
+Step 3 (optional): DNS CNAME subdomain > [username].github.io. Set custom domain in Pages.
+Step 4: Add to profile — github: public_repo, public_url
+
+
+# SECTION 8: CLOSE
+
+Checklist:
+- [ ] Private repo with folder structure
+- [ ] Profile v1.0 committed (full + condensed)
+- [ ] Gist fallback in userPreferences
+- [ ] GitHub connector active
+- [ ] Profile load tested
+- [ ] Integrations connected and tested
+- [ ] Public repo + Pages (if applicable)
+
+Habits: end sessions with a context commit, add reference folders for new projects,
+update profile when role shifts, use Slack inbox or Gmail label for quick captures.
+
+More at dev.nilesheron.com/templates — task management, profile versioning, cross-platform workflow.
+Ask: "Anything unclear? Any integrations we didn't get to?" Then close out.
+  </textarea>
+
+  <script>
+    function copyGuide() {
+      const btn = document.getElementById('copyBtn');
+      const text = document.getElementById('rawGuide').value.trim();
+      navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = 'Copied!';
+        btn.classList.add('btn-copy-success');
+        setTimeout(() => { btn.textContent = 'Copy guide for Claude'; btn.classList.remove('btn-copy-success'); }, 2500);
+      }).catch(() => {
+        const ta = document.getElementById('rawGuide');
+        ta.style.position = 'static';
+        ta.select();
+        document.execCommand('copy');
+        ta.style.position = 'absolute';
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = 'Copy guide for Claude'; }, 2500);
+      });
+    }
+  </script>
+
+</body>
+</html>
