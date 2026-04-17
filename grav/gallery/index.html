@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>L2 — Art Direction Gallery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0a; --bg-elev: #141414; --bg-tile: #0f0f0f;
+  --fg: #e8e6e1; --fg-dim: #a8a59e; --fg-faint: #6b6862;
+  --accent: #d4a574; --border: #1f1f1f; --border-hover: #3a3a3a;
+  --serif: 'Fraunces', Georgia, serif;
+  --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--sans); font-size: 16px; line-height: 1.6;
+  -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+}
+.topnav {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(10, 10, 10, 0.92);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; gap: 2rem;
+}
+.topnav .brand { font-family: var(--serif); font-weight: 400; font-size: 0.95rem; letter-spacing: 0.02em; color: var(--fg-dim); }
+.topnav .brand strong { color: var(--fg); font-weight: 500; }
+.topnav a.back {
+  font-family: var(--mono); font-size: 0.8rem; color: var(--fg-dim);
+  text-decoration: none; padding: 0.4rem 0.8rem; border: 1px solid var(--border);
+  border-radius: 4px; transition: all 0.2s ease;
+}
+.topnav a.back:hover { color: var(--accent); border-color: var(--border-hover); }
+.section-header { max-width: 1400px; margin: 0 auto; padding: 4rem 2rem 1.5rem; }
+.section-header .eyebrow {
+  font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.15em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 0.75rem;
+}
+.section-header h2 {
+  font-family: var(--serif); font-weight: 300;
+  font-size: clamp(1.75rem, 3vw, 2.5rem); letter-spacing: -0.01em;
+  line-height: 1.15; color: var(--fg); margin-bottom: 0.75rem;
+}
+.section-header .note { font-size: 0.95rem; color: var(--fg-dim); max-width: 62ch; line-height: 1.7; }
+.hero-wrap { max-width: 1400px; margin: 0 auto; padding: 0 2rem 4rem; }
+.hero {
+  background: var(--bg-tile); border: 1px solid var(--border);
+  border-radius: 4px; overflow: hidden; transition: border-color 0.25s ease;
+}
+.hero:hover { border-color: var(--border-hover); }
+.hero img { display: block; width: 100%; height: auto; max-height: 85vh; object-fit: contain; background: #000; }
+.hero-caption { padding: 1.5rem 2rem 1.75rem; border-top: 1px solid var(--border); }
+.hero-caption .tag {
+  font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.15em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 0.5rem;
+}
+.hero-caption h3 {
+  font-family: var(--serif); font-weight: 400;
+  font-size: clamp(1.25rem, 2vw, 1.6rem); margin-bottom: 0.6rem; letter-spacing: -0.005em;
+}
+.hero-caption p { color: var(--fg-dim); font-size: 0.95rem; max-width: 72ch; line-height: 1.7; }
+.hero-caption em { color: var(--fg); font-style: italic; font-family: var(--serif); }
+.grid-wrap { max-width: 1400px; margin: 0 auto; padding: 0 2rem 6rem; }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+@media (max-width: 900px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) {
+  .grid { grid-template-columns: 1fr; gap: 1rem; }
+  .topnav { padding: 0.85rem 1rem; }
+  .section-header, .hero-wrap, .grid-wrap { padding-left: 1rem; padding-right: 1rem; }
+  .hero-caption { padding: 1.25rem 1.25rem 1.5rem; }
+}
+.tile {
+  background: var(--bg-tile); border: 1px solid var(--border);
+  border-radius: 4px; overflow: hidden; display: flex; flex-direction: column;
+  transition: border-color 0.25s ease, transform 0.25s ease;
+}
+.tile:hover { border-color: var(--border-hover); transform: translateY(-2px); }
+.tile.off-spec { border-color: #3a2a1a; }
+.tile.off-spec:hover { border-color: #5a3f22; }
+.tile img { display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: cover; background: #000; }
+.tile-caption { padding: 1rem 1.1rem 1.25rem; border-top: 1px solid var(--border); flex: 1; display: flex; flex-direction: column; }
+.tile-caption .tag {
+  font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.15em;
+  text-transform: uppercase; color: var(--fg-faint); margin-bottom: 0.35rem;
+}
+.tile.off-spec .tag { color: #c68c4a; }
+.tile-caption h4 { font-family: var(--serif); font-weight: 400; font-size: 1.05rem; margin-bottom: 0.45rem; line-height: 1.25; }
+.tile-caption p { color: var(--fg-dim); font-size: 0.85rem; line-height: 1.55; margin-top: auto; }
+.tile-caption em { color: var(--fg); font-style: italic; font-family: var(--serif); font-size: 0.9rem; }
+.footer-note {
+  max-width: 1400px; margin: 0 auto; padding: 0 2rem 4rem;
+  font-family: var(--mono); font-size: 0.75rem; color: var(--fg-faint);
+  line-height: 1.7; border-top: 1px solid var(--border); padding-top: 2rem;
+}
+.footer-note strong { color: var(--fg-dim); font-weight: 500; }
+.img-loading { background: linear-gradient(90deg, #0f0f0f, #141414, #0f0f0f); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="brand"><strong>L2</strong> — Art Direction Gallery <span style="color: var(--fg-faint); margin-left: 0.5rem;">v0.1</span></div>
+  <a href="/grav" class="back">← Deck</a>
+</nav>
+
+<header class="section-header">
+  <div class="eyebrow">Cover Direction</div>
+  <h2>Idris at the fork. The ground asks the question.</h2>
+  <p class="note">Current direction for the L2 cover. Celtic-style "CHOOSE" underfoot pulls Luther's narrative onto the pavement — the crowd walks past it, he turns back to face it. The audience stands where he stands.</p>
+</header>
+
+<section class="hero-wrap">
+  <div class="hero">
+    <img id="img-hero" class="img-loading" alt="Hero — CHOOSE cover blend">
+    <div class="hero-caption">
+      <div class="tag">Cover Blend v0.1 · Current Direction</div>
+      <h3>"CHOOSE" as the imperative answer to A's slug.</h3>
+      <p>Direction A asks <em>"What do you choose when it's dark?"</em> — this cover is the one-word reply. Luther turns back toward the graffiti while the crowd walks on. Gaslamps, Whitechapel signage, colorful raincoats at the split between East End and City West. The fork is literalized on the ground; the answer is demanded in Celtic letterform.</p>
+    </div>
+  </div>
+</section>
+
+<header class="section-header">
+  <div class="eyebrow">Alternate Directions</div>
+  <h2>Six candidate covers, mapped to the four strategic directions.</h2>
+  <p class="note">Each candidate illuminates a different angle of the master frame. Five are on-spec variations across the four appendix directions. One is off-spec — included as a provocation to stress-test how far the visual system can bend before it breaks.</p>
+</header>
+
+<section class="grid-wrap">
+  <div class="grid">
+    <div class="tile">
+      <img id="img-option1" class="img-loading" alt="Option 1">
+      <div class="tile-caption">
+        <div class="tag">Option 1 · Direction A</div>
+        <h4>Crossroads, Male Crowd</h4>
+        <p><em>Literal fork in the road.</em> East End / City West signage bracket the split. Brief-compliant on demographic; Idris as pivot, crowd walking through.</p>
+      </div>
+    </div>
+    <div class="tile">
+      <img id="img-option2a" class="img-loading" alt="Option 2 — Hidden Witness">
+      <div class="tile-caption">
+        <div class="tag">Option 2 · Direction B</div>
+        <h4>Hidden Witness</h4>
+        <p><em>Surveillance-coded.</em> Luther behind the corner, flashlight self-illuminating. The crowd across the way is unaware. Someone had to watch. So he did.</p>
+      </div>
+    </div>
+    <div class="tile">
+      <img id="img-option2b" class="img-loading" alt="Option 2 variant — The Walker">
+      <div class="tile-caption">
+        <div class="tag">Option 2 Variant · Direction B</div>
+        <h4>The Walker</h4>
+        <p><em>Departure, not observation.</em> Back turned, walking into the alley with the flashlight. The crowd stays in the light; he goes to the dark. Jon Snow at the wall.</p>
+      </div>
+    </div>
+    <div class="tile">
+      <img id="img-option3" class="img-loading" alt="Option 3 — Center, Surrounded">
+      <div class="tile-caption">
+        <div class="tag">Option 3 · Direction C</div>
+        <h4>Center, Surrounded</h4>
+        <p><em>Tag-style graffiti, close bracket.</em> Hooded figures flanking in the immediate foreground. Luther centered, flashlight on the question. No cape. No backup.</p>
+      </div>
+    </div>
+    <div class="tile">
+      <img id="img-option4" class="img-loading" alt="Option 4 — Mixed Crowd">
+      <div class="tile-caption">
+        <div class="tag">Option 4 · Direction A (variant)</div>
+        <h4>Mixed Crowd</h4>
+        <p><em>Gender-mixed variation on the crossroads.</em> On-brief men remain central to demographic weight; broader audience reads in the periphery. Tag graffiti under the flashlight.</p>
+      </div>
+    </div>
+    <div class="tile off-spec">
+      <img id="img-wildcard" class="img-loading" alt="Wildcard — The Burden (off-spec)">
+      <div class="tile-caption">
+        <div class="tag">Wildcard · Off-spec</div>
+        <h4>The Burden</h4>
+        <p><em>Literalizes Definition 3 — "carry the darkness, so others don't have to."</em> Emotionally charged, tonally distant from the other candidates. Not a peer option; included to mark the outer edge of where the visual system can go before it breaks.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="footer-note">
+  <strong>Gallery v0.1</strong> · Images rendered from Gemini references at 640px. Final cover blend and platform treatments tbd. Strategic mapping per L2 Platform Deck v0.6.
+</div>
+
+<script src="./img/hero.js"></script>
+<script src="./img/option1.js"></script>
+<script src="./img/option2a.js"></script>
+<script src="./img/option2b.js"></script>
+<script src="./img/option3.js"></script>
+<script src="./img/option4.js"></script>
+<script src="./img/wildcard.js"></script>
+<script>
+const pairs = [
+  ['img-hero', window.IMG_HERO],
+  ['img-option1', window.IMG_OPTION1],
+  ['img-option2a', window.IMG_OPTION2A],
+  ['img-option2b', window.IMG_OPTION2B],
+  ['img-option3', window.IMG_OPTION3],
+  ['img-option4', window.IMG_OPTION4],
+  ['img-wildcard', window.IMG_WILDCARD],
+];
+pairs.forEach(([id, src]) => {
+  const el = document.getElementById(id);
+  if (el && src) {
+    el.onload = () => el.classList.remove('img-loading');
+    el.src = src;
+  }
+});
+</script>
+
+</body>
+</html>
