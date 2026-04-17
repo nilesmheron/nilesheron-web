@@ -44,13 +44,19 @@
   }
   .nav-title { color: var(--fg-dim); }
   .nav-title strong { color: var(--fg); font-weight: 500; }
-  .nav-jumps { display: flex; gap: 2px; flex-wrap: wrap; }
+  .nav-jumps { display: flex; gap: 2px; flex-wrap: wrap; align-items: center; }
   .nav-jumps a {
     color: var(--fg-meta); text-decoration: none;
     padding: 6px 10px; border-radius: 4px;
     transition: all 0.2s;
   }
   .nav-jumps a:hover { color: var(--accent); background: rgba(212, 165, 116, 0.08); }
+  .nav-jumps a.nav-external {
+    color: var(--accent);
+    border: 1px solid var(--accent-dim);
+    margin-left: 10px;
+  }
+  .nav-jumps a.nav-external:hover { background: rgba(212, 165, 116, 0.12); }
   main {
     scroll-snap-type: y mandatory;
     overflow-y: scroll; height: 100vh;
@@ -251,6 +257,29 @@
     font-size: 0.9rem; color: var(--fg-dim);
     line-height: 1.55; margin: 0;
   }
+  .gallery-cta {
+    margin-top: 40px;
+    padding: 20px 24px;
+    background: var(--bg-elev);
+    border: 1px solid var(--accent-dim);
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 20px; flex-wrap: wrap;
+  }
+  .gallery-cta-text {
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--fg-dim);
+  }
+  .gallery-cta a {
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--accent); text-decoration: none;
+    padding: 10px 16px; border: 1px solid var(--accent);
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+  .gallery-cta a:hover { background: var(--accent); color: var(--bg); }
   .thanks { text-align: center; }
   .thanks .thanks-big {
     font-family: var(--font-display); font-style: italic;
@@ -270,6 +299,7 @@
     }
     .nav-jumps { font-size: 10px; }
     .nav-jumps a { padding: 4px 7px; }
+    .nav-jumps a.nav-external { margin-left: 4px; }
     section.slide { padding: 140px 6vw 60px; }
     .slide-meta { left: 6vw; }
   }
@@ -290,6 +320,7 @@
     <a href="#D">D</a>
     <a href="#close">Close</a>
     <a href="#appendix">Appendix</a>
+    <a href="/grav/gallery" class="nav-external">Gallery →</a>
   </div>
 </nav>
 
@@ -574,6 +605,11 @@
           <p>Composition similar to Option 1, but crowd includes women and broader demographic mix. Flashlight on graffiti. Signage present.</p>
         </div>
       </div>
+
+      <div class="gallery-cta">
+        <span class="gallery-cta-text">Visual references rendered — see gallery for all six candidate covers + wildcard.</span>
+        <a href="/grav/gallery">View Gallery →</a>
+      </div>
     </div>
   </section>
 
@@ -612,7 +648,7 @@
     }
   });
 
-  const navLinks = document.querySelectorAll('.nav-jumps a');
+  const navLinks = document.querySelectorAll('.nav-jumps a:not(.nav-external)');
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
