@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #0a0a0a; --bg-elev: #141414; --bg-tile: #0f0f0f;
+  --bg: #0a0a0a; --bg-tile: #0f0f0f;
   --fg: #e8e6e1; --fg-dim: #a8a59e; --fg-faint: #6b6862;
   --accent: #d4a574; --border: #1f1f1f; --border-hover: #3a3a3a;
   --serif: 'Fraunces', Georgia, serif;
@@ -99,8 +99,6 @@ html, body {
   line-height: 1.7; border-top: 1px solid var(--border); padding-top: 2rem;
 }
 .footer-note strong { color: var(--fg-dim); font-weight: 500; }
-.img-loading { background: linear-gradient(90deg, #0f0f0f, #141414, #0f0f0f); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
-@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 </style>
 </head>
 <body>
@@ -118,7 +116,7 @@ html, body {
 
 <section class="hero-wrap">
   <div class="hero">
-    <img id="img-hero" class="img-loading" alt="Hero — CHOOSE cover blend">
+    <img src="./img/hero.jpg" alt="Hero — CHOOSE cover blend" loading="eager">
     <div class="hero-caption">
       <div class="tag">Cover Blend v0.1 · Current Direction</div>
       <h3>"CHOOSE" as the imperative answer to A's slug.</h3>
@@ -136,7 +134,7 @@ html, body {
 <section class="grid-wrap">
   <div class="grid">
     <div class="tile">
-      <img id="img-option1" class="img-loading" alt="Option 1">
+      <img src="./img/option1.jpg" alt="Option 1 — Crossroads, male crowd" loading="lazy">
       <div class="tile-caption">
         <div class="tag">Option 1 · Direction A</div>
         <h4>Crossroads, Male Crowd</h4>
@@ -144,7 +142,7 @@ html, body {
       </div>
     </div>
     <div class="tile">
-      <img id="img-option2a" class="img-loading" alt="Option 2 — Hidden Witness">
+      <img src="./img/option2a.jpg" alt="Option 2 — Hidden Witness" loading="lazy">
       <div class="tile-caption">
         <div class="tag">Option 2 · Direction B</div>
         <h4>Hidden Witness</h4>
@@ -152,7 +150,7 @@ html, body {
       </div>
     </div>
     <div class="tile">
-      <img id="img-option2b" class="img-loading" alt="Option 2 variant — The Walker">
+      <img src="./img/option2b.jpg" alt="Option 2 variant — The Walker" loading="lazy">
       <div class="tile-caption">
         <div class="tag">Option 2 Variant · Direction B</div>
         <h4>The Walker</h4>
@@ -160,7 +158,7 @@ html, body {
       </div>
     </div>
     <div class="tile">
-      <img id="img-option3" class="img-loading" alt="Option 3 — Center, Surrounded">
+      <img src="./img/option3.jpg" alt="Option 3 — Center, Surrounded" loading="lazy">
       <div class="tile-caption">
         <div class="tag">Option 3 · Direction C</div>
         <h4>Center, Surrounded</h4>
@@ -168,7 +166,7 @@ html, body {
       </div>
     </div>
     <div class="tile">
-      <img id="img-option4" class="img-loading" alt="Option 4 — Mixed Crowd">
+      <img src="./img/option4.jpg" alt="Option 4 — Mixed Crowd" loading="lazy">
       <div class="tile-caption">
         <div class="tag">Option 4 · Direction A (variant)</div>
         <h4>Mixed Crowd</h4>
@@ -176,7 +174,7 @@ html, body {
       </div>
     </div>
     <div class="tile off-spec">
-      <img id="img-wildcard" class="img-loading" alt="Wildcard — The Burden (off-spec)">
+      <img src="./img/wildcard.jpg" alt="Wildcard — The Burden (off-spec)" loading="lazy">
       <div class="tile-caption">
         <div class="tag">Wildcard · Off-spec</div>
         <h4>The Burden</h4>
@@ -189,32 +187,6 @@ html, body {
 <div class="footer-note">
   <strong>Gallery v0.1</strong> · Images rendered from Gemini references at 640px. Final cover blend and platform treatments tbd. Strategic mapping per L2 Platform Deck v0.6.
 </div>
-
-<script src="./img/hero.js"></script>
-<script src="./img/option1.js"></script>
-<script src="./img/option2a.js"></script>
-<script src="./img/option2b.js"></script>
-<script src="./img/option3.js"></script>
-<script src="./img/option4.js"></script>
-<script src="./img/wildcard.js"></script>
-<script>
-const pairs = [
-  ['img-hero', window.IMG_HERO],
-  ['img-option1', window.IMG_OPTION1],
-  ['img-option2a', window.IMG_OPTION2A],
-  ['img-option2b', window.IMG_OPTION2B],
-  ['img-option3', window.IMG_OPTION3],
-  ['img-option4', window.IMG_OPTION4],
-  ['img-wildcard', window.IMG_WILDCARD],
-];
-pairs.forEach(([id, src]) => {
-  const el = document.getElementById(id);
-  if (el && src) {
-    el.onload = () => el.classList.remove('img-loading');
-    el.src = src;
-  }
-});
-</script>
 
 </body>
 </html>
