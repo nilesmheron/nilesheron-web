@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Luther: Fallen Sun 2 — Strategic Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,300;1,9..144,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --bg-elev: #141414;
+    --fg: #e8e6e1;
+    --fg-dim: #a8a6a0;
+    --fg-meta: #6b6b6b;
+    --accent: #d4a574;
+    --accent-dim: rgba(212, 165, 116, 0.3);
+    --border: rgba(232, 230, 225, 0.1);
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  nav.top-nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(10, 10, 10, 0.85);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 16px;
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .nav-title { color: var(--fg-dim); }
+  .nav-title strong { color: var(--fg); font-weight: 500; }
+  .nav-jumps { display: flex; gap: 2px; flex-wrap: wrap; }
+  .nav-jumps a {
+    color: var(--fg-meta); text-decoration: none;
+    padding: 6px 10px; border-radius: 4px;
+    transition: all 0.2s;
+  }
+  .nav-jumps a:hover { color: var(--accent); background: rgba(212, 165, 116, 0.08); }
+  main {
+    scroll-snap-type: y mandatory;
+    overflow-y: scroll; height: 100vh;
+  }
+  section.slide {
+    min-height: 100vh;
+    padding: 120px 8vw 80px;
+    scroll-snap-align: start;
+    display: flex; flex-direction: column; justify-content: center;
+    position: relative;
+    border-bottom: 1px solid var(--border);
+  }
+  .slide-meta {
+    position: absolute; top: 100px; left: 8vw;
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--fg-meta);
+  }
+  .slide-meta .slide-num { color: var(--accent); }
+  .cover-title {
+    font-family: var(--font-display); font-weight: 300;
+    font-size: clamp(3rem, 8vw, 6rem);
+    letter-spacing: -0.02em; line-height: 1.05;
+    margin-bottom: 24px;
+  }
+  .cover-subtitle {
+    font-size: clamp(1rem, 2vw, 1.25rem);
+    color: var(--fg-dim); font-weight: 300;
+    letter-spacing: 0.05em; text-transform: uppercase;
+  }
+  .cover-art-note {
+    position: absolute; bottom: 60px; left: 8vw; right: 8vw;
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--fg-meta); letter-spacing: 0.05em;
+    max-width: 600px;
+  }
+  .master-frame {
+    font-family: var(--font-display); font-weight: 400;
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    letter-spacing: -0.015em; line-height: 1.1;
+    max-width: 1100px;
+  }
+  .master-frame em { font-style: italic; color: var(--accent); }
+  .definition { max-width: 800px; }
+  .definition-term {
+    font-family: var(--font-display); font-style: italic;
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+    font-weight: 400; margin-bottom: 4px;
+    color: var(--accent);
+  }
+  .definition-etym {
+    font-family: var(--font-mono); font-size: 12px;
+    color: var(--fg-meta); letter-spacing: 0.05em;
+    margin-bottom: 32px;
+  }
+  .definition ol { list-style: none; counter-reset: defs; }
+  .definition ol li {
+    counter-increment: defs;
+    padding: 16px 0 16px 48px;
+    position: relative;
+    font-size: clamp(1.05rem, 1.5vw, 1.2rem);
+    line-height: 1.55;
+    border-top: 1px solid var(--border);
+  }
+  .definition ol li:last-child { border-bottom: 1px solid var(--border); }
+  .definition ol li::before {
+    content: counter(defs);
+    position: absolute; left: 0; top: 16px;
+    font-family: var(--font-display);
+    font-size: 1.5rem; font-weight: 300;
+    color: var(--accent); font-style: italic;
+    min-width: 32px;
+  }
+  .definition ol li strong { color: var(--accent); font-weight: 500; }
+  .platform-text {
+    font-family: var(--font-display); font-weight: 300;
+    font-size: clamp(1.4rem, 2.5vw, 2rem);
+    line-height: 1.4; max-width: 900px; margin-bottom: 32px;
+  }
+  .direction-label {
+    font-family: var(--font-mono); font-size: 12px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--fg-meta); margin-bottom: 8px;
+  }
+  .direction-label .letter { color: var(--accent); font-weight: 500; }
+  .direction-name {
+    font-family: var(--font-display); font-style: italic;
+    font-size: clamp(1.5rem, 3vw, 2.25rem);
+    font-weight: 400; color: var(--fg);
+  }
+  .anchor {
+    font-family: var(--font-display); font-weight: 400;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    line-height: 1.15; letter-spacing: -0.01em;
+    max-width: 1100px;
+  }
+  .anchor-attribution {
+    font-style: italic; font-size: 1.1rem;
+    color: var(--fg-dim); margin-top: 24px;
+  }
+  .slug-label {
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--fg-meta); margin-bottom: 24px;
+  }
+  .slug {
+    font-family: var(--font-display); font-style: italic;
+    font-weight: 400;
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    line-height: 1.2; color: var(--accent);
+    max-width: 900px;
+  }
+  .detail-grid {
+    display: grid; grid-template-columns: 1fr; gap: 48px;
+    max-width: 1400px;
+  }
+  @media (min-width: 900px) {
+    .detail-grid { grid-template-columns: repeat(3, 1fr); gap: 40px; }
+  }
+  .detail-col h3 {
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--accent-dim);
+  }
+  .detail-col p, .detail-col .detail-item {
+    font-size: 0.95rem; line-height: 1.6;
+    color: var(--fg); margin-bottom: 20px;
+  }
+  .detail-col .ref-title {
+    font-weight: 500; color: var(--accent);
+    margin-bottom: 4px; display: block;
+    font-size: 0.95rem;
+  }
+  .detail-col .ref-body {
+    color: var(--fg-dim); font-size: 0.9rem; line-height: 1.55;
+  }
+  .detail-col .manifestation {
+    padding-bottom: 16px; margin-bottom: 16px;
+    border-bottom: 1px dotted var(--border);
+  }
+  .detail-col .manifestation:last-child { border-bottom: none; }
+  .detail-col .manifestation-label {
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--fg-meta); display: block; margin-bottom: 6px;
+  }
+  .close-line {
+    font-family: var(--font-display); font-weight: 300;
+    font-style: italic;
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    line-height: 1.15; max-width: 1100px;
+    color: var(--accent);
+  }
+  .close-note {
+    font-family: var(--font-mono); font-size: 12px;
+    color: var(--fg-meta); margin-top: 40px;
+    letter-spacing: 0.05em;
+  }
+  .appendix-title {
+    font-family: var(--font-mono); font-size: 12px;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--fg-meta); margin-bottom: 16px;
+  }
+  .appendix-heading {
+    font-family: var(--font-display);
+    font-size: clamp(1.8rem, 3vw, 2.5rem);
+    font-weight: 400; margin-bottom: 32px;
+  }
+  .appendix-subheading {
+    font-family: var(--font-display);
+    font-size: 1.3rem; font-weight: 500;
+    color: var(--accent);
+    margin-top: 32px; margin-bottom: 16px;
+  }
+  .appendix-body { max-width: 900px; }
+  .appendix-body p { margin-bottom: 16px; line-height: 1.65; }
+  .appendix-body strong { color: var(--accent); font-weight: 500; }
+  .options-grid {
+    display: grid; grid-template-columns: 1fr; gap: 20px;
+    margin-top: 20px;
+  }
+  @media (min-width: 700px) {
+    .options-grid { grid-template-columns: 1fr 1fr; }
+  }
+  .option-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    padding: 20px; border-radius: 4px;
+  }
+  .option-card h4 {
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 10px;
+  }
+  .option-card p {
+    font-size: 0.9rem; color: var(--fg-dim);
+    line-height: 1.55; margin: 0;
+  }
+  .thanks { text-align: center; }
+  .thanks .thanks-big {
+    font-family: var(--font-display); font-style: italic;
+    font-size: clamp(3rem, 6vw, 4.5rem);
+    color: var(--fg); font-weight: 300;
+    letter-spacing: -0.01em; margin-bottom: 40px;
+  }
+  .thanks p {
+    color: var(--fg-meta); font-family: var(--font-mono);
+    font-size: 12px; letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  @media (max-width: 768px) {
+    nav.top-nav {
+      flex-direction: column; align-items: flex-start;
+      gap: 10px; padding: 10px 16px;
+    }
+    .nav-jumps { font-size: 10px; }
+    .nav-jumps a { padding: 4px 7px; }
+    section.slide { padding: 140px 6vw 60px; }
+    .slide-meta { left: 6vw; }
+  }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <div class="nav-title"><strong>Luther: Fallen Sun 2</strong> — Strategic Platform</div>
+  <div class="nav-jumps">
+    <a href="#frame">Frame</a>
+    <a href="#def">Def</a>
+    <a href="#platform">Platform</a>
+    <a href="#A">A</a>
+    <a href="#B">B</a>
+    <a href="#C">C</a>
+    <a href="#D">D</a>
+    <a href="#close">Close</a>
+    <a href="#appendix">Appendix</a>
+  </div>
+</nav>
+
+<main id="deck">
+
+  <section class="slide" id="cover">
+    <span class="slide-meta"><span class="slide-num">01</span> — Cover</span>
+    <h1 class="cover-title">Luther: Fallen Sun 2</h1>
+    <p class="cover-subtitle">A Strategic Platform</p>
+    <p class="cover-art-note">Art direction: Cover Blend v0.1 in appendix. Graffiti content: "CHOOSE" (primary) or "?" (alternate).</p>
+  </section>
+
+  <section class="slide" id="frame">
+    <span class="slide-meta"><span class="slide-num">02</span> — Master Frame</span>
+    <h2 class="master-frame">Luther is the Choice between <em>Light</em> and <em>Dark</em>.</h2>
+  </section>
+
+  <section class="slide" id="def">
+    <span class="slide-meta"><span class="slide-num">03</span> — Definition</span>
+    <div class="definition">
+      <h2 class="definition-term">Lutheroic / <em>adj.</em></h2>
+      <p class="definition-etym">etymology: Lutheran</p>
+      <ol>
+        <li>doing the right thing when no one is watching.</li>
+        <li>the willingness to respond to be the "someone" the world needs.</li>
+        <li>the choice to carry the darkness, so others don't have to.</li>
+        <li>doing all of the work, and paying all of the costs, required of heroes, while rejecting the title, the recognition. <strong>Imposter Syndrome for Heroes.</strong></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="slide" id="platform">
+    <span class="slide-meta"><span class="slide-num">04</span> — What This Platform Is</span>
+    <p class="platform-text">Luther is the wall between good and evil — committed to protecting the good by exposing himself to the evil he must repel and defeat. He is made of the same stuff as the legion villain, but chooses to bear it so as to protect others from it.</p>
+    <p class="platform-text">Luther is a choice and a question. He proves you can choose good. He asks whether or not we have done it.</p>
+  </section>
+
+  <section class="slide" id="A">
+    <span class="slide-meta"><span class="slide-num">05</span> — Direction A / Anchor</span>
+    <div class="direction-label"><span class="letter">Direction A</span></div>
+    <div class="direction-name">"Who do you want to be, today?"</div>
+    <h2 class="anchor" style="margin-top: 40px;">We are all good. We are all evil. We are named for our choices.</h2>
+  </section>
+
+  <section class="slide" id="A-slug">
+    <span class="slide-meta"><span class="slide-num">06</span> — Direction A / Slug</span>
+    <p class="slug-label">Slug</p>
+    <p class="slug">"What do you choose when it's dark?"</p>
+  </section>
+
+  <section class="slide" id="A-detail">
+    <span class="slide-meta"><span class="slide-num">07</span> — Direction A / Detail</span>
+    <div class="detail-grid">
+      <div class="detail-col">
+        <h3>Cultural Placement</h3>
+        <p>The personal carbon footprint against the corporate oil spill. Recycling at home while the gulf gets dumped in. The small, costly, unapplauded ethic.</p>
+      </div>
+      <div class="detail-col">
+        <h3>External Refs</h3>
+        <div class="detail-item">
+          <span class="ref-title">"Another Day in Paradise"</span>
+          <span class="ref-body">Phil Collins — the song about those who walk past suffering without seeing it. Luther is the one who stops.</span>
+        </div>
+        <div class="detail-item">
+          <span class="ref-title">Marcus Aurelius — Meditations</span>
+          <span class="ref-body">The original morning-practice manual. Ethics as the daily act.</span>
+        </div>
+      </div>
+      <div class="detail-col">
+        <h3>Manifestations</h3>
+        <div class="manifestation">
+          <span class="manifestation-label">Tension</span>
+          The arc doesn't bend on its own.
+        </div>
+        <div class="manifestation">
+          <span class="manifestation-label">Response</span>
+          The arc bending towards justice, but often, it's because of a few men jumping up, and grabbing the universe and bending it at personal cost.
+        </div>
+        <div class="manifestation">
+          <span class="manifestation-label">Payoff</span>
+          We all are Atlas — everyone who chooses to do what is required to bend it.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" id="B">
+    <span class="slide-meta"><span class="slide-num">08</span> — Direction B / Anchor</span>
+    <div class="direction-label"><span class="letter">Direction B</span></div>
+    <div class="direction-name">"The Someone We Need?"</div>
+    <h2 class="anchor" style="margin-top: 40px;">Not because he wants it, but because no one else will.</h2>
+  </section>
+
+  <section class="slide" id="B-slug">
+    <span class="slide-meta"><span class="slide-num">09</span> — Direction B / Slug</span>
+    <p class="slug-label">Slug</p>
+    <p class="slug">"Jon Snow at the wall."</p>
+  </section>
+
+  <section class="slide" id="B-detail">
+    <span class="slide-meta"><span class="slide-num">10</span> — Direction B / Detail</span>
+    <div class="detail-grid">
+      <div class="detail-col">
+        <h3>Cultural Placement</h3>
+        <p>The reluctant-hero lineage. The draft moment. The tap on the shoulder that cannot be refused without becoming someone smaller than you were asked to be.</p>
+      </div>
+      <div class="detail-col">
+        <h3>External Refs</h3>
+        <div class="detail-item">
+          <span class="ref-title">Jon Snow at the northern wall</span>
+          <span class="ref-body">Holding the line against white walkers after everyone else has left. Sent by Abbott the way Snow was sent to the Watch — couldn't be made to go, feels compelled, goes anyway.</span>
+        </div>
+        <div class="detail-item">
+          <span class="ref-title">I Am Legend</span>
+          <span class="ref-body">The last man able to oppose the dark.</span>
+        </div>
+        <div class="detail-item">
+          <span class="ref-title">Unforgiven</span>
+          <span class="ref-body">The man called back after he said he was done.</span>
+        </div>
+        <div class="detail-item">
+          <span class="ref-title">Romans 5:8</span>
+          <span class="ref-body">For God so loved the world that while we were yet sinners he sent his only son to die for our sins. Luther is both father and son; we are the sheep; he will die to save us because he must, because he is called to do so.</span>
+        </div>
+      </div>
+      <div class="detail-col">
+        <h3>Manifestations</h3>
+        <div class="manifestation">
+          <span class="manifestation-label">Tension</span>
+          The government tells him he is the only one. No backup. No resources. The scourge is his to stop.
+        </div>
+        <div class="manifestation">
+          <span class="manifestation-label">Response</span>
+          He doesn't want it. He goes anyway.
+        </div>
+        <div class="manifestation">
+          <span class="manifestation-label">Payoff</span>
+          Someone had to. So he did.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" id="C">
+    <span class="slide-meta"><span class="slide-num">11</span> — Direction C / Anchor</span>
+    <div class="direction-label"><span class="letter">Direction C</span></div>
+    <div class="direction-name">"Hold The Line."</div>
+    <h2 class="anchor" style="margin-top: 40px;">Hero isn't a title, or a cape — it's a choice.</h2>
+  </section>
+
+  <section class="slide" id="C-slug">
+    <span class="slide-meta"><span class="slide-num">12</span> — Direction C / Slug</span>
+    <p class="slug-label">Slug</p>
+    <p class="slug">"No cape. No money. No backup."</p>
+  </section>
+
+  <section class="slide" id="C-detail">
+    <span class="slide-meta"><span class="slide-num">13</span> — Direction C / Detail</span>
+    <div class="detail-grid">
+      <div class="detail-col">
+        <h3>Cultural Placement</h3>
+        <p>The dark-hero lineage, stripped of the machinery that made them gods. Batman without the money. The man at the wall with no army behind him.</p>
+      </div>
+      <div class="detail-col">
+        <h3>External Refs</h3>
+        <div class="detail-item">
+          <span class="ref-title">Batman without the $$</span>
+          <span class="ref-body">Where Batman's superpower was compulsion and wealth — white privilege — Luther is a Black man without resources, explicitly told by the government in the first 20 pages that he is the only one who can stop the scourge of murders, no resources or backup to give him, so he'll have to go it alone.</span>
+        </div>
+        <div class="detail-item">
+          <span class="ref-title">Rebel Ridge</span>
+          <span class="ref-body">Terry stripped of institutional support, stripped of resources, goes anyway. Internal Netflix cross-reference; raised by Jordan in the brief.</span>
+        </div>
+      </div>
+      <div class="detail-col">
+        <h3>Manifestations</h3>
+        <div class="manifestation">
+          <span class="manifestation-label">Tension</span>
+          No cape. No money. No backup. No one is coming.
+        </div>
+        <div class="manifestation">
+          <span class="manifestation-label">Response</span>
+          The choice is still available.
+        </div>
+        <div class="manifestation">
+          <span class="manifestation-label">Payoff</span>
+          Luther is a Black man told flatly he is alone to do battle with unfathomable and legion evil. He goes.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" id="D">
+    <span class="slide-meta"><span class="slide-num">14</span> — Direction D / Anchor</span>
+    <div class="direction-label"><span class="letter">Direction D</span></div>
+    <div class="direction-name">"Your Name Is Your Name."</div>
+    <h2 class="anchor" style="margin-top: 40px;">"You've got a choice. You just like to pretend you don't."</h2>
+    <p class="anchor-attribution">— Alice, to Luther</p>
+  </section>
+
+  <section class="slide" id="D-slug">
+    <span class="slide-meta"><span class="slide-num">15</span> — Direction D / Slug</span>
+    <p class="slug-label">Slug</p>
+    <p class="slug">"Flawed and worthy."</p>
+  </section>
+
+  <section class="slide" id="D-detail">
+    <span class="slide-meta"><span class="slide-num">16</span> — Direction D / Detail</span>
+    <div class="detail-grid">
+      <div class="detail-col">
+        <h3>Cultural Placement</h3>
+        <p>The reckoning with the unreconciled self. Psychologically adjacent to the manosphere's pain economy — and answering it with the one move the manosphere cannot make: the willingness to disregard the self in service of others.</p>
+      </div>
+      <div class="detail-col">
+        <h3>External Refs</h3>
+        <div class="detail-item">
+          <span class="ref-title">Schenk to Luther (L1)</span>
+          <span class="ref-body">"It wasn't me you let down. The tragedy is that you are a better man than you ever allowed yourself to be." Def 4 voiced in canon by the only character who gets to say it.</span>
+        </div>
+        <div class="detail-item">
+          <span class="ref-title">Dexter's dark passenger, unreconciled</span>
+          <span class="ref-body">Luther carries his past <em>like</em> a dark passenger — not <em>as</em> one. Self-suspicion without the compulsion.</span>
+        </div>
+        <div class="detail-item">
+          <span class="ref-title">Rust Cohle (True Detective S1)</span>
+          <span class="ref-body">Private darkness, public hunt. Prestige touchstone, same vector.</span>
+        </div>
+      </div>
+      <div class="detail-col">
+        <h3>Manifestations</h3>
+        <div class="manifestation">
+          <span class="manifestation-label">Tension</span>
+          He hides in "I have no choice." Because the truth — that he is a hero — is too heavy.
+        </div>
+        <div class="manifestation">
+          <span class="manifestation-label">Response</span>
+          He doesn't know how to reconcile that he is both flawed and worthy. Somewhere he does battle with darkness because he knows it is in him.
+        </div>
+        <div class="manifestation">
+          <span class="manifestation-label">Payoff</span>
+          "It wasn't me you let down. The tragedy is that you are a better man than you ever allowed yourself to be." <em>— Schenk, to Luther (L1)</em>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" id="close">
+    <span class="slide-meta"><span class="slide-num">17</span> — Close</span>
+    <h2 class="close-line">Heroes aren't flawless. They just choose the light.</h2>
+    <p class="close-note">Talent beat — Idris, if available.</p>
+  </section>
+
+  <section class="slide" id="appendix">
+    <span class="slide-meta"><span class="slide-num">18</span> — Appendix / Art Direction</span>
+    <p class="appendix-title">Appendix — Art Direction</p>
+    <h2 class="appendix-heading">Cover Blend v0.1</h2>
+    <div class="appendix-body">
+      <p><strong>Staging.</strong> Rain-slicked cobblestone intersection. East End sign left, City West sign right. Idris center-frame but slightly offset — caught mid-step, not posed.</p>
+      <p><strong>Pose.</strong> Looking back over his shoulder toward camera. Reads as "you caught him in the middle of choosing."</p>
+      <p><strong>Prop.</strong> Flashlight in hand, beam angled down to the cobblestones. Beam illuminates graffiti tagged on the wet stone.</p>
+      <p><strong>Graffiti.</strong> "CHOOSE" (primary) or "?" (alternate). A's slug asks "What do you choose when it's dark?" — the graffiti is the imperative answer.</p>
+      <p><strong>Crowd.</strong> Male-majority (brief-compliant), with selected women present to prevent monolithic read. Mix of trench coats, suits, colorful hooded raincoats (yellow/red/blue) for visual rhythm. Facing away, toward both ends of the street — both directions of the fork.</p>
+      <p><strong>Lighting.</strong> Blue-hour dusk. Gaslamps lit. Light rain. Wet surfaces catching lamplight.</p>
+      <p><strong>Net effect.</strong> Luther at the fork, with the instrument of his choice (flashlight), illuminating the question on the ground (graffiti), inside a crowd of men moving both directions without knowing they're being asked anything. The "lonely magsafe flashlight in a sea of darkness" metaphor rendered as a composition.</p>
+
+      <h3 class="appendix-subheading">Source Options</h3>
+      <div class="options-grid">
+        <div class="option-card">
+          <h4>Option 1 — Crossroads, Male Crowd</h4>
+          <p>Idris between East End / City West signs. Crowd of men in varied coats, facing away. Turns back toward camera. Literal "fork in the road." Brief-compliant.</p>
+        </div>
+        <div class="option-card">
+          <h4>Option 2 — Hidden Witness</h4>
+          <p>Idris in shadow behind a corner with flashlight, watching colorful hooded men in rain. Heavy gaslamp mood. Surveillance-coded. Self-illumination.</p>
+        </div>
+        <div class="option-card">
+          <h4>Option 3 — Center, Surrounded</h4>
+          <p>Idris facing camera, flashlight beam on tagged cobblestones. Crowd of colorful hooded men facing inward at him. Most iconic composition — singular, centered.</p>
+        </div>
+        <div class="option-card">
+          <h4>Option 4 — Mixed Crowd</h4>
+          <p>Composition similar to Option 1, but crowd includes women and broader demographic mix. Flashlight on graffiti. Signage present.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide thanks">
+    <span class="slide-meta"><span class="slide-num">—</span> End</span>
+    <p class="thanks-big">thank you.</p>
+    <p>Luther: Fallen Sun 2 — A Strategic Platform</p>
+    <p style="margin-top: 12px;">Prepared by Niles for Gravillis / Netflix</p>
+  </section>
+
+</main>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('section.slide'));
+  const main = document.getElementById('deck');
+
+  function currentIndex() {
+    const scrollTop = main.scrollTop;
+    const h = main.clientHeight;
+    for (let i = 0; i < slides.length; i++) {
+      const top = slides[i].offsetTop - main.offsetTop;
+      if (scrollTop < top + h/2) return Math.max(0, i);
+    }
+    return slides.length - 1;
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === ' ') {
+      e.preventDefault();
+      const i = currentIndex();
+      if (i < slides.length - 1) slides[i+1].scrollIntoView({behavior: 'smooth'});
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      const i = currentIndex();
+      if (i > 0) slides[i-1].scrollIntoView({behavior: 'smooth'});
+    }
+  });
+
+  const navLinks = document.querySelectorAll('.nav-jumps a');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        navLinks.forEach(link => {
+          link.style.color = '';
+          const h = link.getAttribute('href').replace('#', '');
+          if (h === id ||
+              (id.startsWith('A') && h === 'A') ||
+              (id.startsWith('B') && h === 'B') ||
+              (id.startsWith('C') && h === 'C') ||
+              (id.startsWith('D') && h === 'D')) {
+            link.style.color = 'var(--accent)';
+          }
+        });
+      }
+    });
+  }, { threshold: 0.5, root: main });
+
+  slides.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>
