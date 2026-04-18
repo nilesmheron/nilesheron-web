@@ -12,6 +12,10 @@
 //   - https://dev.nilesheron.com            (sandbox/personal-ai-os)
 //   - https://tasks.nilesheron.com          (task dashboard chat windows)
 //   - https://niles-task-dashboard.vercel.app (task dashboard preview URL)
+//
+// Model allow-list accepts BOTH short-form and dated-form model strings,
+// because both are valid at the Anthropic API. Clients are free to use
+// either. When adding a new generation of a model, add both forms.
 
 const DEFAULT_ALLOWED_ORIGINS = [
   'https://dev.nilesheron.com',
@@ -20,8 +24,12 @@ const DEFAULT_ALLOWED_ORIGINS = [
 ];
 
 const DEFAULT_ALLOWED_MODELS = [
+  // Haiku 4.5
   'claude-haiku-4-5',
+  'claude-haiku-4-5-20251001',
+  // Sonnet 4.6
   'claude-sonnet-4-6',
+  'claude-sonnet-4-6-20250929',
 ];
 
 const DEFAULT_MAX_TOKENS = 2048;
