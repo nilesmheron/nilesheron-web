@@ -51,28 +51,21 @@ Before reading any section below, these deviations from schema.sql matter:
 
 ---
 
-## Open Questions — Answers Required Before These Sections
+## Decisions — All Resolved (2026-04-18)
 
-Eight questions from PRD §9 plus two additional conflicts found in the codebase. Sections that are blocked pending your answer are marked below.
-
-| # | Question | Blocks |
-|---|----------|--------|
-| OQ1 | Token counting method (exact tokenizer vs. approximation vs. API call) | 4.9 |
-| OQ2 | Allowlist config location (JSON file vs. env var vs. DB table) | 4.4 |
-| OQ3 | Approval scope (card-level vs. attachment-version-level vs. both) | 4.1, 4.8 |
-| OQ4 | Haiku mirror failure: post without mirror + retry affordance, or block? | 4.1 |
-| OQ5 | Synthesize prompt context budget: compacted view or pull full history? | 4.15 |
-| OQ6 | @all / @owners mentions: in scope for v1? (PRD recommends no) | 4.10 |
-| OQ7 | Attachment parse cache retention period | 4.3, 4.7 |
-| OQ8 | Confirm: collaborator promoted to owner → historical contributions keep `author_role_at_submission: collaborator`. Intended? | 4.8 |
-| **OQA** | **Multi-owner model conflict.** Current system has one global admin (Niles, via `OWNER_EMAIL` env var). PRD §4.8 introduces per-card owners. Does this mean `task_owner`-role collaborators can be promoted to card-level owner? Or is Niles always the implicit card owner and `card_owner` table only tracks secondary owners? | 4.8, 4.1 |
-| **OQB** | **`task_reviews` migration.** Existing `task_reviews` rows should migrate to `review_contribution` records. What type should they get — `comment`? And should their associated comments (currently in `task_comments` with `review_id` set) migrate into `review_contribution.body`, or stay in `task_comments` as linked Haiku chat? | 4.1 |
-
-**My recommendation for OQ4:** Post without mirror, show "Haiku didn't confirm — retry" affordance. Matches PRD recommendation. Confirm?
-
-**My recommendation for OQ6:** Out of scope for v1. Confirm?
-
-**My recommendation for OQ8:** Yes, preserve historical attribution. Correct behavior. Confirm?
+| # | Question | Decision |
+|---|----------|----------|
+| OQ1 | Token counting method | **Rough estimate: `Math.ceil(text.length / 4)`.** Goal is backup-before-compact, not precision. |
+| OQ2 | Allowlist config location | **Database table.** Most stable; editable at runtime without redeploy; accessible to future Claude sessions. |
+| OQ3 | Approval scope | **Card-level only.** An approval signals "this is good to go" — it applies to the card as a whole, not a specific attachment version. |
+| OQ4 | Haiku mirror failure | **Post comment without mirror; show "Haiku didn't confirm — retry" affordance.** |
+| OQ5 | Synthesize context budget | **Compacted view by default; "Deep synthesis" action for owners pulls full committed history.** |
+| OQ6 | @mentions | **User-specific only** (e.g. `@Caleb`). No `@all` or `@owners` in v1. |
+| OQ7 | Parse cache retention | **Retain indefinitely** unless storage constraints require eviction. |
+| OQ8 | Role change attribution | **Preserve.** Historical contributions keep `author_role_at_submission` as recorded. |
+| OQA | Multi-owner model | **Anyone with a valid account can be a card owner.** Not limited to admin. The `card_owners` table is the authority; admin is always treated as an implicit card owner on all cards. |
+| OQB | Existing reviews migration | **Migrate as `comment` type** in `review_contributions`. Associated `task_comments` rows with `review_id` set migrate as linked Haiku chat messages under the relevant contribution. |
+| Export | Format scope | **Markdown file only for v1.** No PDF, no clipboard export. Simplifies 4.13 significantly. |
 
 ---
 
