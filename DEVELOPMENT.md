@@ -136,7 +136,7 @@ For multi-file pushes of large HTML, a Python3 bash one-liner that counts charac
 - **Bio page (`/archive/bio`) not yet built.** Requires Instagram handle and bio copy; Behold.so is the planned integration for the live IG grid but a static curated grid ships first.
 - **Mixed identity in `archive/`.** Pages still reference the mmh placeholder brand in places. Rebrand to Niles is the next planned work on that section.
 - **No automated testing.** Verification is manual (live check at `dev.nilesheron.com`) plus the pre-commit Python character-count check. Acceptable at current scale.
-- **`api/chat.js` has no rate limiting, no auth, and no origin allow-list.** It's a public pass-through to a paid Anthropic account. Any site on the internet can call `dev.nilesheron.com/api/chat` and burn `ANTHROPIC_API_KEY` budget. The only reason this hasn't been a problem is obscurity. Before the endpoint gets any more consumers (or the URL gets posted publicly), add an `Origin` allow-list or a shared secret. This risk compounds as `tasks.nilesheron.com` scales.
+- **`api/chat.js` has no rate limiting.** Origin allow-list, model allow-list, and `max_tokens` ceiling were added 2026-04-18 (see commit `6161d53`). Rate limiting is still absent — if abuse patterns appear, add a per-origin or per-IP throttle.
 - **`sandbox/personal-ai-os/` internal wiring not exhaustively documented here.** `index.html` is the assessment flow, `report.html` renders a saved report (uses `api/report.js` GET), and `sample.html` is likely a static demo. Confirm by reading these files before making changes.
 
 ---
@@ -159,7 +159,6 @@ For multi-file pushes of large HTML, a Python3 bash one-liner that counts charac
 3. Decide homepage architecture and build `/`.
 4. Migrate logo off SuperDesign Supabase bucket.
 5. Eventual `nilesheron.com` DNS cutover off Tumblr.
-6. Add `Origin` allow-list or shared secret to `api/chat.js` before consumer count grows further.
 
 ### Blocked on user input
 - Niles's Instagram handle (for bio page)
