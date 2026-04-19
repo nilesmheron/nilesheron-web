@@ -17,7 +17,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "frame-ancestors 'self' https://niles-task-dashboard.vercel.app https://tasks.nilesheron.com http://localhost:3000"
+          "value": "frame-ancestors 'self' https://niles-task-dashboard.vercel.app https://tasks.nilesheron.com http://localhost http://localhost:3000 http://localhost:3001"
         }
       ]
     }
