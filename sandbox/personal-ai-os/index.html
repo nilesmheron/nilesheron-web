@@ -30,8 +30,8 @@
   /* ── Landing ── */
   #landing { flex: 1; overflow-y: auto; }
 
-  .hero { max-width: 780px; margin: 0 auto; padding: 4rem 1.5rem 3.5rem; display: flex; align-items: center; gap: 3rem; }
-  .hero-copy { flex: 1; }
+  .hero { max-width: 900px; margin: 0 auto; padding: 4rem 1.5rem 3.5rem; display: flex; align-items: center; gap: 2rem; }
+  .hero-copy { flex: 0 0 420px; }
   .hero-eyebrow { font-family: 'Fraunces', serif; font-size: 16px; font-style: italic; color: var(--text-muted); line-height: 1.6; margin-bottom: 1rem; }
   .hero-headline { font-family: 'Fraunces', serif; font-size: 38px; font-weight: 500; line-height: 1.15; color: var(--text); margin-bottom: 1.25rem; }
   .hero-headline .accent { color: var(--accent); }
@@ -39,12 +39,12 @@
   .hero-cta { display: inline-block; background: var(--accent); color: var(--accent-ink); border: none; border-radius: 10px; padding: 13px 28px; font-size: 15px; font-family: 'Inter', sans-serif; font-weight: 500; cursor: pointer; transition: opacity 0.15s; }
   .hero-cta:hover { opacity: 0.88; }
   .hero-fine { font-size: 12px; color: var(--text-dim); margin-top: 10px; line-height: 1.6; }
-  .hero-illo { flex-shrink: 0; width: 220px; display: flex; align-items: center; justify-content: center; }
-  .hero-illo img { width: 220px; display: block; }
+  .hero-illo { flex: 1; display: flex; align-items: center; justify-content: center; }
+  .hero-illo img { width: 100%; max-width: 340px; display: block; }
 
-  .land-divider { height: 1px; background: var(--border); max-width: 780px; margin: 0 auto; }
+  .land-divider { height: 1px; background: var(--border); max-width: 900px; margin: 0 auto; }
 
-  .below { max-width: 780px; margin: 0 auto; padding: 3rem 1.5rem; display: flex; gap: 3rem; align-items: flex-start; }
+  .below { max-width: 900px; margin: 0 auto; padding: 3rem 1.5rem; display: flex; gap: 3rem; align-items: flex-start; }
   .steps-col { flex: 1; }
   .steps-label { font-size: 11px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 1.5rem; }
   .step { display: flex; gap: 14px; margin-bottom: 1.25rem; }
