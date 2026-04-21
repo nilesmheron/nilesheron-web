@@ -3,110 +3,154 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Personal AI OS</title>
+<title>OneBite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root { --bg: #0f0f0f; --surface: #1a1a1a; --surface2: #222; --border: rgba(255,255,255,0.08); --border-strong: rgba(255,255,255,0.18); --text: #f0f0f0; --text-muted: #888; --text-dim: #444; --user-bg: #1e1e1e; }
-  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 15px; line-height: 1.6; min-height: 100vh; display: flex; flex-direction: column; }
-  #site-header { padding: 1.25rem 1.5rem; border-bottom: 0.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
-  .wordmark { font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); }
-  .progress-wrap { width: 80px; height: 2px; background: var(--border); border-radius: 2px; overflow: hidden; }
-  .progress-fill { height: 100%; background: var(--text-muted); border-radius: 2px; transition: width 0.5s ease; width: 3%; }
+  :root {
+    --bg: #F4F1EB;
+    --bg-alt: #FAF8F3;
+    --text: #2B2824;
+    --text-muted: #6B635A;
+    --text-dim: #8B8378;
+    --accent: #CC785C;
+    --accent-ink: #FAF8F3;
+    --border: #D4CFC4;
+  }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 15px; line-height: 1.6; min-height: 100vh; display: flex; flex-direction: column; }
+
+  /* ── Header ── */
+  #site-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .wordmark { font-size: 11px; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-dim); }
+  .progress-wrap { width: 80px; height: 2px; background: #E4DFD3; border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.5s ease; width: 3%; }
+
+  /* ── Landing ── */
   #landing { flex: 1; overflow-y: auto; }
   .land-hero { max-width: 640px; margin: 0 auto; padding: 3rem 1.5rem 2rem; }
   .land-eyebrow { font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 1rem; }
-  .land-headline { font-size: 28px; font-weight: 500; line-height: 1.25; color: var(--text); margin-bottom: 1.25rem; }
-  .land-body { font-size: 16px; line-height: 1.75; color: var(--text-muted); margin-bottom: 1rem; }
+  .land-headline { font-family: 'Fraunces', serif; font-size: 28px; font-weight: 500; line-height: 1.25; color: var(--text); margin-bottom: 1.25rem; }
+  .land-body { font-size: 15px; line-height: 1.75; color: var(--text-muted); margin-bottom: 1rem; }
   .land-body strong { color: var(--text); font-weight: 500; }
-  .land-divider { height: 0.5px; background: var(--border); max-width: 640px; margin: 0 auto; }
+  .land-divider { height: 1px; background: var(--border); max-width: 640px; margin: 0 auto; }
   .land-section { max-width: 640px; margin: 0 auto; padding: 2rem 1.5rem; }
-  .land-section-label { font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 1.25rem; }
+  .land-section-label { font-size: 11px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 1.25rem; }
   .steps { display: flex; flex-direction: column; gap: 16px; }
   .step { display: flex; gap: 14px; align-items: flex-start; }
-  .step-num { width: 22px; height: 22px; border-radius: 50%; border: 0.5px solid var(--border-strong); display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--text-muted); flex-shrink: 0; margin-top: 2px; }
+  .step-num { width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--text-muted); flex-shrink: 0; margin-top: 2px; }
   .step-text { font-size: 15px; color: var(--text-muted); line-height: 1.6; }
   .step-text strong { color: var(--text); font-weight: 500; }
-  .example-card { background: var(--surface); border: 0.5px solid var(--border-strong); border-radius: 12px; overflow: hidden; }
-  .example-header { padding: 14px 18px; border-bottom: 0.5px solid var(--border); display: flex; justify-content: space-between; align-items: baseline; }
+  .example-card { background: var(--bg-alt); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .example-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: baseline; }
   .example-label { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
   .example-name { font-size: 12px; color: var(--text-dim); }
   .example-body { padding: 0 18px; }
-  .ex-section { padding: 16px 0; border-bottom: 0.5px solid var(--border); }
+  .ex-section { padding: 16px 0; border-bottom: 1px solid var(--border); }
   .ex-section:last-child { border-bottom: none; }
   .ex-section-head { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 8px; }
-  .ex-section-body { font-size: 14px; line-height: 1.65; color: var(--text-muted); }
-  .example-toggle { width: 100%; padding: 12px 18px; background: none; border: none; border-top: 0.5px solid var(--border); color: var(--text-dim); font-size: 12px; font-family: inherit; cursor: pointer; text-align: center; }
+  .ex-section-body { font-family: 'Fraunces', serif; font-size: 15px; line-height: 1.65; color: var(--text-muted); }
+  .example-toggle { width: 100%; padding: 12px 18px; background: none; border: none; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 12px; font-family: 'Inter', sans-serif; cursor: pointer; text-align: center; }
   .example-toggle:hover { color: var(--text-muted); }
   .land-cta { max-width: 640px; margin: 0 auto; padding: 2rem 1.5rem 3rem; }
-  .start-btn { background: var(--text); color: var(--bg); border: none; border-radius: 10px; padding: 13px 32px; font-size: 15px; font-family: inherit; font-weight: 500; cursor: pointer; transition: opacity 0.15s; }
+  .start-btn { background: var(--accent); color: var(--accent-ink); border: none; border-radius: 10px; padding: 13px 32px; font-size: 15px; font-family: 'Inter', sans-serif; font-weight: 500; cursor: pointer; transition: opacity 0.15s; }
   .start-btn:hover { opacity: 0.88; }
   .land-fine { font-size: 12px; color: var(--text-dim); margin-top: 12px; }
+
+  /* ── Chat ── */
   #chat-view { display: none; flex: 1; flex-direction: column; overflow: hidden; }
   #chat-main { flex: 1; overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; }
-  #messages { max-width: 640px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; padding-bottom: 1rem; }
-  .msg { max-width: 82%; padding: 11px 15px; border-radius: 16px; font-size: 15px; line-height: 1.65; }
-  .msg.ai { align-self: flex-start; background: var(--surface); color: var(--text); border-bottom-left-radius: 4px; }
-  .msg.user { align-self: flex-end; background: var(--user-bg); border: 0.5px solid var(--border-strong); color: var(--text); border-bottom-right-radius: 4px; }
-  .msg.note { align-self: center; background: none; font-size: 12px; color: var(--text-dim); padding: 2px 0; max-width: 100%; }
-  .typing { display: flex; gap: 5px; align-items: center; padding: 14px 16px; }
+  #messages { max-width: 640px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; padding-bottom: 1rem; }
+  .msg { word-wrap: break-word; }
+
+  /* AI — no bubble */
+  .msg.ai { align-self: flex-start; background: transparent; border: none; padding: 0; max-width: 86%; }
+  .msg.ai .author { font-size: 10px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 6px; }
+  .msg.ai .ai-text { font-family: 'Fraunces', serif; font-size: 16px; line-height: 1.6; color: var(--text); }
+
+  /* User */
+  .msg.user { align-self: flex-end; background: transparent; border: 1px solid var(--border); border-radius: 14px; padding: 9px 14px; font-size: 14.5px; line-height: 1.45; color: var(--text); max-width: 82%; }
+
+  /* Note */
+  .msg.note { align-self: center; background: none; font-size: 12px; color: var(--text-dim); padding: 2px 0; max-width: 100%; text-align: center; }
+
+  /* Typing */
+  .msg.ai.typing-wrap { padding: 2px 0; }
+  .typing-dots { display: flex; gap: 5px; align-items: center; padding-top: 2px; }
   .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-dim); animation: bounce 1.2s ease-in-out infinite; }
-  .dot:nth-child(2) { animation-delay: 0.18s; } .dot:nth-child(3) { animation-delay: 0.36s; }
+  .dot:nth-child(2) { animation-delay: 0.18s; }
+  .dot:nth-child(3) { animation-delay: 0.36s; }
   @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-5px)} }
-  #chat-footer { flex-shrink: 0; border-top: 0.5px solid var(--border); padding: 1rem 1.5rem; }
+
+  /* Footer / input */
+  #chat-footer { flex-shrink: 0; border-top: 1px solid var(--border); padding: 1rem 1.5rem; }
   .input-row { max-width: 640px; margin: 0 auto; display: flex; gap: 10px; align-items: flex-end; }
-  textarea { flex: 1; background: var(--surface); border: 0.5px solid var(--border-strong); border-radius: 12px; color: var(--text); font-size: 15px; font-family: inherit; line-height: 1.5; padding: 10px 14px; resize: none; min-height: 44px; max-height: 160px; overflow-y: auto; }
-  textarea:focus { outline: none; border-color: rgba(255,255,255,0.3); }
+  textarea { flex: 1; background: var(--bg-alt); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 15px; font-family: 'Inter', sans-serif; line-height: 1.5; padding: 10px 14px; resize: none; min-height: 44px; max-height: 160px; overflow-y: auto; }
+  textarea:focus { outline: none; border-color: rgba(204, 120, 92, 0.5); }
   textarea::placeholder { color: var(--text-dim); }
   textarea:disabled { opacity: 0.4; }
-  button#send { background: var(--text); color: var(--bg); border: none; border-radius: 10px; padding: 10px 18px; font-size: 14px; font-family: inherit; font-weight: 500; cursor: pointer; flex-shrink: 0; height: 44px; transition: opacity 0.15s; }
+  button#send { background: var(--accent); color: var(--accent-ink); border: none; border-radius: 6px; padding: 10px 16px; font-size: 11px; font-family: 'Inter', sans-serif; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; flex-shrink: 0; height: 44px; transition: opacity 0.15s; }
   button#send:disabled { opacity: 0.3; cursor: default; }
   button#send:hover:not(:disabled) { opacity: 0.85; }
+
+  /* ── Assessment ── */
   #assessment-view { display: none; flex: 1; overflow-y: auto; padding: 1.5rem; }
   #assessment { max-width: 640px; width: 100%; margin: 0 auto; padding-bottom: 2rem; }
   .bp-meta { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1.25rem; }
-  .bp-label { font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); }
-  .bp-name { font-size: 12px; color: var(--text-dim); }
-  .bp-divider { height: 0.5px; background: var(--border); margin-bottom: 1.25rem; }
-  .bp-section-head { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin: 28px 0 10px; }
+  .bp-label { font-size: 11px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-dim); }
+  .bp-name { font-size: 12px; color: var(--text-muted); }
+  .bp-divider { height: 1px; background: var(--border); margin-bottom: 1.25rem; }
+  .bp-section-head { font-size: 11px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-dim); margin: 26px 0 10px; }
   .bp-section-head:first-child { margin-top: 0; }
-  .bp-body p { margin: 0 0 10px; line-height: 1.75; color: var(--text); font-size: 15px; }
-  .save-panel { margin-top: 2.5rem; padding: 1.5rem; background: var(--surface); border: 0.5px solid var(--border-strong); border-radius: 12px; }
-  .save-panel-label { font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+  .bp-body p { font-family: 'Fraunces', serif; font-size: 16px; line-height: 1.7; color: var(--text); margin-bottom: 10px; }
+
+  /* Save panel */
+  .save-panel { margin-top: 2.5rem; padding: 1.5rem; background: var(--bg-alt); border: 1px solid var(--border); border-radius: 12px; }
+  .save-panel-label { font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 8px; }
   .save-panel-body { font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-bottom: 14px; }
   .save-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-  .save-btn { background: var(--text); color: var(--bg); border: none; border-radius: 9px; padding: 10px 20px; font-size: 14px; font-family: inherit; font-weight: 500; cursor: pointer; transition: opacity 0.15s; }
+  .save-btn { background: var(--text); color: var(--bg); border: none; border-radius: 9px; padding: 10px 20px; font-size: 14px; font-family: 'Inter', sans-serif; font-weight: 500; cursor: pointer; transition: opacity 0.15s; }
   .save-btn:hover:not(:disabled) { opacity: 0.85; }
   .save-btn:disabled { opacity: 0.35; cursor: default; }
-  .save-btn-outline { background: transparent; border: 0.5px solid var(--border-strong); color: var(--text-muted); border-radius: 9px; padding: 10px 20px; font-size: 14px; font-family: inherit; cursor: pointer; transition: background 0.1s; }
-  .save-btn-outline:hover { background: var(--surface2); color: var(--text); }
+  .save-btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-muted); border-radius: 9px; padding: 10px 20px; font-size: 14px; font-family: 'Inter', sans-serif; cursor: pointer; transition: color 0.1s; }
+  .save-btn-outline:hover { color: var(--text); }
   .saved-url-wrap { margin-top: 12px; display: none; }
-  .saved-url { font-size: 12px; color: var(--text-muted); word-break: break-all; background: var(--bg); border: 0.5px solid var(--border-strong); border-radius: 8px; padding: 8px 12px; }
+  .saved-url { font-size: 12px; color: var(--text-muted); word-break: break-all; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; }
   .saved-url-label { font-size: 11px; color: var(--text-dim); margin-bottom: 4px; }
-  .share-panel { margin-top: 1rem; padding: 1.5rem; background: var(--surface); border: 0.5px solid var(--border-strong); border-radius: 12px; }
-  .share-panel-label { font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
+
+  /* Share / feedback panel */
+  .share-panel { margin-top: 1rem; padding: 1.5rem; background: var(--bg-alt); border: 1px solid var(--border); border-radius: 12px; }
+  .share-panel-label { font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 10px; }
   .share-panel-body { font-size: 14px; color: var(--text-muted); line-height: 1.65; margin-bottom: 1.25rem; }
-  .feedback-ta { width: 100%; background: var(--bg); border: 0.5px solid var(--border-strong); border-radius: 10px; color: var(--text); font-size: 14px; font-family: inherit; line-height: 1.55; padding: 10px 13px; resize: none; min-height: 80px; margin-bottom: 14px; }
-  .feedback-ta:focus { outline: none; border-color: rgba(255,255,255,0.3); }
+  .feedback-ta { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 14px; font-family: 'Inter', sans-serif; line-height: 1.55; padding: 10px 13px; resize: none; min-height: 80px; margin-bottom: 14px; }
+  .feedback-ta:focus { outline: none; border-color: rgba(204, 120, 92, 0.5); }
   .feedback-ta::placeholder { color: var(--text-dim); }
   .feedback-ta:disabled { opacity: 0.4; }
   .opt-in-block { margin-bottom: 14px; }
   .opt-in-nudge { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; line-height: 1.55; }
   .opt-in-nudge strong { color: var(--text); font-weight: 500; }
   .opt-in-row { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; cursor: pointer; }
-  .opt-in-row input[type=checkbox] { width: 15px; height: 15px; accent-color: var(--text-muted); cursor: pointer; flex-shrink: 0; }
-  .opt-in-row label { font-size: 13px; color: var(--text-muted); cursor: pointer; line-height: 1.4; }
+  .opt-in-row input[type=checkbox] { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
+  .opt-in-row span { font-size: 13px; color: var(--text-muted); line-height: 1.4; }
   .share-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 4px; }
-  .share-btn { background: var(--text); color: var(--bg); border: none; border-radius: 9px; padding: 10px 22px; font-size: 14px; font-family: inherit; font-weight: 500; cursor: pointer; transition: opacity 0.15s; }
+  .share-btn { background: var(--text); color: var(--bg); border: none; border-radius: 9px; padding: 10px 22px; font-size: 14px; font-family: 'Inter', sans-serif; font-weight: 500; cursor: pointer; transition: opacity 0.15s; }
   .share-btn:hover:not(:disabled) { opacity: 0.85; }
   .share-btn:disabled { opacity: 0.35; cursor: default; }
   .share-confirm { font-size: 13px; color: var(--text-muted); }
-  .restart-link { font-size: 13px; color: var(--text-dim); background: none; border: none; cursor: pointer; padding: 10px 0; font-family: inherit; text-decoration: underline; text-underline-offset: 3px; }
-  .restart-link:hover { color: var(--text-muted); }
+
+  /* Restart + copy row */
+  .restart-row { margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .copy-guide-btn { background: transparent; border: 1px solid var(--border); border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 13px; color: var(--text-muted); padding: 8px 18px; cursor: pointer; transition: color 0.15s, border-color 0.15s; }
+  .copy-guide-btn:hover { color: var(--text); }
+  .copy-guide-btn.copied { color: var(--accent); border-color: var(--accent); }
+  .restart-btn { background: none; border: none; font-family: 'Inter', sans-serif; font-size: 13px; color: var(--text-dim); cursor: pointer; padding: 8px 0; text-decoration: underline; text-underline-offset: 3px; }
+  .restart-btn:hover { color: var(--text-muted); }
 </style>
 </head>
 <body>
 <div id="site-header">
-  <span class="wordmark">Personal AI OS</span>
+  <span class="wordmark">OneBite</span>
   <div class="progress-wrap"><div class="progress-fill" id="pbar"></div></div>
 </div>
 <div id="landing">
@@ -162,7 +206,7 @@ var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 
 var INTAKE_SYS = "You are a warm, curious intake assistant. Your purpose is to get to know this person and suggest ways they can be more efficient using AI. You are not owned by any company and have no preference toward any particular solution.\n\nMove through four phases. Keep responses short. One or two questions at a time.\n\nPHASE 1 - WHO THEY ARE (2-3 exchanges)\nLearn what they do and who they do it for. Probe once if thin. Signal the shift naturally when ready.\n\nPHASE 2 - THEIR CURRENT SYSTEMS (3-4 exchanges)\nAsk what tools and systems they actually use. Where things break down and cost them time and energy.\n\nPHASE 2B - THE AI BARRIER (1-2 exchanges)\nAsk directly what stops them from doing more with AI. The answer is almost always trust or capacity or both.\n\nTRUST CHECKPOINT\nMirror back in 3-4 tight sentences. Ask if it lands. Move on when confirmed.\n\nPHASE 3 - THE AMBITION (1-2 exchanges)\nOnly after trust checkpoint. What does their work life look like if this gets solved? Then trigger immediately.\n\nWHEN READY\nEnd your message with this marker on its own line:\n[ASSESSMENT_READY]\n\nSTYLE: Warm, direct. Never say Great! Short responses. Prose only. Mirror before probing. Lowercase is fine.";
 
-var ASSESSMENT_SYS = "You are generating a personalized AI systems assessment based on a completed intake conversation. Be genuinely useful. Name real tools. Be specific to what this person shared.\n\nUse exactly this structure. Format each main header as **HEADER NAME** on its own line.\n\n**WHAT WE HEARD**\nA cohesive, specific synthesis of what you learned. Cover: who they are, the tools they're actually using, where those systems are breaking down, what has held them back from AI specifically (trust, capacity, or both), and what success looks like in their own words. This is a mirror, not a recommendation section. Name the actual tools they mentioned. Reflect their language. Be specific about the failures. 2-3 tight paragraphs.\n\n**WHAT WE SUGGEST**\nThe recommendations written as a coherent system. Name actual tools with why they fit this person specifically and what the honest limitation is. Describe how the pieces connect. Be explicit about the single best first move and why, accounting for their actual barrier. Close with one paragraph on what their work life looks like if they build this.\n\n[SETUP_GUIDE_START]\n**WHICH VERSION OF THE SYSTEM DO YOU WANT TO BUILD?**\n\nPick the version that fits where you are right now. You can always start with Level 1 and move up.\n\n**LEVEL 1 \u2014 QUICK WINS (a few hours, no new tools)**\nUse what you already have differently. The right starting point if you want to see what AI can do for your specific situation before committing to anything new.\n\nStep 1: [specific action using existing tools or free options based on what they shared]\nStep 2: [specific action]\nStep 3: [specific action]\n\n**LEVEL 2 \u2014 OFF-THE-SHELF STACK (a weekend, no code)**\nInstall and configure the recommended tools. No automation yet. The right level if you want something that materially changes how you work.\n\nStep 1: [specific tool setup action, referencing actual tools recommended above]\nStep 2: [specific configuration step]\nStep 3: [specific step]\n\n**LEVEL 3 \u2014 CONNECTED SYSTEM (ongoing, some setup time)**\nThe full build: tools connected through automation so information moves without you touching it.\n\nStep 1: [foundation step]\nStep 2: [first automation or connection]\nStep 3: [next connection or workflow]\n[SETUP_GUIDE_END]\n\nWrite like a trusted advisor who actually listened. Direct, no corporate language, no AI cheerleading.";
+var ASSESSMENT_SYS = "You are generating a personalized AI systems assessment based on a completed intake conversation. Be genuinely useful. Name real tools. Be specific to what this person shared.\n\nUse exactly this structure. Format each main header as **HEADER NAME** on its own line.\n\n**WHAT WE HEARD**\nA cohesive, specific synthesis of what you learned. Cover: who they are, the tools they're actually using, where those systems are breaking down, what has held them back from AI specifically (trust, capacity, or both), and what success looks like in their own words. This is a mirror, not a recommendation section. Name the actual tools they mentioned. Reflect their language. Be specific about the failures. 2-3 tight paragraphs.\n\n**WHAT WE SUGGEST**\nThe recommendations written as a coherent system. Name actual tools with why they fit this person specifically and what the honest limitation is. Describe how the pieces connect. Be explicit about the single best first move and why, accounting for their actual barrier. Close with one paragraph on what their work life looks like if they build this.\n\n[SETUP_GUIDE_START]\n**WHICH VERSION OF THE SYSTEM DO YOU WANT TO BUILD?**\n\nPick the version that fits where you are right now. You can always start with Level 1 and move up.\n\n**LEVEL 1 — QUICK WINS (a few hours, no new tools)**\nUse what you already have differently. The right starting point if you want to see what AI can do for your specific situation before committing to anything new.\n\nStep 1: [specific action using existing tools or free options based on what they shared]\nStep 2: [specific action]\nStep 3: [specific action]\n\n**LEVEL 2 — OFF-THE-SHELF STACK (a weekend, no code)**\nInstall and configure the recommended tools. No automation yet. The right level if you want something that materially changes how you work.\n\nStep 1: [specific tool setup action, referencing actual tools recommended above]\nStep 2: [specific configuration step]\nStep 3: [specific step]\n\n**LEVEL 3 — CONNECTED SYSTEM (ongoing, some setup time)**\nThe full build: tools connected through automation so information moves without you touching it.\n\nStep 1: [foundation step]\nStep 2: [first automation or connection]\nStep 3: [next connection or workflow]\n[SETUP_GUIDE_END]\n\nWrite like a trusted advisor who actually listened. Direct, no corporate language, no AI cheerleading.";
 
 var OPENER = "hey - glad you're here. what do you do?";
 var PRIMING = [
@@ -181,8 +225,8 @@ function ping(payload) {
 }
 function toggleExample() {
   var more = document.getElementById("example-more"), btn = document.getElementById("example-toggle");
-  if (more.style.display === "none") { more.style.display = "block"; btn.textContent = "Hide full assessment \u2191"; }
-  else { more.style.display = "none"; btn.textContent = "Show full assessment \u2193"; }
+  if (more.style.display === "none") { more.style.display = "block"; btn.textContent = "Hide full assessment ↑"; }
+  else { more.style.display = "none"; btn.textContent = "Show full assessment ↓"; }
 }
 function startChat() {
   document.getElementById("landing").style.display = "none";
@@ -190,9 +234,33 @@ function startChat() {
   addMsg("ai", OPENER); inputEl.focus(); ping({ completed: false });
 }
 function scroll() { setTimeout(function() { var m = document.getElementById("chat-main"); m.scrollTop = m.scrollHeight; }, 60); }
-function addMsg(role, text) { var d = document.createElement("div"); d.className = "msg " + role; d.textContent = text; msgsEl.appendChild(d); scroll(); }
+function addMsg(role, text) {
+  var d = document.createElement("div");
+  d.className = "msg " + role;
+  if (role === "ai") {
+    var author = document.createElement("div");
+    author.className = "author";
+    author.textContent = "OneBite";
+    var body = document.createElement("div");
+    body.className = "ai-text";
+    body.textContent = text;
+    d.appendChild(author);
+    d.appendChild(body);
+  } else {
+    d.textContent = text;
+  }
+  msgsEl.appendChild(d);
+  scroll();
+}
 function addNote(text) { var d = document.createElement("div"); d.className = "msg note"; d.textContent = text; msgsEl.appendChild(d); scroll(); }
-function showTyping() { var d = document.createElement("div"); d.className = "msg ai typing"; d.id = "typing"; d.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>'; msgsEl.appendChild(d); scroll(); }
+function showTyping() {
+  var d = document.createElement("div");
+  d.className = "msg ai typing-wrap";
+  d.id = "typing";
+  d.innerHTML = '<div class="author">OneBite</div><div class="typing-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
+  msgsEl.appendChild(d);
+  scroll();
+}
 function hideTyping() { var t = document.getElementById("typing"); if (t) t.remove(); }
 function setProgress(p) { pbar.style.width = p + "%"; }
 function lock() { busy = true; inputEl.disabled = true; sendBtn.disabled = true; }
@@ -236,6 +304,25 @@ function parseSections(rawText) {
   if (cur) out.push(cur);
   return out.length ? out : [{ h: "Your Assessment", b: text.split("\n") }];
 }
+function copyGuide() {
+  var btn = document.getElementById("copy-guide-btn");
+  var text = lastAssessmentRaw.replace(/\*\*/g, "");
+  function onCopied() {
+    btn.textContent = "Copied";
+    btn.classList.add("copied");
+    setTimeout(function() { btn.textContent = "Copy setup guide"; btn.classList.remove("copied"); }, 1800);
+  }
+  function doFallback() {
+    var ta = document.createElement("textarea");
+    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select(); document.execCommand("copy"); document.body.removeChild(ta);
+  }
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(onCopied).catch(function() { doFallback(); onCopied(); });
+  } else {
+    doFallback(); onCopied();
+  }
+}
 function saveReport() {
   var btn = document.getElementById("save-report-btn");
   var status = document.getElementById("save-status");
@@ -250,7 +337,7 @@ function saveReport() {
     if (!rows || !rows[0] || !rows[0].id) throw new Error('Save failed');
     var id = rows[0].id;
     var url = window.location.origin + '/sandbox/personal-ai-os/report?id=' + id;
-    btn.textContent = 'Saved \u2713';
+    btn.textContent = 'Saved ✓';
     document.getElementById('saved-url-text').textContent = url;
     document.getElementById('saved-url-wrap').style.display = 'block';
     document.getElementById('open-report-btn').style.display = 'inline-block';
@@ -263,7 +350,7 @@ function saveReport() {
     };
     status.textContent = '';
   })
-  .catch(function(e) { btn.disabled = false; btn.textContent = 'Save / Share report'; status.textContent = 'Something went wrong \u2014 ' + e.message; });
+  .catch(function(e) { btn.disabled = false; btn.textContent = 'Save / Share report'; status.textContent = 'Something went wrong — ' + e.message; });
 }
 function submitFeedback() {
   var btn = document.getElementById("share-submit-btn"), status = document.getElementById("share-status");
@@ -277,13 +364,13 @@ function submitFeedback() {
   }).then(function(r) { return r.json(); })
   .then(function(data) {
     if (data.ok) {
-      btn.textContent = "Sent \u2713"; status.textContent = "Got it \u2014 thank you.";
+      btn.textContent = "Sent ✓"; status.textContent = "Got it — thank you.";
       document.getElementById("feedback-ta").disabled = true;
       document.getElementById("chk-report").disabled = true;
       document.getElementById("chk-transcript").disabled = true;
     } else throw new Error(data.error || "unknown error");
   })
-  .catch(function(e) { btn.disabled = false; btn.textContent = "Send \u2192"; status.textContent = "Something went wrong \u2014 " + e.message; });
+  .catch(function(e) { btn.disabled = false; btn.textContent = "Send →"; status.textContent = "Something went wrong — " + e.message; });
 }
 function showAssessment(text) {
   document.getElementById("chat-view").style.display = "none";
@@ -295,36 +382,36 @@ function showAssessment(text) {
   ping({ completed: true, name: lastFirstName || null });
   var sections = parseSections(text);
   var hasGuide = text.indexOf('[SETUP_GUIDE_START]') !== -1;
-  var html = '<div class="bp-meta"><span class="bp-label">Your AI Assessment</span><span class="bp-name">' + lastFirstName + '</span></div><div class="bp-divider"></div>';
+  var html = '<div class="bp-meta"><span class="bp-label">Your OneBite assessment</span><span class="bp-name">' + lastFirstName + '</span></div><div class="bp-divider"></div>';
   for (var j = 0; j < sections.length; j++) {
     html += '<div class="bp-section-head"' + (j===0?' style="margin-top:0"':'') + '>' + sections[j].h + '</div><div class="bp-body">';
     sections[j].b.filter(function(l){return l.trim();}).forEach(function(l){html+='<p>'+l+'</p>';});
     html += '</div>';
   }
   if (hasGuide) {
-    html += '<div style="margin-top:1.5rem;padding:14px 16px;background:rgba(255,255,255,0.04);border:0.5px solid var(--border-strong);border-radius:10px;font-size:13px;color:var(--text-muted);line-height:1.6;">Your setup guide (Levels 1, 2, and 3) is included in the <strong style="color:var(--text);">downloadable .md file</strong> \u2014 save your report below to access it.</div>';
+    html += '<div style="margin-top:1.5rem;padding:14px 16px;background:var(--bg-alt);border:1px solid var(--border);border-radius:10px;font-family:\'Inter\',sans-serif;font-size:13px;color:var(--text-muted);line-height:1.6;">Your setup guide (Levels 1, 2, and 3) is included in the <strong style="color:var(--text);">downloadable .md file</strong> — save your report below to access it.</div>';
   }
   html += '<div class="save-panel" style="margin-top:1.5rem;">';
   html += '<p class="save-panel-label">Save / Share report</p>';
   html += '<p class="save-panel-body">Save your report to get a permanent link. The .md download includes your full setup guide with step-by-step instructions for building your system.</p>';
   html += '<div class="save-actions">';
   html += '<button id="save-report-btn" class="save-btn" onclick="saveReport()">Save / Share report</button>';
-  html += '<button id="open-report-btn" class="save-btn-outline" style="display:none">Open report \u2197</button>';
+  html += '<button id="open-report-btn" class="save-btn-outline" style="display:none">Open report ↗</button>';
   html += '<button id="copy-url-btn" class="save-btn-outline" style="display:none">Copy link</button>';
   html += '</div>';
-  html += '<span id="save-status" style="font-size:13px;color:var(--text-muted);margin-top:8px;display:block"></span>';
+  html += '<span id="save-status" style="font-family:\'Inter\',sans-serif;font-size:13px;color:var(--text-muted);margin-top:8px;display:block"></span>';
   html += '<div class="saved-url-wrap" id="saved-url-wrap"><p class="saved-url-label">Shareable link</p><div class="saved-url" id="saved-url-text"></div></div>';
   html += '</div>';
   html += '<div class="share-panel">';
   html += '<p class="share-panel-label">Send this back</p>';
-  html += '<p class="share-panel-body">If this was useful \u2014 or if it missed the mark \u2014 send it back.</p>';
+  html += '<p class="share-panel-body">If this was useful — or if it missed the mark — send it back.</p>';
   html += '<textarea id="feedback-ta" class="feedback-ta" placeholder="Was this helpful? Did it get your situation right? Anything you\'d add or push back on? (optional)"></textarea>';
-  html += '<div class="opt-in-block"><p class="opt-in-nudge"><strong>Including your report and conversation helps us make this more useful</strong> \u2014 if you don\'t mind, please check the boxes!</p>';
+  html += '<div class="opt-in-block"><p class="opt-in-nudge"><strong>Including your report and conversation helps us make this more useful</strong> — if you don\'t mind, please check the boxes!</p>';
   html += '<label class="opt-in-row"><input type="checkbox" id="chk-report"> <span>Share my assessment report</span></label>';
   html += '<label class="opt-in-row"><input type="checkbox" id="chk-transcript"> <span>Share my conversation</span></label></div>';
-  html += '<div class="share-row"><button id="share-submit-btn" class="share-btn" onclick="submitFeedback()">Send \u2192</button><span id="share-status" class="share-confirm"></span></div>';
+  html += '<div class="share-row"><button id="share-submit-btn" class="share-btn" onclick="submitFeedback()">Send →</button><span id="share-status" class="share-confirm"></span></div>';
   html += '</div>';
-  html += '<div style="margin-top:1.5rem;padding-top:1.25rem;border-top:0.5px solid var(--border);"><button class="restart-link" onclick="location.reload()">Start over</button></div>';
+  html += '<div class="restart-row"><button class="copy-guide-btn" id="copy-guide-btn" onclick="copyGuide()">Copy setup guide</button><button class="restart-btn" onclick="location.reload()">Start over</button></div>';
   document.getElementById("assessment").innerHTML = html;
   av.scrollTop = 0;
 }
