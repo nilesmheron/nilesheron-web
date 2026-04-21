@@ -29,34 +29,50 @@
 
   /* ── Landing ── */
   #landing { flex: 1; overflow-y: auto; }
-  .land-hero { max-width: 640px; margin: 0 auto; padding: 3rem 1.5rem 2rem; }
-  .land-eyebrow { font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 1rem; }
-  .land-headline { font-family: 'Fraunces', serif; font-size: 28px; font-weight: 500; line-height: 1.25; color: var(--text); margin-bottom: 1.25rem; }
-  .land-body { font-size: 15px; line-height: 1.75; color: var(--text-muted); margin-bottom: 1rem; }
-  .land-body strong { color: var(--text); font-weight: 500; }
-  .land-divider { height: 1px; background: var(--border); max-width: 640px; margin: 0 auto; }
-  .land-section { max-width: 640px; margin: 0 auto; padding: 2rem 1.5rem; }
-  .land-section-label { font-size: 11px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 1.25rem; }
-  .steps { display: flex; flex-direction: column; gap: 16px; }
-  .step { display: flex; gap: 14px; align-items: flex-start; }
-  .step-num { width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--text-muted); flex-shrink: 0; margin-top: 2px; }
+
+  .hero { max-width: 780px; margin: 0 auto; padding: 4rem 1.5rem 3.5rem; display: flex; align-items: center; gap: 3rem; }
+  .hero-copy { flex: 1; }
+  .hero-eyebrow { font-family: 'Fraunces', serif; font-size: 16px; font-style: italic; color: var(--text-muted); line-height: 1.6; margin-bottom: 1rem; }
+  .hero-headline { font-family: 'Fraunces', serif; font-size: 38px; font-weight: 500; line-height: 1.15; color: var(--text); margin-bottom: 1.25rem; }
+  .hero-headline .accent { color: var(--accent); }
+  .hero-sub { font-size: 15px; color: var(--text-muted); line-height: 1.65; margin-bottom: 1.75rem; max-width: 380px; }
+  .hero-cta { display: inline-block; background: var(--accent); color: var(--accent-ink); border: none; border-radius: 10px; padding: 13px 28px; font-size: 15px; font-family: 'Inter', sans-serif; font-weight: 500; cursor: pointer; transition: opacity 0.15s; }
+  .hero-cta:hover { opacity: 0.88; }
+  .hero-fine { font-size: 12px; color: var(--text-dim); margin-top: 10px; line-height: 1.6; }
+  .hero-illo { flex-shrink: 0; width: 220px; display: flex; align-items: center; justify-content: center; }
+  .hero-illo img { width: 220px; display: block; }
+
+  .land-divider { height: 1px; background: var(--border); max-width: 780px; margin: 0 auto; }
+
+  .below { max-width: 780px; margin: 0 auto; padding: 3rem 1.5rem; display: flex; gap: 3rem; align-items: flex-start; }
+  .steps-col { flex: 1; }
+  .steps-label { font-size: 11px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 1.5rem; }
+  .step { display: flex; gap: 14px; margin-bottom: 1.25rem; }
+  .step-num { width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--text-dim); flex-shrink: 0; margin-top: 2px; }
   .step-text { font-size: 15px; color: var(--text-muted); line-height: 1.6; }
   .step-text strong { color: var(--text); font-weight: 500; }
+  .step-onebite { font-family: 'Fraunces', serif; font-size: 15px; color: var(--accent); font-style: italic; margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--border); }
+
+  .example-col { width: 300px; flex-shrink: 0; }
   .example-card { background: var(--bg-alt); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-  .example-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: baseline; }
-  .example-label { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
-  .example-name { font-size: 12px; color: var(--text-dim); }
-  .example-body { padding: 0 18px; }
-  .ex-section { padding: 16px 0; border-bottom: 1px solid var(--border); }
-  .ex-section:last-child { border-bottom: none; }
-  .ex-section-head { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 8px; }
-  .ex-section-body { font-family: 'Fraunces', serif; font-size: 15px; line-height: 1.65; color: var(--text-muted); }
-  .example-toggle { width: 100%; padding: 12px 18px; background: none; border: none; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 12px; font-family: 'Inter', sans-serif; cursor: pointer; text-align: center; }
-  .example-toggle:hover { color: var(--text-muted); }
-  .land-cta { max-width: 640px; margin: 0 auto; padding: 2rem 1.5rem 3rem; }
-  .start-btn { background: var(--accent); color: var(--accent-ink); border: none; border-radius: 10px; padding: 13px 32px; font-size: 15px; font-family: 'Inter', sans-serif; font-weight: 500; cursor: pointer; transition: opacity 0.15s; }
-  .start-btn:hover { opacity: 0.88; }
-  .land-fine { font-size: 12px; color: var(--text-dim); margin-top: 12px; }
+  .example-card-head { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: baseline; }
+  .example-card-label { font-size: 10px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-dim); }
+  .example-card-name { font-size: 11px; color: var(--text-dim); }
+  .example-card-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+  .ex-section-head { font-size: 9px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 4px; }
+  .ex-section-body { font-family: 'Fraunces', serif; font-size: 13px; line-height: 1.6; color: var(--text-muted); }
+  .example-cta { padding: 14px 16px; border-top: 1px solid var(--border); }
+  .example-cta-btn { display: block; width: 100%; text-align: center; background: var(--accent); color: var(--accent-ink); border: none; border-radius: 8px; padding: 10px; font-size: 12px; font-family: 'Inter', sans-serif; font-weight: 500; letter-spacing: 0.04em; cursor: pointer; transition: opacity 0.15s; }
+  .example-cta-btn:hover { opacity: 0.88; }
+  .example-cta-fine { font-size: 11px; color: var(--text-dim); text-align: center; margin-top: 8px; }
+
+  @media (max-width: 640px) {
+    .hero { flex-direction: column-reverse; gap: 1.5rem; padding-top: 2rem; }
+    .hero-illo img { width: 140px; }
+    .hero-headline { font-size: 28px; }
+    .below { flex-direction: column; }
+    .example-col { width: 100%; }
+  }
 
   /* ── Chat ── */
   #chat-view { display: none; flex: 1; flex-direction: column; overflow: hidden; }
@@ -156,40 +172,54 @@
   <div class="progress-wrap"><div class="progress-fill" id="pbar"></div></div>
 </div>
 <div id="landing">
-  <div class="land-hero">
-    <p class="land-eyebrow">A free tool</p>
-    <h1 class="land-headline">Figure out what AI could actually be doing for you.</h1>
-    <p class="land-body">Sometimes AI can be scary. <strong>Mostly that&#8217;s because people don&#8217;t understand it</strong> &#8212; not because it&#8217;s complicated, but because no one has taken the time to explain what it can do for them specifically.</p>
-    <p class="land-body">This tool isn&#8217;t owned by a company and has no preference toward any particular solution. It&#8217;s going to ask you some questions about how you work, what&#8217;s breaking down, and what&#8217;s held you back from AI so far. Then it&#8217;ll give you an honest assessment: what already exists that could help you, what could be built for you specifically, and where to start.</p>
-  </div>
-  <div class="land-divider"></div>
-  <div class="land-section">
-    <p class="land-section-label">How it works</p>
-    <div class="steps">
-      <div class="step"><div class="step-num">1</div><div class="step-text"><strong>A short conversation.</strong> An AI asks you about what you do, the tools you use, where things fall apart, and what&#8217;s stopped you from doing more with AI.</div></div>
-      <div class="step"><div class="step-num">2</div><div class="step-text"><strong>A real assessment.</strong> What we heard, and what we suggest &#8212; specific tools, a clear first move, and a step-by-step setup guide tailored to your situation.</div></div>
-      <div class="step"><div class="step-num">3</div><div class="step-text"><strong>Something you can act on.</strong> Download your setup guide and bring it into Claude or any AI assistant to start building.</div></div>
+  <div class="hero">
+    <div class="hero-copy">
+      <p class="hero-eyebrow">Figuring out how to use AI can feel like trying to eat an elephant.</p>
+      <h1 class="hero-headline">But there&#8217;s only one<br>way to do it.<br><span class="accent">OneBite at a time.</span></h1>
+      <p class="hero-sub">A 10-minute conversation. A personalized plan for how AI can actually fit into your work.</p>
+      <button class="hero-cta" onclick="startChat()">Get my assessment &#8594;</button>
+      <p class="hero-fine">Takes about 10 minutes. Your conversation isn&#8217;t stored by default.<br>No elephants will ever be harmed in the making of this product.</p>
+    </div>
+    <div class="hero-illo">
+      <img src="elephant.png" alt="A friendly elephant">
     </div>
   </div>
   <div class="land-divider"></div>
-  <div class="land-section">
-    <p class="land-section-label">Example output</p>
-    <p style="font-size:14px;color:var(--text-muted);margin-bottom:1.25rem;line-height:1.6;">Jordan is a founder constantly creating documents &#8212; investor updates, partnership briefs, staff communications &#8212; but her process is fragmented and she doesn&#8217;t trust putting sensitive deal info into AI tools.</p>
-    <div class="example-card">
-      <div class="example-header"><span class="example-label">AI Assessment</span><span class="example-name">Jordan</span></div>
-      <div class="example-body">
-        <div class="ex-section"><div class="ex-section-head">What we heard</div><div class="ex-section-body">You&#8217;re running your document workflow across Google Docs, email drafts, and your own memory. Every document starts from scratch with no shared context. The privacy concern is legitimate &#8212; but it&#8217;s also kept you from using AI for things where it would be completely safe.</div></div>
-        <div class="ex-section" id="example-more" style="display:none;">
-          <div class="ex-section-head">What we suggest</div>
-          <div class="ex-section-body" style="margin-bottom:14px;"><strong style="color:var(--text);">Claude Projects</strong> &#8212; A private workspace where Claude uses only your documents. Nothing leaves your project. Start here.<br><br><strong style="color:var(--text);">Notion AI</strong> &#8212; If you move to Notion, its AI layer drafts and summarizes inside your workspace. Real switching cost, but high payoff.<br><br>The setup guide (in your .md download) walks you through three levels: quick wins this week, off-the-shelf stack over a weekend, and a fully connected system.</div>
+  <div class="below">
+    <div class="steps-col">
+      <p class="steps-label">How it works</p>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text"><strong>A short conversation.</strong> OneBite asks about your work, your tools, and what&#8217;s getting in the way.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-text"><strong>A real assessment.</strong> Specific tools, a first move, and a step-by-step setup guide built for your situation.</div>
+      </div>
+      <p class="step-onebite">One bite at a time.</p>
+    </div>
+    <div class="example-col">
+      <div class="example-card">
+        <div class="example-card-head">
+          <span class="example-card-label">OneBite Assessment</span>
+          <span class="example-card-name">Mia</span>
+        </div>
+        <div class="example-card-body">
+          <div>
+            <div class="ex-section-head">What we heard</div>
+            <div class="ex-section-body">You&#8217;re running three projects out of your inbox and a Notion board nobody updates. The synthesis is all in your head&#8230;</div>
+          </div>
+          <div>
+            <div class="ex-section-head">Your first move</div>
+            <div class="ex-section-body">Set up a Claude Project this week. Load it with your last 5 client notes and use this starter prompt&#8230;</div>
+          </div>
+        </div>
+        <div class="example-cta">
+          <button class="example-cta-btn" onclick="startChat()">Get my assessment &#8594;</button>
+          <p class="example-cta-fine">Free. Takes 10 minutes.</p>
         </div>
       </div>
-      <button class="example-toggle" id="example-toggle" onclick="toggleExample()">Show full assessment &#8595;</button>
     </div>
-  </div>
-  <div class="land-cta">
-    <button class="start-btn" onclick="startChat()">Get my assessment &#8594;</button>
-    <p class="land-fine">Takes about 10 minutes. Your conversation isn&#8217;t stored by default.</p>
   </div>
 </div>
 <div id="chat-view">
@@ -224,11 +254,6 @@ var pbar = document.getElementById("pbar");
 
 function ping(payload) {
   fetch("/api/feedback", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }).catch(function() {});
-}
-function toggleExample() {
-  var more = document.getElementById("example-more"), btn = document.getElementById("example-toggle");
-  if (more.style.display === "none") { more.style.display = "block"; btn.textContent = "Hide full assessment ↑"; }
-  else { more.style.display = "none"; btn.textContent = "Show full assessment ↓"; }
 }
 function startChat() {
   document.getElementById("landing").style.display = "none";
