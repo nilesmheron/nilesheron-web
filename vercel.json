@@ -1,6 +1,10 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
+  "redirects": [
+    { "source": "/sandbox/personal-ai-os", "destination": "/onebite", "permanent": true },
+    { "source": "/sandbox/personal-ai-os/report", "destination": "/onebite/report", "permanent": true }
+  ],
   "rewrites": [
 { "source": "/templates/onboarding", "destination": "/templates/onboarding.html" },
     { "source": "/templates/task-management", "destination": "/templates/task-management.html" },
