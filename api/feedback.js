@@ -22,7 +22,7 @@ export default async function handler(req, res) {
 
   const row = {
     name: name || null,
-    feedback: feedback || null,
+    feedback: feedback || 'no specific feedback given',
     completed: completed === true,
     share_report: share_report === true,
     share_transcript: share_transcript === true,
