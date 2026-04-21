@@ -2,8 +2,7 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/onebite", "destination": "/sandbox/personal-ai-os/index.html" },
-    { "source": "/templates/onboarding", "destination": "/templates/onboarding.html" },
+{ "source": "/templates/onboarding", "destination": "/templates/onboarding.html" },
     { "source": "/templates/task-management", "destination": "/templates/task-management.html" },
     { "source": "/templates/profile-versioning", "destination": "/templates/profile-versioning.html" },
     { "source": "/templates/cross-platform-packager", "destination": "/templates/cross-platform-packager.html" }
