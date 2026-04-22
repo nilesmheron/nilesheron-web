@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Venture 313 · Hero Direction Comparison</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: #EEEBE0;
+    color: #1A1918;
+    padding: 48px 32px;
+    line-height: 1.5;
+  }
+  .container { max-width: 1100px; margin: 0 auto; }
+  .intro { margin-bottom: 48px; }
+  .intro-eyebrow { font-size: 11px; letter-spacing: 0.12em; color: #6B6862; margin-bottom: 8px; font-weight: 500; }
+  .intro-title { font-size: 32px; font-weight: 500; letter-spacing: -0.02em; margin-bottom: 12px; line-height: 1.1; }
+  .intro-body { font-size: 15px; color: #4A4948; max-width: 680px; line-height: 1.55; }
+  .variant { margin-bottom: 56px; }
+  .variant-label {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 6px;
+  }
+  .variant-letter {
+    background: #0A0A0A;
+    color: #C5F74E;
+    padding: 4px 10px;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+  }
+  .variant-title { font-size: 20px; font-weight: 500; color: #0A0A0A; letter-spacing: -0.01em; }
+  .variant-claim { font-size: 14px; color: #5F5E5A; font-style: italic; margin-bottom: 16px; max-width: 640px; }
+  .mockup {
+    background: #0A0A0A;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+  }
+  .nav {
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 0.5px solid #2A2A28;
+  }
+  .wordmark {
+    color: #C5F74E;
+    padding: 4px 10px;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    border: 1px solid #C5F74E;
+  }
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    font-size: 12px;
+    color: #F5F3ED;
+  }
+  .apply-btn {
+    background: #C5F74E;
+    color: #0A0A0A;
+    padding: 6px 14px;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 12px;
+  }
+  .eyebrow-purple {
+    display: inline-block;
+    background: #C4B5FD;
+    color: #2A1B6B;
+    padding: 4px 10px;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    font-weight: 500;
+    margin-bottom: 20px;
+  }
+  .hero-headline { font-size: 36px; line-height: 1.05; font-weight: 500; letter-spacing: -0.02em; color: #F5F3ED; }
+  .hero-body { font-size: 13px; color: #B8B6AE; line-height: 1.55; margin-top: 14px; }
+  .accent-green { color: #C5F74E; }
+  .detroit-grid-bg {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400"><g stroke="%23222" stroke-width="0.5" fill="none"><path d="M0 60 L600 80 M0 120 L600 150 M0 180 L600 220 M0 240 L600 280 M0 300 L600 340 M50 0 L80 400 M130 0 L160 400 M210 0 L240 400 M290 0 L320 400 M370 0 L400 400 M450 0 L480 400 M530 0 L560 400"/></g></svg>');
+    background-size: 100% 100%;
+  }
+  .photo-placeholder {
+    background: linear-gradient(135deg, #2A2A28, #3A2A4A);
+    display: flex;
+    align-items: end;
+    padding: 12px;
+    font-size: 10px;
+    color: #6B6962;
+  }
+
+  /* A: Split Hero */
+  .hero-a { padding: 48px 32px 48px; background: #0A0A0A; color: #F5F3ED; }
+  .hero-a-grid { display: grid; grid-template-columns: 1fr 220px; gap: 32px; align-items: end; }
+  .hero-a-photo { aspect-ratio: 3/4; border-radius: 4px; }
+
+  /* B: Landscape Editorial */
+  .hero-b-wrapper { position: relative; aspect-ratio: 16/9; background: linear-gradient(135deg, #2A2A28 0%, #3A2A4A 50%, #1A2A3A 100%); overflow: hidden; }
+  .hero-b-grid-overlay {
+    position: absolute; inset: 0;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="560" viewBox="0 0 1000 560"><g stroke="%23ffffff0D" stroke-width="0.5" fill="none"><path d="M0 80 L1000 110 M0 160 L1000 200 M0 240 L1000 290 M0 320 L1000 380 M0 400 L1000 460 M0 480 L1000 540 M100 0 L140 560 M240 0 L280 560 M380 0 L420 560 M520 0 L560 560 M660 0 L700 560 M800 0 L840 560"/></g></svg>');
+    background-size: cover;
+  }
+  .hero-b-scrim { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(10,10,10,0.85) 0%, rgba(10,10,10,0.5) 40%, transparent 70%); }
+  .hero-b-content { position: absolute; left: 32px; top: 48px; right: 32px; max-width: 500px; }
+  .hero-b-impact { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(180deg, transparent 0%, rgba(10,10,10,0.9) 40%, #0A0A0A 100%); padding: 32px 32px 20px; }
+  .impact-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 20px; }
+  .impact-num { font-size: 28px; font-weight: 500; letter-spacing: -0.03em; margin-bottom: 4px; }
+  .impact-label { font-size: 10px; color: #B8B6AE; }
+
+  /* C: Founder Voice */
+  .hero-c-grid { display: grid; grid-template-columns: 280px 1fr; min-height: 420px; }
+  .hero-c-photo {
+    background: linear-gradient(160deg, #2A2A28 0%, #3A2A4A 100%);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-c-photo-label {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: #C5F74E;
+    color: #0A0A0A;
+    padding: 4px 9px;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+  }
+  .hero-c-content { padding: 44px 36px 36px; display: flex; flex-direction: column; justify-content: space-between; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400"><g stroke="%23222" stroke-width="0.5" fill="none"><path d="M0 60 L400 80 M0 120 L400 150 M0 180 L400 220 M0 240 L400 280 M0 300 L400 340 M50 0 L80 400 M130 0 L160 400 M210 0 L240 400 M290 0 L320 400"/></g></svg>'); background-size: 100% 100%; background-position: right center; background-repeat: no-repeat; }
+  .hero-c-quote { font-size: 28px; line-height: 1.25; font-weight: 500; color: #F5F3ED; letter-spacing: -0.01em; margin-bottom: 24px; }
+  .hero-c-attribution { border-top: 1px solid #2A2A28; padding-top: 14px; }
+  .hero-c-name { font-size: 14px; color: #F5F3ED; font-weight: 500; margin-bottom: 3px; }
+  .hero-c-role { font-size: 12px; color: #B8B6AE; }
+  .hero-c-pagination { display: flex; align-items: center; gap: 16px; margin-top: 28px; }
+  .pag-dots { display: flex; gap: 6px; }
+  .pag-dot { width: 20px; height: 3px; background: #2A2A28; }
+  .pag-dot.active { background: #C5F74E; }
+  .pag-label { font-size: 11px; color: #8A8A88; letter-spacing: 0.1em; }
+
+  /* D: Impact-Led */
+  .hero-d { padding: 52px 32px 44px; background: #0A0A0A; color: #F5F3ED; }
+  .hero-d-title { font-size: 32px; line-height: 1.1; font-weight: 500; margin-bottom: 36px; letter-spacing: -0.02em; max-width: 560px; }
+  .hero-d-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 48px; align-items: end; margin-bottom: 36px; }
+  .hero-d-mega-eyebrow { font-size: 11px; color: #C4B5FD; letter-spacing: 0.15em; margin-bottom: 8px; font-weight: 500; }
+  .hero-d-mega { font-size: 96px; line-height: 0.9; font-weight: 500; color: #C5F74E; letter-spacing: -0.04em; margin-bottom: 10px; }
+  .hero-d-mega-caption { font-size: 13px; color: #B8B6AE; line-height: 1.5; max-width: 360px; }
+  .hero-d-body { font-size: 13px; color: #B8B6AE; line-height: 1.6; padding-bottom: 8px; }
+  .hero-d-stats { border-top: 0.5px solid #2A2A28; padding-top: 24px; }
+
+  /* E: Momentum-Forward */
+  .hero-e { padding: 48px 32px 40px; background: #0A0A0A; color: #F5F3ED; }
+  .hero-e-title { font-size: 34px; line-height: 1.05; font-weight: 500; margin-bottom: 12px; letter-spacing: -0.02em; max-width: 580px; }
+  .hero-e-body { font-size: 13px; color: #B8B6AE; line-height: 1.55; max-width: 480px; margin-bottom: 32px; }
+  .timeline-block { border-top: 0.5px solid #2A2A28; padding-top: 20px; }
+  .timeline-row {
+    display: grid;
+    grid-template-columns: 180px 1fr 90px;
+    gap: 18px;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 0.5px solid #2A2A28;
+  }
+  .timeline-row.v313 { border-bottom: none; padding-top: 16px; }
+  .timeline-label-eyebrow { font-size: 10px; letter-spacing: 0.1em; margin-bottom: 2px; color: #8A8A88; }
+  .timeline-label-main { font-size: 13px; color: #B8B6AE; }
+  .timeline-bar { height: 5px; background: #2A2A28; border-radius: 2px; position: relative; }
+  .timeline-bar-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px; }
+  .timeline-time { font-size: 15px; font-weight: 500; text-align: right; letter-spacing: -0.01em; }
+  .footer-note {
+    margin-top: 56px;
+    padding-top: 24px;
+    border-top: 0.5px solid #D4D1C6;
+    font-size: 12px;
+    color: #6B6862;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="intro">
+    <div class="intro-eyebrow">VENTURE 313 · HOME PAGE HERO DIRECTIONS</div>
+    <div class="intro-title">Five directions, one brand system.</div>
+    <div class="intro-body">Every variation uses the same palette, typography, and design language established by the Impact Report — black, neon green, lavender purple, Detroit map texture. What changes between them is the strategic claim being made in the first viewport: who speaks first, and what they say.</div>
+  </div>
+
+  <!-- A: SPLIT HERO -->
+  <div class="variant">
+    <div class="variant-label">
+      <span class="variant-letter">A</span>
+      <span class="variant-title">Split Hero — Headline + Portrait</span>
+    </div>
+    <div class="variant-claim">Claim: "We're a credible capital platform for Detroit founders." Institutional voice with a founder photo as visual anchor. Balanced — neither the founder nor V313 dominates.</div>
+    <div class="mockup">
+      <div class="nav">
+        <div class="wordmark" style="background: #0A0A0A;">VENTURE 313</div>
+        <div class="nav-links">
+          <span>Platform</span><span>Portfolio</span><span>Stories</span><span>Events</span><span>News</span><span>About</span>
+          <span class="apply-btn">Apply</span>
+        </div>
+      </div>
+      <div class="hero-a detroit-grid-bg">
+        <div class="hero-a-grid">
+          <div>
+            <div class="eyebrow-purple">2022 — 2025</div>
+            <div class="hero-headline">Detroit capital. <span class="accent-green">Real founders.</span> Momentum that compounds.</div>
+            <div class="hero-body" style="max-width: 420px;">A $10M commitment from the Gilbert Family Foundation, deployed through TechTown Detroit, Invest Detroit Ventures, and Detroit Development Fund — across grants, equity, and debt for every stage a founder actually needs capital.</div>
+          </div>
+          <div class="photo-placeholder hero-a-photo">[Founder portrait]</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B: LANDSCAPE EDITORIAL -->
+  <div class="variant">
+    <div class="variant-label">
+      <span class="variant-letter">B</span>
+      <span class="variant-title">Landscape Editorial — Photo Takes the Fold</span>
+    </div>
+    <div class="variant-claim">Claim: "Look at the founders we serve." Photography carries the fold. Impact numbers dissolve into the bottom of the hero. Most magazine-cover-like.</div>
+    <div class="mockup">
+      <div class="nav">
+        <div class="wordmark" style="background: #0A0A0A;">VENTURE 313</div>
+        <div class="nav-links">
+          <span>Platform</span><span>Portfolio</span><span>Stories</span><span>Events</span><span>News</span><span>About</span>
+          <span class="apply-btn">Apply</span>
+        </div>
+      </div>
+      <div class="hero-b-wrapper">
+        <div class="hero-b-grid-overlay"></div>
+        <div style="position: absolute; bottom: 200px; right: 20px; font-size: 10px; color: #6B6962;">[Full-bleed founder photography]</div>
+        <div class="hero-b-scrim"></div>
+        <div class="hero-b-content">
+          <div class="eyebrow-purple">A GILBERT FAMILY FOUNDATION INITIATIVE</div>
+          <div class="hero-headline" style="font-size: 40px;">Detroit capital. <span class="accent-green">Real founders.</span><br>Momentum that compounds.</div>
+        </div>
+        <div class="hero-b-impact">
+          <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px;">
+            <div style="font-size: 10px; color: #C4B5FD; letter-spacing: 0.15em; font-weight: 500;">IMPACT · 2022 — 2025</div>
+            <div style="font-size: 10px; color: #8A8A88; letter-spacing: 0.1em;">10× RETURN ON DEPLOYED CAPITAL</div>
+          </div>
+          <div class="impact-grid">
+            <div><div class="impact-num accent-green">$5.5M</div><div class="impact-label">Deployed</div></div>
+            <div><div class="impact-num" style="color: #F5F3ED;">116</div><div class="impact-label">Founders</div></div>
+            <div><div class="impact-num" style="color: #F5F3ED;">$50M+</div><div class="impact-label">Follow-on</div></div>
+            <div><div class="impact-num" style="color: #F5F3ED;">50+</div><div class="impact-label">Jobs created</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- C: FOUNDER VOICE -->
+  <div class="variant">
+    <div class="variant-label">
+      <span class="variant-letter">C</span>
+      <span class="variant-title">Founder Voice — A Founder Speaks First</span>
+    </div>
+    <div class="variant-claim">Claim: "Hear it from someone who lived it." Rotating founder spotlight. V313 waits its turn. Most founder-forward in posture.</div>
+    <div class="mockup">
+      <div class="nav">
+        <div class="wordmark" style="background: #0A0A0A;">VENTURE 313</div>
+        <div class="nav-links">
+          <span>Platform</span><span>Portfolio</span><span>Stories</span><span>Events</span><span>News</span><span>About</span>
+          <span class="apply-btn">Apply</span>
+        </div>
+      </div>
+      <div class="hero-c-grid">
+        <div class="hero-c-photo">
+          <div class="hero-c-photo-label">TECHTOWN + IDV</div>
+          <div style="position: absolute; bottom: 14px; left: 14px; font-size: 10px; color: #6B6962;">[Founder portrait]</div>
+        </div>
+        <div class="hero-c-content">
+          <div>
+            <div class="eyebrow-purple">FOUNDER IN FOCUS</div>
+            <div class="hero-c-quote">"The capital was the door. <span class="accent-green">The coaching, the connections, the sustained bet on the work</span> — that's what got us through it."</div>
+            <div class="hero-c-attribution">
+              <div class="hero-c-name">Crystal Brown</div>
+              <div class="hero-c-role">Founder &amp; CEO, CircNova · AI-powered circular RNA therapeutics</div>
+            </div>
+          </div>
+          <div class="hero-c-pagination">
+            <div class="pag-dots">
+              <div class="pag-dot active"></div>
+              <div class="pag-dot"></div>
+              <div class="pag-dot"></div>
+              <div class="pag-dot"></div>
+            </div>
+            <div class="pag-label">01 / 04 · ROTATING FOUNDER SPOTLIGHT</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- D: IMPACT-LED -->
+  <div class="variant">
+    <div class="variant-label">
+      <span class="variant-letter">D</span>
+      <span class="variant-title">Impact-Led — Numbers as the Hero</span>
+    </div>
+    <div class="variant-claim">Claim: "Look at what we've already done." $50M+ in follow-on funding becomes the hero number. Proof before pitch. Most press-forward.</div>
+    <div class="mockup">
+      <div class="nav">
+        <div class="wordmark" style="background: #0A0A0A;">VENTURE 313</div>
+        <div class="nav-links">
+          <span>Platform</span><span>Portfolio</span><span>Stories</span><span>Events</span><span>News</span><span>About</span>
+          <span class="apply-btn">Apply</span>
+        </div>
+      </div>
+      <div class="hero-d detroit-grid-bg">
+        <div class="eyebrow-purple">2022 — 2025 IMPACT</div>
+        <div class="hero-d-title">We invest in bold ideas. Detroit's founders do the rest.</div>
+        <div class="hero-d-grid">
+          <div>
+            <div class="hero-d-mega-eyebrow">OUR PORTFOLIO HAS SECURED</div>
+            <div class="hero-d-mega">$50M+</div>
+            <div class="hero-d-mega-caption">in follow-on funding from local and national investors — a 10× return on the capital we've deployed so far.</div>
+          </div>
+          <div class="hero-d-body">A $10M commitment from the Gilbert Family Foundation, deployed through TechTown Detroit, Invest Detroit Ventures, and Detroit Development Fund — across grants, equity, and debt for every stage a founder actually needs capital.</div>
+        </div>
+        <div class="hero-d-stats">
+          <div class="impact-grid">
+            <div><div style="font-size: 28px; font-weight: 500; color: #F5F3ED; letter-spacing: -0.03em; margin-bottom: 4px;">$5.5M</div><div class="impact-label">Capital deployed</div></div>
+            <div><div style="font-size: 28px; font-weight: 500; color: #F5F3ED; letter-spacing: -0.03em; margin-bottom: 4px;">116</div><div class="impact-label">Founders championed</div></div>
+            <div><div style="font-size: 28px; font-weight: 500; color: #F5F3ED; letter-spacing: -0.03em; margin-bottom: 4px;">100%</div><div class="impact-label">Detroit-based</div></div>
+            <div><div style="font-size: 28px; font-weight: 500; color: #F5F3ED; letter-spacing: -0.03em; margin-bottom: 4px;">50+</div><div class="impact-label">Jobs created</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- E: MOMENTUM-FORWARD -->
+  <div class="variant">
+    <div class="variant-label">
+      <span class="variant-letter">E</span>
+      <span class="variant-title">Momentum-Forward — Speed Is the Argument</span>
+    </div>
+    <div class="variant-claim">Claim: "We move faster than anyone else." Timeline compression — from typical VC's 2+ years to V313's months — becomes the hero visual. Most distinctive competitive claim.</div>
+    <div class="mockup">
+      <div class="nav">
+        <div class="wordmark" style="background: #0A0A0A;">VENTURE 313</div>
+        <div class="nav-links">
+          <span>Platform</span><span>Portfolio</span><span>Stories</span><span>Events</span><span>News</span><span>About</span>
+          <span class="apply-btn">Apply</span>
+        </div>
+      </div>
+      <div class="hero-e">
+        <div class="eyebrow-purple">WE BUILD MOMENTUM FAST</div>
+        <div class="hero-e-title">From idea to funded in <span class="accent-green">months</span>, not years.</div>
+        <div class="hero-e-body">Carta reports that 2022-vintage VC funds deployed only 43% of their capital after 24 months. Detroit's founders can't wait that long. We've compressed a multi-year funding journey into something that happens in a matter of months.</div>
+        <div class="timeline-block">
+          <div class="timeline-row">
+            <div>
+              <div class="timeline-label-eyebrow">TYPICAL VC FUND</div>
+              <div class="timeline-label-main">Carta 2022 vintage</div>
+            </div>
+            <div class="timeline-bar"><div class="timeline-bar-fill" style="width: 100%; background: #44403A;"></div></div>
+            <div class="timeline-time" style="color: #8A8A88;">2+ years</div>
+          </div>
+          <div class="timeline-row">
+            <div>
+              <div class="timeline-label-eyebrow">TRADITIONAL DETROIT</div>
+              <div class="timeline-label-main">Accelerator + seed pathway</div>
+            </div>
+            <div class="timeline-bar"><div class="timeline-bar-fill" style="width: 50%; background: #6B6862;"></div></div>
+            <div class="timeline-time" style="color: #B8B6AE;">~1 year</div>
+          </div>
+          <div class="timeline-row v313">
+            <div>
+              <div class="timeline-label-eyebrow" style="color: #C5F74E; font-weight: 500;">VENTURE 313</div>
+              <div class="timeline-label-main" style="color: #F5F3ED; font-weight: 500;">Grant → Equity → Debt</div>
+            </div>
+            <div class="timeline-bar" style="height: 8px;"><div class="timeline-bar-fill" style="width: 15%; background: #C5F74E;"></div></div>
+            <div class="timeline-time accent-green" style="font-size: 18px;">Months</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    Note: All five variations share identical page rhythm below the fold — impact band (where not integrated into the hero), capital continuum section, recently funded grid, upcoming events and press, apply CTA, partner footer. What differs between them is only the first viewport and the strategic claim being made there.
+  </div>
+
+</div>
+</body>
+</html>
