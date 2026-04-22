@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Venture 313 · Event-Forward Mockup</title>
+<style>
+  :root {
+    --v-black: #0A0A0A;
+    --v-carbon: #1A1A1A;
+    --v-graphite: #2A2A28;
+    --v-ash: #4A4948;
+    --v-smoke: #8A8A88;
+    --v-fog: #B8B6AE;
+    --v-paper: #F5F3ED;
+    --v-stone: #EBE4D1;
+    --v-green: #C5F74E;
+    --v-purple: #C4B5FD;
+    --v-purple-deep: #2A1B6B;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--v-black);
+    color: var(--v-paper);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono { font-family: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+  .accent-green { color: var(--v-green); }
+  .accent-purple { color: var(--v-purple); }
+  a { color: inherit; text-decoration: none; }
+
+  .status-strip {
+    background: var(--v-black);
+    border-bottom: 0.5px solid var(--v-graphite);
+    padding: 6px 32px;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--v-smoke);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+  }
+  .status-left, .status-right { display: flex; gap: 16px; align-items: center; }
+  .status-item { display: flex; gap: 6px; align-items: center; }
+  .live-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--v-green);
+    box-shadow: 0 0 0 0 rgba(197, 247, 78, 0.7);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(197, 247, 78, 0.7); }
+    70% { box-shadow: 0 0 0 6px rgba(197, 247, 78, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(197, 247, 78, 0); }
+  }
+  .status-green { color: var(--v-green); }
+
+  .nav {
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 0.5px solid var(--v-graphite);
+    background: var(--v-black);
+  }
+  .wordmark {
+    color: var(--v-green);
+    padding: 5px 12px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    border: 1px solid var(--v-green);
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  .nav-links { display: flex; align-items: center; gap: 26px; font-size: 13px; color: var(--v-paper); }
+  .nav-links a { position: relative; padding: 4px 0; transition: color 0.15s; }
+  .nav-links a:hover { color: var(--v-green); }
+  .nav-links a.active { color: var(--v-green); }
+  .nav-links a.active::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: -6px;
+    height: 1px; background: var(--v-green);
+  }
+  .apply-btn {
+    background: var(--v-green);
+    color: var(--v-black);
+    padding: 8px 18px;
+    border-radius: 3px;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    transition: transform 0.15s;
+  }
+  .apply-btn:hover { transform: translateX(1px); }
+
+  .hero {
+    background: var(--v-black);
+    padding: 48px 32px 56px;
+    position: relative;
+  }
+  .hero-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    gap: 24px;
+  }
+  .hero-title-block { flex: 1; }
+  .hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: transparent;
+    border: 1px solid var(--v-green);
+    color: var(--v-green);
+    padding: 5px 12px;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    font-weight: 500;
+    margin-bottom: 16px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  .hero-headline {
+    font-size: 36px;
+    line-height: 1.05;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    margin-bottom: 10px;
+  }
+  .hero-sub {
+    font-size: 14px;
+    color: var(--v-fog);
+    max-width: 540px;
+    line-height: 1.55;
+  }
+  .hero-meta {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 10px;
+    color: var(--v-smoke);
+    letter-spacing: 0.1em;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .events-grid {
+    display: grid;
+    grid-template-columns: 1.9fr 1fr;
+    gap: 20px;
+  }
+
+  .featured-event {
+    position: relative;
+    background: linear-gradient(135deg, #141414 0%, #1C1A22 100%);
+    border: 0.5px solid var(--v-graphite);
+    padding: 28px;
+    overflow: hidden;
+  }
+  .featured-event::before,
+  .featured-event::after {
+    content: '';
+    position: absolute;
+    width: 16px; height: 16px;
+    border: 1px solid var(--v-green);
+  }
+  .featured-event::before {
+    top: 8px; left: 8px;
+    border-right: none; border-bottom: none;
+  }
+  .featured-event::after {
+    bottom: 8px; right: 8px;
+    border-left: none; border-top: none;
+  }
+  .featured-event-corner-tr, .featured-event-corner-bl {
+    position: absolute;
+    width: 16px; height: 16px;
+    border: 1px solid var(--v-green);
+  }
+  .featured-event-corner-tr {
+    top: 8px; right: 8px;
+    border-left: none; border-bottom: none;
+  }
+  .featured-event-corner-bl {
+    bottom: 8px; left: 8px;
+    border-right: none; border-top: none;
+  }
+  .featured-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px dashed var(--v-graphite);
+  }
+  .featured-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    color: var(--v-green);
+    font-weight: 500;
+  }
+  .featured-tag-divider { color: var(--v-graphite); }
+  .featured-id {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 10px;
+    color: var(--v-smoke);
+    letter-spacing: 0.1em;
+  }
+  .featured-body {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 32px;
+    align-items: start;
+  }
+  .featured-date-block {
+    border-left: 2px solid var(--v-green);
+    padding-left: 16px;
+  }
+  .featured-date-month {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--v-green);
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  .featured-date-day {
+    font-size: 72px;
+    line-height: 0.9;
+    font-weight: 500;
+    letter-spacing: -0.04em;
+    color: var(--v-paper);
+    margin-bottom: 6px;
+  }
+  .featured-date-year {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: var(--v-smoke);
+  }
+  .featured-date-time {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11px;
+    color: var(--v-fog);
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 0.5px solid var(--v-graphite);
+  }
+  .featured-title {
+    font-size: 24px;
+    line-height: 1.2;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--v-paper);
+    margin-bottom: 12px;
+  }
+  .featured-desc {
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--v-fog);
+    margin-bottom: 20px;
+    max-width: 440px;
+  }
+  .featured-meta-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px 24px;
+    margin-bottom: 22px;
+    padding: 14px 0;
+    border-top: 0.5px solid var(--v-graphite);
+    border-bottom: 0.5px solid var(--v-graphite);
+  }
+  .meta-row { display: flex; flex-direction: column; gap: 2px; }
+  .meta-label {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    color: var(--v-smoke);
+    text-transform: uppercase;
+  }
+  .meta-value { font-size: 12px; color: var(--v-paper); }
+  .meta-coord {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 10px;
+    color: var(--v-fog);
+  }
+  .speakers-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 22px;
+  }
+  .speaker-stack {
+    display: flex;
+    margin-left: 8px;
+  }
+  .speaker {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--v-graphite), #3A2A4A);
+    border: 1.5px solid var(--v-black);
+    margin-left: -8px;
+    position: relative;
+  }
+  .speakers-label {
+    font-size: 11px;
+    color: var(--v-fog);
+  }
+  .speakers-label strong { color: var(--v-paper); font-weight: 500; }
+  .featured-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--v-green);
+    color: var(--v-black);
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    border-radius: 3px;
+  }
+
+  .schedule {
+    background: var(--v-carbon);
+    border: 0.5px solid var(--v-graphite);
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+  }
+  .schedule-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+  .schedule-title {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: var(--v-purple);
+    font-weight: 500;
+  }
+  .schedule-count {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 10px;
+    color: var(--v-smoke);
+  }
+  .schedule-sub {
+    font-size: 12px;
+    color: var(--v-fog);
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px dashed var(--v-graphite);
+  }
+  .schedule-list { flex: 1; }
+  .schedule-row {
+    display: grid;
+    grid-template-columns: 54px 1fr auto;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 0.5px solid var(--v-graphite);
+    align-items: start;
+  }
+  .schedule-row:last-of-type { border-bottom: none; }
+  .schedule-date {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 10px;
+    line-height: 1.3;
+    color: var(--v-green);
+    font-weight: 500;
+    letter-spacing: 0.04em;
+  }
+  .schedule-date-day { font-size: 16px; display: block; margin-bottom: 1px; }
+  .schedule-details { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .schedule-title-text {
+    font-size: 12px;
+    color: var(--v-paper);
+    font-weight: 500;
+    line-height: 1.35;
+  }
+  .schedule-venue {
+    font-size: 10px;
+    color: var(--v-smoke);
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    letter-spacing: 0.05em;
+  }
+  .schedule-partner {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    color: var(--v-purple);
+    border: 1px solid var(--v-graphite);
+    padding: 2px 6px;
+    font-weight: 500;
+    align-self: start;
+  }
+  .schedule-footer {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 0.5px solid var(--v-graphite);
+  }
+  .schedule-all-link {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11px;
+    color: var(--v-green);
+    letter-spacing: 0.08em;
+  }
+
+  .impact {
+    background: var(--v-black);
+    border-top: 0.5px solid var(--v-graphite);
+    border-bottom: 0.5px solid var(--v-graphite);
+    padding: 36px 32px;
+  }
+  .impact-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .impact-eyebrow {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11px;
+    color: var(--v-purple);
+    letter-spacing: 0.15em;
+    font-weight: 500;
+  }
+  .impact-return {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 10px;
+    color: var(--v-smoke);
+    letter-spacing: 0.12em;
+  }
+  .impact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 32px;
+  }
+  .impact-cell { display: flex; flex-direction: column; gap: 4px; }
+  .impact-num {
+    font-size: 40px;
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .impact-num-primary { color: var(--v-green); }
+  .impact-num-secondary { color: var(--v-paper); }
+  .impact-trend {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11px;
+    color: var(--v-green);
+    font-weight: 500;
+  }
+  .impact-label {
+    font-size: 11px;
+    color: var(--v-fog);
+    margin-top: 2px;
+  }
+  .impact-sub {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 9px;
+    color: var(--v-smoke);
+    letter-spacing: 0.08em;
+  }
+
+  .founders {
+    background: var(--v-paper);
+    color: var(--v-black);
+    padding: 56px 32px;
+  }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+  .section-eyebrow {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11px;
+    color: var(--v-purple-deep);
+    letter-spacing: 0.15em;
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .section-title {
+    font-size: 28px;
+    font-weight: 500;
+    color: var(--v-black);
+    letter-spacing: -0.015em;
+    line-height: 1.1;
+  }
+  .section-link {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11px;
+    color: var(--v-black);
+    letter-spacing: 0.08em;
+    border-bottom: 1px solid var(--v-black);
+    padding-bottom: 2px;
+    white-space: nowrap;
+  }
+  .founders-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  .founder-card {
+    background: #FFFFFF;
+    border: 0.5px solid rgba(0,0,0,0.1);
+    overflow: hidden;
+    position: relative;
+  }
+  .founder-photo {
+    aspect-ratio: 4/3;
+    background: linear-gradient(135deg, var(--v-graphite), #3A2A4A);
+    position: relative;
+  }
+  .founder-photo-label {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    font-size: 9px;
+    color: rgba(255,255,255,0.5);
+    font-family: ui-monospace, monospace;
+    letter-spacing: 0.05em;
+  }
+  .founder-tag {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: var(--v-green);
+    color: var(--v-black);
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 9px;
+    font-weight: 600;
+    padding: 3px 7px;
+    letter-spacing: 0.08em;
+  }
+  .founder-info { padding: 12px 14px 14px; }
+  .founder-id {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 9px;
+    color: var(--v-purple-deep);
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+  .founder-name { font-size: 14px; font-weight: 500; color: var(--v-black); margin-bottom: 2px; }
+  .founder-company { font-size: 11px; color: #5F5E5A; }
+
+  .about {
+    background: var(--v-black);
+    padding: 56px 32px;
+    border-top: 0.5px solid var(--v-graphite);
+  }
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 48px;
+    align-items: start;
+  }
+  .about-title {
+    font-size: 32px;
+    font-weight: 500;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--v-paper);
+    margin-bottom: 16px;
+  }
+  .about-eyebrow-purple {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11px;
+    color: var(--v-purple);
+    letter-spacing: 0.15em;
+    font-weight: 500;
+    margin-bottom: 12px;
+    display: block;
+  }
+  .about-body {
+    font-size: 14px;
+    color: var(--v-fog);
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+  .about-link {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11px;
+    color: var(--v-green);
+    letter-spacing: 0.08em;
+    border-bottom: 1px solid var(--v-green);
+    padding-bottom: 2px;
+  }
+  .continuum-mini {
+    background: var(--v-carbon);
+    border: 0.5px solid var(--v-graphite);
+    padding: 22px;
+  }
+  .continuum-label {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 10px;
+    color: var(--v-smoke);
+    letter-spacing: 0.15em;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 0.5px solid var(--v-graphite);
+  }
+  .continuum-stages {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px;
+    background: var(--v-graphite);
+    position: relative;
+  }
+  .continuum-stage {
+    background: var(--v-carbon);
+    padding: 14px 14px;
+    position: relative;
+  }
+  .continuum-stage-num {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 10px;
+    color: var(--v-green);
+    letter-spacing: 0.12em;
+    margin-bottom: 6px;
+  }
+  .continuum-stage-name {
+    font-size: 13px;
+    color: var(--v-paper);
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  .continuum-stage-amount {
+    font-size: 16px;
+    color: var(--v-paper);
+    font-weight: 500;
+    margin-bottom: 6px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    letter-spacing: -0.01em;
+  }
+  .continuum-stage-partner {
+    font-size: 10px;
+    color: var(--v-fog);
+  }
+  .continuum-arrow {
+    position: absolute;
+    top: 50%;
+    right: -8px;
+    transform: translateY(-50%);
+    width: 14px; height: 14px;
+    color: var(--v-green);
+    font-family: ui-monospace, monospace;
+    font-size: 12px;
+    z-index: 2;
+  }
+
+  .news {
+    background: var(--v-paper);
+    color: var(--v-black);
+    padding: 56px 32px;
+  }
+  .news-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .news-card {
+    background: #FFFFFF;
+    border: 0.5px solid rgba(0,0,0,0.1);
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+  }
+  .news-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 24px; height: 2px;
+    background: var(--v-green);
+  }
+  .news-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    margin-top: 6px;
+  }
+  .news-source { color: var(--v-purple-deep); font-weight: 600; }
+  .news-date { color: #5F5E5A; }
+  .news-headline {
+    font-size: 15px;
+    color: var(--v-black);
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: -0.005em;
+  }
+  .news-excerpt {
+    font-size: 12px;
+    color: #5F5E5A;
+    line-height: 1.55;
+  }
+  .news-link {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 10px;
+    color: var(--v-black);
+    letter-spacing: 0.08em;
+    margin-top: auto;
+  }
+
+  .cta {
+    background: var(--v-green);
+    color: var(--v-black);
+    padding: 56px 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .cta::before {
+    content: '[APPLY]';
+    position: absolute;
+    top: 20px;
+    left: 32px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    font-weight: 600;
+    opacity: 0.5;
+  }
+  .cta::after {
+    content: 'SYSTEM \2192 OPEN';
+    position: absolute;
+    top: 20px;
+    right: 32px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    font-weight: 600;
+    opacity: 0.5;
+  }
+  .cta-inner {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 32px;
+    align-items: center;
+    margin-top: 16px;
+  }
+  .cta-title {
+    font-size: 36px;
+    font-weight: 500;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin-bottom: 10px;
+  }
+  .cta-sub { font-size: 14px; line-height: 1.5; max-width: 480px; }
+  .cta-btn {
+    background: var(--v-black);
+    color: var(--v-green);
+    padding: 16px 28px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    border-radius: 3px;
+    display: inline-flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .footer {
+    background: var(--v-black);
+    padding: 40px 32px 24px;
+    border-top: 0.5px solid var(--v-graphite);
+  }
+  .footer-partners {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+    padding-bottom: 24px;
+    border-bottom: 0.5px solid var(--v-graphite);
+  }
+  .footer-partners-label {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 10px;
+    color: var(--v-purple);
+    letter-spacing: 0.15em;
+  }
+  .footer-partner { font-size: 12px; color: var(--v-paper); }
+  .footer-dot { color: var(--v-graphite); }
+  .footer-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 10px;
+    color: var(--v-smoke);
+    letter-spacing: 0.08em;
+  }
+  .footer-location {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  @media (max-width: 900px) {
+    .events-grid, .about-grid, .impact-grid, .founders-grid, .news-grid, .continuum-stages { grid-template-columns: 1fr; }
+    .featured-body { grid-template-columns: 1fr; gap: 20px; }
+    .featured-date-day { font-size: 56px; }
+    .cta-inner { grid-template-columns: 1fr; }
+    .status-strip { flex-direction: column; align-items: start; gap: 4px; padding: 8px 20px; }
+    .nav-links { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="status-strip mono">
+  <div class="status-left">
+    <div class="status-item"><span class="live-dot"></span><span class="status-green">SYSTEM · OPERATIONAL</span></div>
+    <div class="status-item">DETROIT · 42.3314°N 83.0458°W</div>
+  </div>
+  <div class="status-right">
+    <div class="status-item">116 FOUNDERS</div>
+    <div class="status-item">$5.5M DEPLOYED</div>
+    <div class="status-item">UPTIME 3.2Y</div>
+  </div>
+</div>
+
+<nav class="nav">
+  <div class="wordmark">VENTURE 313</div>
+  <div class="nav-links">
+    <a href="#" class="active">Events</a>
+    <a href="#">Stories</a>
+    <a href="#">Portfolio</a>
+    <a href="#">News</a>
+    <a href="#">About</a>
+    <a href="#" class="apply-btn">Apply →</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-header">
+    <div class="hero-title-block">
+      <div class="hero-eyebrow">
+        <span class="live-dot"></span>
+        LIVE IN DETROIT
+      </div>
+      <h1 class="hero-headline">What's happening in the <span class="accent-green">313</span>.</h1>
+      <p class="hero-sub">From founder houses to pitch competitions, hackathons to curated dinners — the V313 ecosystem moves at the speed of the founders it serves.</p>
+    </div>
+    <div class="hero-meta">
+      [ EVENT INDEX ]<br>
+      Q2 2026 · 12 UPCOMING
+    </div>
+  </div>
+
+  <div class="events-grid">
+
+    <div class="featured-event">
+      <div class="featured-event-corner-tr"></div>
+      <div class="featured-event-corner-bl"></div>
+
+      <div class="featured-head">
+        <div class="featured-tag">
+          <span class="live-dot"></span>
+          NEXT EVENT
+          <span class="featured-tag-divider">·</span>
+          <span class="accent-purple">TECHTOWN DETROIT</span>
+        </div>
+        <div class="featured-id">[ EVT-0087 ]</div>
+      </div>
+
+      <div class="featured-body">
+
+        <div class="featured-date-block">
+          <div class="featured-date-month">MAY</div>
+          <div class="featured-date-day">08</div>
+          <div class="featured-date-year">· 2026 ·</div>
+          <div class="featured-date-time">
+            18:00 — 21:00<br>
+            EST / UTC-5
+          </div>
+        </div>
+
+        <div>
+          <h2 class="featured-title">Midwest Founders House — Spring Intensive</h2>
+          <p class="featured-desc">A curated two-day intensive bringing early-stage Detroit founders together with investors, mentors, and operators from across the Midwest. Limited to 40 founders. Meals and transport provided.</p>
+
+          <div class="featured-meta-grid">
+            <div class="meta-row">
+              <div class="meta-label">Venue</div>
+              <div class="meta-value">Michigan Central</div>
+              <div class="meta-coord">2001 15th St · 42.3286°N 83.0777°W</div>
+            </div>
+            <div class="meta-row">
+              <div class="meta-label">Capacity</div>
+              <div class="meta-value">40 founders · Invite + RSVP</div>
+              <div class="meta-coord">22 / 40 seats remaining</div>
+            </div>
+          </div>
+
+          <div class="speakers-row">
+            <div class="speaker-stack">
+              <div class="speaker"></div>
+              <div class="speaker"></div>
+              <div class="speaker"></div>
+              <div class="speaker"></div>
+            </div>
+            <div class="speakers-label"><strong>Featuring</strong> Crystal Brown (CircNova) · Darren Riley (JustAir) · + 4 others</div>
+          </div>
+
+          <a href="#" class="featured-cta">Reserve your seat →</a>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="schedule">
+      <div class="schedule-head">
+        <div class="schedule-title">▸ UPCOMING</div>
+        <div class="schedule-count mono">05 / 12</div>
+      </div>
+      <p class="schedule-sub">Next 60 days across TechTown, IDV, and DDF.</p>
+
+      <div class="schedule-list">
+
+        <div class="schedule-row">
+          <div class="schedule-date mono">MAY<span class="schedule-date-day">22</span>18:00</div>
+          <div class="schedule-details">
+            <div class="schedule-title-text">IDV Office Hours</div>
+            <div class="schedule-venue">NEWLAB DETROIT</div>
+          </div>
+          <div class="schedule-partner">IDV</div>
+        </div>
+
+        <div class="schedule-row">
+          <div class="schedule-date mono">JUN<span class="schedule-date-day">03</span>17:00</div>
+          <div class="schedule-details">
+            <div class="schedule-title-text">V313 Spring Demo Day</div>
+            <div class="schedule-venue">MICHIGAN CENTRAL</div>
+          </div>
+          <div class="schedule-partner">ALL</div>
+        </div>
+
+        <div class="schedule-row">
+          <div class="schedule-date mono">JUN<span class="schedule-date-day">10</span>17:30</div>
+          <div class="schedule-details">
+            <div class="schedule-title-text">Founder Burnout &amp; Trigger Mapping</div>
+            <div class="schedule-venue">DDF OFFICES</div>
+          </div>
+          <div class="schedule-partner">DDF</div>
+        </div>
+
+        <div class="schedule-row">
+          <div class="schedule-date mono">JUL<span class="schedule-date-day">14</span>17:30</div>
+          <div class="schedule-details">
+            <div class="schedule-title-text">TechTown Cohort Orientation</div>
+            <div class="schedule-venue">TECHTOWN DETROIT</div>
+          </div>
+          <div class="schedule-partner">TT</div>
+        </div>
+
+        <div class="schedule-row">
+          <div class="schedule-date mono">JUL<span class="schedule-date-day">22</span>18:00</div>
+          <div class="schedule-details">
+            <div class="schedule-title-text">Black Tech Saturday</div>
+            <div class="schedule-venue">MICHIGAN CENTRAL</div>
+          </div>
+          <div class="schedule-partner">TT</div>
+        </div>
+
+      </div>
+
+      <div class="schedule-footer">
+        <a href="#" class="schedule-all-link">[→] VIEW ALL EVENTS</a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section class="impact">
+  <div class="impact-head">
+    <div class="impact-eyebrow">[ IMPACT · 2022 — 2025 ]</div>
+    <div class="impact-return">10× RETURN ON DEPLOYED CAPITAL</div>
+  </div>
+  <div class="impact-grid">
+    <div class="impact-cell">
+      <div class="impact-num"><span class="impact-num-primary">$5.5M</span><span class="impact-trend">↑</span></div>
+      <div class="impact-label">Capital deployed</div>
+      <div class="impact-sub">ACROSS 3 VEHICLES</div>
+    </div>
+    <div class="impact-cell">
+      <div class="impact-num"><span class="impact-num-secondary">116</span><span class="impact-trend">↑</span></div>
+      <div class="impact-label">Founders championed</div>
+      <div class="impact-sub">100% DETROIT-BASED</div>
+    </div>
+    <div class="impact-cell">
+      <div class="impact-num"><span class="impact-num-secondary">$50M+</span><span class="impact-trend">↑</span></div>
+      <div class="impact-label">Follow-on funding</div>
+      <div class="impact-sub">PORTFOLIO-ATTRACTED</div>
+    </div>
+    <div class="impact-cell">
+      <div class="impact-num"><span class="impact-num-secondary">50+</span><span class="impact-trend">↑</span></div>
+      <div class="impact-label">Jobs created</div>
+      <div class="impact-sub">LOCAL MULTIPLIER</div>
+    </div>
+  </div>
+</section>
+
+<section class="founders">
+  <div class="section-head">
+    <div>
+      <span class="section-eyebrow">[ FOUNDERS IN FOCUS ]</span>
+      <div class="section-title">Real Detroit. Real founders.</div>
+    </div>
+    <a href="#" class="section-link">[→] ALL STORIES</a>
+  </div>
+
+  <div class="founders-grid">
+
+    <div class="founder-card">
+      <div class="founder-photo">
+        <div class="founder-tag">TT + IDV</div>
+        <div class="founder-photo-label">[ FNDR-042 ]</div>
+      </div>
+      <div class="founder-info">
+        <div class="founder-id">01 · BIOTECH</div>
+        <div class="founder-name">Crystal Brown</div>
+        <div class="founder-company">CircNova · Circular RNA therapeutics</div>
+      </div>
+    </div>
+
+    <div class="founder-card">
+      <div class="founder-photo">
+        <div class="founder-tag">TT + IDV</div>
+        <div class="founder-photo-label">[ FNDR-038 ]</div>
+      </div>
+      <div class="founder-info">
+        <div class="founder-id">02 · MOBILITY</div>
+        <div class="founder-name">David R. Medina Alvarez</div>
+        <div class="founder-company">LIVAQ · Electric off-road vehicles</div>
+      </div>
+    </div>
+
+    <div class="founder-card">
+      <div class="founder-photo">
+        <div class="founder-tag">TT + IDV</div>
+        <div class="founder-photo-label">[ FNDR-051 ]</div>
+      </div>
+      <div class="founder-info">
+        <div class="founder-id">03 · CLIMATE</div>
+        <div class="founder-name">Darren Riley</div>
+        <div class="founder-company">JustAir · Air quality monitoring</div>
+      </div>
+    </div>
+
+    <div class="founder-card">
+      <div class="founder-photo">
+        <div class="founder-tag">DDF</div>
+        <div class="founder-photo-label">[ FNDR-067 ]</div>
+      </div>
+      <div class="founder-info">
+        <div class="founder-id">04 · MFG</div>
+        <div class="founder-name">Ramy Habib</div>
+        <div class="founder-company">EnBiologics · Small-batch manufacturing</div>
+      </div>
+    </div>
+
+    <div class="founder-card">
+      <div class="founder-photo">
+        <div class="founder-tag">TT</div>
+        <div class="founder-photo-label">[ FNDR-073 ]</div>
+      </div>
+      <div class="founder-info">
+        <div class="founder-id">05 · COMMUNITY</div>
+        <div class="founder-name">Alexa &amp; Johnnie Turnage</div>
+        <div class="founder-company">Black Tech Saturdays · Ecosystem building</div>
+      </div>
+    </div>
+
+    <div class="founder-card">
+      <div class="founder-photo">
+        <div class="founder-tag">DDF</div>
+        <div class="founder-photo-label">[ FNDR-081 ]</div>
+      </div>
+      <div class="founder-info">
+        <div class="founder-id">06 · FINTECH</div>
+        <div class="founder-name">Sonya Rivas</div>
+        <div class="founder-company">CASITA Title · Bilingual title services</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section class="about">
+  <div class="about-grid">
+
+    <div>
+      <span class="about-eyebrow-purple">[ ABOUT V313 ]</span>
+      <h2 class="about-title">A $10M commitment.<br>Three partners.<br>One continuum.</h2>
+      <p class="about-body">Venture 313 is a three-year commitment from the Gilbert Family Foundation to give Detroit founders access to capital, coaching, and community. One application, routed to the right partner — TechTown for non-dilutive grants, Invest Detroit Ventures for equity, Detroit Development Fund for debt — across every stage a founder actually needs capital.</p>
+      <a href="#" class="about-link">[→] SEE HOW IT WORKS</a>
+    </div>
+
+    <div class="continuum-mini">
+      <div class="continuum-label">[ CAPITAL CONTINUUM · DEPLOYED ]</div>
+      <div class="continuum-stages">
+
+        <div class="continuum-stage">
+          <div class="continuum-stage-num">01 · GRANT</div>
+          <div class="continuum-stage-name">Idea → Prototype</div>
+          <div class="continuum-stage-amount">$500–$25K</div>
+          <div class="continuum-stage-partner">TechTown Detroit</div>
+          <div class="continuum-arrow">→</div>
+        </div>
+
+        <div class="continuum-stage">
+          <div class="continuum-stage-num">02 · EQUITY</div>
+          <div class="continuum-stage-name">Traction → Scale</div>
+          <div class="continuum-stage-amount">$25K–$250K</div>
+          <div class="continuum-stage-partner">Invest Detroit Ventures</div>
+          <div class="continuum-arrow">→</div>
+        </div>
+
+        <div class="continuum-stage">
+          <div class="continuum-stage-num">03 · DEBT</div>
+          <div class="continuum-stage-name">Revenue → Runway</div>
+          <div class="continuum-stage-amount">Customized</div>
+          <div class="continuum-stage-partner">Detroit Development Fund</div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section class="news">
+  <div class="section-head">
+    <div>
+      <span class="section-eyebrow">[ IN THE PRESS ]</span>
+      <div class="section-title">What Detroit is saying.</div>
+    </div>
+    <a href="#" class="section-link">[→] ALL COVERAGE</a>
+  </div>
+
+  <div class="news-grid">
+
+    <div class="news-card">
+      <div class="news-meta">
+        <div class="news-source">CRAIN'S DETROIT</div>
+        <div class="news-date">2026.04.14</div>
+      </div>
+      <h3 class="news-headline">V313 crosses $5M deployment milestone with 116th founder</h3>
+      <p class="news-excerpt">The Gilbert Family Foundation initiative, now in year three, has outpaced traditional VC deployment cycles by a factor of five.</p>
+      <a href="#" class="news-link">[→] READ</a>
+    </div>
+
+    <div class="news-card">
+      <div class="news-meta">
+        <div class="news-source">DETROIT NEWS</div>
+        <div class="news-date">2026.04.02</div>
+      </div>
+      <h3 class="news-headline">How three Detroit orgs rewrote the early-stage capital playbook</h3>
+      <p class="news-excerpt">TechTown, Invest Detroit Ventures, and DDF broke the silos that kept founders chasing capital across disconnected programs.</p>
+      <a href="#" class="news-link">[→] READ</a>
+    </div>
+
+    <div class="news-card">
+      <div class="news-meta">
+        <div class="news-source">MODEL D</div>
+        <div class="news-date">2026.03.28</div>
+      </div>
+      <h3 class="news-headline">Founder-first: inside V313's approach to Detroit's entrepreneur class</h3>
+      <p class="news-excerpt">"V313 funding was the most founder-friendly I've seen." — a deep look at what portfolio companies actually say about the platform.</p>
+      <a href="#" class="news-link">[→] READ</a>
+    </div>
+
+  </div>
+</section>
+
+<section class="cta">
+  <div class="cta-inner">
+    <div>
+      <h2 class="cta-title">Ready to find where you fit?</h2>
+      <p class="cta-sub">One application. We route you to the right partner, the right instrument, the right stage. No cold outreach, no guessing which door to knock on.</p>
+    </div>
+    <a href="#" class="cta-btn">Start your application →</a>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="footer-partners">
+    <div class="footer-partners-label">[ IN PARTNERSHIP WITH ]</div>
+    <div class="footer-partner">Gilbert Family Foundation</div>
+    <div class="footer-dot">·</div>
+    <div class="footer-partner">TechTown Detroit</div>
+    <div class="footer-dot">·</div>
+    <div class="footer-partner">Invest Detroit Ventures</div>
+    <div class="footer-dot">·</div>
+    <div class="footer-partner">Detroit Development Fund</div>
+  </div>
+  <div class="footer-bottom">
+    <div>© 2026 VENTURE 313 · A GILBERT FAMILY FOUNDATION INITIATIVE</div>
+    <div class="footer-location">
+      <span>42.3314°N 83.0458°W</span>
+      <span class="footer-dot">·</span>
+      <span class="status-green">SYSTEM · OPERATIONAL</span>
+      <span class="live-dot" style="display: inline-block; margin-left: 4px;"></span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
