@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Venture 313 · Event-Forward (v4 · analytics)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --v-black: #0A0A0A;
+    --v-carbon: #141414;
+    --v-graphite: #2A2A28;
+    --v-ash: #3A3A38;
+    --v-smoke: #8A8A88;
+    --v-fog: #B8B6AE;
+    --v-paper: #F5F3ED;
+    --v-green: #C5F74E;
+    --v-mint: #56EB91;
+    --v-teal: #11A78A;
+    --v-purple: #C4B5FD;
+    --v-purple-deep: #2A1B6B;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--v-black);
+    color: var(--v-paper);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .display { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+  .mono { font-family: 'JetBrains Mono', ui-monospace, "SF Mono", Menlo, monospace; }
+  .accent-green { color: var(--v-green); }
+  a { color: inherit; text-decoration: none; }
+
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(197, 247, 78, 0.7); }
+    70% { box-shadow: 0 0 0 6px rgba(197, 247, 78, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(197, 247, 78, 0); }
+  }
+  .live-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--v-green);
+    box-shadow: 0 0 0 0 rgba(197, 247, 78, 0.7);
+    animation: pulse 2s ease-in-out infinite;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+
+  /* BLUEPRINT GRID TEXTURE — subtle, on dark backgrounds */
+  .grid-bg {
+    background-image:
+      linear-gradient(rgba(197,247,78,0.018) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(197,247,78,0.018) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+
+  /* NAV */
+  .nav {
+    padding: 22px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 0.5px solid var(--v-graphite);
+    position: relative;
+    z-index: 2;
+  }
+  .wordmark {
+    font-family: 'Space Grotesk', sans-serif;
+    color: var(--v-green);
+    padding: 6px 14px;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    border: 1px solid var(--v-green);
+  }
+  .nav-links { display: flex; align-items: center; gap: 30px; font-size: 13px; color: var(--v-paper); }
+  .nav-links a { position: relative; padding: 4px 0; transition: color 0.15s; font-weight: 500; }
+  .nav-links a:hover { color: var(--v-green); }
+  .nav-links a.active { color: var(--v-green); }
+  .nav-links a.active::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: -6px;
+    height: 1px; background: var(--v-green);
+  }
+  .apply-btn {
+    background: var(--v-green);
+    color: var(--v-black);
+    padding: 9px 20px;
+    border-radius: 3px;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+  }
+
+  /* HERO */
+  .hero { padding: 72px 40px 88px; background: var(--v-black); position: relative; }
+  .hero-header { margin-bottom: 52px; max-width: 720px; position: relative; z-index: 1; }
+  .hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--v-green);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    font-weight: 500;
+    margin-bottom: 24px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .hero-headline {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 48px;
+    line-height: 1.05;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+  }
+  .hero-sub {
+    font-size: 15px;
+    color: var(--v-fog);
+    max-width: 560px;
+    line-height: 1.6;
+  }
+
+  .events-grid {
+    display: grid;
+    grid-template-columns: 1.85fr 1fr;
+    gap: 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* FEATURED EVENT */
+  .featured-event {
+    position: relative;
+    background: var(--v-carbon);
+    border: 0.5px solid var(--v-graphite);
+    padding: 36px;
+  }
+  .featured-event::before,
+  .featured-event::after {
+    content: '';
+    position: absolute;
+    width: 14px; height: 14px;
+    border: 1px solid var(--v-green);
+    opacity: 0.6;
+  }
+  .featured-event::before {
+    top: -1px; left: -1px;
+    border-right: none; border-bottom: none;
+  }
+  .featured-event::after {
+    bottom: -1px; right: -1px;
+    border-left: none; border-top: none;
+  }
+  .featured-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: var(--v-green);
+    font-weight: 500;
+    margin-bottom: 32px;
+  }
+  .featured-tag .partner-name { color: var(--v-paper); }
+  .featured-tag .divider { color: var(--v-graphite); }
+
+  .featured-body {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 36px;
+    align-items: start;
+  }
+  .featured-date-block {
+    border-left: 2px solid var(--v-green);
+    padding-left: 18px;
+  }
+  .featured-date-month {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    color: var(--v-green);
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+  .featured-date-day {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 80px;
+    line-height: 0.9;
+    font-weight: 500;
+    letter-spacing: -0.04em;
+    color: var(--v-paper);
+    margin-bottom: 8px;
+  }
+  .featured-date-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--v-fog);
+    letter-spacing: 0.08em;
+  }
+  .featured-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px;
+    line-height: 1.2;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--v-paper);
+    margin-bottom: 14px;
+  }
+  .featured-desc {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--v-fog);
+    margin-bottom: 26px;
+    max-width: 460px;
+  }
+  .featured-venue {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-bottom: 26px;
+  }
+  .featured-venue-name { font-size: 13px; color: var(--v-paper); }
+  .featured-venue-coord {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--v-smoke);
+  }
+  .speakers-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 30px;
+  }
+  .speaker-stack { display: flex; margin-left: 8px; }
+  .speaker {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--v-graphite), #3A2A4A);
+    border: 2px solid var(--v-carbon);
+    margin-left: -10px;
+  }
+  .speakers-label { font-size: 12px; color: var(--v-fog); }
+  .speakers-label strong { color: var(--v-paper); font-weight: 500; }
+  .featured-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--v-green);
+    color: var(--v-black);
+    padding: 12px 22px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    border-radius: 3px;
+  }
+
+  /* SCHEDULE */
+  .schedule {
+    background: transparent;
+    border: 0.5px solid var(--v-graphite);
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+  }
+  .schedule-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    color: var(--v-paper);
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+  .schedule-sub {
+    font-size: 12px;
+    color: var(--v-fog);
+    margin-bottom: 24px;
+  }
+  .schedule-list { flex: 1; }
+  .schedule-row {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    gap: 16px;
+    padding: 16px 0;
+    border-top: 0.5px solid var(--v-graphite);
+    align-items: start;
+  }
+  .schedule-date {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    line-height: 1.3;
+    color: var(--v-green);
+    font-weight: 500;
+    letter-spacing: 0.06em;
+  }
+  .schedule-date-day { font-size: 20px; display: block; margin: 2px 0; color: var(--v-paper); font-weight: 500; letter-spacing: -0.02em; font-family: 'Space Grotesk', sans-serif; }
+  .schedule-details { display: flex; flex-direction: column; gap: 4px; }
+  .schedule-title-text {
+    font-size: 13px;
+    color: var(--v-paper);
+    font-weight: 500;
+    line-height: 1.3;
+  }
+  .schedule-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--v-smoke);
+    letter-spacing: 0.06em;
+  }
+  .schedule-partner { color: var(--v-fog); }
+  .schedule-dot { color: var(--v-graphite); }
+  .schedule-footer {
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 0.5px solid var(--v-graphite);
+  }
+  .link-arrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--v-green);
+    letter-spacing: 0.08em;
+  }
+
+  /* IMPACT + ANALYTICS */
+  .impact {
+    padding: 80px 40px;
+    background: var(--v-black);
+    border-top: 0.5px solid var(--v-graphite);
+    border-bottom: 0.5px solid var(--v-graphite);
+    position: relative;
+  }
+  .impact-inner { position: relative; z-index: 1; }
+  .impact-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 40px;
+  }
+  .impact-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--v-paper);
+    letter-spacing: 0.18em;
+    font-weight: 500;
+  }
+  .impact-return {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--v-smoke);
+    letter-spacing: 0.12em;
+  }
+  .impact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 40px;
+    margin-bottom: 56px;
+    padding-bottom: 56px;
+    border-bottom: 0.5px solid var(--v-graphite);
+  }
+  .impact-cell { display: flex; flex-direction: column; gap: 10px; }
+  .impact-num {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 52px;
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  .impact-num.primary { color: var(--v-green); }
+  .impact-num.secondary { color: var(--v-paper); }
+  .impact-label { font-size: 12px; color: var(--v-fog); }
+
+  /* CAPITAL FLOW CHART */
+  .chart-section { }
+  .chart-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 28px;
+  }
+  .chart-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--v-paper);
+    letter-spacing: 0.18em;
+    font-weight: 500;
+  }
+  .chart-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--v-smoke);
+    letter-spacing: 0.1em;
+  }
+  .chart-row {
+    display: grid;
+    grid-template-columns: 220px 1fr 140px;
+    align-items: center;
+    gap: 24px;
+    padding: 18px 0;
+    border-top: 0.5px solid var(--v-graphite);
+  }
+  .chart-row:last-child { border-bottom: 0.5px solid var(--v-graphite); }
+  .chart-label { display: flex; flex-direction: column; gap: 3px; }
+  .chart-label-partner { font-size: 14px; color: var(--v-paper); font-weight: 500; }
+  .chart-label-stage {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--v-smoke);
+    letter-spacing: 0.08em;
+  }
+  .chart-bar-track {
+    height: 8px;
+    background: var(--v-graphite);
+    border-radius: 1px;
+    position: relative;
+    overflow: hidden;
+  }
+  .chart-bar-fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    border-radius: 1px;
+  }
+  .chart-bar-fill.green { background: var(--v-green); }
+  .chart-bar-fill.mint { background: var(--v-mint); }
+  .chart-bar-fill.teal { background: var(--v-teal); }
+  .chart-value {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+  }
+  .chart-amount {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    color: var(--v-paper);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  .chart-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--v-smoke);
+    letter-spacing: 0.08em;
+  }
+
+  /* SECTION HEADS */
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 40px;
+  }
+  .section-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    font-weight: 500;
+    margin-bottom: 12px;
+    display: block;
+  }
+  .section-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 34px;
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    line-height: 1.1;
+  }
+  .section-link {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    padding-bottom: 2px;
+    white-space: nowrap;
+  }
+
+  /* FOUNDERS */
+  .founders { background: var(--v-paper); color: var(--v-black); padding: 96px 40px; }
+  .founders .section-eyebrow { color: var(--v-purple-deep); font-weight: 600; }
+  .founders .section-title { color: var(--v-black); }
+  .founders .section-link { color: var(--v-black); border-bottom: 1px solid var(--v-black); }
+  .founders-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .founder-card {
+    background: #FFFFFF;
+    border: 0.5px solid rgba(0,0,0,0.1);
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .founder-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  }
+  .founder-photo {
+    aspect-ratio: 4/3;
+    background: linear-gradient(135deg, var(--v-graphite), #3A2A4A);
+    position: relative;
+  }
+  .founder-tag {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    background: var(--v-green);
+    color: var(--v-black);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 4px 8px;
+    letter-spacing: 0.08em;
+  }
+  .founder-info { padding: 18px 20px 22px; }
+  .founder-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--v-black);
+    margin-bottom: 4px;
+    letter-spacing: -0.005em;
+  }
+  .founder-company { font-size: 12px; color: #5F5E5A; line-height: 1.4; }
+
+  /* ABOUT */
+  .about {
+    background: var(--v-black);
+    padding: 96px 40px;
+    position: relative;
+  }
+  .about-inner { position: relative; z-index: 1; }
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap: 64px;
+    align-items: start;
+  }
+  .about-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--v-paper);
+    letter-spacing: 0.18em;
+    font-weight: 500;
+    margin-bottom: 16px;
+    display: block;
+  }
+  .about-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 40px;
+    font-weight: 500;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--v-paper);
+    margin-bottom: 20px;
+  }
+  .about-body {
+    font-size: 15px;
+    color: var(--v-fog);
+    line-height: 1.65;
+    margin-bottom: 28px;
+    max-width: 460px;
+  }
+  .about-link {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--v-green);
+    letter-spacing: 0.08em;
+    border-bottom: 1px solid var(--v-green);
+    padding-bottom: 2px;
+  }
+
+  /* CONTINUUM MINI with stage counts */
+  .continuum-mini {
+    border: 0.5px solid var(--v-graphite);
+    padding: 28px;
+    background: var(--v-carbon);
+  }
+  .continuum-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--v-smoke);
+    letter-spacing: 0.18em;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 0.5px solid var(--v-graphite);
+  }
+  .continuum-stages {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+  }
+  .continuum-stage { display: flex; flex-direction: column; gap: 8px; }
+  .continuum-stage-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    margin-bottom: 4px;
+  }
+  .continuum-stage[data-vehicle="grant"] .continuum-stage-num { color: var(--v-green); }
+  .continuum-stage[data-vehicle="equity"] .continuum-stage-num { color: var(--v-mint); }
+  .continuum-stage[data-vehicle="debt"] .continuum-stage-num { color: var(--v-teal); }
+  .continuum-stage-name { font-size: 13px; color: var(--v-paper); font-weight: 500; }
+  .continuum-stage-amount {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 17px;
+    color: var(--v-paper);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  .continuum-stage-partner { font-size: 11px; color: var(--v-fog); }
+  .continuum-stage-bar {
+    height: 3px;
+    background: var(--v-graphite);
+    margin-top: 10px;
+    position: relative;
+  }
+  .continuum-stage-bar-fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+  }
+  .continuum-stage[data-vehicle="grant"] .continuum-stage-bar-fill { background: var(--v-green); }
+  .continuum-stage[data-vehicle="equity"] .continuum-stage-bar-fill { background: var(--v-mint); }
+  .continuum-stage[data-vehicle="debt"] .continuum-stage-bar-fill { background: var(--v-teal); }
+  .continuum-stage-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--v-smoke);
+    letter-spacing: 0.08em;
+    margin-top: 6px;
+  }
+
+  /* NEWS */
+  .news { background: var(--v-paper); color: var(--v-black); padding: 96px 40px; }
+  .news .section-eyebrow { color: var(--v-purple-deep); font-weight: 600; }
+  .news .section-title { color: var(--v-black); }
+  .news .section-link { color: var(--v-black); border-bottom: 1px solid var(--v-black); }
+  .news-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .news-card {
+    background: #FFFFFF;
+    border: 0.5px solid rgba(0,0,0,0.1);
+    padding: 26px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .news-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+  }
+  .news-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+  }
+  .news-source { color: var(--v-purple-deep); font-weight: 600; }
+  .news-date { color: #5F5E5A; }
+  .news-headline {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 17px;
+    color: var(--v-black);
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: -0.005em;
+  }
+  .news-excerpt { font-size: 13px; color: #5F5E5A; line-height: 1.6; }
+  .news-link {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--v-black);
+    letter-spacing: 0.08em;
+    margin-top: 6px;
+  }
+
+  /* CTA */
+  .cta {
+    background: var(--v-green);
+    color: var(--v-black);
+    padding: 80px 40px;
+  }
+  .cta-inner {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 40px;
+    align-items: center;
+  }
+  .cta-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 42px;
+    font-weight: 500;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+  }
+  .cta-sub { font-size: 15px; line-height: 1.55; max-width: 500px; }
+  .cta-btn {
+    background: var(--v-black);
+    color: var(--v-green);
+    padding: 18px 30px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    border-radius: 3px;
+    display: inline-flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  /* FOOTER */
+  .footer {
+    background: var(--v-black);
+    padding: 48px 40px 32px;
+    border-top: 0.5px solid var(--v-graphite);
+  }
+  .footer-partners {
+    display: flex;
+    gap: 18px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+    padding-bottom: 28px;
+    border-bottom: 0.5px solid var(--v-graphite);
+  }
+  .footer-partners-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--v-smoke);
+    letter-spacing: 0.18em;
+  }
+  .footer-partner { font-size: 13px; color: var(--v-paper); }
+  .footer-dot { color: var(--v-graphite); }
+  .footer-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--v-smoke);
+    letter-spacing: 0.1em;
+  }
+
+  @media (max-width: 900px) {
+    .events-grid, .about-grid, .impact-grid, .founders-grid, .news-grid, .continuum-stages { grid-template-columns: 1fr; gap: 20px; }
+    .featured-body { grid-template-columns: 1fr; gap: 28px; }
+    .featured-date-day { font-size: 64px; }
+    .cta-inner { grid-template-columns: 1fr; }
+    .nav-links { display: none; }
+    .hero, .impact, .founders, .about, .news, .cta, .footer { padding-left: 20px; padding-right: 20px; }
+    .chart-row { grid-template-columns: 1fr; gap: 10px; }
+    .chart-value { align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wordmark">VENTURE 313</div>
+  <div class="nav-links">
+    <a href="#" class="active">Events</a>
+    <a href="#">Stories</a>
+    <a href="#">Portfolio</a>
+    <a href="#">News</a>
+    <a href="#">About</a>
+    <a href="#" class="apply-btn">Apply →</a>
+  </div>
+</nav>
+
+<section class="hero grid-bg">
+  <div class="hero-header">
+    <div class="hero-eyebrow">
+      <span class="live-dot"></span>
+      LIVE IN DETROIT
+    </div>
+    <h1 class="hero-headline">What's happening in the <span class="accent-green">313</span>.</h1>
+    <p class="hero-sub">From founder houses to pitch competitions, hackathons to curated dinners — the V313 ecosystem moves at the speed of the founders it serves.</p>
+  </div>
+
+  <div class="events-grid">
+
+    <div class="featured-event">
+      <div class="featured-tag">
+        <span class="live-dot"></span>
+        NEXT EVENT
+        <span class="divider">·</span>
+        <span class="partner-name">TECHTOWN DETROIT</span>
+      </div>
+
+      <div class="featured-body">
+
+        <div class="featured-date-block">
+          <div class="featured-date-month">MAY · 2026</div>
+          <div class="featured-date-day">08</div>
+          <div class="featured-date-time">18:00 — 21:00 EST</div>
+        </div>
+
+        <div>
+          <h2 class="featured-title">Midwest Founders House — Spring Intensive</h2>
+          <p class="featured-desc">A curated two-day intensive bringing early-stage Detroit founders together with investors, mentors, and operators from across the Midwest.</p>
+
+          <div class="featured-venue">
+            <div class="featured-venue-name">Michigan Central · Detroit</div>
+            <div class="featured-venue-coord">42.3286°N 83.0777°W</div>
+          </div>
+
+          <div class="speakers-row">
+            <div class="speaker-stack">
+              <div class="speaker"></div>
+              <div class="speaker"></div>
+              <div class="speaker"></div>
+              <div class="speaker"></div>
+            </div>
+            <div class="speakers-label"><strong>Featuring</strong> Crystal Brown (CircNova), Darren Riley (JustAir), and 4 others</div>
+          </div>
+
+          <a href="#" class="featured-cta">Reserve your seat →</a>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="schedule">
+      <div class="schedule-title">UPCOMING</div>
+      <p class="schedule-sub">Next 60 days across TechTown, IDV, and DDF.</p>
+
+      <div class="schedule-list">
+
+        <div class="schedule-row">
+          <div class="schedule-date">MAY<span class="schedule-date-day">22</span></div>
+          <div class="schedule-details">
+            <div class="schedule-title-text">IDV Office Hours</div>
+            <div class="schedule-meta">
+              <span>Newlab Detroit</span>
+              <span class="schedule-dot">·</span>
+              <span class="schedule-partner">IDV</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="schedule-row">
+          <div class="schedule-date">JUN<span class="schedule-date-day">03</span></div>
+          <div class="schedule-details">
+            <div class="schedule-title-text">V313 Spring Demo Day</div>
+            <div class="schedule-meta">
+              <span>Michigan Central</span>
+              <span class="schedule-dot">·</span>
+              <span class="schedule-partner">ALL</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="schedule-row">
+          <div class="schedule-date">JUN<span class="schedule-date-day">10</span></div>
+          <div class="schedule-details">
+            <div class="schedule-title-text">Founder Burnout &amp; Trigger Mapping</div>
+            <div class="schedule-meta">
+              <span>DDF Offices</span>
+              <span class="schedule-dot">·</span>
+              <span class="schedule-partner">DDF</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="schedule-row">
+          <div class="schedule-date">JUL<span class="schedule-date-day">14</span></div>
+          <div class="schedule-details">
+            <div class="schedule-title-text">TechTown Cohort Orientation</div>
+            <div class="schedule-meta">
+              <span>TechTown Detroit</span>
+              <span class="schedule-dot">·</span>
+              <span class="schedule-partner">TT</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="schedule-footer">
+        <a href="#" class="link-arrow">View all events →</a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section class="impact grid-bg">
+  <div class="impact-inner">
+
+    <div class="impact-head">
+      <div class="impact-eyebrow">IMPACT · 2022 — 2025</div>
+      <div class="impact-return">10× RETURN ON DEPLOYED CAPITAL</div>
+    </div>
+
+    <div class="impact-grid">
+      <div class="impact-cell">
+        <div class="impact-num primary">$5.5M</div>
+        <div class="impact-label">Capital deployed</div>
+      </div>
+      <div class="impact-cell">
+        <div class="impact-num secondary">116</div>
+        <div class="impact-label">Founders championed</div>
+      </div>
+      <div class="impact-cell">
+        <div class="impact-num secondary">$50M+</div>
+        <div class="impact-label">Follow-on funding</div>
+      </div>
+      <div class="impact-cell">
+        <div class="impact-num secondary">50+</div>
+        <div class="impact-label">Jobs created</div>
+      </div>
+    </div>
+
+    <div class="chart-section">
+      <div class="chart-head">
+        <div class="chart-title">CAPITAL FLOW · BY VEHICLE</div>
+        <div class="chart-sub">$5.5M TOTAL · 116 COMPANIES</div>
+      </div>
+
+      <div class="chart-row">
+        <div class="chart-label">
+          <div class="chart-label-partner">TechTown Detroit</div>
+          <div class="chart-label-stage">STAGE 01 · GRANT</div>
+        </div>
+        <div class="chart-bar-track"><div class="chart-bar-fill green" style="width: 48.5%;"></div></div>
+        <div class="chart-value">
+          <div class="chart-amount">$1.26M</div>
+          <div class="chart-count">83 COMPANIES</div>
+        </div>
+      </div>
+
+      <div class="chart-row">
+        <div class="chart-label">
+          <div class="chart-label-partner">Invest Detroit Ventures</div>
+          <div class="chart-label-stage">STAGE 02 · EQUITY</div>
+        </div>
+        <div class="chart-bar-track"><div class="chart-bar-fill mint" style="width: 100%;"></div></div>
+        <div class="chart-value">
+          <div class="chart-amount">$2.60M</div>
+          <div class="chart-count">18 COMPANIES</div>
+        </div>
+      </div>
+
+      <div class="chart-row">
+        <div class="chart-label">
+          <div class="chart-label-partner">Detroit Development Fund</div>
+          <div class="chart-label-stage">STAGE 03 · DEBT</div>
+        </div>
+        <div class="chart-bar-track"><div class="chart-bar-fill teal" style="width: 63.3%;"></div></div>
+        <div class="chart-value">
+          <div class="chart-amount">$1.65M</div>
+          <div class="chart-count">15 COMPANIES</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section class="founders">
+  <div class="section-head">
+    <div>
+      <span class="section-eyebrow">FOUNDERS IN FOCUS</span>
+      <div class="section-title">Real Detroit. Real founders.</div>
+    </div>
+    <a href="#" class="section-link">View all stories →</a>
+  </div>
+
+  <div class="founders-grid">
+
+    <div class="founder-card">
+      <div class="founder-photo"><div class="founder-tag">TT + IDV</div></div>
+      <div class="founder-info">
+        <div class="founder-name">Crystal Brown</div>
+        <div class="founder-company">CircNova — Circular RNA therapeutics</div>
+      </div>
+    </div>
+
+    <div class="founder-card">
+      <div class="founder-photo"><div class="founder-tag">TT + IDV</div></div>
+      <div class="founder-info">
+        <div class="founder-name">David R. Medina Alvarez</div>
+        <div class="founder-company">LIVAQ — Electric off-road vehicles</div>
+      </div>
+    </div>
+
+    <div class="founder-card">
+      <div class="founder-photo"><div class="founder-tag">TT + IDV</div></div>
+      <div class="founder-info">
+        <div class="founder-name">Darren Riley</div>
+        <div class="founder-company">JustAir — Air quality monitoring</div>
+      </div>
+    </div>
+
+    <div class="founder-card">
+      <div class="founder-photo"><div class="founder-tag">DDF</div></div>
+      <div class="founder-info">
+        <div class="founder-name">Ramy Habib</div>
+        <div class="founder-company">EnBiologics — Small-batch manufacturing</div>
+      </div>
+    </div>
+
+    <div class="founder-card">
+      <div class="founder-photo"><div class="founder-tag">TT</div></div>
+      <div class="founder-info">
+        <div class="founder-name">Alexa &amp; Johnnie Turnage</div>
+        <div class="founder-company">Black Tech Saturdays — Ecosystem building</div>
+      </div>
+    </div>
+
+    <div class="founder-card">
+      <div class="founder-photo"><div class="founder-tag">DDF</div></div>
+      <div class="founder-info">
+        <div class="founder-name">Sonya Rivas</div>
+        <div class="founder-company">CASITA Title — Bilingual title services</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section class="about grid-bg">
+  <div class="about-inner about-grid">
+
+    <div>
+      <span class="about-eyebrow">ABOUT V313</span>
+      <h2 class="about-title">A $10M commitment.<br>Three partners.<br>One continuum.</h2>
+      <p class="about-body">Venture 313 is a three-year commitment from the Gilbert Family Foundation to give Detroit founders access to capital, coaching, and community. One application, routed to the right partner — across every stage a founder actually needs capital.</p>
+      <a href="#" class="about-link">See how it works →</a>
+    </div>
+
+    <div class="continuum-mini">
+      <div class="continuum-label">CAPITAL CONTINUUM</div>
+      <div class="continuum-stages">
+
+        <div class="continuum-stage" data-vehicle="grant">
+          <div class="continuum-stage-num">01 · GRANT</div>
+          <div class="continuum-stage-name">Idea → Prototype</div>
+          <div class="continuum-stage-amount">$500–$25K</div>
+          <div class="continuum-stage-partner">TechTown Detroit</div>
+          <div class="continuum-stage-bar"><div class="continuum-stage-bar-fill" style="width: 100%;"></div></div>
+          <div class="continuum-stage-count">83 COMPANIES · AVG $13.5K</div>
+        </div>
+
+        <div class="continuum-stage" data-vehicle="equity">
+          <div class="continuum-stage-num">02 · EQUITY</div>
+          <div class="continuum-stage-name">Traction → Scale</div>
+          <div class="continuum-stage-amount">$25K–$250K</div>
+          <div class="continuum-stage-partner">Invest Detroit Ventures</div>
+          <div class="continuum-stage-bar"><div class="continuum-stage-bar-fill" style="width: 22%;"></div></div>
+          <div class="continuum-stage-count">18 COMPANIES · AVG $144K</div>
+        </div>
+
+        <div class="continuum-stage" data-vehicle="debt">
+          <div class="continuum-stage-num">03 · DEBT</div>
+          <div class="continuum-stage-name">Revenue → Runway</div>
+          <div class="continuum-stage-amount">Customized</div>
+          <div class="continuum-stage-partner">Detroit Development Fund</div>
+          <div class="continuum-stage-bar"><div class="continuum-stage-bar-fill" style="width: 18%;"></div></div>
+          <div class="continuum-stage-count">15 COMPANIES · AVG $97K</div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section class="news">
+  <div class="section-head">
+    <div>
+      <span class="section-eyebrow">IN THE PRESS</span>
+      <div class="section-title">What Detroit is saying.</div>
+    </div>
+    <a href="#" class="section-link">All coverage →</a>
+  </div>
+
+  <div class="news-grid">
+
+    <div class="news-card">
+      <div class="news-meta">
+        <div class="news-source">CRAIN'S DETROIT</div>
+        <div class="news-date">2026.04.14</div>
+      </div>
+      <h3 class="news-headline">V313 crosses $5M deployment milestone with 116th founder</h3>
+      <p class="news-excerpt">The Gilbert Family Foundation initiative, now in year three, has outpaced traditional VC deployment cycles by a factor of five.</p>
+      <a href="#" class="news-link">Read →</a>
+    </div>
+
+    <div class="news-card">
+      <div class="news-meta">
+        <div class="news-source">DETROIT NEWS</div>
+        <div class="news-date">2026.04.02</div>
+      </div>
+      <h3 class="news-headline">How three Detroit orgs rewrote the early-stage capital playbook</h3>
+      <p class="news-excerpt">TechTown, Invest Detroit Ventures, and DDF broke the silos that kept founders chasing capital across disconnected programs.</p>
+      <a href="#" class="news-link">Read →</a>
+    </div>
+
+    <div class="news-card">
+      <div class="news-meta">
+        <div class="news-source">MODEL D</div>
+        <div class="news-date">2026.03.28</div>
+      </div>
+      <h3 class="news-headline">Founder-first: inside V313's approach to Detroit's entrepreneur class</h3>
+      <p class="news-excerpt">"V313 funding was the most founder-friendly I've seen." A deep look at what portfolio companies actually say about the platform.</p>
+      <a href="#" class="news-link">Read →</a>
+    </div>
+
+  </div>
+</section>
+
+<section class="cta">
+  <div class="cta-inner">
+    <div>
+      <h2 class="cta-title">Ready to find where you fit?</h2>
+      <p class="cta-sub">One application. We route you to the right partner, the right instrument, the right stage.</p>
+    </div>
+    <a href="#" class="cta-btn">Start your application →</a>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="footer-partners">
+    <div class="footer-partners-label">IN PARTNERSHIP WITH</div>
+    <div class="footer-partner">Gilbert Family Foundation</div>
+    <div class="footer-dot">·</div>
+    <div class="footer-partner">TechTown Detroit</div>
+    <div class="footer-dot">·</div>
+    <div class="footer-partner">Invest Detroit Ventures</div>
+    <div class="footer-dot">·</div>
+    <div class="footer-partner">Detroit Development Fund</div>
+  </div>
+  <div class="footer-bottom">
+    <div>© 2026 Venture 313 · A Gilbert Family Foundation initiative</div>
+    <div>42.3314°N 83.0458°W</div>
+  </div>
+</footer>
+
+</body>
+</html>
