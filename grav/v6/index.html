@@ -58,15 +58,17 @@
     overflow-y: scroll; height: 100vh;
   }
   section.slide {
-    min-height: 100vh;
-    padding: 120px 8vw 80px;
+    height: 100vh;
+    max-height: 100vh;
+    padding: clamp(80px, 12vh, 120px) 8vw clamp(40px, 8vh, 80px);
     scroll-snap-align: start;
     display: flex; flex-direction: column; justify-content: center;
     position: relative;
     border-bottom: 1px solid var(--border);
+    overflow: hidden;
   }
   .slide-meta {
-    position: absolute; top: 100px; left: 8vw;
+    position: absolute; top: clamp(70px, 10vh, 100px); left: 8vw;
     font-family: var(--font-mono); font-size: 11px;
     letter-spacing: 0.1em; text-transform: uppercase;
     color: var(--fg-meta);
@@ -123,142 +125,151 @@
   }
 
   .direction-label {
-    font-family: var(--font-mono); font-size: 42px;
+    font-family: var(--font-mono);
+    font-size: clamp(20px, min(5.5vh, 3vw), 42px);
     letter-spacing: 0.1em; text-transform: uppercase;
-    color: var(--fg-meta); margin-bottom: 14px;
+    color: var(--fg-meta); margin-bottom: clamp(8px, 1.5vh, 14px);
     font-weight: 700;
   }
   .direction-label .letter { color: var(--accent); font-weight: 700; }
   .direction-name {
     font-family: var(--font-display); font-style: italic;
-    font-size: clamp(4.2rem, 7.5vw, 5.7rem);
+    font-size: clamp(2.2rem, min(10vh, 7.5vw), 5.7rem);
     font-weight: 700; color: var(--fg);
-    margin-bottom: 56px;
+    margin-bottom: clamp(24px, 5vh, 56px);
     line-height: 1.05;
+  }
+  section[id$="-detail"] .direction-label {
+    font-size: clamp(12px, 2vh, 18px);
+    margin-bottom: 6px;
+  }
+  section[id$="-detail"] .direction-name {
+    font-size: clamp(1.3rem, min(3.5vh, 2.5vw), 1.9rem);
+    margin-bottom: clamp(16px, 3vh, 32px);
   }
 
   .slot-label {
-    font-family: var(--font-mono); font-size: 15px;
+    font-family: var(--font-mono); font-size: clamp(11px, 1.6vh, 15px);
     letter-spacing: 0.14em; text-transform: uppercase;
-    color: var(--fg-meta); margin-bottom: 14px;
-    padding-bottom: 10px;
+    color: var(--fg-meta); margin-bottom: clamp(8px, 1.5vh, 14px);
+    padding-bottom: clamp(6px, 1vh, 10px);
     border-bottom: 1px solid var(--accent-dim);
   }
-  .slot { margin-bottom: 48px; max-width: 1100px; }
+  .slot { margin-bottom: clamp(20px, 4vh, 48px); max-width: 1100px; }
   .slot:last-child { margin-bottom: 0; }
 
   .anchor {
     font-family: var(--font-display); font-weight: 400;
-    font-size: clamp(2.7rem, 5.4vw, 3.75rem);
+    font-size: clamp(1.6rem, min(6vh, 5.4vw), 3.75rem);
     line-height: 1.25; letter-spacing: -0.01em;
   }
   .slug {
     font-family: var(--font-display); font-style: italic;
     font-weight: 400; color: var(--accent);
-    font-size: clamp(2.1rem, 4.2vw, 2.925rem);
+    font-size: clamp(1.25rem, min(4.5vh, 4.2vw), 2.925rem);
     line-height: 1.3;
   }
 
-  .stack-block { margin-bottom: 36px; max-width: 1200px; }
+  .stack-block { margin-bottom: clamp(14px, 3vh, 36px); max-width: 1200px; }
   .stack-block:last-child { margin-bottom: 0; }
   .stack-label {
-    font-family: var(--font-mono); font-size: 15px;
+    font-family: var(--font-mono); font-size: clamp(11px, 1.6vh, 15px);
     letter-spacing: 0.14em; text-transform: uppercase;
-    color: var(--accent); margin-bottom: 14px;
-    padding-bottom: 10px;
+    color: var(--accent); margin-bottom: clamp(6px, 1.5vh, 14px);
+    padding-bottom: clamp(5px, 1vh, 10px);
     border-bottom: 1px solid var(--accent-dim);
   }
 
   .cultural-ref {
     font-family: var(--font-display);
-    font-size: clamp(1.725rem, 2.85vw, 2.175rem);
-    line-height: 1.5; font-weight: 400;
+    font-size: clamp(0.95rem, min(2.4vh, 2.85vw), 2.175rem);
+    line-height: 1.45; font-weight: 400;
     color: var(--fg);
   }
   .cultural-ref em { color: var(--accent); font-style: italic; }
-  .cultural-ref .ref-item { margin-bottom: 14px; }
+  .cultural-ref .ref-item { margin-bottom: clamp(6px, 1.2vh, 14px); }
   .cultural-ref .ref-item:last-child { margin-bottom: 0; }
   .cultural-ref .ref-title {
     font-weight: 500; color: var(--accent); font-style: italic;
   }
   .cultural-ref .frame {
     font-style: italic; color: var(--fg);
-    padding-bottom: 14px; margin-bottom: 14px;
+    padding-bottom: clamp(6px, 1.2vh, 14px); margin-bottom: clamp(6px, 1.2vh, 14px);
     border-bottom: 1px solid var(--border);
   }
 
   .visual-description {
     font-family: var(--font-body);
-    font-size: 1.5rem; line-height: 1.65;
+    font-size: clamp(0.85rem, min(2vh, 1.5vw), 1.5rem); line-height: 1.5;
     color: var(--fg-dim);
     max-width: 900px;
   }
   .visual-description .intent-lead {
     font-family: var(--font-mono);
-    font-size: 15px;
+    font-size: clamp(10px, 1.4vh, 15px);
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--fg-meta);
-    margin-bottom: 8px;
+    margin-bottom: clamp(4px, 1vh, 8px);
     display: block;
   }
 
   .manifestations-grid {
-    display: grid; grid-template-columns: 1fr; gap: 20px;
+    display: grid; grid-template-columns: 1fr; gap: clamp(12px, 2.5vh, 20px);
   }
   @media (min-width: 900px) {
-    .manifestations-grid { grid-template-columns: repeat(3, 1fr); gap: 32px; }
+    .manifestations-grid { grid-template-columns: repeat(3, 1fr); gap: clamp(16px, 3vw, 32px); }
   }
   .manifestation {
-    padding: 14px 18px;
+    padding: clamp(10px, 1.8vh, 14px) clamp(12px, 1.8vw, 18px);
     background: var(--bg-elev);
     border: 1px solid var(--border);
     border-left: 2px solid var(--accent);
     border-radius: 2px;
   }
   .manifestation-label {
-    font-family: var(--font-mono); font-size: 15px;
+    font-family: var(--font-mono); font-size: clamp(10px, 1.4vh, 15px);
     letter-spacing: 0.14em; text-transform: uppercase;
-    color: var(--accent); display: block; margin-bottom: 8px;
+    color: var(--accent); display: block; margin-bottom: clamp(4px, 1vh, 8px);
   }
   .manifestation-body {
-    font-size: 1.425rem; line-height: 1.55;
+    font-size: clamp(0.85rem, min(1.8vh, 1.4vw), 1.425rem); line-height: 1.5;
     color: var(--fg);
   }
   .manifestation-body em { color: var(--accent); font-style: italic; }
 
   .summary-title {
     font-family: var(--font-display); font-weight: 400;
-    font-size: clamp(2rem, 3.8vw, 2.8rem);
+    font-size: clamp(1.5rem, min(5vh, 3.8vw), 2.8rem);
     letter-spacing: -0.01em;
-    margin-bottom: 48px;
+    margin-bottom: clamp(20px, 4vh, 48px);
   }
   .summary-grid {
-    display: grid; grid-template-columns: 1fr; gap: 24px;
+    display: grid; grid-template-columns: 1fr; gap: clamp(14px, 2.5vh, 24px);
     max-width: 1300px;
   }
   @media (min-width: 900px) {
-    .summary-grid { grid-template-columns: repeat(2, 1fr); gap: 32px; }
+    .summary-grid { grid-template-columns: repeat(2, 1fr); gap: clamp(18px, 2.5vw, 32px); }
   }
   .summary-card {
-    padding: 20px 24px;
+    padding: clamp(14px, 2vh, 20px) clamp(16px, 2vw, 24px);
     background: var(--bg-elev);
     border: 1px solid var(--border);
     border-left: 3px solid var(--accent);
     border-radius: 2px;
   }
   .summary-card .card-label {
-    font-family: var(--font-mono); font-size: 10px;
+    font-family: var(--font-mono); font-size: clamp(9px, 1.2vh, 10px);
     letter-spacing: 0.14em; text-transform: uppercase;
     color: var(--accent); display: block; margin-bottom: 6px;
   }
   .summary-card .card-name {
     font-family: var(--font-display); font-style: italic;
-    font-size: 1.15rem; color: var(--fg);
-    margin-bottom: 14px;
+    font-size: clamp(0.95rem, min(2vh, 1.3vw), 1.15rem); color: var(--fg);
+    margin-bottom: clamp(8px, 1.5vh, 14px);
   }
   .summary-card .card-body {
-    font-size: 0.95rem; line-height: 1.6; color: var(--fg);
+    font-size: clamp(0.8rem, min(1.7vh, 1.1vw), 0.95rem); line-height: 1.55; color: var(--fg);
   }
   .summary-card .card-body em { color: var(--accent); font-style: italic; }
 
@@ -267,7 +278,7 @@
   }
   .lutheroic-term {
     font-family: var(--font-display); font-weight: 400;
-    font-size: clamp(2.6rem, 5.5vw, 4rem);
+    font-size: clamp(2rem, min(8vh, 5.5vw), 4rem);
     letter-spacing: -0.01em; line-height: 1.05;
     margin-bottom: 6px;
     color: var(--accent);
@@ -277,10 +288,10 @@
     font-weight: 300;
   }
   .lutheroic-etym {
-    font-family: var(--font-mono); font-size: 11px;
+    font-family: var(--font-mono); font-size: clamp(10px, 1.4vh, 12px);
     letter-spacing: 0.1em; text-transform: uppercase;
     color: var(--fg-meta);
-    margin-bottom: 36px;
+    margin-bottom: clamp(18px, 4vh, 36px);
   }
   .lutheroic ol {
     list-style: none; counter-reset: defs;
@@ -288,20 +299,20 @@
   }
   .lutheroic ol li {
     counter-increment: defs;
-    padding: 16px 0 16px 48px;
+    padding: clamp(10px, 2vh, 16px) 0 clamp(10px, 2vh, 16px) clamp(36px, 5vw, 48px);
     position: relative;
     font-family: var(--font-display);
-    font-size: clamp(1.1rem, 1.6vw, 1.3rem);
-    line-height: 1.5;
+    font-size: clamp(0.95rem, min(2.2vh, 1.6vw), 1.3rem);
+    line-height: 1.45;
     border-top: 1px solid var(--border);
     color: var(--fg);
   }
   .lutheroic ol li:last-child { border-bottom: 1px solid var(--border); }
   .lutheroic ol li::before {
     content: counter(defs);
-    position: absolute; left: 0; top: 16px;
+    position: absolute; left: 0; top: clamp(10px, 2vh, 16px);
     font-family: var(--font-display);
-    font-size: 1.5rem; font-weight: 300;
+    font-size: clamp(1.1rem, 2.4vh, 1.5rem); font-weight: 300;
     color: var(--accent); font-style: italic;
     min-width: 32px;
   }
