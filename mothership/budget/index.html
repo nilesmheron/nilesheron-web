@@ -114,6 +114,20 @@ h1 { font-size: 17px; font-weight: 600; margin-bottom: 4px; }
 }
 .preset-btn.custom .preset-delete:hover { color: #a00; }
 
+.save-preset-input {
+  font-family: inherit;
+  font-size: 12px;
+  padding: 3px 8px;
+  border: 1px solid #888;
+  background: #fff;
+  color: #222;
+  margin-right: 4px;
+  min-width: 160px;
+}
+.save-preset-input:focus { outline: none; border-color: #444; }
+.preset-btn.save-confirm { color: #222; border-color: #444; border-style: solid; }
+.preset-btn.save-cancel { color: #888; border-color: #aaa; padding: 4px 7px; }
+
 .layout {
   display: grid;
   grid-template-columns: 1fr 300px;
@@ -519,7 +533,14 @@ tr:hover .delete-btn { opacity: 1; }
     <button class="preset-btn" data-preset="ambitious">Ambition-aligned</button>
   </span>
   <span id="custom-preset-buttons"></span>
-  <button class="preset-btn save" id="save-preset-btn" title="Save current selection as a new preset">+ Save as…</button>
+  <span id="save-preset-container">
+    <button class="preset-btn save" id="save-preset-btn" title="Save current selection as a new preset">+ Save as…</button>
+    <span id="save-preset-form" style="display:none;">
+      <input type="text" id="save-preset-name" class="save-preset-input" placeholder="Preset name…" maxlength="40">
+      <button class="preset-btn save-confirm" id="save-preset-confirm">Save</button>
+      <button class="preset-btn save-cancel" id="save-preset-cancel" title="Cancel">✕</button>
+    </span>
+  </span>
   <button class="preset-btn clear" data-preset="clear">Clear</button>
 </div>
 
@@ -1287,14 +1308,32 @@ document.querySelector('.controls').addEventListener('click', e => {
   }
 });
 
-document.getElementById('save-preset-btn').addEventListener('click', () => {
-  const name = prompt('Name this preset:');
-  if (!name) return;
-  const trimmed = name.trim();
-  if (!trimmed) return;
+// =====================
+// SAVE PRESET (inline form — replaces blocked prompt())
+// =====================
+function showSavePresetForm() {
+  document.getElementById('save-preset-btn').style.display = 'none';
+  document.getElementById('save-preset-form').style.display = 'inline';
+  const input = document.getElementById('save-preset-name');
+  input.value = '';
+  input.focus();
+}
+
+function hideSavePresetForm() {
+  document.getElementById('save-preset-btn').style.display = '';
+  document.getElementById('save-preset-form').style.display = 'none';
+  document.getElementById('save-preset-name').value = '';
+}
+
+function commitSavePreset() {
+  const input = document.getElementById('save-preset-name');
+  const trimmed = input.value.trim();
+  if (!trimmed) {
+    input.focus();
+    return;
+  }
 
   const existingIdx = customPresets.findIndex(p => p.name === trimmed);
-
   const preset = {
     name: trimmed,
     enable: [...state.enabled],
@@ -1302,13 +1341,34 @@ document.getElementById('save-preset-btn').addEventListener('click', () => {
   };
 
   if (existingIdx >= 0) {
-    if (!confirm(`A preset named "${trimmed}" exists. Overwrite?`)) return;
+    if (!confirm(`A preset named "${trimmed}" exists. Overwrite?`)) {
+      input.focus();
+      return;
+    }
     customPresets[existingIdx] = preset;
   } else {
     customPresets.push(preset);
   }
   saveCustomPresets();
   renderCustomPresets();
+  hideSavePresetForm();
+}
+
+document.getElementById('save-preset-btn').addEventListener('click', e => {
+  e.stopPropagation();
+  showSavePresetForm();
+});
+document.getElementById('save-preset-confirm').addEventListener('click', e => {
+  e.stopPropagation();
+  commitSavePreset();
+});
+document.getElementById('save-preset-cancel').addEventListener('click', e => {
+  e.stopPropagation();
+  hideSavePresetForm();
+});
+document.getElementById('save-preset-name').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); commitSavePreset(); }
+  if (e.key === 'Escape') { e.preventDefault(); hideSavePresetForm(); }
 });
 
 // =====================
