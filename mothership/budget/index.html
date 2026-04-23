@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Mothership Budget Builder</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  background: #fff;
+  color: #222;
+  font-size: 13px;
+  line-height: 1.4;
+  padding: 24px 32px 60px;
+  max-width: 1500px;
+  margin: 0 auto;
+}
+
+header {
+  padding-bottom: 14px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #bbb;
+}
+
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.header-text { flex: 1; min-width: 0; }
+
+.header-total {
+  text-align: right;
+  padding: 8px 14px;
+  border: 1px solid #222;
+  background: #fafafa;
+  min-width: 180px;
+}
+
+.header-total-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #555;
+  margin-bottom: 2px;
+}
+
+.header-total-amount {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 22px;
+  font-weight: 600;
+  color: #222;
+  line-height: 1.1;
+}
+
+.header-total-years {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11px;
+  color: #777;
+  margin-top: 3px;
+}
+
+h1 { font-size: 17px; font-weight: 600; margin-bottom: 4px; }
+.subtitle { font-size: 13px; color: #555; margin-bottom: 10px; }
+.meta { font-size: 12px; color: #666; }
+.meta span { margin-right: 16px; }
+
+.controls {
+  padding: 10px 12px;
+  margin-bottom: 18px;
+  background: #f7f7f7;
+  border: 1px solid #ddd;
+}
+
+.controls-label {
+  display: inline-block;
+  font-size: 12px;
+  color: #666;
+  margin-right: 10px;
+}
+
+.preset-btn {
+  font-family: inherit;
+  font-size: 12px;
+  padding: 4px 10px;
+  background: #fff;
+  border: 1px solid #888;
+  color: #222;
+  cursor: pointer;
+  margin-right: 4px;
+}
+
+.preset-btn:hover { background: #eee; }
+.preset-btn.clear { color: #666; border-color: #aaa; }
+.preset-btn.save { color: #444; border-color: #888; border-style: dashed; }
+.preset-btn.custom { background: #f0ede4; border-color: #888; padding-right: 6px; }
+
+.preset-btn.custom .preset-delete {
+  display: inline-block;
+  margin-left: 6px;
+  color: #aaa;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+}
+.preset-btn.custom .preset-delete:hover { color: #a00; }
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 28px;
+  align-items: start;
+}
+
+.category { margin-bottom: 22px; }
+
+.category-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 4px 0 6px;
+  border-bottom: 1px solid #888;
+}
+
+.category-header h2 { font-size: 13px; font-weight: 600; }
+.base-flag { font-size: 11px; font-weight: 400; color: #888; margin-left: 6px; }
+.category-subtotal { font-size: 12px; color: #666; }
+
+.items-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  table-layout: auto;
+}
+
+.items-table thead th {
+  font-size: 11px;
+  font-weight: 500;
+  color: #666;
+  text-align: right;
+  padding: 5px 6px;
+  border-bottom: 1px solid #ddd;
+}
+
+.items-table thead th:first-child,
+.items-table thead th:nth-child(2) { text-align: left; }
+.items-table thead th:last-child { width: 24px; padding: 0; }
+.items-table thead th.col-compound { text-align: center; width: 32px; }
+
+.items-table tbody tr { border-bottom: 1px solid #eee; }
+.items-table tbody tr.disabled { opacity: 0.45; }
+.items-table td { padding: 7px 6px; vertical-align: top; }
+
+.item-checkbox { width: 26px; }
+.item-checkbox input {
+  width: 13px;
+  height: 13px;
+  cursor: pointer;
+  margin-top: 2px;
+}
+
+.item-name-input {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  width: 100%;
+  padding: 2px 4px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #222;
+  display: block;
+}
+.item-name-input:hover { border-color: #ccc; }
+.item-name-input:focus {
+  outline: none;
+  border-color: #666;
+  background: #fff;
+}
+.item-name-input:disabled { color: #999; cursor: not-allowed; }
+
+.item-note {
+  font-size: 12px;
+  color: #777;
+  margin-top: 2px;
+  line-height: 1.35;
+  max-width: 440px;
+  padding: 2px 4px;
+  border: 1px solid transparent;
+  min-height: 18px;
+  cursor: text;
+  white-space: pre-wrap;
+}
+.item-note:hover { border-color: #ccc; }
+.item-note:focus {
+  outline: none;
+  border-color: #666;
+  background: #fff;
+}
+.item-note:empty::before {
+  content: attr(data-placeholder);
+  color: #bbb;
+  font-style: italic;
+}
+
+.item-tier-select {
+  margin-top: 4px;
+  font-family: inherit;
+  font-size: 11px;
+  padding: 1px 4px;
+}
+
+.col-base { width: 105px; text-align: right; }
+
+.base-input {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12px;
+  width: 100%;
+  text-align: right;
+  padding: 3px 5px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #222;
+}
+.base-input:hover { border-color: #ccc; }
+.base-input:focus {
+  outline: none;
+  border-color: #666;
+  background: #fff;
+}
+.base-input:disabled { color: #999; cursor: not-allowed; }
+
+.col-compound { width: 32px; text-align: center; }
+.compound-box input {
+  width: 12px;
+  height: 12px;
+  cursor: pointer;
+  margin-top: 5px;
+}
+.compound-box input:disabled { cursor: not-allowed; }
+
+.col-year { width: 95px; text-align: right; }
+
+.year-total {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12px;
+  color: #222;
+  text-align: right;
+  padding: 3px 5px;
+}
+
+.mod-input {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11px;
+  width: 100%;
+  text-align: right;
+  padding: 1px 5px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #888;
+  margin-top: 1px;
+}
+.mod-input:hover { border-color: #ccc; color: #444; }
+.mod-input:focus {
+  outline: none;
+  border-color: #666;
+  background: #fff;
+  color: #222;
+}
+.mod-input:disabled { color: #bbb; cursor: not-allowed; }
+
+.col-total { width: 105px; text-align: right; }
+
+.cost-total {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: right;
+  padding: 3px 5px;
+}
+
+.item-delete { width: 24px; padding: 3px 0; text-align: center; }
+
+.delete-btn {
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1;
+  color: #ccc;
+  background: none;
+  border: none;
+  padding: 2px 4px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.1s, color 0.1s;
+}
+tr:hover .delete-btn { opacity: 1; }
+.delete-btn:hover { color: #a00; }
+
+.summary {
+  position: sticky;
+  top: 16px;
+  background: #fafafa;
+  border: 1px solid #bbb;
+  padding: 14px 16px;
+}
+
+.summary h2 {
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #555;
+}
+
+.year-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 13px;
+  border-bottom: 1px solid #eee;
+}
+
+.year-row.total {
+  border-top: 1px solid #222;
+  border-bottom: 1px solid #222;
+  padding: 7px 0;
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+.year-label { color: #333; }
+.year-amount { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+
+.category-breakdown {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid #ddd;
+}
+
+.category-breakdown h3 {
+  font-size: 11px;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+  font-size: 12px;
+}
+.cat-label { color: #333; }
+.cat-amount { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+
+.export {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid #ddd;
+}
+
+.export-btn {
+  font-family: inherit;
+  font-size: 12px;
+  padding: 5px 10px;
+  background: #fff;
+  border: 1px solid #666;
+  color: #222;
+  cursor: pointer;
+  margin-right: 6px;
+}
+.export-btn:hover { background: #eee; }
+
+.reset {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #ddd;
+  font-size: 11px;
+  color: #888;
+}
+
+.reset-btn {
+  font-family: inherit;
+  font-size: 11px;
+  color: #888;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.reset-btn:hover { color: #a00; }
+
+.add-section {
+  margin-top: 20px;
+  padding: 12px 16px;
+  background: #f7f7f7;
+  border: 1px solid #ddd;
+}
+
+.add-toggle {
+  font-family: inherit;
+  font-size: 12px;
+  color: #444;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+.add-toggle:hover { color: #222; }
+
+.add-form {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 6px 12px;
+  align-items: center;
+  font-size: 12px;
+}
+
+.add-form label { color: #555; text-align: right; }
+
+.add-form input[type="text"] {
+  font-family: inherit;
+  font-size: 12px;
+  padding: 4px 6px;
+  border: 1px solid #bbb;
+  background: #fff;
+  color: #222;
+}
+.add-form input:focus { outline: none; border-color: #666; }
+
+.add-form .mods-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.add-form-compound {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.add-form-actions { grid-column: 2; margin-top: 6px; }
+
+.add-submit, .add-cancel {
+  font-family: inherit;
+  font-size: 12px;
+  padding: 4px 10px;
+  background: #fff;
+  border: 1px solid #666;
+  color: #222;
+  cursor: pointer;
+  margin-right: 6px;
+}
+.add-submit:hover, .add-cancel:hover { background: #eee; }
+.add-cancel { border-color: #aaa; color: #666; }
+
+.footnotes {
+  margin-top: 24px;
+  padding-top: 12px;
+  border-top: 1px solid #ddd;
+  font-size: 12px;
+  color: #666;
+  max-width: 820px;
+}
+.footnotes p { margin-bottom: 5px; }
+
+@media (max-width: 1100px) {
+  body { padding: 16px 12px 40px; }
+  .layout { grid-template-columns: 1fr; }
+  .summary { position: static; margin-bottom: 20px; }
+  .add-form { grid-template-columns: 1fr; }
+  .add-form label { text-align: left; }
+  .add-form-actions { grid-column: 1; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-row">
+    <div class="header-text">
+      <h1>Mothership Budget Builder</h1>
+      <div class="subtitle">Base annual cost + per-year % modifiers. Compound toggle per line.</div>
+      <div class="meta">
+        <span>Timeline: H2 2026 – H1 2029</span>
+        <span>Y1 starts: Jul 1, 2026</span>
+        <span>Building opens: Q1 2027</span>
+        <span>Defaults: scratch budget v1.0</span>
+      </div>
+    </div>
+    <div class="header-total">
+      <div class="header-total-label">Three-year total</div>
+      <div class="header-total-amount" id="header-total">$0</div>
+      <div class="header-total-years"><span id="header-y1">$0</span> · <span id="header-y2">$0</span> · <span id="header-y3">$0</span></div>
+    </div>
+  </div>
+</header>
+
+<div class="controls">
+  <span class="controls-label">Scenarios:</span>
+  <span id="preset-buttons">
+    <button class="preset-btn" data-preset="floor">Base only</button>
+    <button class="preset-btn" data-preset="mvp">MVP</button>
+    <button class="preset-btn" data-preset="roadmap">Roadmap-aligned</button>
+    <button class="preset-btn" data-preset="ambitious">Ambition-aligned</button>
+  </span>
+  <span id="custom-preset-buttons"></span>
+  <button class="preset-btn save" id="save-preset-btn" title="Save current selection as a new preset">+ Save as…</button>
+  <button class="preset-btn clear" data-preset="clear">Clear</button>
+</div>
+
+<div class="layout">
+  <main>
+    <div id="categories-container"></div>
+
+    <div class="add-section">
+      <button class="add-toggle" id="add-toggle">+ Add line</button>
+      <div class="add-form" id="add-form" hidden>
+        <label for="add-category">Category</label>
+        <input type="text" id="add-category" list="category-list" placeholder="Pick existing or type new…">
+        <datalist id="category-list"></datalist>
+
+        <label for="add-name">Name</label>
+        <input type="text" id="add-name" placeholder="Line item name">
+
+        <label for="add-note">Note</label>
+        <input type="text" id="add-note" placeholder="Description or assumption (optional)">
+
+        <label for="add-base">Base annual $</label>
+        <input type="text" id="add-base" placeholder="e.g. 180000">
+
+        <label>Compound?</label>
+        <div class="add-form-compound">
+          <input type="checkbox" id="add-compound">
+          <span style="font-size:11px;color:#777;">Year mods compound (Y2 applies to Y1's value, etc.). Off = each mod applies to base.</span>
+        </div>
+
+        <label>Modifiers (%)</label>
+        <div class="mods-row">
+          <input type="text" id="add-y1" placeholder="Y1 % (e.g. -25)">
+          <input type="text" id="add-y2" placeholder="Y2 %">
+          <input type="text" id="add-y3" placeholder="Y3 %">
+        </div>
+
+        <div class="add-form-actions">
+          <button class="add-submit" id="add-submit">Add line</button>
+          <button class="add-cancel" id="add-cancel">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <aside class="summary">
+    <h2>Running Total</h2>
+
+    <div class="year-row"><span class="year-label">Year 1 (H2 '26 – H1 '27)</span><span class="year-amount" id="total-y1">$0</span></div>
+    <div class="year-row"><span class="year-label">Year 2 (H2 '27 – H1 '28)</span><span class="year-amount" id="total-y2">$0</span></div>
+    <div class="year-row"><span class="year-label">Year 3 (H2 '28 – H1 '29)</span><span class="year-amount" id="total-y3">$0</span></div>
+    <div class="year-row total"><span class="year-label">Three-year total</span><span class="year-amount" id="total-all">$0</span></div>
+
+    <div class="category-breakdown">
+      <h3>By category (3-yr)</h3>
+      <div id="category-breakdown-rows"></div>
+    </div>
+
+    <div class="export">
+      <button class="export-btn" id="export-xlsx">Download .xlsx</button>
+      <button class="export-btn" id="export-csv">Download .csv</button>
+    </div>
+
+    <div class="reset">
+      Edits saved to browser. <button class="reset-btn" id="reset-defaults">Reset to defaults</button>
+    </div>
+  </aside>
+</div>
+
+<div class="footnotes">
+  <p><strong>Base annual cost</strong> is the line's normative yearly value. Each year's <strong>% modifier</strong> adjusts it. A modifier of 0 means "same as base"; −100% means "nothing that year"; +10% means "10% more than base" (or than prior year, if compound).</p>
+  <p><strong>Compound</strong>: Y2 applies on top of Y1's dollar value, Y3 applies on top of Y2's. Good for salaries (3%/yr raises) or anything growing steadily. Off (independent): each year's modifier applies directly to the base. Good for partial-year starts, one-time costs, or anything that doesn't compound.</p>
+  <p>All fields are editable. Click name, note, base, or modifier to edit. Click × to delete a line. Use "Add line" below the table.</p>
+  <p>Edits persist in this browser only (not synced). Catalyst Fund tier dropdown swaps tier-specific base and modifiers.</p>
+</div>
+
+<script>
+// =====================
+// DEFAULT ITEMS — new schema: baseCost + modifiers + compound
+// =====================
+const DEFAULT_ITEMS = [
+  // ADMIN / G&A
+  { id: "ceo", category: "Admin / G&A", name: "CEO", note: "Strategic leadership. Base = starting annual salary; modifiers apply ~3% escalation.", isBase: true, baseCost: 310000, modifiers: { y1: 0, y2: 3.2, y3: 3.1 }, compound: true },
+  { id: "cos", category: "Admin / G&A", name: "Chief of Staff", note: "Operations, compliance, stakeholder coordination. Y1 modifier reflects 9-month partial (Oct 2026 start).", isBase: true, baseCost: 180000, modifiers: { y1: -27.2, y2: 0, y3: 2.8 }, compound: false },
+  { id: "ops_contractor", category: "Admin / G&A", name: "Ops / admin contractor", note: "Y1 bridging role; absorbed into staff Y2.", isBase: true, baseCost: 50000, modifiers: { y1: 0, y2: -100, y3: -100 }, compound: false },
+  { id: "legal", category: "Admin / G&A", name: "Legal, accounting, PEO", note: "Entity formation and partnership agreements front-load Y1.", isBase: true, baseCost: 75000, modifiers: { y1: 33.3, y2: 0, y3: 0 }, compound: false },
+  { id: "misc", category: "Admin / G&A", name: "Miscellaneous / office supplies", note: "", isBase: true, baseCost: 20000, modifiers: { y1: -25, y2: 0, y3: 0 }, compound: false },
+  { id: "reserve_ops", category: "Admin / G&A", name: "General operating contingency", note: "Hedge on building timing, comp adjustments, unexpected costs. Scales down as uncertainty resolves.", isBase: false, baseCost: 200000, modifiers: { y1: 0, y2: -50, y3: -75 }, compound: false },
+
+  // OCCUPANCY
+  { id: "interim_space", category: "Occupancy", name: "Interim shared space (pre-building)", note: "~9 months Y1 before 5th floor is available.", isBase: true, baseCost: 60000, modifiers: { y1: 0, y2: -100, y3: -100 }, compound: false },
+  { id: "rent_y1_partial", category: "Occupancy", name: "5th floor partial occupancy (Y1)", note: "~3 months × $20K/mo all-in (Apr – Jun 2027).", isBase: true, baseCost: 60000, modifiers: { y1: 0, y2: -100, y3: -100 }, compound: false },
+  { id: "rent_full", category: "Occupancy", name: "5th floor rent + CAM (full year)", note: "$25/SF NNN × 8,036 SF base (~$200K) + CAM/NNN pass-through (~$50K). JCMB treatment TBD.", isBase: true, baseCost: 250000, modifiers: { y1: -100, y2: 0, y3: 0 }, compound: false },
+
+  // INFRASTRUCTURE / IT
+  { id: "tech", category: "Infrastructure / IT", name: "Tech, tools, IT, software", note: "Slack, Google Workspace, CRM, project mgmt, finance.", isBase: true, baseCost: 30000, modifiers: { y1: 33.3, y2: 0, y3: 0 }, compound: false },
+  { id: "research_data", category: "Infrastructure / IT", name: "Research and data subscriptions", note: "Pitchbook, Crunchbase, market data.", isBase: false, baseCost: 30000, modifiers: { y1: 16.7, y2: 0, y3: 0 }, compound: false },
+
+  // INSURANCE & COMPLIANCE
+  { id: "insurance", category: "Insurance & Compliance", name: "Insurance (D&O, E&O, general liability)", note: "", isBase: true, baseCost: 30000, modifiers: { y1: 0, y2: 0, y3: 0 }, compound: true },
+
+  // PROGRAM / PROJECT
+  { id: "dir_programs", category: "Program / Project", name: "Director of Programs", note: "Owns TC, BlackOps, and founder support. Y1 modifier reflects 6-month partial (Jan 2027 start).", isBase: false, baseCost: 185000, modifiers: { y1: -51.4, y2: 0, y3: 2.7 }, compound: false },
+  { id: "dir_capital", category: "Program / Project", name: "Director of Capital", note: "GP / LP programs lead. Y1 modifier reflects 3-month partial (Apr 2027 start).", isBase: false, baseCost: 185000, modifiers: { y1: -75.7, y2: 0, y3: 2.7 }, compound: false },
+  { id: "events_coord", category: "Program / Project", name: "Events / Program Coordinator", note: "Building programming support. Y2 modifier reflects 8-month partial.", isBase: false, baseCost: 90000, modifiers: { y1: -100, y2: -36.7, y3: 0 }, compound: false },
+  { id: "program_analyst", category: "Program / Project", name: "Program Analyst (data / reporting)", note: "Tracks outcomes, metrics, foundation reporting. Y3 modifier reflects Q3 start.", isBase: false, baseCost: 40000, modifiers: { y1: -100, y2: -100, y3: 0 }, compound: false },
+  { id: "program_coord_contractor", category: "Program / Project", name: "Program coordination contractor (Y1 bridge)", note: "Pre-full-staff Y1. Absorbed into Events / Program Coordinator Y2.", isBase: false, baseCost: 50000, modifiers: { y1: 0, y2: -100, y3: -100 }, compound: false },
+  { id: "tc_partnership", category: "Program / Project", name: "Transparent Collective partnership", note: "Accelerator cohort sponsorship, program costs, founder support. Anchor partner.", isBase: false, baseCost: 175000, modifiers: { y1: 0, y2: 0, y3: -5.7 }, compound: false },
+  { id: "blackops", category: "Program / Project", name: "BlackOps VC engagement", note: "Founder advocacy and deal facilitation partnership.", isBase: false, baseCost: 50000, modifiers: { y1: 0, y2: 0, y3: 0 }, compound: true },
+  { id: "cortex_sf", category: "Program / Project", name: "Cortex House SF exchange", note: "Midwest-to-coast founder connectivity. Travel + founder stipends. Y1 heavy with setup.", isBase: false, baseCost: 60000, modifiers: { y1: 0, y2: -50, y3: -58.3 }, compound: false },
+  { id: "catalyst", category: "Program / Project", name: "Founder Catalyst Fund (direct deployment)", note: "Non-dilutive milestone-based grants. Tier dropdown swaps sizing.", isBase: false, tiers: [
+    { name: "Pilot", baseCost: 100000, modifiers: { y1: 0, y2: 50, y3: 100 } },
+    { name: "Scale (default)", baseCost: 150000, modifiers: { y1: 0, y2: 100, y3: 133.3 } },
+    { name: "Ambitious", baseCost: 200000, modifiers: { y1: 0, y2: 100, y3: 150 } }
+  ], defaultTier: 1, compound: false },
+  { id: "whole_founder", category: "Program / Project", name: "Whole Founder programming", note: "Peer convenings, facilitation, community-building. Y1 pilot; Y2+ formalized.", isBase: false, baseCost: 75000, modifiers: { y1: 0, y2: 20, y3: 5.6 }, compound: true },
+  { id: "founder_convenings", category: "Program / Project", name: "Founder / investor convenings", note: "Quarterly. Y1 informal pre-building; Y2+ in-building.", isBase: false, baseCost: 75000, modifiers: { y1: 0, y2: -33.3, y3: -40 }, compound: false },
+  { id: "gp_training", category: "Program / Project", name: "GP Training Pilot", note: "2 emerging GPs in fundraising support (Y2 pilot; scales Y3).", isBase: false, baseCost: 60000, modifiers: { y1: -100, y2: -25, y3: 0 }, compound: false },
+  { id: "lp_education", category: "Program / Project", name: "LP Education Pilot", note: "4 new LPs — education, facilitation, intro support.", isBase: false, baseCost: 40000, modifiers: { y1: -100, y2: -25, y3: 0 }, compound: false },
+  { id: "eso_partnerships", category: "Program / Project", name: "ESO partnership investments", note: "4 partnerships × ~$10K avg. Co-programming, chapter activations.", isBase: false, baseCost: 40000, modifiers: { y1: -100, y2: 0, y3: -12.5 }, compound: false },
+  { id: "interim_programming", category: "Program / Project", name: "Pre-building interim programming (Y1)", note: "Partner-hosted events in existing spaces before 5th floor opens.", isBase: false, baseCost: 40000, modifiers: { y1: 0, y2: -100, y3: -100 }, compound: false },
+  { id: "reserve_capital", category: "Program / Project", name: "Capital deployment reserve", note: "Flexibility for Catalyst Fund overage or strategic opportunity.", isBase: false, baseCost: 100000, modifiers: { y1: 0, y2: -50, y3: -50 }, compound: false },
+
+  // MARKETING / GROWTH
+  { id: "dir_marketing", category: "Marketing / Growth", name: "Director of Marketing / Comms", note: "Full staff role. Converts from Y1 contractor. Y2 modifier reflects 10-month partial (Sep 2027 start).", isBase: false, baseCost: 170000, modifiers: { y1: -100, y2: -18.8, y3: 0 }, compound: false },
+  { id: "comms_contractor", category: "Marketing / Growth", name: "Comms / PR contractor (Y1 bridge)", note: "Use if Director of Marketing not yet hired.", isBase: false, baseCost: 75000, modifiers: { y1: 0, y2: -100, y3: -100 }, compound: false },
+  { id: "thought_leadership", category: "Marketing / Growth", name: "Thought leadership / owned publishing", note: "Infrastructure Y1; formal launch H2 2027.", isBase: false, baseCost: 40000, modifiers: { y1: 0, y2: 0, y3: 0 }, compound: true },
+  { id: "dfc_partnership", category: "Marketing / Growth", name: "Detroit Future City content partnership", note: "Paid content partnership for thought leadership distribution.", isBase: false, baseCost: 25000, modifiers: { y1: -100, y2: 0, y3: 0 }, compound: false },
+  { id: "building_opening", category: "Marketing / Growth", name: "Building opening event (Q1 2027)", note: "Initial opening event at end of Y1.", isBase: false, baseCost: 50000, modifiers: { y1: 0, y2: -100, y3: -100 }, compound: false },
+  { id: "formal_launch", category: "Marketing / Growth", name: "Formal public launch event (H2 2027)", note: "Larger, public-facing launch Y2.", isBase: false, baseCost: 50000, modifiers: { y1: -100, y2: 0, y3: -100 }, compound: false },
+  { id: "marketing_spend", category: "Marketing / Growth", name: "Marketing spend (non-rebrand)", note: "Ongoing marketing and campaign spend outside rebrand capital.", isBase: false, baseCost: 20000, modifiers: { y1: 0, y2: 0, y3: 0 }, compound: true },
+  { id: "rebrand", category: "Marketing / Growth", name: "Rebrand and comms infrastructure", note: "Strategic rebrand, identity, website, content library.", isBase: false, baseCost: 225000, modifiers: { y1: 0, y2: -100, y3: -100 }, compound: false },
+
+  // TRAVEL & MEETINGS
+  { id: "travel", category: "Travel & Meetings", name: "Travel (conferences, fundraising, coastal exchange)", note: "Standing travel budget outside Cortex SF line. Y1 heavy with ramp-up.", isBase: false, baseCost: 75000, modifiers: { y1: 0, y2: -33.3, y3: -26.7 }, compound: false },
+
+  // CAPITAL / EQUIPMENT
+  { id: "ffe", category: "Capital / Equipment", name: "5th floor activation (FF&E)", note: "Furniture, technology, signage, initial stocking — not in construction scope.", isBase: false, baseCost: 75000, modifiers: { y1: 0, y2: -100, y3: -100 }, compound: false }
+];
+
+// =====================
+// PRESETS
+// =====================
+const DEFAULT_BASE_IDS = DEFAULT_ITEMS.filter(i => i.isBase).map(i => i.id);
+
+const presets = {
+  floor: { enable: [...DEFAULT_BASE_IDS], tierOverrides: {} },
+  mvp: {
+    enable: [...DEFAULT_BASE_IDS, "tc_partnership", "blackops", "catalyst", "whole_founder", "founder_convenings", "research_data", "travel", "reserve_ops"],
+    tierOverrides: { catalyst: 0 }
+  },
+  roadmap: {
+    enable: [...DEFAULT_BASE_IDS, "dir_programs", "dir_capital", "dir_marketing", "events_coord", "comms_contractor", "program_coord_contractor", "tc_partnership", "blackops", "cortex_sf", "catalyst", "whole_founder", "founder_convenings", "gp_training", "lp_education", "eso_partnerships", "research_data", "thought_leadership", "interim_programming", "building_opening", "formal_launch", "rebrand", "ffe", "travel", "marketing_spend", "reserve_ops", "reserve_capital"],
+    tierOverrides: { catalyst: 1 }
+  },
+  ambitious: {
+    enable: [...DEFAULT_BASE_IDS, "dir_programs", "dir_capital", "dir_marketing", "events_coord", "program_analyst", "comms_contractor", "program_coord_contractor", "tc_partnership", "blackops", "cortex_sf", "catalyst", "whole_founder", "founder_convenings", "gp_training", "lp_education", "eso_partnerships", "research_data", "thought_leadership", "dfc_partnership", "interim_programming", "building_opening", "formal_launch", "rebrand", "ffe", "travel", "marketing_spend", "reserve_ops", "reserve_capital"],
+    tierOverrides: { catalyst: 2 }
+  },
+  clear: { enable: [], tierOverrides: {} }
+};
+
+// =====================
+// STORAGE
+// =====================
+const STORAGE_ITEMS = 'mothership_budget_items_v2'; // bump version for new schema
+const STORAGE_STATE = 'mothership_budget_state_v1';
+const STORAGE_CUSTOM_PRESETS = 'mothership_budget_custom_presets_v1';
+
+function deepClone(obj) { return JSON.parse(JSON.stringify(obj)); }
+
+// Migrate legacy item structure ({ costs: {y1,y2,y3} }) to new ({ baseCost, modifiers, compound })
+function migrateItem(item) {
+  if (!item) return item;
+
+  // Handle tiered items
+  if (item.tiers) {
+    item.tiers = item.tiers.map(t => {
+      if (t.baseCost !== undefined && t.modifiers) return t;
+      const c = t.costs || { y1: 0, y2: 0, y3: 0 };
+      const base = c.y2 || c.y1 || c.y3 || 0;
+      return {
+        name: t.name,
+        baseCost: base,
+        modifiers: base > 0 ? {
+          y1: Math.round(((c.y1 / base) - 1) * 1000) / 10,
+          y2: Math.round(((c.y2 / base) - 1) * 1000) / 10,
+          y3: Math.round(((c.y3 / base) - 1) * 1000) / 10
+        } : { y1: 0, y2: 0, y3: 0 }
+      };
+    });
+    if (item.compound === undefined) item.compound = false;
+    delete item.costs;
+    return item;
+  }
+
+  if (item.baseCost !== undefined && item.modifiers) return item;
+
+  const c = item.costs || { y1: 0, y2: 0, y3: 0 };
+  const base = c.y2 || c.y1 || c.y3 || 0;
+  item.baseCost = base;
+  item.modifiers = base > 0 ? {
+    y1: Math.round(((c.y1 / base) - 1) * 1000) / 10,
+    y2: Math.round(((c.y2 / base) - 1) * 1000) / 10,
+    y3: Math.round(((c.y3 / base) - 1) * 1000) / 10
+  } : { y1: 0, y2: 0, y3: 0 };
+  if (item.compound === undefined) item.compound = false;
+  delete item.costs;
+  return item;
+}
+
+function loadItems() {
+  // Try v2 first
+  try {
+    const raw = localStorage.getItem(STORAGE_ITEMS);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length) return syncCategories(parsed.map(migrateItem));
+    }
+  } catch (e) {}
+  // Fall back to v1 if present, migrate
+  try {
+    const legacyRaw = localStorage.getItem('mothership_budget_items_v1');
+    if (legacyRaw) {
+      const parsed = JSON.parse(legacyRaw);
+      if (Array.isArray(parsed) && parsed.length) {
+        const migrated = syncCategories(parsed.map(migrateItem));
+        // Save to v2 slot; leave v1 alone in case user wants rollback
+        try { localStorage.setItem(STORAGE_ITEMS, JSON.stringify(migrated)); } catch (e) {}
+        return migrated;
+      }
+    }
+  } catch (e) {}
+  return deepClone(DEFAULT_ITEMS);
+}
+
+// For any loaded item whose ID matches a default, sync category name to current default.
+// Preserves user edits to base/mods/name/note; only overwrites category.
+// Custom items (unknown IDs) are left alone.
+function syncCategories(loaded) {
+  const defaultCats = new Map(DEFAULT_ITEMS.map(d => [d.id, d.category]));
+  loaded.forEach(item => {
+    if (defaultCats.has(item.id)) {
+      item.category = defaultCats.get(item.id);
+    }
+  });
+  return loaded;
+}
+
+function loadState(itemsRef) {
+  try {
+    const raw = localStorage.getItem(STORAGE_STATE);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return {
+        enabled: new Set(parsed.enabled || []),
+        tiers: parsed.tiers || {}
+      };
+    }
+  } catch (e) {}
+  const initTiers = {};
+  itemsRef.filter(i => i.tiers).forEach(i => { initTiers[i.id] = i.defaultTier; });
+  return {
+    enabled: new Set(itemsRef.filter(i => i.isBase).map(i => i.id)),
+    tiers: initTiers
+  };
+}
+
+function save() {
+  try {
+    localStorage.setItem(STORAGE_ITEMS, JSON.stringify(items));
+    localStorage.setItem(STORAGE_STATE, JSON.stringify({
+      enabled: [...state.enabled],
+      tiers: state.tiers
+    }));
+  } catch (e) {}
+}
+
+function loadCustomPresets() {
+  try {
+    const raw = localStorage.getItem(STORAGE_CUSTOM_PRESETS);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch (e) {}
+  return [];
+}
+
+function saveCustomPresets() {
+  try {
+    localStorage.setItem(STORAGE_CUSTOM_PRESETS, JSON.stringify(customPresets));
+  } catch (e) {}
+}
+
+let items = loadItems();
+let state = loadState(items);
+let customPresets = loadCustomPresets();
+
+// =====================
+// UTILITIES
+// =====================
+function fmt(n) {
+  if (n === 0 || n === null || n === undefined) return '—';
+  return '$' + Math.round(n).toLocaleString();
+}
+
+function fmtBase(n) {
+  if (n === null || n === undefined) return '';
+  return Math.round(n).toLocaleString();
+}
+
+function fmtPct(n) {
+  if (n === null || n === undefined) return '0%';
+  const v = Number(n);
+  if (isNaN(v)) return '0%';
+  // Show up to 1 decimal, trim trailing .0
+  const r = Math.round(v * 10) / 10;
+  const s = Number.isInteger(r) ? r.toString() : r.toFixed(1);
+  return (v > 0 ? '+' : '') + s + '%';
+}
+
+function parseNum(str) {
+  if (!str) return 0;
+  const raw = String(str).replace(/[^0-9.\-]/g, '');
+  if (raw === '' || raw === '-' || raw === '.') return 0;
+  const v = parseFloat(raw);
+  if (isNaN(v)) return 0;
+  return Math.max(0, v);
+}
+
+function parsePct(str) {
+  if (!str && str !== '0') return 0;
+  const raw = String(str).replace(/[^0-9.\-]/g, '');
+  if (raw === '' || raw === '-' || raw === '.' || raw === '-.') return 0;
+  const v = parseFloat(raw);
+  if (isNaN(v)) return 0;
+  return v;
+}
+
+function findItem(id) { return items.find(i => i.id === id); }
+
+// Core math: compute { y1, y2, y3 } dollar values for an item (considering tier if present)
+function computeYearValues(item) {
+  let baseCost, modifiers;
+  if (item.tiers) {
+    const tierIdx = state.tiers[item.id] ?? item.defaultTier;
+    const tier = item.tiers[tierIdx];
+    baseCost = tier.baseCost || 0;
+    modifiers = tier.modifiers || { y1: 0, y2: 0, y3: 0 };
+  } else {
+    baseCost = item.baseCost || 0;
+    modifiers = item.modifiers || { y1: 0, y2: 0, y3: 0 };
+  }
+  const compound = !!item.compound;
+  const m1 = 1 + ((modifiers.y1 || 0) / 100);
+  const m2 = 1 + ((modifiers.y2 || 0) / 100);
+  const m3 = 1 + ((modifiers.y3 || 0) / 100);
+  const y1 = Math.max(0, baseCost * m1);
+  let y2, y3;
+  if (compound) {
+    y2 = Math.max(0, y1 * m2);
+    y3 = Math.max(0, y2 * m3);
+  } else {
+    y2 = Math.max(0, baseCost * m2);
+    y3 = Math.max(0, baseCost * m3);
+  }
+  return { y1, y2, y3 };
+}
+
+function getItemTotal(item) {
+  const v = computeYearValues(item);
+  return v.y1 + v.y2 + v.y3;
+}
+
+// For editing: get the active baseCost / modifiers (for the current tier if tiered)
+function getActiveBase(item) {
+  if (item.tiers) {
+    const tierIdx = state.tiers[item.id] ?? item.defaultTier;
+    return item.tiers[tierIdx].baseCost || 0;
+  }
+  return item.baseCost || 0;
+}
+
+function getActiveMods(item) {
+  if (item.tiers) {
+    const tierIdx = state.tiers[item.id] ?? item.defaultTier;
+    return item.tiers[tierIdx].modifiers || { y1: 0, y2: 0, y3: 0 };
+  }
+  return item.modifiers || { y1: 0, y2: 0, y3: 0 };
+}
+
+function setActiveBase(item, val) {
+  if (item.tiers) {
+    const tierIdx = state.tiers[item.id] ?? item.defaultTier;
+    item.tiers[tierIdx].baseCost = val;
+  } else {
+    item.baseCost = val;
+  }
+}
+
+function setActiveMod(item, year, val) {
+  if (item.tiers) {
+    const tierIdx = state.tiers[item.id] ?? item.defaultTier;
+    if (!item.tiers[tierIdx].modifiers) item.tiers[tierIdx].modifiers = { y1: 0, y2: 0, y3: 0 };
+    item.tiers[tierIdx].modifiers[year] = val;
+  } else {
+    if (!item.modifiers) item.modifiers = { y1: 0, y2: 0, y3: 0 };
+    item.modifiers[year] = val;
+  }
+}
+
+function escapeHTML(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function newId() {
+  return 'custom_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+}
+
+// =====================
+// RENDER
+// =====================
+function render() {
+  const container = document.getElementById('categories-container');
+
+  const cats = new Map();
+  items.forEach(item => {
+    if (!cats.has(item.category)) cats.set(item.category, []);
+    cats.get(item.category).push(item);
+  });
+
+  let html = '';
+  for (const [cat, catItems] of cats) {
+    const isBaseCat = catItems.every(i => i.isBase);
+    const subtotal = catItems.filter(i => state.enabled.has(i.id)).reduce((sum, i) => sum + getItemTotal(i), 0);
+
+    html += `<div class="category">
+      <div class="category-header">
+        <h2>${escapeHTML(cat)}${isBaseCat ? ' <span class="base-flag">(base)</span>' : ''}</h2>
+        <div class="category-subtotal">3-yr: ${fmt(subtotal)}</div>
+      </div>
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Line item</th>
+            <th>Base $</th>
+            <th class="col-compound" title="Compound: Y2 applies to Y1's value, Y3 to Y2's. Off = each mod applies to base.">Cpd</th>
+            <th>Y1</th>
+            <th>Y2</th>
+            <th>Y3</th>
+            <th>3-yr total</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>`;
+
+    catItems.forEach(item => {
+      const enabled = state.enabled.has(item.id);
+      const base = getActiveBase(item);
+      const mods = getActiveMods(item);
+      const v = computeYearValues(item);
+      const total = v.y1 + v.y2 + v.y3;
+
+      html += `<tr class="${enabled ? '' : 'disabled'}" data-id="${item.id}">
+        <td class="item-checkbox"><input type="checkbox" ${enabled ? 'checked' : ''} data-id="${item.id}" class="item-toggle" aria-label="Toggle ${escapeHTML(item.name)}"></td>
+        <td>
+          <input type="text" class="item-name-input" data-id="${item.id}" value="${escapeHTML(item.name)}" placeholder="Line item">
+          <div class="item-note" contenteditable="true" data-id="${item.id}" data-placeholder="Add note…">${escapeHTML(item.note || '')}</div>`;
+      if (item.tiers) {
+        const tierIdx = state.tiers[item.id] ?? item.defaultTier;
+        html += `<select class="item-tier-select" data-id="${item.id}">`;
+        item.tiers.forEach((t, i) => {
+          html += `<option value="${i}" ${i === tierIdx ? 'selected' : ''}>Tier: ${escapeHTML(t.name)}</option>`;
+        });
+        html += `</select>`;
+      }
+      html += `</td>
+        <td class="col-base"><input type="text" class="base-input" data-id="${item.id}" value="${fmtBase(base)}" ${enabled ? '' : 'disabled'} aria-label="Base annual cost"></td>
+        <td class="col-compound compound-box"><input type="checkbox" class="compound-toggle" data-id="${item.id}" ${item.compound ? 'checked' : ''} ${enabled ? '' : 'disabled'} title="Compound year modifiers"></td>
+        <td class="col-year">
+          <div class="year-total">${enabled ? fmt(v.y1) : '—'}</div>
+          <input type="text" class="mod-input" data-id="${item.id}" data-year="y1" value="${fmtPct(mods.y1)}" ${enabled ? '' : 'disabled'} aria-label="Year 1 modifier">
+        </td>
+        <td class="col-year">
+          <div class="year-total">${enabled ? fmt(v.y2) : '—'}</div>
+          <input type="text" class="mod-input" data-id="${item.id}" data-year="y2" value="${fmtPct(mods.y2)}" ${enabled ? '' : 'disabled'} aria-label="Year 2 modifier">
+        </td>
+        <td class="col-year">
+          <div class="year-total">${enabled ? fmt(v.y3) : '—'}</div>
+          <input type="text" class="mod-input" data-id="${item.id}" data-year="y3" value="${fmtPct(mods.y3)}" ${enabled ? '' : 'disabled'} aria-label="Year 3 modifier">
+        </td>
+        <td class="col-total cost-total">${enabled ? fmt(total) : '—'}</td>
+        <td class="item-delete"><button class="delete-btn" data-id="${item.id}" title="Delete line">×</button></td>
+      </tr>`;
+    });
+
+    html += `</tbody></table></div>`;
+  }
+
+  container.innerHTML = html;
+  attachRowHandlers();
+}
+
+function attachRowHandlers() {
+  document.querySelectorAll('.item-toggle').forEach(el => {
+    el.addEventListener('change', e => {
+      const id = e.target.dataset.id;
+      if (e.target.checked) state.enabled.add(id);
+      else state.enabled.delete(id);
+      save();
+      render();
+      renderSummary();
+    });
+  });
+
+  document.querySelectorAll('.item-name-input').forEach(el => {
+    el.addEventListener('blur', e => {
+      const id = e.target.dataset.id;
+      const item = findItem(id);
+      if (item) item.name = e.target.value;
+      save();
+    });
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); }
+    });
+  });
+
+  document.querySelectorAll('.item-note').forEach(el => {
+    el.addEventListener('blur', e => {
+      const id = e.target.dataset.id;
+      const item = findItem(id);
+      if (item) item.note = e.target.innerText.trim();
+      save();
+    });
+  });
+
+  document.querySelectorAll('.item-tier-select').forEach(el => {
+    el.addEventListener('change', e => {
+      const id = e.target.dataset.id;
+      state.tiers[id] = parseInt(e.target.value, 10);
+      save();
+      render();
+      renderSummary();
+    });
+  });
+
+  document.querySelectorAll('.base-input').forEach(el => {
+    el.addEventListener('blur', e => {
+      const id = e.target.dataset.id;
+      const val = parseNum(e.target.value);
+      const item = findItem(id);
+      if (!item) return;
+      setActiveBase(item, val);
+      save();
+      render();
+      renderSummary();
+    });
+    el.addEventListener('keydown', e => { if (e.key === 'Enter') e.target.blur(); });
+  });
+
+  document.querySelectorAll('.mod-input').forEach(el => {
+    el.addEventListener('blur', e => {
+      const id = e.target.dataset.id;
+      const year = e.target.dataset.year;
+      const val = parsePct(e.target.value);
+      const item = findItem(id);
+      if (!item) return;
+      setActiveMod(item, year, val);
+      save();
+      render();
+      renderSummary();
+    });
+    el.addEventListener('keydown', e => { if (e.key === 'Enter') e.target.blur(); });
+  });
+
+  document.querySelectorAll('.compound-toggle').forEach(el => {
+    el.addEventListener('change', e => {
+      const id = e.target.dataset.id;
+      const item = findItem(id);
+      if (!item) return;
+      item.compound = e.target.checked;
+      save();
+      render();
+      renderSummary();
+    });
+  });
+
+  document.querySelectorAll('.delete-btn').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      const id = e.target.dataset.id;
+      const item = findItem(id);
+      if (!item) return;
+      const label = item.name || 'this line';
+      if (confirm(`Delete "${label}"?`)) {
+        items = items.filter(i => i.id !== id);
+        state.enabled.delete(id);
+        delete state.tiers[id];
+        save();
+        render();
+        renderSummary();
+        refreshCategoryDatalist();
+      }
+    });
+  });
+}
+
+function renderSummary() {
+  let y1 = 0, y2 = 0, y3 = 0;
+  const catSums = new Map();
+
+  items.forEach(item => {
+    const topCat = item.category.split(' — ')[0];
+    if (!catSums.has(topCat)) catSums.set(topCat, 0);
+  });
+
+  items.forEach(item => {
+    if (state.enabled.has(item.id)) {
+      const v = computeYearValues(item);
+      y1 += v.y1; y2 += v.y2; y3 += v.y3;
+      const topCat = item.category.split(' — ')[0];
+      catSums.set(topCat, (catSums.get(topCat) || 0) + v.y1 + v.y2 + v.y3);
+    }
+  });
+
+  document.getElementById('total-y1').textContent = fmt(y1);
+  document.getElementById('total-y2').textContent = fmt(y2);
+  document.getElementById('total-y3').textContent = fmt(y3);
+  document.getElementById('total-all').textContent = fmt(y1 + y2 + y3);
+
+  document.getElementById('header-y1').textContent = fmt(y1);
+  document.getElementById('header-y2').textContent = fmt(y2);
+  document.getElementById('header-y3').textContent = fmt(y3);
+  document.getElementById('header-total').textContent = fmt(y1 + y2 + y3);
+
+  let breakdownHtml = '';
+  for (const [cat, sum] of catSums) {
+    if (sum > 0) {
+      breakdownHtml += `<div class="breakdown-row"><span class="cat-label">${escapeHTML(cat)}</span><span class="cat-amount">${fmt(sum)}</span></div>`;
+    }
+  }
+  document.getElementById('category-breakdown-rows').innerHTML = breakdownHtml || '<div class="breakdown-row"><span class="cat-label">Nothing selected</span><span class="cat-amount">—</span></div>';
+}
+
+// =====================
+// ADD LINE
+// =====================
+function refreshCategoryDatalist() {
+  const datalist = document.getElementById('category-list');
+  if (!datalist) return;
+  const cats = [...new Set(items.map(i => i.category))];
+  datalist.innerHTML = cats.map(c => `<option value="${escapeHTML(c)}">`).join('');
+}
+
+const addToggle = document.getElementById('add-toggle');
+const addForm = document.getElementById('add-form');
+
+addToggle.addEventListener('click', () => {
+  addForm.hidden = !addForm.hidden;
+  if (!addForm.hidden) {
+    refreshCategoryDatalist();
+    document.getElementById('add-category').focus();
+  }
+});
+
+document.getElementById('add-submit').addEventListener('click', () => {
+  const category = document.getElementById('add-category').value.trim();
+  const name = document.getElementById('add-name').value.trim();
+  const note = document.getElementById('add-note').value.trim();
+  const baseCost = parseNum(document.getElementById('add-base').value);
+  const compound = document.getElementById('add-compound').checked;
+  const y1 = parsePct(document.getElementById('add-y1').value);
+  const y2 = parsePct(document.getElementById('add-y2').value);
+  const y3 = parsePct(document.getElementById('add-y3').value);
+
+  if (!category) { alert('Please enter a category.'); return; }
+  if (!name) { alert('Please enter a line item name.'); return; }
+
+  const newItem = {
+    id: newId(),
+    category, name, note,
+    isBase: false,
+    baseCost,
+    modifiers: { y1, y2, y3 },
+    compound
+  };
+
+  let insertIdx = -1;
+  for (let i = items.length - 1; i >= 0; i--) {
+    if (items[i].category === category) { insertIdx = i; break; }
+  }
+  if (insertIdx === -1) {
+    items.push(newItem);
+  } else {
+    items.splice(insertIdx + 1, 0, newItem);
+  }
+  state.enabled.add(newItem.id);
+  save();
+  render();
+  renderSummary();
+  refreshCategoryDatalist();
+
+  // Reset form
+  document.getElementById('add-category').value = '';
+  document.getElementById('add-name').value = '';
+  document.getElementById('add-note').value = '';
+  document.getElementById('add-base').value = '';
+  document.getElementById('add-compound').checked = false;
+  document.getElementById('add-y1').value = '';
+  document.getElementById('add-y2').value = '';
+  document.getElementById('add-y3').value = '';
+  addForm.hidden = true;
+});
+
+document.getElementById('add-cancel').addEventListener('click', () => {
+  addForm.hidden = true;
+});
+
+// =====================
+// PRESETS
+// =====================
+function applyPreset(preset) {
+  state.enabled = new Set(preset.enable);
+  items.filter(i => i.tiers).forEach(i => { state.tiers[i.id] = i.defaultTier; });
+  if (preset.tierOverrides) {
+    Object.entries(preset.tierOverrides).forEach(([id, tier]) => { state.tiers[id] = tier; });
+  }
+  save();
+  render();
+  renderSummary();
+}
+
+function renderCustomPresets() {
+  const container = document.getElementById('custom-preset-buttons');
+  if (!container) return;
+  container.innerHTML = customPresets.map((p, i) =>
+    `<button class="preset-btn custom" data-custom-idx="${i}" title="${escapeHTML(p.name)}">${escapeHTML(p.name)}<span class="preset-delete" data-delete-idx="${i}" title="Delete this preset">×</span></button>`
+  ).join('');
+}
+
+document.querySelector('.controls').addEventListener('click', e => {
+  const deleteTarget = e.target.closest('.preset-delete');
+  if (deleteTarget) {
+    e.stopPropagation();
+    const idx = parseInt(deleteTarget.dataset.deleteIdx, 10);
+    const preset = customPresets[idx];
+    if (preset && confirm(`Delete preset "${preset.name}"?`)) {
+      customPresets.splice(idx, 1);
+      saveCustomPresets();
+      renderCustomPresets();
+    }
+    return;
+  }
+
+  const btn = e.target.closest('.preset-btn');
+  if (!btn) return;
+
+  if (btn.dataset.preset) {
+    applyPreset(presets[btn.dataset.preset]);
+  } else if (btn.dataset.customIdx !== undefined) {
+    const preset = customPresets[parseInt(btn.dataset.customIdx, 10)];
+    if (preset) applyPreset(preset);
+  }
+});
+
+document.getElementById('save-preset-btn').addEventListener('click', () => {
+  const name = prompt('Name this preset:');
+  if (!name) return;
+  const trimmed = name.trim();
+  if (!trimmed) return;
+
+  const existingIdx = customPresets.findIndex(p => p.name === trimmed);
+
+  const preset = {
+    name: trimmed,
+    enable: [...state.enabled],
+    tierOverrides: { ...state.tiers }
+  };
+
+  if (existingIdx >= 0) {
+    if (!confirm(`A preset named "${trimmed}" exists. Overwrite?`)) return;
+    customPresets[existingIdx] = preset;
+  } else {
+    customPresets.push(preset);
+  }
+  saveCustomPresets();
+  renderCustomPresets();
+});
+
+// =====================
+// RESET
+// =====================
+document.getElementById('reset-defaults').addEventListener('click', () => {
+  if (!confirm('Reset to defaults? All edits, custom lines, and deletions will be lost.')) return;
+  try {
+    localStorage.removeItem(STORAGE_ITEMS);
+    localStorage.removeItem('mothership_budget_items_v1');
+    localStorage.removeItem(STORAGE_STATE);
+  } catch (e) {}
+  items = deepClone(DEFAULT_ITEMS);
+  const initTiers = {};
+  items.filter(i => i.tiers).forEach(i => { initTiers[i.id] = i.defaultTier; });
+  state = {
+    enabled: new Set(items.filter(i => i.isBase).map(i => i.id)),
+    tiers: initTiers
+  };
+  save();
+  render();
+  renderSummary();
+  refreshCategoryDatalist();
+});
+
+// =====================
+// EXPORT
+// =====================
+function buildExportRows() {
+  const rows = [['Category', 'Line item', 'Selected', 'Base annual $', 'Compound?', 'Y1 mod %', 'Y2 mod %', 'Y3 mod %', 'Y1 $', 'Y2 $', 'Y3 $', '3-yr total', 'Notes']];
+  items.forEach(item => {
+    const enabled = state.enabled.has(item.id);
+    const base = getActiveBase(item);
+    const mods = getActiveMods(item);
+    const v = computeYearValues(item);
+    let name = item.name;
+    if (item.tiers) name += ` [Tier: ${item.tiers[state.tiers[item.id] ?? item.defaultTier].name}]`;
+    const y1$ = enabled ? v.y1 : 0;
+    const y2$ = enabled ? v.y2 : 0;
+    const y3$ = enabled ? v.y3 : 0;
+    rows.push([
+      item.category,
+      name,
+      enabled ? 'Y' : 'N',
+      base,
+      item.compound ? 'Y' : 'N',
+      mods.y1 || 0,
+      mods.y2 || 0,
+      mods.y3 || 0,
+      y1$, y2$, y3$,
+      y1$ + y2$ + y3$,
+      item.note || ''
+    ]);
+  });
+  let ty1 = 0, ty2 = 0, ty3 = 0;
+  items.forEach(i => {
+    if (state.enabled.has(i.id)) {
+      const v = computeYearValues(i);
+      ty1 += v.y1; ty2 += v.y2; ty3 += v.y3;
+    }
+  });
+  rows.push([]);
+  rows.push(['TOTAL', '', '', '', '', '', '', '', ty1, ty2, ty3, ty1 + ty2 + ty3, '']);
+  return { rows, ty1, ty2, ty3 };
+}
+
+document.getElementById('export-csv').addEventListener('click', () => {
+  const { rows } = buildExportRows();
+  const csv = rows.map(r => r.map(v => {
+    const s = String(v === null || v === undefined ? '' : v).replace(/"/g, '""');
+    return /[",\n]/.test(s) ? `"${s}"` : s;
+  }).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'Mothership_Budget_' + new Date().toISOString().slice(0, 10) + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('export-xlsx').addEventListener('click', () => {
+  const { rows, ty1, ty2, ty3 } = buildExportRows();
+  const wb = XLSX.utils.book_new();
+
+  const sumRows = [
+    ['Mothership / CTE — 3-year budget'],
+    ['Generated', new Date().toISOString().slice(0, 10)],
+    ['Configuration', 'Custom (edit-in-place)'],
+    [],
+    ['Period', 'Amount'],
+    ['Year 1 (H2 2026 – H1 2027)', ty1],
+    ['Year 2 (H2 2027 – H1 2028)', ty2],
+    ['Year 3 (H2 2028 – H1 2029)', ty3],
+    ['Three-year total', ty1 + ty2 + ty3]
+  ];
+  const sws = XLSX.utils.aoa_to_sheet(sumRows);
+  sws['!cols'] = [{ wch: 34 }, { wch: 16 }];
+  XLSX.utils.book_append_sheet(wb, sws, 'Summary');
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [
+    { wch: 32 }, { wch: 44 }, { wch: 10 }, { wch: 14 }, { wch: 11 },
+    { wch: 10 }, { wch: 10 }, { wch: 10 },
+    { wch: 13 }, { wch: 13 }, { wch: 13 }, { wch: 15 }, { wch: 60 }
+  ];
+  XLSX.utils.book_append_sheet(wb, ws, 'Budget detail');
+
+  XLSX.writeFile(wb, 'Mothership_Budget_' + new Date().toISOString().slice(0, 10) + '.xlsx');
+});
+
+// =====================
+// INIT
+// =====================
+refreshCategoryDatalist();
+renderCustomPresets();
+render();
+renderSummary();
+</script>
+
+</body>
+</html>
