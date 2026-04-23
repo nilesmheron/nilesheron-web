@@ -7,15 +7,18 @@
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #fff; color: #1a1a1a; padding: 32px; }
-  h1 { font-size: 18px; font-weight: 500; margin-bottom: 4px; color: #1a1a1a; }
+  h1 { font-size: 18px; font-weight: 500; margin-bottom: 16px; color: #1a1a1a; }
   .subtitle { font-size: 12px; color: #888; margin-bottom: 20px; }
+  .tab-nav { display: flex; margin-bottom: 24px; border-bottom: 1px solid #e5e5e5; }
+  .tab-btn { padding: 8px 20px; background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; font-size: 12px; font-weight: 500; color: #999; font-family: inherit; margin-bottom: -1px; transition: color 0.15s, border-color 0.15s; }
+  .tab-btn.active { color: #1a1a1a; border-bottom-color: #1a1a1a; }
+  .tab-btn:hover:not(.active) { color: #555; }
   .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 20px; }
   .filter-hint { font-size: 10px; color: #aaa; margin-left: 6px; letter-spacing: 0.04em; }
   .fb { padding: 4px 12px; border-radius: 14px; border: 1px solid; cursor: pointer; font-size: 11px; font-weight: 500; background: transparent; transition: background 0.15s, color 0.15s; font-family: inherit; }
   table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-  th { font-size: 11px; font-weight: 500; padding: 8px 4px 10px; text-align: center; color: #888; border-bottom: 1px solid #e5e5e5; line-height: 1.4; }
-  th.lh { text-align: left; padding-left: 12px; width: 34%; }
-  th:not(.lh) { width: 13.2%; }
+  th { font-size: 11px; font-weight: 500; padding: 6px 3px 8px; text-align: center; color: #888; border-bottom: 1px solid #e5e5e5; line-height: 1.3; }
+  th.lh { text-align: left; padding-left: 12px; }
   td.lc { padding: 4px 8px 4px 22px; color: #1a1a1a; font-size: 12px; line-height: 1.3; position: relative; cursor: pointer; user-select: none; }
   td.lc .tw { display: inline-block; width: 10px; color: #bbb; font-size: 9px; margin-right: 6px; position: relative; top: -1px; transition: transform 0.15s; }
   tr.row.open td.lc .tw { transform: rotate(90deg); color: #666; }
@@ -33,390 +36,278 @@
   .ex-inner dd ul { margin-left: 14px; }
   .ex-inner dd li { margin-bottom: 2px; }
   .hidden { display: none; }
+  #view-m td.bc { border-right: 1px solid #f0f0f0; }
+  #view-m th.mc { border-right: 1px solid #ebebeb; }
+  .scroll-wrap { overflow-x: auto; }
   @media print {
     body { padding: 16px; }
-    .controls { display: none; }
+    .controls, .tab-nav { display: none; }
     .ph td { border-top: 1px solid #ddd; }
     tr.ex { display: none; }
   }
 </style>
 </head>
 <body>
-
 <h1>Mothership — Unified Timeline</h1>
-<p class="subtitle">1420 Charter (real estate delivery) + Deliverable Roadmap (strategic pillars) &nbsp;·&nbsp; Q2 2026 – Q2 2027</p>
-
-<div class="controls" id="controls"></div>
-
-<table>
-  <thead>
-    <tr>
-      <th class="lh">Deliverable / Milestone</th>
-      <th>Q2 2026<br><span style="font-weight:400;font-size:10px;opacity:0.75;">Apr – Jun</span></th>
-      <th>Q3 2026<br><span style="font-weight:400;font-size:10px;opacity:0.75;">Jul – Sep</span></th>
-      <th>Q4 2026<br><span style="font-weight:400;font-size:10px;opacity:0.75;">Oct – Dec</span></th>
-      <th>Q1 2027<br><span style="font-weight:400;font-size:10px;opacity:0.75;">Jan – Mar</span></th>
-      <th>Q2 2027<br><span style="font-weight:400;font-size:10px;opacity:0.75;">Apr – Jun</span></th>
-    </tr>
-  </thead>
-  <tbody id="gb"></tbody>
-</table>
-
+<div class="tab-nav">
+  <button class="tab-btn active" id="tb-q" onclick="switchTab('q')">Quarterly</button>
+  <button class="tab-btn" id="tb-m" onclick="switchTab('m')">Monthly</button>
+</div>
+<div id="view-q">
+  <p class="subtitle">1420 Charter (real estate delivery) + Deliverable Roadmap (strategic pillars) &nbsp;·&nbsp; Q2 2026 – Q2 2027</p>
+  <div class="controls" id="cq"></div>
+  <table>
+    <thead>
+      <tr>
+        <th class="lh" style="width:34%;">Deliverable / Milestone</th>
+        <th style="width:13.2%;">Q2 2026<br><span style="font-weight:400;font-size:10px;opacity:0.75;">Apr – Jun</span></th>
+        <th style="width:13.2%;">Q3 2026<br><span style="font-weight:400;font-size:10px;opacity:0.75;">Jul – Sep</span></th>
+        <th style="width:13.2%;">Q4 2026<br><span style="font-weight:400;font-size:10px;opacity:0.75;">Oct – Dec</span></th>
+        <th style="width:13.2%;">Q1 2027<br><span style="font-weight:400;font-size:10px;opacity:0.75;">Jan – Mar</span></th>
+        <th style="width:13.2%;">Q2 2027<br><span style="font-weight:400;font-size:10px;opacity:0.75;">Apr – Jun</span></th>
+      </tr>
+    </thead>
+    <tbody id="gb-q"></tbody>
+  </table>
+</div>
+<div id="view-m" style="display:none;">
+  <p class="subtitle">1420 Charter (real estate delivery) + Deliverable Roadmap (strategic pillars) &nbsp;·&nbsp; Apr 2026 – Jun 2027</p>
+  <div class="controls" id="cm"></div>
+  <div class="scroll-wrap">
+    <table style="min-width:1280px;">
+      <thead>
+        <tr>
+          <th class="lh" rowspan="2" style="width:200px;vertical-align:bottom;border-bottom:none;">Deliverable / Milestone</th>
+          <th colspan="9" style="border-bottom:none;color:#aaa;font-size:10px;font-weight:500;padding-bottom:3px;">2026</th>
+          <th colspan="6" style="border-bottom:none;color:#aaa;font-size:10px;font-weight:500;padding-bottom:3px;border-left:1px solid #d0d0d0;">2027</th>
+        </tr>
+        <tr>
+          <th class="mc">Apr</th><th class="mc">May</th><th class="mc">Jun</th>
+          <th class="mc">Jul</th><th class="mc">Aug</th><th class="mc">Sep</th>
+          <th class="mc">Oct</th><th class="mc">Nov</th><th class="mc">Dec</th>
+          <th class="mc" style="border-left:1px solid #d0d0d0;">Jan</th>
+          <th class="mc">Feb</th><th class="mc">Mar</th>
+          <th class="mc">Apr</th><th class="mc">May</th><th class="mc">Jun</th>
+        </tr>
+      </thead>
+      <tbody id="gb-m"></tbody>
+    </table>
+  </div>
+</div>
 <script>
-const COLS = 5;
-
-// expansion format: array of { k: 'Label', v: 'Value' or ['list','of','items'] }
-
-const CHARTER = [
-  {id:'charter', label:'1420 Project Charter', color:'#6B5E4F', tc:'#3A2F22', items:[
-    {l:'Vision Alignment', a:[1,0,0,0,0], n:'Charter finalized Apr 17 · Consultant team, design schedule, brand package outline May 8',
-     x:[
-       {k:'Milestones', v:[
-         'Apr 17, 2026 — Finalize Project Charter (Melissa Dittmer)',
-         'May 8, 2026 — Finalize Consultant Team (Melissa Dittmer)',
-         'May 8, 2026 — Confirm Design Schedule (Melissa Dittmer)',
-         'May 8, 2026 — Outline Brand Package Process & Outcomes (Greg Shewchuk + Niles)',
-       ]},
-       {k:'Niles on hook', v:'Brand package outline co-owned with Greg — due May 8.'},
-     ]},
-    {l:'Design Phase', a:[1,1,0,0,0], n:'Kickoff May 15 · SD Jun 5 · DD Jul 17 · CDs Sept 11',
-     x:[
-       {k:'Milestones', v:[
-         'May 15, 2026 — Design & Creative Kick Off (Melissa Dittmer)',
-         'Jun 5, 2026 — Complete Schematic Design Documents (Melissa Dittmer)',
-         'Jun 17, 2026 — SD Cost Estimate (Melissa Dittmer)',
-         'Jun 19, 2026 — Confirm Design Development Scope (Melissa Dittmer, Wonwoo Lee)',
-         'Jul 17, 2026 — Complete Design Development Documents (Melissa Dittmer)',
-         'Jul 17, 2026 — Complete Mothership Brand Standards (Greg Shewchuk + Niles)',
-         'Jul 29, 2026 — DD Cost Estimate (Melissa Dittmer)',
-         'Jul 31, 2026 — Confirm Permit Set & CD Scope (Melissa Dittmer, Wonwoo Lee)',
-         'Aug 28, 2026 — Issue Bid/Permit Set (Melissa Dittmer)',
-         'Sept 11, 2026 — Complete Construction Documents (Melissa Dittmer)',
-       ]},
-       {k:'Niles on hook', v:'Brand Standards complete with Greg — due Jul 17 (concurrent with DD completion).'},
-       {k:'Gating', v:'SD cost estimate gates scope for DD; DD cost estimate + Jul 31 confirmation gate scope for CDs.'},
-     ]},
-    {l:'Construction', a:[0,1,1,1,0], n:'Permit + demo Sept 2026 · Construction Oct 2026 → Apr 2027',
-     x:[
-       {k:'Milestones', v:[
-         'Sept 2026 — Obtain Building Permit (CM)',
-         'Sept 2026 — Confirm Construction Schedule (CM)',
-         'Sept 2026 — Demolition Begins (CM)',
-         'Oct 2026 — Construction Begins (CM)',
-         'Apr 2027 — Construction Completion (CM)',
-         'Apr 2027 — Commissioning (CM)',
-       ]},
-       {k:'CM hire', v:'Construction Manager onboards during Schematic Design phase and stays through all subsequent phases.'},
-       {k:'Phasing', v:'Mothership team may conclude completed design scope should be phased across multiple construction stages.'},
-     ]},
-    {l:'Operations transition (Niles)', a:[0,0,0,0,1], n:'Transition Apr · Tenants Apr–May · Soft/Grand Opening TBD',
-     x:[
-       {k:'Milestones', v:[
-         'Apr 2027 — Transition To Operations (Niles, ownership unconfirmed in Charter)',
-         'Apr–May 2027 — Tenants Move In (Niles, ownership unconfirmed)',
-         'TBD — Mothership Soft Opening (Niles, ownership unconfirmed)',
-         'TBD — Mothership Grand Opening (Niles, ownership unconfirmed)',
-       ]},
-       {k:'Open questions', v:'Charter shows "Niles ??" for all four Operations-phase items. Soft and Grand Opening dates are blank. These are live ownership and date-setting decisions.'},
-       {k:'Dependency', v:'Building must open on fundraising-threshold logic: 50%+ operational funding secured before tenants move in.'},
-     ]},
+const COLS_Q=5,COLS_M=15;
+const CHARTER=[
+  {id:'charter',label:'1420 Project Charter',color:'#6B5E4F',tc:'#3A2F22',items:[
+    {l:'Vision Alignment',a:[1,0,0,0,0],am:[1,1,0,0,0,0,0,0,0,0,0,0,0,0,0],
+     n:'Charter finalized Apr 17 · Consultant team, design schedule, brand package outline May 8',
+     x:[{k:'Milestones',v:['Apr 17, 2026 — Finalize Project Charter (Melissa Dittmer)','May 8, 2026 — Finalize Consultant Team (Melissa Dittmer)','May 8, 2026 — Confirm Design Schedule (Melissa Dittmer)','May 8, 2026 — Outline Brand Package Process & Outcomes (Greg Shewchuk + Niles)']},
+        {k:'Niles on hook',v:'Brand package outline co-owned with Greg — due May 8.'}]},
+    {l:'Design Phase',a:[1,1,0,0,0],am:[0,1,1,1,1,1,0,0,0,0,0,0,0,0,0],
+     n:'Kickoff May 15 · SD Jun 5 · DD Jul 17 · CDs Sept 11',
+     x:[{k:'Milestones',v:['May 15, 2026 — Design &amp; Creative Kick Off (Melissa Dittmer)','Jun 5, 2026 — Complete Schematic Design Documents (Melissa Dittmer)','Jun 17, 2026 — SD Cost Estimate (Melissa Dittmer)','Jun 19, 2026 — Confirm Design Development Scope (Melissa Dittmer, Wonwoo Lee)','Jul 17, 2026 — Complete Design Development Documents (Melissa Dittmer)','Jul 17, 2026 — Complete Mothership Brand Standards (Greg Shewchuk + Niles)','Jul 29, 2026 — DD Cost Estimate (Melissa Dittmer)','Jul 31, 2026 — Confirm Permit Set &amp; CD Scope (Melissa Dittmer, Wonwoo Lee)','Aug 28, 2026 — Issue Bid/Permit Set (Melissa Dittmer)','Sept 11, 2026 — Complete Construction Documents (Melissa Dittmer)']},
+        {k:'Niles on hook',v:'Brand Standards complete with Greg — due Jul 17 (concurrent with DD completion).'},
+        {k:'Gating',v:'SD cost estimate gates scope for DD; DD cost estimate + Jul 31 confirmation gate scope for CDs.'}]},
+    {l:'Construction',a:[0,1,1,1,0],am:[0,0,0,0,0,1,1,1,1,1,1,1,1,0,0],
+     n:'Permit + demo Sept 2026 · Construction Oct 2026 → Apr 2027',
+     x:[{k:'Milestones',v:['Sept 2026 — Obtain Building Permit (CM)','Sept 2026 — Confirm Construction Schedule (CM)','Sept 2026 — Demolition Begins (CM)','Oct 2026 — Construction Begins (CM)','Apr 2027 — Construction Completion (CM)','Apr 2027 — Commissioning (CM)']},
+        {k:'CM hire',v:'Construction Manager onboards during Schematic Design phase and stays through all subsequent phases.'},
+        {k:'Phasing',v:'Mothership team may conclude completed design scope should be phased across multiple construction stages.'}]},
+    {l:'Operations transition (Niles)',a:[0,0,0,0,1],am:[0,0,0,0,0,0,0,0,0,0,0,0,1,1,1],
+     n:'Transition Apr · Tenants Apr–May · Soft/Grand Opening TBD',
+     x:[{k:'Milestones',v:['Apr 2027 — Transition To Operations (Niles, ownership unconfirmed in Charter)','Apr–May 2027 — Tenants Move In (Niles, ownership unconfirmed)','TBD — Mothership Soft Opening (Niles, ownership unconfirmed)','TBD — Mothership Grand Opening (Niles, ownership unconfirmed)']},
+        {k:'Open questions',v:'Charter shows "Niles ??" for all four Operations-phase items. Soft and Grand Opening dates are blank. These are live ownership and date-setting decisions.'},
+        {k:'Dependency',v:'Building must open on fundraising-threshold logic: 50%+ operational funding secured before tenants move in.'}]},
   ]}
 ];
-
-const ROADMAP = [
-  {id:'founders', label:'Founders', color:'#EF9F27', tc:'#633806', items:[
-    {l:'TC founder support pipeline', a:[0,1,1,1,1], n:'4 (H2 2026) → 8 (H1 2027) → ongoing',
-     x:[
-       {k:'Target', v:'4 pre-seed rounds closed by end H2 2026 → 4 additional by Q1 2027 (8 total for building opening narrative).'},
-       {k:'Partners', v:'Transparent Collective (accelerator cohorts, Cortex House SF exchange); BlackOps VC (advocacy + deal facilitation).'},
-       {k:'Activities', v:[
-         'Identify high-potential Black and Brown founders from Detroit and broader Midwest',
-         'Support founders through fundraise (intros, pitch refinement, advocacy)',
-         'Execute first TC accelerator cohort in Detroit (H2 2026)',
-         'Activate Cortex House SF exchange program placements',
-         'Continue TC/Venture 313 collaboration + other ESO partnerships',
-       ]},
-       {k:'Metrics', v:'Pre-seed rounds closed · $ raised · geographic mix (Detroit / Midwest / national).'},
-       {k:'Framing', v:'Less than 2% of VC nationally reaches Black founders — this target is proof of concept for a broken system, not a modest goal.'},
-     ]},
-    {l:'2nd TC accelerator cohort', a:[0,0,0,1,1], n:'H1 2027',
-     x:[
-       {k:'Timing', v:'Launches H1 2027, building on first Detroit cohort from H2 2026.'},
-       {k:'Purpose', v:'Scale early TC engagement model; contributes to the 8-founder target for building opening.'},
-       {k:'Scope', v:'Expand geographic reach while maintaining Detroit anchor; document outcomes rigorously for public narrative.'},
-     ]},
-    {l:'Founder community & cultural programming', a:[0,1,1,1,1], n:'Informal Q4 2026 → formalized H1 2027',
-     x:[
-       {k:'Principle', v:'Whole Founder — capital without cultural embrace is not an acceptable outcome.'},
-       {k:'Activities', v:[
-         'Launch at least one recurring founder community convening (Q4 2026)',
-         'Establish relationships with facilitators equipped to lead culturally informed programming',
-         'Integrate community-building into every founder-facing event (never purely transactional)',
-       ]},
-       {k:'Evolution', v:'Begins as informal convenings H2 2026; formalizes into structured peer groups + facilitated sessions H1 2027.'},
-     ]},
-    {l:'Formalize community programming', a:[0,0,0,1,1], n:'H1 2027',
-     x:[
-       {k:'Transition', v:'From informal H2 2026 convenings to structured programming.'},
-       {k:'Scope', v:'Regular founder peer groups, facilitated sessions on the particular experience of building venture-scale companies as a marginalized founder.'},
-       {k:'Dependency', v:'Requires community relationships + facilitator network built in H2 2026.'},
-     ]},
+const ROADMAP=[
+  {id:'founders',label:'Founders',color:'#EF9F27',tc:'#633806',items:[
+    {l:'TC founder support pipeline',a:[0,1,1,1,1],am:[0,0,0,1,1,1,1,1,1,1,1,1,1,1,1],
+     n:'4 (H2 2026) → 8 (H1 2027) → ongoing',
+     x:[{k:'Target',v:'4 pre-seed rounds closed by end H2 2026 → 4 additional by Q1 2027 (8 total for building opening narrative).'},
+        {k:'Partners',v:'Transparent Collective (accelerator cohorts, Cortex House SF exchange); BlackOps VC (advocacy + deal facilitation).'},
+        {k:'Activities',v:['Identify high-potential Black and Brown founders from Detroit and broader Midwest','Support founders through fundraise (intros, pitch refinement, advocacy)','Execute first TC accelerator cohort in Detroit (H2 2026)','Activate Cortex House SF exchange program placements','Continue TC/Venture 313 collaboration + other ESO partnerships']},
+        {k:'Metrics',v:'Pre-seed rounds closed · $ raised · geographic mix (Detroit / Midwest / national).'},
+        {k:'Framing',v:'Less than 2% of VC nationally reaches Black founders — this target is proof of concept for a broken system, not a modest goal.'}]},
+    {l:'2nd TC accelerator cohort',a:[0,0,0,1,1],am:[0,0,0,0,0,0,0,0,0,1,1,1,1,1,1],n:'H1 2027',
+     x:[{k:'Timing',v:'Launches H1 2027, building on first Detroit cohort from H2 2026.'},
+        {k:'Purpose',v:'Scale early TC engagement model; contributes to the 8-founder target for building opening.'},
+        {k:'Scope',v:'Expand geographic reach while maintaining Detroit anchor; document outcomes rigorously for public narrative.'}]},
+    {l:'Founder community &amp; cultural programming',a:[0,1,1,1,1],am:[0,0,0,1,1,1,1,1,1,1,1,1,1,1,1],
+     n:'Informal Q4 2026 → formalized H1 2027',nm:'Informal Oct 2026 → formalized H1 2027',
+     x:[{k:'Principle',v:'Whole Founder — capital without cultural embrace is not an acceptable outcome.'},
+        {k:'Activities',v:['Launch at least one recurring founder community convening (Q4 2026)','Establish relationships with facilitators equipped to lead culturally informed programming','Integrate community-building into every founder-facing event (never purely transactional)']},
+        {k:'Evolution',v:'Begins as informal convenings H2 2026; formalizes into structured peer groups + facilitated sessions H1 2027.'}]},
+    {l:'Formalize community programming',a:[0,0,0,1,1],am:[0,0,0,0,0,0,0,0,0,1,1,1,1,1,1],n:'H1 2027',
+     x:[{k:'Transition',v:'From informal H2 2026 convenings to structured programming.'},
+        {k:'Scope',v:'Regular founder peer groups, facilitated sessions on the particular experience of building venture-scale companies as a marginalized founder.'},
+        {k:'Dependency',v:'Requires community relationships + facilitator network built in H2 2026.'}]},
   ]},
-  {id:'building', label:'Building & infrastructure', color:'#1D9E75', tc:'#085041', items:[
-    {l:'5th floor renovation', a:[0,1,1,1,0], n:'target completion: Mar 2027',
-     x:[
-       {k:'Owner', v:'Song Foundation + JCMB (renovation execution); Mothership team provides programming-side input.'},
-       {k:'Activities', v:[
-         'Coordinate with Song Foundation & JCMB on renovation timeline',
-         'Provide input on space design for programming needs',
-         'Plan interim programming in existing building spaces and extension spaces',
-       ]},
-       {k:'Enables', v:'Physical programming space for formal H2 2027 launch.'},
-       {k:'Link to Charter', v:'Depends on Charter construction schedule: permit Sept 2026, construction Oct 2026 → Apr 2027.'},
-     ]},
-    {l:'Tenant alignment framework', a:[0,1,1,0,0], n:'complete Q4 2026',
-     x:[
-       {k:'Deliverables', v:[
-         'Document defining mission-aligned tenant characteristics by sector',
-         'Identification of current tenants for phase-out (as leases expire)',
-         'Target tenant types: VCs, family offices, foundations, startup service providers',
-         'Key building improvements needed to attract target tenants',
-       ]},
-       {k:'Structural note', v:'JCMB-related work involves dual role of Song Foundation as funder + ownership stakeholder. See Appendix B for conflict management approaches.'},
-     ]},
-    {l:'Informal programming launch', a:[0,1,1,0,0], n:'begin Q4 2026',
-     x:[
-       {k:'Activities', v:[
-         'Host founder-funder networking events in existing building spaces',
-         'Establish brand presence beyond just the physical building',
-         'Create informal convening opportunities for ecosystem participants',
-         'Test programming concepts before formal launch',
-       ]},
-       {k:'Purpose', v:'Build activity and narrative momentum ahead of building opening — prove impact first, announce infrastructure second.'},
-     ]},
-    {l:'Building opening & announcement', a:[0,0,0,1,0], n:'target Q1 2027',
-     x:[
-       {k:'Prep', v:'Brand identity + materials finalized; narrative and supporting materials developed; announcement timing coordinated with TC, BlackOps, Song Foundation; launch event planned (invites, programming, media).'},
-       {k:'Announcement stakeholders', v:'Song Foundation · Transparent Collective · Sharon Madison (JCMB) · BlackOps VC · 2-5 additional VC partners · Foundation partners.'},
-       {k:'Narrative', v:'"Over the past 6–9 months, through partnerships with Song Foundation, Transparent Collective, and BlackOps VC, we\'ve supported X Black and Brown founders in raising $Y in capital. Today, we\'re opening [Brand Name] at the historic Julian C. Madison Building as the physical home for this work."'},
-       {k:'Open items', v:'Exact opening event date TBD. Final brand name pending rebrand exercise. Charter Soft/Grand Opening dates also blank.'},
-     ]},
-    {l:'Mission-aligned tenant attraction', a:[0,0,0,1,1], n:'initiate Q1 2027',
-     x:[
-       {k:'Activities', v:[
-         'Launch outreach to target tenant prospects identified in framework',
-         'Develop tenant value proposition (beyond rent: ecosystem access, programming, community)',
-         'Begin conversations with VCs, family offices, foundations, service providers',
-       ]},
-       {k:'Depends on', v:'Tenant alignment framework complete (Q4 2026) + brand identity complete (Q4 2026).'},
-     ]},
+  {id:'building',label:'Building &amp; infrastructure',color:'#1D9E75',tc:'#085041',items:[
+    {l:'5th floor renovation',a:[0,1,1,1,0],am:[0,0,0,1,1,1,1,1,1,1,1,1,0,0,0],
+     n:'target completion: Mar 2027',
+     x:[{k:'Owner',v:'Song Foundation + JCMB (renovation execution); Mothership team provides programming-side input.'},
+        {k:'Activities',v:['Coordinate with Song Foundation &amp; JCMB on renovation timeline','Provide input on space design for programming needs','Plan interim programming in existing building spaces and extension spaces']},
+        {k:'Enables',v:'Physical programming space for formal H2 2027 launch.'},
+        {k:'Link to Charter',v:'Depends on Charter construction schedule: permit Sept 2026, construction Oct 2026 → Apr 2027.'}]},
+    {l:'Tenant alignment framework',a:[0,1,1,0,0],am:[0,0,0,1,1,1,1,1,1,0,0,0,0,0,0],
+     n:'complete Q4 2026',nm:'complete by Dec 2026',
+     x:[{k:'Deliverables',v:['Document defining mission-aligned tenant characteristics by sector','Identification of current tenants for phase-out (as leases expire)','Target tenant types: VCs, family offices, foundations, startup service providers','Key building improvements needed to attract target tenants']},
+        {k:'Structural note',v:'JCMB-related work involves dual role of Song Foundation as funder + ownership stakeholder. See Appendix B for conflict management approaches.'}]},
+    {l:'Informal programming launch',a:[0,1,1,0,0],am:[0,0,0,1,1,1,1,1,1,0,0,0,0,0,0],
+     n:'begin Q4 2026',nm:'begin Oct 2026',
+     x:[{k:'Activities',v:['Host founder-funder networking events in existing building spaces','Establish brand presence beyond just the physical building','Create informal convening opportunities for ecosystem participants','Test programming concepts before formal launch']},
+        {k:'Purpose',v:'Build activity and narrative momentum ahead of building opening — prove impact first, announce infrastructure second.'}]},
+    {l:'Building opening &amp; announcement',a:[0,0,0,1,0],am:[0,0,0,0,0,0,0,0,0,1,1,1,0,0,0],
+     n:'target Q1 2027',
+     x:[{k:'Prep',v:'Brand identity + materials finalized; narrative and supporting materials developed; announcement timing coordinated with TC, BlackOps, Song Foundation; launch event planned (invites, programming, media).'},
+        {k:'Announcement stakeholders',v:'Song Foundation · Transparent Collective · Sharon Madison (JCMB) · BlackOps VC · 2-5 additional VC partners · Foundation partners.'},
+        {k:'Narrative',v:'"Over the past 6–9 months, through partnerships with Song Foundation, Transparent Collective, and BlackOps VC, we\'ve supported X Black and Brown founders in raising $Y in capital. Today, we\'re opening [Brand Name] at the historic Julian C. Madison Building as the physical home for this work."'},
+        {k:'Open items',v:'Exact opening event date TBD. Final brand name pending rebrand exercise. Charter Soft/Grand Opening dates also blank.'}]},
+    {l:'Mission-aligned tenant attraction',a:[0,0,0,1,1],am:[0,0,0,0,0,0,0,0,0,1,1,1,1,1,1],
+     n:'initiate Q1 2027',
+     x:[{k:'Activities',v:['Launch outreach to target tenant prospects identified in framework','Develop tenant value proposition (beyond rent: ecosystem access, programming, community)','Begin conversations with VCs, family offices, foundations, service providers']},
+        {k:'Depends on',v:'Tenant alignment framework complete (Dec 2026) + brand identity complete (Dec 2026).'}]},
   ]},
-  {id:'branding', label:'Branding, comms & thought leadership', color:'#7F77DD', tc:'#3C3489', items:[
-    {l:'Rebrand & brand identity', a:[0,1,1,0,0], n:'complete Q4 2026',
-     x:[
-       {k:'Scope', v:[
-         'Move away from placeholder names ("CTE" / "Mothership") to market-appropriate brand',
-         'Develop comprehensive brand identity: name, visual identity, positioning statement',
-         'Test brand with key stakeholders (founders, funders, partners)',
-         'Finalize brand guidelines and messaging framework',
-       ]},
-       {k:'Deliverable', v:'New brand identity ready for building opening announcement.'},
-       {k:'Link to Charter', v:'Brand Standards milestone (Jul 17, 2026) under Charter Design Phase is the operational track; this is the strategic track.'},
-     ]},
-    {l:'Communications infrastructure', a:[0,1,1,0,0], n:'establish Q4 2026',
-     x:[
-       {k:'Build', v:[
-         'Hire/contract communications and PR support',
-         'Establish social media presence and content calendar',
-         'Develop media relationships (local + national tech/business press)',
-         'Create narrative framework: "Detroit backing underrepresented founders"',
-         'Document early wins (case studies, founder testimonials, data)',
-       ]},
-       {k:'Enables', v:'Amplification of H1 2027 early wins and building opening announcement.'},
-     ]},
-    {l:'Ongoing PR & media relations', a:[0,0,0,1,1], n:'H1 2027 onward',
-     x:[
-       {k:'Focus', v:'Amplify founder wins; maintain media relationships; seed national narrative ("Detroit as Sand Hill Road for marginalized founders").'},
-       {k:'Metrics', v:'Media placements · social reach · narrative adoption.'},
-     ]},
+  {id:'branding',label:'Branding, comms &amp; thought leadership',color:'#7F77DD',tc:'#3C3489',items:[
+    {l:'Rebrand &amp; brand identity',a:[0,1,1,0,0],am:[0,0,0,1,1,1,1,1,1,0,0,0,0,0,0],
+     n:'complete Q4 2026',nm:'complete by Dec 2026',
+     x:[{k:'Scope',v:['Move away from placeholder names ("CTE" / "Mothership") to market-appropriate brand','Develop comprehensive brand identity: name, visual identity, positioning statement','Test brand with key stakeholders (founders, funders, partners)','Finalize brand guidelines and messaging framework']},
+        {k:'Deliverable',v:'New brand identity ready for building opening announcement.'},
+        {k:'Link to Charter',v:'Brand Standards milestone (Jul 17, 2026) under Charter Design Phase is the operational track; this is the strategic track.'}]},
+    {l:'Communications infrastructure',a:[0,1,1,0,0],am:[0,0,0,1,1,1,1,1,1,0,0,0,0,0,0],
+     n:'establish Q4 2026',nm:'establish by Dec 2026',
+     x:[{k:'Build',v:['Hire/contract communications and PR support','Establish social media presence and content calendar','Develop media relationships (local + national tech/business press)','Create narrative framework: "Detroit backing underrepresented founders"','Document early wins (case studies, founder testimonials, data)']},
+        {k:'Enables',v:'Amplification of H1 2027 early wins and building opening announcement.'}]},
+    {l:'Ongoing PR &amp; media relations',a:[0,0,0,1,1],am:[0,0,0,0,0,0,0,0,0,1,1,1,1,1,1],
+     n:'H1 2027 onward',
+     x:[{k:'Focus',v:'Amplify founder wins; maintain media relationships; seed national narrative ("Detroit as Sand Hill Road for marginalized founders").'},
+        {k:'Metrics',v:'Media placements · social reach · narrative adoption.'}]},
   ]},
-  {id:'org', label:'Organizational foundation', color:'#888780', tc:'#444441', items:[
-    {l:'Governance & operations setup', a:[0,1,1,0,0], n:'establish Q3 2026',
-     x:[
-       {k:'Build', v:[
-         'Governance framework and decision-making processes',
-         'Operational systems (finance, HR, project management)',
-         'Partnership agreement templates and processes',
-         'Measurement and reporting frameworks',
-       ]},
-       {k:'Note', v:'Fiscal sponsor identification and onboarding completed prior to CEO start date.'},
-     ]},
-    {l:'Financial planning & 3-year budget', a:[0,1,1,0,0], n:'complete Q4 2026',
-     x:[
-       {k:'Scope', v:'FY 2027-2029 comprehensive budget.'},
-       {k:'Scenarios', v:'Conservative · moderate · aggressive growth.'},
-       {k:'Components', v:'Revenue/expense projections · programming milestones alignment · hiring plan.'},
-       {k:'Deliverable', v:'3-year budget ready for foundation fundraising conversations (unblocks H1 2027 fundraise).'},
-     ]},
-    {l:'Initial team & contractors', a:[0,1,1,1,1], n:'hire by Q4 2026',
-     x:[
-       {k:'Initial roles (contractors)', v:[
-         'Communications/PR support (part-time or project-based)',
-         'Operations/administrative support (part-time)',
-         'Program coordination support (as needed for TC partnership)',
-       ]},
-       {k:'Transition plan', v:'Convert contractors to staff positions as budget allows in Year 2.'},
-     ]},
+  {id:'org',label:'Organizational foundation',color:'#888780',tc:'#444441',items:[
+    {l:'Governance &amp; operations setup',a:[0,1,1,0,0],am:[0,0,0,1,1,1,1,1,1,0,0,0,0,0,0],
+     n:'establish Q3 2026',nm:'establish by Sep 2026',
+     x:[{k:'Build',v:['Governance framework and decision-making processes','Operational systems (finance, HR, project management)','Partnership agreement templates and processes','Measurement and reporting frameworks']},
+        {k:'Note',v:'Fiscal sponsor identification and onboarding completed prior to CEO start date.'}]},
+    {l:'Financial planning &amp; 3-year budget',a:[0,1,1,0,0],am:[0,0,0,1,1,1,1,1,1,0,0,0,0,0,0],
+     n:'complete Q4 2026',nm:'complete by Dec 2026',
+     x:[{k:'Scope',v:'FY 2027-2029 comprehensive budget.'},
+        {k:'Scenarios',v:'Conservative · moderate · aggressive growth.'},
+        {k:'Components',v:'Revenue/expense projections · programming milestones alignment · hiring plan.'},
+        {k:'Deliverable',v:'3-year budget ready for foundation fundraising conversations (unblocks H1 2027 fundraise).'}]},
+    {l:'Initial team &amp; contractors',a:[0,1,1,1,1],am:[0,0,0,1,1,1,1,1,1,1,1,1,1,1,1],
+     n:'hire by Q4 2026',nm:'hire by Dec 2026',
+     x:[{k:'Initial roles (contractors)',v:['Communications/PR support (part-time or project-based)','Operations/administrative support (part-time)','Program coordination support (as needed for TC partnership)']},
+        {k:'Transition plan',v:'Convert contractors to staff positions as budget allows in Year 2.'}]},
   ]},
-  {id:'financial', label:'Financial sustainability', color:'#639922', tc:'#27500A', items:[
-    {l:'Foundation fundraising', a:[0,0,0,1,1], n:'50%+ secured before opening',
-     x:[
-       {k:'Target', v:'50%+ of operational funding secured before building opening · diversify beyond Song Foundation · secure 2+ year runway.'},
-       {k:'Activities', v:[
-         'Work with Song Foundation to cultivate additional foundation funders',
-         'Develop compelling case for support based on 6–12 month track record',
-         'Present 3-year budget + programming roadmap to foundation prospects',
-         'Secure multi-year commitments for operational sustainability',
-       ]},
-       {k:'Metrics', v:'Total committed funding · number of funders (reduce single-source dependency) · multi-year commitment rate.'},
-       {k:'Gates', v:'3-year budget must be complete before this runs; building opening cannot proceed without 50%+ threshold.'},
-     ]},
+  {id:'financial',label:'Financial sustainability',color:'#639922',tc:'#27500A',items:[
+    {l:'Foundation fundraising',a:[0,0,0,1,1],am:[0,0,0,0,0,0,0,0,0,1,1,1,1,1,1],
+     n:'50%+ secured before opening',
+     x:[{k:'Target',v:'50%+ of operational funding secured before building opening · diversify beyond Song Foundation · secure 2+ year runway.'},
+        {k:'Activities',v:['Work with Song Foundation to cultivate additional foundation funders','Develop compelling case for support based on 6–12 month track record','Present 3-year budget + programming roadmap to foundation prospects','Secure multi-year commitments for operational sustainability']},
+        {k:'Metrics',v:'Total committed funding · number of funders (reduce single-source dependency) · multi-year commitment rate.'},
+        {k:'Gates',v:'3-year budget must be complete before this runs; building opening cannot proceed without 50%+ threshold.'}]},
   ]},
-  {id:'programming', label:'Programming & ESO mapping', color:'#378ADD', tc:'#0C447C', items:[
-    {l:'ESO mapping — Tier 1', a:[0,0,0,1,1], n:'complete Q2 2027',
-     x:[
-       {k:'Purpose', v:'Understand what exists, what works, where gaps require us to build.'},
-       {k:'Local orgs to assess', v:'TechTown Detroit · Black Tech Saturdays · Endeavor Midwest · Michigan Founders Fund · Centrepolis · Venture 313 · Michigan Central.'},
-       {k:'National orgs to evaluate', v:'Camelback Ventures · others to be identified through mapping process.'},
-       {k:'Deliverable', v:'ESO Mapping Report with recommendations: which programs to partner with · where are gaps · what to build vs. support.'},
-       {k:'Reference', v:'See Appendix A for full ESO mapping framework, geographic scopes, program areas, and decision criteria.'},
-     ]},
+  {id:'programming',label:'Programming &amp; ESO mapping',color:'#378ADD',tc:'#0C447C',items:[
+    {l:'ESO mapping — Tier 1',a:[0,0,0,1,1],am:[0,0,0,0,0,0,0,0,0,1,1,1,1,1,1],
+     n:'complete Q2 2027',nm:'complete by Jun 2027',
+     x:[{k:'Purpose',v:'Understand what exists, what works, where gaps require us to build.'},
+        {k:'Local orgs to assess',v:'TechTown Detroit · Black Tech Saturdays · Endeavor Midwest · Michigan Founders Fund · Centrepolis · Venture 313 · Michigan Central.'},
+        {k:'National orgs to evaluate',v:'Camelback Ventures · others to be identified through mapping process.'},
+        {k:'Deliverable',v:'ESO Mapping Report with recommendations: which programs to partner with · where are gaps · what to build vs. support.'},
+        {k:'Reference',v:'See Appendix A for full ESO mapping framework, geographic scopes, program areas, and decision criteria.'}]},
   ]},
-  {id:'partnerships', label:'Partnerships', color:'#D85A30', tc:'#712B13', items:[
-    {l:'TC & BlackOps partnership activation', a:[0,1,1,1,1], n:'anchor partnerships',
-     x:[
-       {k:'TC', v:'Already active in Detroit through existing programmatic relationships. H2 2026 formalizes/deepens engagement. Expected anchor tenant. TC\'s engagement is not contingent on building announcement; ours is not contingent on theirs — build in parallel and amplify each other.'},
-       {k:'BlackOps', v:'Founder advocacy + deal facilitation partner. Fund II closing Q1 2027.'},
-       {k:'What each brings', v:'TC: national credibility + proven model. Local side: relationships, ecosystem context, institutional infrastructure to sustain and amplify over time.'},
-     ]},
-    {l:'ESO partnerships (4 target)', a:[0,0,0,1,1], n:'2 local, 2 national',
-     x:[
-       {k:'Target', v:'4 ESO partnerships executed by H1 2028 — 2 local, 2 national.'},
-       {k:'Selection', v:'Informed by Tier 1 ESO mapping deliverable (Q2 2027).'},
-       {k:'Open', v:'Specific organizations TBD per the roadmap\'s "items requiring definition".'},
-     ]},
+  {id:'partnerships',label:'Partnerships',color:'#D85A30',tc:'#712B13',items:[
+    {l:'TC &amp; BlackOps partnership activation',a:[0,1,1,1,1],am:[0,0,0,1,1,1,1,1,1,1,1,1,1,1,1],
+     n:'anchor partnerships',
+     x:[{k:'TC',v:'Already active in Detroit through existing programmatic relationships. H2 2026 formalizes/deepens engagement. Expected anchor tenant. TC\'s engagement is not contingent on building announcement; ours is not contingent on theirs — build in parallel and amplify each other.'},
+        {k:'BlackOps',v:'Founder advocacy + deal facilitation partner. Fund II closing Q1 2027.'},
+        {k:'What each brings',v:'TC: national credibility + proven model. Local side: relationships, ecosystem context, institutional infrastructure to sustain and amplify over time.'}]},
+    {l:'ESO partnerships (4 target)',a:[0,0,0,1,1],am:[0,0,0,0,0,0,0,0,0,1,1,1,1,1,1],
+     n:'2 local, 2 national',
+     x:[{k:'Target',v:'4 ESO partnerships executed by H1 2028 — 2 local, 2 national.'},
+        {k:'Selection',v:'Informed by Tier 1 ESO mapping deliverable (Q2 2027).'},
+        {k:'Open',v:'Specific organizations TBD per the roadmap\'s "items requiring definition".'}]},
   ]},
 ];
-
-const ALL = [...CHARTER, ...ROADMAP];
-let sel = new Set();        // pillar IDs selected; empty = "All"
-let openRows = new Set();   // row IDs currently expanded
-
-function isPillarVisible(id){ return sel.size===0 || sel.has(id); }
-
-function mkBar(color,a,i){
-  if(!a[i]) return '<td class="bc"></td>';
-  const s=i===0||!a[i-1], e=i===(COLS-1)||!a[i+1];
+const ALL=[...CHARTER,...ROADMAP];
+let selQ=new Set(),selM=new Set(),openRowsQ=new Set(),openRowsM=new Set();
+function isPillarVisible(id,sel){return sel.size===0||sel.has(id);}
+function mkBar(color,arr,i,cols,isM){
+  const ys=isM&&i===9,bs=ys?'border-left:1px solid #d0d0d0;':'';
+  if(!arr[i])return`<td class="bc" style="${bs}"></td>`;
+  const s=i===0||!arr[i-1],e=i===(cols-1)||!arr[i+1];
   const br=s&&e?'4px':s?'4px 0 0 4px':e?'0 4px 4px 0':'0';
-  const ml=s?'3px':'0', mr=e?'3px':'0';
-  return `<td class="bc"><div class="bar" style="background:${color};border-radius:${br};margin:0 ${mr} 0 ${ml};"></div></td>`;
+  return`<td class="bc" style="${bs}"><div class="bar" style="background:${color};border-radius:${br};margin:0 ${e?'3px':'0'} 0 ${s?'3px':'0'};"></div></td>`;
 }
-
 function renderExpansion(x){
-  if(!x||!x.length) return '<div class="ex-inner" style="color:#999;font-style:italic;">No additional detail.</div>';
+  if(!x||!x.length)return'<div class="ex-inner" style="color:#999;font-style:italic;">No additional detail.</div>';
   let h='<div class="ex-inner"><dl>';
-  x.forEach(pair=>{
-    h+=`<dt>${pair.k}</dt>`;
-    if(Array.isArray(pair.v)){
-      h+='<dd><ul>';
-      pair.v.forEach(li=>h+=`<li>${li}</li>`);
-      h+='</ul></dd>';
-    } else {
-      h+=`<dd>${pair.v}</dd>`;
-    }
+  x.forEach(p=>{
+    h+=`<dt>${p.k}</dt>`;
+    if(Array.isArray(p.v)){h+='<dd><ul>';p.v.forEach(li=>h+=`<li>${li}</li>`);h+='</ul></dd>';}
+    else h+=`<dd>${p.v}</dd>`;
   });
-  h+='</dl></div>';
-  return h;
+  return h+'</dl></div>';
 }
-
-function renderGroup(group){
+function renderGroup(group,isM,sel,openRows){
+  const cols=isM?COLS_M:COLS_Q,tab=isM?'m':'q';
   let h='';
   group.forEach(p=>{
-    const hide = !isPillarVisible(p.id) ? ' hidden' : '';
-    h+=`<tr class="ph${hide}"><td colspan="${COLS+1}" style="background:${p.color}18;color:${p.tc};border-left-color:${p.color};">${p.label}</td></tr>`;
+    const hide=!isPillarVisible(p.id,sel)?' hidden':'';
+    h+=`<tr class="ph${hide}"><td colspan="${cols+1}" style="background:${p.color}18;color:${p.tc};border-left-color:${p.color};">${p.label}</td></tr>`;
     p.items.forEach((it,idx)=>{
-      const rid = `${p.id}-${idx}`;
-      const open = openRows.has(rid);
-      const caret = open ? '▾' : '▸';
-      h+=`<tr class="row ${open?'open':''}${hide}" onclick="toggleRow('${rid}')"><td class="lc"><span class="tw">${caret}</span>${it.l}${it.n?`<span class="note">${it.n}</span>`:''}</td>`;
-      for(let i=0;i<COLS;i++) h+=mkBar(p.color,it.a,i);
-      h+=`</tr>`;
-      // expansion row
-      const exHidden = (!open || !!hide) ? ' hidden' : '';
-      h+=`<tr class="ex${exHidden}"><td colspan="${COLS+1}" style="border-left-color:${p.color};">${renderExpansion(it.x)}</td></tr>`;
+      const rid=`${p.id}-${idx}`,open=openRows.has(rid),arr=isM?it.am:it.a,note=isM?(it.nm||it.n):it.n;
+      h+=`<tr class="row ${open?'open':''}${hide}" onclick="toggleRow('${rid}','${tab}')"><td class="lc"><span class="tw">${open?'▾':'▸'}</span>${it.l}${note?`<span class="note">${note}</span>`:''}</td>`;
+      for(let i=0;i<cols;i++)h+=mkBar(p.color,arr,i,cols,isM);
+      h+=`</tr><tr class="ex${(!open||!!hide)?' hidden':''}"><td colspan="${cols+1}" style="border-left-color:${p.color};">${renderExpansion(it.x)}</td></tr>`;
     });
   });
   return h;
 }
-
-function render(){
-  const showCharter = CHARTER.some(p=>isPillarVisible(p.id));
-  const showRoadmap = ROADMAP.some(p=>isPillarVisible(p.id));
-  let h='';
-  h += `<tr class="sl${showCharter?'':' hidden'}"><td colspan="${COLS+1}">Real estate delivery</td></tr>`;
-  h += renderGroup(CHARTER);
-  h += `<tr class="sl${showRoadmap?'':' hidden'}"><td colspan="${COLS+1}">Strategic roadmap</td></tr>`;
-  h += renderGroup(ROADMAP);
-  document.getElementById('gb').innerHTML=h;
+function renderView(isM){
+  const sel=isM?selM:selQ,openRows=isM?openRowsM:openRowsQ,cols=isM?COLS_M:COLS_Q;
+  const sc=CHARTER.some(p=>isPillarVisible(p.id,sel)),sr=ROADMAP.some(p=>isPillarVisible(p.id,sel));
+  let h=`<tr class="sl${sc?'':' hidden'}"><td colspan="${cols+1}">Real estate delivery</td></tr>`;
+  h+=renderGroup(CHARTER,isM,sel,openRows);
+  h+=`<tr class="sl${sr?'':' hidden'}"><td colspan="${cols+1}">Strategic roadmap</td></tr>`;
+  h+=renderGroup(ROADMAP,isM,sel,openRows);
+  document.getElementById(isM?'gb-m':'gb-q').innerHTML=h;
 }
-
-function toggleRow(rid){
-  if(openRows.has(rid)) openRows.delete(rid);
-  else openRows.add(rid);
-  render();
+function toggleRow(rid,tab){
+  const o=tab==='m'?openRowsM:openRowsQ;
+  if(o.has(rid))o.delete(rid);else o.add(rid);
+  renderView(tab==='m');
 }
-
-function buildF(){
-  let h=`<button class="fb" id="f-all" onclick="setF('all')" style="color:#666;border-color:#ccc;">All</button>`;
-  ALL.forEach(p=>{
-    h+=`<button class="fb" id="f-${p.id}" onclick="setF('${p.id}')" style="color:${p.tc};border-color:${p.color};">${p.label}</button>`;
-  });
+function buildFilters(isM){
+  const cid=isM?'cm':'cq',tab=isM?'m':'q';
+  let h=`<button class="fb" id="${cid}-all" onclick="setF('all','${tab}')" style="color:#666;border-color:#ccc;">All</button>`;
+  ALL.forEach(p=>{h+=`<button class="fb" id="${cid}-${p.id}" onclick="setF('${p.id}','${tab}')" style="color:${p.tc};border-color:${p.color};">${p.label}</button>`;});
   h+=`<span class="filter-hint">click multiple to combine · click again to remove</span>`;
-  document.getElementById('controls').innerHTML=h;
-  styleActive();
+  document.getElementById(cid).innerHTML=h;
+  styleFilters(isM);
 }
-
-function styleActive(){
-  document.querySelectorAll('.fb').forEach(b=>{
-    const id=b.id.replace('f-','');
-    const p=ALL.find(x=>x.id===id);
-    let active = false;
-    if(id==='all') active = (sel.size===0);
-    else active = sel.has(id);
-    if(active){
-      b.style.background=p?p.color:'#888';
-      b.style.color='white';
-      b.style.borderColor=p?p.color:'#888';
-    } else {
-      b.style.background='transparent';
-      if(p){b.style.color=p.tc;b.style.borderColor=p.color;}
-      else{b.style.color='#666';b.style.borderColor='#ccc';}
-    }
+function styleFilters(isM){
+  const sel=isM?selM:selQ,cid=isM?'cm':'cq';
+  document.querySelectorAll(`#${cid} .fb`).forEach(b=>{
+    const raw=b.id.replace(`${cid}-`,''),p=ALL.find(x=>x.id===raw);
+    const active=raw==='all'?(sel.size===0):sel.has(raw);
+    if(active){b.style.background=p?p.color:'#888';b.style.color='white';b.style.borderColor=p?p.color:'#888';}
+    else{b.style.background='transparent';if(p){b.style.color=p.tc;b.style.borderColor=p.color;}else{b.style.color='#666';b.style.borderColor='#ccc';}}
   });
 }
-
-function setF(id){
-  if(id==='all'){
-    sel.clear();
-  } else {
-    if(sel.has(id)) sel.delete(id);
-    else sel.add(id);
-  }
-  styleActive();
-  render();
+function setF(id,tab){
+  const isM=tab==='m',sel=isM?selM:selQ;
+  if(id==='all')sel.clear();else{if(sel.has(id))sel.delete(id);else sel.add(id);}
+  styleFilters(isM);renderView(isM);
 }
-
-buildF();render();
+function switchTab(tab){
+  document.getElementById('view-q').style.display=tab==='q'?'':'none';
+  document.getElementById('view-m').style.display=tab==='m'?'':'none';
+  document.getElementById('tb-q').classList.toggle('active',tab==='q');
+  document.getElementById('tb-m').classList.toggle('active',tab==='m');
+}
+buildFilters(false);renderView(false);
+buildFilters(true);renderView(true);
 </script>
 </body>
 </html>
