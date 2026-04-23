@@ -5,7 +5,7 @@
 <title>Mothership Budget Builder</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -621,63 +621,45 @@ tr:hover .delete-btn { opacity: 1; }
 // DEFAULT ITEMS — new schema: baseCost + modifiers + compound
 // =====================
 const DEFAULT_ITEMS = [
-  // ADMIN / G&A
-  { id: "ceo", category: "Admin / G&A", name: "CEO", note: "Strategic leadership. Base = starting annual salary; modifiers apply ~3% escalation.", isBase: true, baseCost: 310000, modifiers: { y1: 0, y2: 3.2, y3: 3.1 }, compound: true },
-  { id: "cos", category: "Admin / G&A", name: "Chief of Staff", note: "Operations, compliance, stakeholder coordination. Y1 modifier reflects 9-month partial (Oct 2026 start).", isBase: true, baseCost: 180000, modifiers: { y1: -27.2, y2: 0, y3: 2.8 }, compound: false },
-  { id: "ops_contractor", category: "Admin / G&A", name: "Ops / admin contractor", note: "Y1 bridging role; absorbed into staff Y2.", isBase: true, baseCost: 50000, modifiers: { y1: 0, y2: -100, y3: -100 }, compound: false },
-  { id: "legal", category: "Admin / G&A", name: "Legal, accounting, PEO", note: "Entity formation and partnership agreements front-load Y1.", isBase: true, baseCost: 75000, modifiers: { y1: 33.3, y2: 0, y3: 0 }, compound: false },
-  { id: "misc", category: "Admin / G&A", name: "Miscellaneous / office supplies", note: "", isBase: true, baseCost: 20000, modifiers: { y1: -25, y2: 0, y3: 0 }, compound: false },
-  { id: "reserve_ops", category: "Admin / G&A", name: "General operating contingency", note: "Hedge on building timing, comp adjustments, unexpected costs. Scales down as uncertainty resolves.", isBase: false, baseCost: 200000, modifiers: { y1: 0, y2: -50, y3: -75 }, compound: false },
-
-  // OCCUPANCY
-  { id: "interim_space", category: "Occupancy", name: "Interim shared space (pre-building)", note: "~9 months Y1 before 5th floor is available.", isBase: true, baseCost: 60000, modifiers: { y1: 0, y2: -100, y3: -100 }, compound: false },
-  { id: "rent_y1_partial", category: "Occupancy", name: "5th floor partial occupancy (Y1)", note: "~3 months × $20K/mo all-in (Apr – Jun 2027).", isBase: true, baseCost: 60000, modifiers: { y1: 0, y2: -100, y3: -100 }, compound: false },
-  { id: "rent_full", category: "Occupancy", name: "5th floor rent + CAM (full year)", note: "$25/SF NNN × 8,036 SF base (~$200K) + CAM/NNN pass-through (~$50K). JCMB treatment TBD.", isBase: true, baseCost: 250000, modifiers: { y1: -100, y2: 0, y3: 0 }, compound: false },
-
-  // INFRASTRUCTURE / IT
-  { id: "tech", category: "Infrastructure / IT", name: "Tech, tools, IT, software", note: "Slack, Google Workspace, CRM, project mgmt, finance.", isBase: true, baseCost: 30000, modifiers: { y1: 33.3, y2: 0, y3: 0 }, compound: false },
-  { id: "research_data", category: "Infrastructure / IT", name: "Research and data subscriptions", note: "Pitchbook, Crunchbase, market data.", isBase: false, baseCost: 30000, modifiers: { y1: 16.7, y2: 0, y3: 0 }, compound: false },
-
-  // INSURANCE & COMPLIANCE
-  { id: "insurance", category: "Insurance & Compliance", name: "Insurance (D&O, E&O, general liability)", note: "", isBase: true, baseCost: 30000, modifiers: { y1: 0, y2: 0, y3: 0 }, compound: true },
-
-  // PROGRAM / PROJECT
-  { id: "dir_programs", category: "Program / Project", name: "Director of Programs", note: "Owns TC, BlackOps, and founder support. Y1 modifier reflects 6-month partial (Jan 2027 start).", isBase: false, baseCost: 185000, modifiers: { y1: -51.4, y2: 0, y3: 2.7 }, compound: false },
-  { id: "dir_capital", category: "Program / Project", name: "Director of Capital", note: "GP / LP programs lead. Y1 modifier reflects 3-month partial (Apr 2027 start).", isBase: false, baseCost: 185000, modifiers: { y1: -75.7, y2: 0, y3: 2.7 }, compound: false },
-  { id: "events_coord", category: "Program / Project", name: "Events / Program Coordinator", note: "Building programming support. Y2 modifier reflects 8-month partial.", isBase: false, baseCost: 90000, modifiers: { y1: -100, y2: -36.7, y3: 0 }, compound: false },
-  { id: "program_analyst", category: "Program / Project", name: "Program Analyst (data / reporting)", note: "Tracks outcomes, metrics, foundation reporting. Y3 modifier reflects Q3 start.", isBase: false, baseCost: 40000, modifiers: { y1: -100, y2: -100, y3: 0 }, compound: false },
-  { id: "program_coord_contractor", category: "Program / Project", name: "Program coordination contractor (Y1 bridge)", note: "Pre-full-staff Y1. Absorbed into Events / Program Coordinator Y2.", isBase: false, baseCost: 50000, modifiers: { y1: 0, y2: -100, y3: -100 }, compound: false },
-  { id: "tc_partnership", category: "Program / Project", name: "Transparent Collective partnership", note: "Accelerator cohort sponsorship, program costs, founder support. Anchor partner.", isBase: false, baseCost: 175000, modifiers: { y1: 0, y2: 0, y3: -5.7 }, compound: false },
-  { id: "blackops", category: "Program / Project", name: "BlackOps VC engagement", note: "Founder advocacy and deal facilitation partnership.", isBase: false, baseCost: 50000, modifiers: { y1: 0, y2: 0, y3: 0 }, compound: true },
-  { id: "cortex_sf", category: "Program / Project", name: "Cortex House SF exchange", note: "Midwest-to-coast founder connectivity. Travel + founder stipends. Y1 heavy with setup.", isBase: false, baseCost: 60000, modifiers: { y1: 0, y2: -50, y3: -58.3 }, compound: false },
-  { id: "catalyst", category: "Program / Project", name: "Founder Catalyst Fund (direct deployment)", note: "Non-dilutive milestone-based grants. Tier dropdown swaps sizing.", isBase: false, tiers: [
-    { name: "Pilot", baseCost: 100000, modifiers: { y1: 0, y2: 50, y3: 100 } },
-    { name: "Scale (default)", baseCost: 150000, modifiers: { y1: 0, y2: 100, y3: 133.3 } },
-    { name: "Ambitious", baseCost: 200000, modifiers: { y1: 0, y2: 100, y3: 150 } }
-  ], defaultTier: 1, compound: false },
-  { id: "whole_founder", category: "Program / Project", name: "Whole Founder programming", note: "Peer convenings, facilitation, community-building. Y1 pilot; Y2+ formalized.", isBase: false, baseCost: 75000, modifiers: { y1: 0, y2: 20, y3: 5.6 }, compound: true },
-  { id: "founder_convenings", category: "Program / Project", name: "Founder / investor convenings", note: "Quarterly. Y1 informal pre-building; Y2+ in-building.", isBase: false, baseCost: 75000, modifiers: { y1: 0, y2: -33.3, y3: -40 }, compound: false },
-  { id: "gp_training", category: "Program / Project", name: "GP Training Pilot", note: "2 emerging GPs in fundraising support (Y2 pilot; scales Y3).", isBase: false, baseCost: 60000, modifiers: { y1: -100, y2: -25, y3: 0 }, compound: false },
-  { id: "lp_education", category: "Program / Project", name: "LP Education Pilot", note: "4 new LPs — education, facilitation, intro support.", isBase: false, baseCost: 40000, modifiers: { y1: -100, y2: -25, y3: 0 }, compound: false },
-  { id: "eso_partnerships", category: "Program / Project", name: "ESO partnership investments", note: "4 partnerships × ~$10K avg. Co-programming, chapter activations.", isBase: false, baseCost: 40000, modifiers: { y1: -100, y2: 0, y3: -12.5 }, compound: false },
-  { id: "interim_programming", category: "Program / Project", name: "Pre-building interim programming (Y1)", note: "Partner-hosted events in existing spaces before 5th floor opens.", isBase: false, baseCost: 40000, modifiers: { y1: 0, y2: -100, y3: -100 }, compound: false },
-  { id: "reserve_capital", category: "Program / Project", name: "Capital deployment reserve", note: "Flexibility for Catalyst Fund overage or strategic opportunity.", isBase: false, baseCost: 100000, modifiers: { y1: 0, y2: -50, y3: -50 }, compound: false },
-
-  // MARKETING / GROWTH
-  { id: "dir_marketing", category: "Marketing / Growth", name: "Director of Marketing / Comms", note: "Full staff role. Converts from Y1 contractor. Y2 modifier reflects 10-month partial (Sep 2027 start).", isBase: false, baseCost: 170000, modifiers: { y1: -100, y2: -18.8, y3: 0 }, compound: false },
-  { id: "comms_contractor", category: "Marketing / Growth", name: "Comms / PR contractor (Y1 bridge)", note: "Use if Director of Marketing not yet hired.", isBase: false, baseCost: 75000, modifiers: { y1: 0, y2: -100, y3: -100 }, compound: false },
-  { id: "thought_leadership", category: "Marketing / Growth", name: "Thought leadership / owned publishing", note: "Infrastructure Y1; formal launch H2 2027.", isBase: false, baseCost: 40000, modifiers: { y1: 0, y2: 0, y3: 0 }, compound: true },
-  { id: "dfc_partnership", category: "Marketing / Growth", name: "Detroit Future City content partnership", note: "Paid content partnership for thought leadership distribution.", isBase: false, baseCost: 25000, modifiers: { y1: -100, y2: 0, y3: 0 }, compound: false },
-  { id: "building_opening", category: "Marketing / Growth", name: "Building opening event (Q1 2027)", note: "Initial opening event at end of Y1.", isBase: false, baseCost: 50000, modifiers: { y1: 0, y2: -100, y3: -100 }, compound: false },
-  { id: "formal_launch", category: "Marketing / Growth", name: "Formal public launch event (H2 2027)", note: "Larger, public-facing launch Y2.", isBase: false, baseCost: 50000, modifiers: { y1: -100, y2: 0, y3: -100 }, compound: false },
-  { id: "marketing_spend", category: "Marketing / Growth", name: "Marketing spend (non-rebrand)", note: "Ongoing marketing and campaign spend outside rebrand capital.", isBase: false, baseCost: 20000, modifiers: { y1: 0, y2: 0, y3: 0 }, compound: true },
-  { id: "rebrand", category: "Marketing / Growth", name: "Rebrand and comms infrastructure", note: "Strategic rebrand, identity, website, content library.", isBase: false, baseCost: 225000, modifiers: { y1: 0, y2: -100, y3: -100 }, compound: false },
-
-  // TRAVEL & MEETINGS
-  { id: "travel", category: "Travel & Meetings", name: "Travel (conferences, fundraising, coastal exchange)", note: "Standing travel budget outside Cortex SF line. Y1 heavy with ramp-up.", isBase: false, baseCost: 75000, modifiers: { y1: 0, y2: -33.3, y3: -26.7 }, compound: false },
-
-  // CAPITAL / EQUIPMENT
-  { id: "ffe", category: "Capital / Equipment", name: "5th floor activation (FF&E)", note: "Furniture, technology, signage, initial stocking — not in construction scope.", isBase: false, baseCost: 75000, modifiers: { y1: 0, y2: -100, y3: -100 }, compound: false }
+  { id: "ceo", category: "Admin / G&A", name: "CEO Salary", note: "Strategic leadership. Base assumes full Y1 starting July 2026; delays compound.", isBase: true, baseCost: 250000, modifiers: { y1: 0, y2: 6, y3: 6 }, compound: true },
+  { id: "cos", category: "Admin / G&A", name: "Chief of Staff**", note: "(Title / Exact Role TBD, could be COO, Sr. Director of Operations, etc) Responsible for Compliance, stakeholder coordination, Program Ops. Y1 reflects 9-month partial (Oct 2026 start).", isBase: true, baseCost: 107500, modifiers: { y1: -25, y2: 6, y3: 12 }, compound: false },
+  { id: "finance_contractor", category: "Admin / G&A", name: "Finance / Compliance Contractor", note: "Grant / Accounting / Finance Manager", isBase: true, baseCost: 40000, modifiers: { y1: 0, y2: 0, y3: 0 }, compound: false },
+  { id: "legal", category: "Admin / G&A", name: "Legal, accounting, PEO", note: "Entity formation and partnership agreements front-load Y1.", isBase: true, baseCost: 75000, modifiers: { y1: -100, y2: 0, y3: 0 }, compound: false },
+  { id: "insurance", category: "Insurance & Compliance", name: "Insurance (D&O, E&O, general liability)", note: "Unclear whether we need this...", isBase: false, baseCost: 30000, modifiers: { y1: 0, y2: 0, y3: 0 }, compound: false },
+  { id: "tech", category: "Infrastructure / IT", name: "Tech, tools, IT, software", note: "Slack, Google Workspace, CRM, project mgmt, finance, equipment.", isBase: true, baseCost: 30000, modifiers: { y1: 50, y2: 15, y3: 0 }, compound: false },
+  { id: "misc", category: "Admin / G&A", name: "Miscellaneous / office supplies", note: "Unclear if needed?", isBase: false, baseCost: 20000, modifiers: { y1: -25, y2: 0, y3: 0 }, compound: false },
+  { id: "interim_space", category: "Occupancy", name: "Interim shared space (pre-building)", note: "(Unclear how to handle this stuff?)\n\n~9 months Y1 before 5th floor is available.", isBase: false, baseCost: 60000, modifiers: { y1: 0, y2: -100, y3: -100 }, compound: false },
+  { id: "rent_y1_partial", category: "Occupancy", name: "5th floor partial occupancy (Y1)", note: "(Unclear how to handle?)\n\n~3 months × $20K/mo all-in (Apr – Jun 2027).", isBase: false, baseCost: 60000, modifiers: { y1: 0, y2: -100, y3: -100 }, compound: false },
+  { id: "rent_full", category: "Occupancy", name: "5th floor rent + CAM (full year)", note: "(Unclear how to handle?)\n\n$25/SF NNN × 8,036 SF base (~$200K) + CAM/NNN pass-through (~$50K). JCMB treatment TBD.", isBase: false, baseCost: 250000, modifiers: { y1: -100, y2: 0, y3: 0 }, compound: false },
+  { id: "dir_programs", category: "Program / Project", name: "(Employee) Director of Community Programs", note: "Owns TC, Cortex AI, Lectures/Workshops, and founder support. Default Y1 reflects 6-month partial (Jan 2027 start).", isBase: true, baseCost: 125000, modifiers: { y1: -64, y2: 0, y3: 0 }, compound: false },
+  { id: "dir_capital", category: "Program / Project", name: "(Employee) Associate Director, Capital Programs", note: "Owns capital programs and investor community development. Default Y1 reflects 3-month partial (Apr 2027 start).", isBase: true, baseCost: 125000, modifiers: { y1: -100, y2: 0, y3: 0 }, compound: false },
+  { id: "marketing_comms", category: "Marketing / Growth", name: "Marketing + Comms", note: "Contractors (PR, Marketing)", isBase: true, baseCost: 150000, modifiers: { y1: -50, y2: 0, y3: 0 }, compound: false },
+  { id: "events_coord", category: "Program / Project", name: "(Employee) Events / Program Coordinator", note: "Supports Director layer. Building programming support. Default Y2 reflects 8-month partial.", isBase: true, baseCost: 80000, modifiers: { y1: -62.5, y2: 0, y3: 0 }, compound: false },
+  { id: "program_analyst", category: "Program / Project", name: "(1099) Program Analyst (data / reporting)", note: "Tracks outcomes, metrics, foundation reporting. Default Y3 reflects Q3 start.", isBase: true, baseCost: 40000, modifiers: { y1: -100, y2: -50, y3: 0 }, compound: false },
+  { id: "content_capture", category: "Marketing / Growth", name: "Content Capture and Storytelling", note: "Vendor cost beyond MarComm Strategy\n\nUse if Director of Marketing not yet hired. Can run independently of the staff line.", isBase: true, baseCost: 75000, modifiers: { y1: 0, y2: -33, y3: -50 }, compound: false },
+  { id: "program_coord_contractor", category: "Program / Project", name: "(1099) Program coordination contractor (Y1 bridge)", note: "Pre-full-staff Y1. Absorbed into Events / Program Coordinator Y2.", isBase: true, baseCost: 50000, modifiers: { y1: 0, y2: -100, y3: -100 }, compound: false },
+  { id: "founder_development", category: "Program / Project", name: "Founder Development + Community Programs", note: "Accelerator cohort sponsorship, program costs, founder support.", isBase: true, baseCost: 500000, modifiers: { y1: -40, y2: -20, y3: 0 }, compound: false },
+  { id: "capital_programs", category: "Program / Project", name: "Capital Programs", note: "Founder advocacy, non-dilutive support, fundraise facilitation, GP/LP Training", isBase: true, baseCost: 500000, modifiers: { y1: -40, y2: -20, y3: 0 }, compound: false },
+  { id: "cortex_sf", category: "Program / Project", name: "Cortex House SF exchange", note: "Midwest-to-coast founder connectivity. Travel + founder stipends.", isBase: true, baseCost: 100000, modifiers: { y1: 0, y2: 0, y3: -100 }, compound: false },
+  { id: "catalyst", category: "Program / Project", name: "Founder Catalyst Fund (direct deployment) [Tier: Ambitious]", note: "Non-dilutive milestone-based grants. Pilot / scale / ambitious swap the default sizing.", isBase: true, baseCost: 400000, modifiers: { y1: -50, y2: 0, y3: 25 }, compound: false },
+  { id: "whole_founder", category: "Program / Project", name: "Whole Founder programming", note: "(Absorbed by Founder + Community Programs)\n\nPeer convenings, facilitation, community-building. Y1 pilot; Y2+ formalized.", isBase: false, baseCost: 90000, modifiers: { y1: -16.7, y2: 0, y3: 5.6 }, compound: false },
+  { id: "founder_convenings", category: "Program / Project", name: "Founder / investor convenings", note: "(absorbed by \"Capital Programs) \nQuarterly. Y1 informal pre-building; Y2+ in-building.", isBase: false, baseCost: 50000, modifiers: { y1: 50, y2: 0, y3: -10 }, compound: false },
+  { id: "gp_training", category: "Program / Project", name: "GP Training Pilot", note: "(Absorbed by Capital Programs)\n\n2 emerging GPs in fundraising support (Y2 pilot; scales Y3).", isBase: false, baseCost: 45000, modifiers: { y1: -100, y2: 0, y3: 33.3 }, compound: false },
+  { id: "lp_education", category: "Program / Project", name: "LP Education Pilot", note: "(Absorbed by Capital Programs) \n\n4 new LPs — education, facilitation, intro support.", isBase: false, baseCost: 30000, modifiers: { y1: -100, y2: 0, y3: 33.3 }, compound: false },
+  { id: "eso_partnerships", category: "Program / Project", name: "Ecosystem Investments", note: "4 partnerships × ~$10K avg. Co-programming, chapter activations.", isBase: true, baseCost: 100000, modifiers: { y1: -50, y2: 0, y3: 0 }, compound: false },
+  { id: "research_data", category: "Infrastructure / IT", name: "Research and data subscriptions", note: "Pitchbook, Crunchbase, market data.", isBase: true, baseCost: 30000, modifiers: { y1: 16.7, y2: 0, y3: 0 }, compound: false },
+  { id: "thought_leadership", category: "Marketing / Growth", name: "Thought leadership / owned publishing", note: "Infrastructure Y1; formal launch H2 2027.", isBase: true, baseCost: 40000, modifiers: { y1: 0, y2: 0, y3: 0 }, compound: false },
+  { id: "dfc_partnership", category: "Marketing / Growth", name: "Detroit Future City content partnership", note: "(Removed)\n\n\nPaid content partnership for thought leadership distribution.", isBase: false, baseCost: 25000, modifiers: { y1: -100, y2: 0, y3: 0 }, compound: false },
+  { id: "interim_programming", category: "Program / Project", name: "Pre-building interim programming (Y1)", note: "(Absorbed by Founder/Capital Budgets)\n\nPartner-hosted events in existing spaces before 5th floor opens.", isBase: false, baseCost: 40000, modifiers: { y1: 0, y2: -100, y3: -100 }, compound: false },
+  { id: "building_opening", category: "Marketing / Growth", name: "Building opening event (Q1 2027)", note: "Initial opening event at end of Y1.", isBase: true, baseCost: 50000, modifiers: { y1: 0, y2: -100, y3: -100 }, compound: false },
+  { id: "formal_launch", category: "Marketing / Growth", name: "Formal public launch event (H2 2027)", note: "Larger, public-facing launch Y2.", isBase: true, baseCost: 50000, modifiers: { y1: -100, y2: 0, y3: -100 }, compound: false },
+  { id: "travel", category: "Travel & Meetings", name: "Travel (conferences, fundraising, coastal exchange)", note: "Standing travel budget", isBase: true, baseCost: 100000, modifiers: { y1: 0, y2: 0, y3: 0 }, compound: false },
+  { id: "marketing_spend", category: "Marketing / Growth", name: "Marketing spend (non-rebrand)", note: "Ongoing marketing and campaign spend outside rebrand capital.", isBase: true, baseCost: 90000, modifiers: { y1: -100, y2: 0, y3: 0 }, compound: false },
+  { id: "rebrand", category: "Marketing / Growth", name: "Rebrand and comms infrastructure", note: "Strategic rebrand, identity, website, content library.", isBase: true, baseCost: 120000, modifiers: { y1: 0, y2: -100, y3: -100 }, compound: false },
+  { id: "ffe", category: "Capital / Equipment", name: "5th floor activation (FF&E)", note: "(Unclear if CTE responsible)\n\nFurniture, technology, signage, initial stocking — not in construction scope.", isBase: false, baseCost: 75000, modifiers: { y1: 0, y2: -100, y3: -100 }, compound: false },
+  { id: "reserve_ops", category: "Admin / G&A", name: "General operating contingency", note: "Hedge on building timing, comp adjustments, unexpected costs.", isBase: true, baseCost: 100000, modifiers: { y1: 100, y2: 0, y3: -50 }, compound: false },
+  { id: "exec_admin", category: "Admin / G&A", name: "Executive Admin", note: "Admin support", isBase: true, baseCost: 75000, modifiers: { y1: 5, y2: 5, y3: 5 }, compound: true },
+  { id: "reserve_capital", category: "Program / Project", name: "Capital deployment reserve", note: "Flexibility for Catalyst Fund overage or strategic opportunity.", isBase: true, baseCost: 100000, modifiers: { y1: 0, y2: 0, y3: 0 }, compound: false }
 ];
 
 // =====================
@@ -1395,7 +1377,7 @@ document.getElementById('reset-defaults').addEventListener('click', () => {
 });
 
 // =====================
-// EXPORT
+// CSV EXPORT (plain text, no styling)
 // =====================
 function buildExportRows() {
   const rows = [['Category', 'Line item', 'Selected', 'Base annual $', 'Compound?', 'Y1 mod %', 'Y2 mod %', 'Y3 mod %', 'Y1 $', 'Y2 $', 'Y3 $', '3-yr total', 'Notes']];
@@ -1452,32 +1434,155 @@ document.getElementById('export-csv').addEventListener('click', () => {
   URL.revokeObjectURL(url);
 });
 
-document.getElementById('export-xlsx').addEventListener('click', () => {
-  const { rows, ty1, ty2, ty3 } = buildExportRows();
-  const wb = XLSX.utils.book_new();
+// =====================
+// XLSX EXPORT (styled, via xlsx-js-style)
+// =====================
+const XLSX_FMT = {
+  money: '"$"#,##0;"-$"#,##0;"$0"',
+  moneyDash: '[=0]"—";"$"#,##0',
+  pct: '0.0"%"'
+};
 
-  const sumRows = [
-    ['Mothership / CTE — 3-year budget'],
-    ['Generated', new Date().toISOString().slice(0, 10)],
+const XLSX_BORDER_BOTTOM = { bottom: { style: 'thin', color: { rgb: "666666" } } };
+const XLSX_BORDER_TOP = { top: { style: 'medium', color: { rgb: "222222" } } };
+const XLSX_FILL_HEADER = { patternType: "solid", fgColor: { rgb: "E8E8E8" } };
+const XLSX_FILL_TOTAL = { patternType: "solid", fgColor: { rgb: "F5F5F5" } };
+
+const XLSX_STYLE = {
+  title:      { font: { bold: true, sz: 14, color: { rgb: "222222" } }, alignment: { horizontal: 'left', vertical: 'center' } },
+  metaLabel:  { font: { bold: true, color: { rgb: "555555" } }, alignment: { horizontal: 'left' } },
+  metaValue:  { font: { color: { rgb: "333333" } }, alignment: { horizontal: 'left' } },
+  h:          { font: { bold: true, color: { rgb: "222222" } }, fill: XLSX_FILL_HEADER, alignment: { horizontal: 'left',   vertical: 'center' }, border: XLSX_BORDER_BOTTOM },
+  hR:         { font: { bold: true, color: { rgb: "222222" } }, fill: XLSX_FILL_HEADER, alignment: { horizontal: 'right',  vertical: 'center' }, border: XLSX_BORDER_BOTTOM },
+  hC:         { font: { bold: true, color: { rgb: "222222" } }, fill: XLSX_FILL_HEADER, alignment: { horizontal: 'center', vertical: 'center' }, border: XLSX_BORDER_BOTTOM },
+  txt:        { alignment: { vertical: 'top' } },
+  txtOff:     { font: { color: { rgb: "AAAAAA" } }, alignment: { vertical: 'top' } },
+  note:       { font: { color: { rgb: "777777" }, sz: 11 }, alignment: { vertical: 'top', wrapText: true } },
+  noteOff:    { font: { color: { rgb: "BBBBBB" }, sz: 11 }, alignment: { vertical: 'top', wrapText: true } },
+  money:      { numFmt: XLSX_FMT.money,     alignment: { horizontal: 'right', vertical: 'top' } },
+  moneyOff:   { numFmt: XLSX_FMT.moneyDash, alignment: { horizontal: 'right', vertical: 'top' }, font: { color: { rgb: "BBBBBB" } } },
+  pct:        { numFmt: XLSX_FMT.pct, alignment: { horizontal: 'right', vertical: 'top' } },
+  pctOff:     { numFmt: XLSX_FMT.pct, alignment: { horizontal: 'right', vertical: 'top' }, font: { color: { rgb: "AAAAAA" } } },
+  ctr:        { alignment: { horizontal: 'center', vertical: 'top' } },
+  ctrOff:     { alignment: { horizontal: 'center', vertical: 'top' }, font: { color: { rgb: "AAAAAA" } } },
+  totalTxt:   { font: { bold: true }, fill: XLSX_FILL_TOTAL, border: XLSX_BORDER_TOP, alignment: { vertical: 'top' } },
+  totalMoney: { font: { bold: true }, numFmt: '"$"#,##0', fill: XLSX_FILL_TOTAL, border: XLSX_BORDER_TOP, alignment: { horizontal: 'right', vertical: 'top' } }
+};
+
+function xlsxApplyStyles(ws, styleGrid) {
+  styleGrid.forEach((rowStyles, r) => {
+    rowStyles.forEach((styleKey, c) => {
+      if (!styleKey) return;
+      const addr = XLSX.utils.encode_cell({ r, c });
+      if (ws[addr]) ws[addr].s = XLSX_STYLE[styleKey];
+    });
+  });
+}
+
+function buildSummarySheet(ty1, ty2, ty3, tAll) {
+  const today = new Date().toISOString().slice(0, 10);
+  const rows = [
+    ['Mothership / CTE — 3-year budget', ''],
+    ['', ''],
+    ['Generated', today],
     ['Configuration', 'Custom (edit-in-place)'],
-    [],
+    ['', ''],
     ['Period', 'Amount'],
     ['Year 1 (H2 2026 – H1 2027)', ty1],
     ['Year 2 (H2 2027 – H1 2028)', ty2],
     ['Year 3 (H2 2028 – H1 2029)', ty3],
-    ['Three-year total', ty1 + ty2 + ty3]
+    ['Three-year total', tAll]
   ];
-  const sws = XLSX.utils.aoa_to_sheet(sumRows);
-  sws['!cols'] = [{ wch: 34 }, { wch: 16 }];
-  XLSX.utils.book_append_sheet(wb, sws, 'Summary');
+  const styles = [
+    ['title', 'title'],
+    [null, null],
+    ['metaLabel', 'metaValue'],
+    ['metaLabel', 'metaValue'],
+    [null, null],
+    ['h', 'hR'],
+    ['txt', 'money'],
+    ['txt', 'money'],
+    ['txt', 'money'],
+    ['totalTxt', 'totalMoney']
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{ wch: 38 }, { wch: 22 }];
+  ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 1 } }];
+  ws['!rows'] = [{ hpt: 22 }]; // give title row a bit more height
+  xlsxApplyStyles(ws, styles);
+  return ws;
+}
+
+function buildDetailSheet(ty1, ty2, ty3, tAll) {
+  const rows = [['Category', 'Line item', 'Selected', 'Base annual $', 'Compound', 'Y1 mod', 'Y2 mod', 'Y3 mod', 'Y1 $', 'Y2 $', 'Y3 $', '3-yr total', 'Notes']];
+  const styles = [['h', 'h', 'hC', 'hR', 'hC', 'hR', 'hR', 'hR', 'hR', 'hR', 'hR', 'hR', 'h']];
+
+  let prevCategory = null;
+  items.forEach(item => {
+    const enabled = state.enabled.has(item.id);
+    const base = getActiveBase(item);
+    const mods = getActiveMods(item);
+    const v = computeYearValues(item);
+    let name = item.name;
+    if (item.tiers) name += ` [${item.tiers[state.tiers[item.id] ?? item.defaultTier].name}]`;
+    const y1$ = enabled ? v.y1 : 0;
+    const y2$ = enabled ? v.y2 : 0;
+    const y3$ = enabled ? v.y3 : 0;
+    const total = y1$ + y2$ + y3$;
+
+    const showCat = item.category !== prevCategory;
+    prevCategory = item.category;
+
+    const tx = enabled ? 'txt' : 'txtOff';
+    const nt = enabled ? 'note' : 'noteOff';
+    const mn = enabled ? 'money' : 'moneyOff';
+    const pc = enabled ? 'pct' : 'pctOff';
+    const ct = enabled ? 'ctr' : 'ctrOff';
+
+    rows.push([
+      showCat ? item.category : '',
+      name,
+      enabled ? 'Y' : 'N',
+      base,
+      item.compound ? 'Y' : 'N',
+      mods.y1 || 0,
+      mods.y2 || 0,
+      mods.y3 || 0,
+      y1$, y2$, y3$,
+      total,
+      item.note || ''
+    ]);
+    styles.push([tx, tx, ct, mn, ct, pc, pc, pc, mn, mn, mn, mn, nt]);
+  });
+
+  rows.push(['TOTAL', '', '', '', '', '', '', '', ty1, ty2, ty3, tAll, '']);
+  styles.push(['totalTxt', 'totalTxt', 'totalTxt', 'totalTxt', 'totalTxt', 'totalTxt', 'totalTxt', 'totalTxt', 'totalMoney', 'totalMoney', 'totalMoney', 'totalMoney', 'totalTxt']);
 
   const ws = XLSX.utils.aoa_to_sheet(rows);
   ws['!cols'] = [
-    { wch: 32 }, { wch: 44 }, { wch: 10 }, { wch: 14 }, { wch: 11 },
-    { wch: 10 }, { wch: 10 }, { wch: 10 },
-    { wch: 13 }, { wch: 13 }, { wch: 13 }, { wch: 15 }, { wch: 60 }
+    { wch: 22 }, { wch: 48 }, { wch: 9 }, { wch: 14 }, { wch: 11 },
+    { wch: 9 }, { wch: 9 }, { wch: 9 },
+    { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 15 }, { wch: 60 }
   ];
-  XLSX.utils.book_append_sheet(wb, ws, 'Budget detail');
+  ws['!views'] = [{ state: 'frozen', ySplit: 1, xSplit: 2 }];
+  ws['!autofilter'] = { ref: `A1:M${rows.length - 1}` };
+  xlsxApplyStyles(ws, styles);
+  return ws;
+}
+
+document.getElementById('export-xlsx').addEventListener('click', () => {
+  let ty1 = 0, ty2 = 0, ty3 = 0;
+  items.forEach(i => {
+    if (state.enabled.has(i.id)) {
+      const v = computeYearValues(i);
+      ty1 += v.y1; ty2 += v.y2; ty3 += v.y3;
+    }
+  });
+  const tAll = ty1 + ty2 + ty3;
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, buildSummarySheet(ty1, ty2, ty3, tAll), 'Summary');
+  XLSX.utils.book_append_sheet(wb, buildDetailSheet(ty1, ty2, ty3, tAll), 'Budget detail');
 
   XLSX.writeFile(wb, 'Mothership_Budget_' + new Date().toISOString().slice(0, 10) + '.xlsx');
 });
