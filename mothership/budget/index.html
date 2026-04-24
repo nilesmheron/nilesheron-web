@@ -99,8 +99,22 @@ h1 { font-size: 17px; font-weight: 600; margin-bottom: 4px; }
 }
 
 .preset-btn:hover { background: #eee; }
+.preset-btn.active { background: #222; color: #fff; border-color: #222; }
+.preset-btn.active:hover { background: #444; }
 .preset-btn.clear { color: #666; border-color: #aaa; }
 .preset-btn.save { color: #444; border-color: #888; border-style: dashed; }
+.scale-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  color: #996600;
+  background: #fff8e6;
+  border: 1px solid #e6c84d;
+  padding: 1px 5px;
+  margin-left: 6px;
+  vertical-align: middle;
+  letter-spacing: 0.02em;
+}
 .preset-btn.custom { background: #f0ede4; border-color: #888; padding-right: 6px; }
 
 .preset-btn.custom .preset-delete {
@@ -527,9 +541,8 @@ tr:hover .delete-btn { opacity: 1; }
 <div class="controls">
   <span class="controls-label">Scenarios:</span>
   <span id="preset-buttons">
-    <button class="preset-btn" data-preset="floor">Base only</button>
-    <button class="preset-btn" data-preset="mvp">MVP</button>
-    <button class="preset-btn" data-preset="roadmap">Roadmap-aligned</button>
+    <button class="preset-btn active" data-preset="nmh_custom_1">NMH Custom 1</button>
+    <button class="preset-btn" data-preset="base">Base only</button>
     <button class="preset-btn" data-preset="ambitious">Ambition-aligned</button>
   </span>
   <span id="custom-preset-buttons"></span>
@@ -613,12 +626,12 @@ tr:hover .delete-btn { opacity: 1; }
   <p><strong>Base annual cost</strong> is the line's normative yearly value. Each year's <strong>% modifier</strong> adjusts it. A modifier of 0 means "same as base"; −100% means "nothing that year"; +10% means "10% more than base" (or than prior year, if compound).</p>
   <p><strong>Compound</strong>: Y2 applies on top of Y1's dollar value, Y3 applies on top of Y2's. Good for salaries (3%/yr raises) or anything growing steadily. Off (independent): each year's modifier applies directly to the base. Good for partial-year starts, one-time costs, or anything that doesn't compound.</p>
   <p>All fields are editable. Click name, note, base, or modifier to edit. Click × to delete a line. Use "Add line" below the table.</p>
-  <p>Edits persist in this browser only (not synced). Catalyst Fund tier dropdown swaps tier-specific base and modifiers.</p>
+  <p><strong>Scale badges</strong> (e.g. ×50% (preset)) indicate items running at a partial rate in the current scenario. Switch presets to clear them.</p>
 </div>
 
 <script>
 // =====================
-// DEFAULT ITEMS — new schema: baseCost + modifiers + compound
+// DEFAULT ITEMS
 // =====================
 const DEFAULT_ITEMS = [
   { id: "ceo", category: "Admin / G&A", name: "CEO Salary", note: "Strategic leadership. Base assumes full Y1 starting July 2026; delays compound.", isBase: true, baseCost: 250000, modifiers: { y1: 0, y2: 6, y3: 6 }, compound: true },
@@ -668,36 +681,47 @@ const DEFAULT_ITEMS = [
 const DEFAULT_BASE_IDS = DEFAULT_ITEMS.filter(i => i.isBase).map(i => i.id);
 
 const presets = {
-  floor: { enable: [...DEFAULT_BASE_IDS], tierOverrides: {} },
-  mvp: {
-    enable: [...DEFAULT_BASE_IDS, "tc_partnership", "blackops", "catalyst", "whole_founder", "founder_convenings", "research_data", "travel", "reserve_ops"],
-    tierOverrides: { catalyst: 0 }
+  nmh_custom_1: {
+    enable: [...DEFAULT_BASE_IDS],
+    tierOverrides: {},
+    scales: {}
   },
-  roadmap: {
-    enable: [...DEFAULT_BASE_IDS, "dir_programs", "dir_capital", "dir_marketing", "events_coord", "comms_contractor", "program_coord_contractor", "tc_partnership", "blackops", "cortex_sf", "catalyst", "whole_founder", "founder_convenings", "gp_training", "lp_education", "eso_partnerships", "research_data", "thought_leadership", "interim_programming", "building_opening", "formal_launch", "rebrand", "ffe", "travel", "marketing_spend", "reserve_ops", "reserve_capital"],
-    tierOverrides: { catalyst: 1 }
+  base: {
+    enable: [
+      "ceo", "cos", "tech", "dir_programs", "finance_contractor",
+      "research_data", "travel",
+      "marketing_comms", "content_capture", "thought_leadership",
+      "building_opening", "formal_launch",
+      "founder_development", "capital_programs", "cortex_sf", "eso_partnerships"
+    ],
+    tierOverrides: {},
+    scales: {
+      founder_development: 0.5,
+      capital_programs:    0.25,
+      cortex_sf:           0.5,
+      eso_partnerships:    0.5
+    }
   },
   ambitious: {
-    enable: [...DEFAULT_BASE_IDS, "dir_programs", "dir_capital", "dir_marketing", "events_coord", "program_analyst", "comms_contractor", "program_coord_contractor", "tc_partnership", "blackops", "cortex_sf", "catalyst", "whole_founder", "founder_convenings", "gp_training", "lp_education", "eso_partnerships", "research_data", "thought_leadership", "dfc_partnership", "interim_programming", "building_opening", "formal_launch", "rebrand", "ffe", "travel", "marketing_spend", "reserve_ops", "reserve_capital"],
-    tierOverrides: { catalyst: 2 }
+    enable: DEFAULT_ITEMS.map(i => i.id),
+    tierOverrides: {},
+    scales: {}
   },
-  clear: { enable: [], tierOverrides: {} }
+  clear: { enable: [], tierOverrides: {}, scales: {} }
 };
 
 // =====================
 // STORAGE
 // =====================
-const STORAGE_ITEMS = 'mothership_budget_items_v2'; // bump version for new schema
+const STORAGE_ITEMS = 'mothership_budget_items_v2';
 const STORAGE_STATE = 'mothership_budget_state_v1';
 const STORAGE_CUSTOM_PRESETS = 'mothership_budget_custom_presets_v1';
+const STORAGE_ACTIVE_PRESET = 'mothership_budget_active_preset_v1';
 
 function deepClone(obj) { return JSON.parse(JSON.stringify(obj)); }
 
-// Migrate legacy item structure ({ costs: {y1,y2,y3} }) to new ({ baseCost, modifiers, compound })
 function migrateItem(item) {
   if (!item) return item;
-
-  // Handle tiered items
   if (item.tiers) {
     item.tiers = item.tiers.map(t => {
       if (t.baseCost !== undefined && t.modifiers) return t;
@@ -717,9 +741,7 @@ function migrateItem(item) {
     delete item.costs;
     return item;
   }
-
   if (item.baseCost !== undefined && item.modifiers) return item;
-
   const c = item.costs || { y1: 0, y2: 0, y3: 0 };
   const base = c.y2 || c.y1 || c.y3 || 0;
   item.baseCost = base;
@@ -734,7 +756,6 @@ function migrateItem(item) {
 }
 
 function loadItems() {
-  // Try v2 first
   try {
     const raw = localStorage.getItem(STORAGE_ITEMS);
     if (raw) {
@@ -742,14 +763,12 @@ function loadItems() {
       if (Array.isArray(parsed) && parsed.length) return syncCategories(parsed.map(migrateItem));
     }
   } catch (e) {}
-  // Fall back to v1 if present, migrate
   try {
     const legacyRaw = localStorage.getItem('mothership_budget_items_v1');
     if (legacyRaw) {
       const parsed = JSON.parse(legacyRaw);
       if (Array.isArray(parsed) && parsed.length) {
         const migrated = syncCategories(parsed.map(migrateItem));
-        // Save to v2 slot; leave v1 alone in case user wants rollback
         try { localStorage.setItem(STORAGE_ITEMS, JSON.stringify(migrated)); } catch (e) {}
         return migrated;
       }
@@ -758,15 +777,10 @@ function loadItems() {
   return deepClone(DEFAULT_ITEMS);
 }
 
-// For any loaded item whose ID matches a default, sync category name to current default.
-// Preserves user edits to base/mods/name/note; only overwrites category.
-// Custom items (unknown IDs) are left alone.
 function syncCategories(loaded) {
   const defaultCats = new Map(DEFAULT_ITEMS.map(d => [d.id, d.category]));
   loaded.forEach(item => {
-    if (defaultCats.has(item.id)) {
-      item.category = defaultCats.get(item.id);
-    }
+    if (defaultCats.has(item.id)) item.category = defaultCats.get(item.id);
   });
   return loaded;
 }
@@ -778,7 +792,8 @@ function loadState(itemsRef) {
       const parsed = JSON.parse(raw);
       return {
         enabled: new Set(parsed.enabled || []),
-        tiers: parsed.tiers || {}
+        tiers: parsed.tiers || {},
+        scales: parsed.scales || {}
       };
     }
   } catch (e) {}
@@ -786,7 +801,8 @@ function loadState(itemsRef) {
   itemsRef.filter(i => i.tiers).forEach(i => { initTiers[i.id] = i.defaultTier; });
   return {
     enabled: new Set(itemsRef.filter(i => i.isBase).map(i => i.id)),
-    tiers: initTiers
+    tiers: initTiers,
+    scales: {}
   };
 }
 
@@ -795,7 +811,8 @@ function save() {
     localStorage.setItem(STORAGE_ITEMS, JSON.stringify(items));
     localStorage.setItem(STORAGE_STATE, JSON.stringify({
       enabled: [...state.enabled],
-      tiers: state.tiers
+      tiers: state.tiers,
+      scales: state.scales || {}
     }));
   } catch (e) {}
 }
@@ -838,7 +855,6 @@ function fmtPct(n) {
   if (n === null || n === undefined) return '0%';
   const v = Number(n);
   if (isNaN(v)) return '0%';
-  // Show up to 1 decimal, trim trailing .0
   const r = Math.round(v * 10) / 10;
   const s = Number.isInteger(r) ? r.toString() : r.toFixed(1);
   return (v > 0 ? '+' : '') + s + '%';
@@ -864,7 +880,6 @@ function parsePct(str) {
 
 function findItem(id) { return items.find(i => i.id === id); }
 
-// Core math: compute { y1, y2, y3 } dollar values for an item (considering tier if present)
 function computeYearValues(item) {
   let baseCost, modifiers;
   if (item.tiers) {
@@ -889,7 +904,8 @@ function computeYearValues(item) {
     y2 = Math.max(0, baseCost * m2);
     y3 = Math.max(0, baseCost * m3);
   }
-  return { y1, y2, y3 };
+  const scale = (state.scales && state.scales[item.id]) != null ? state.scales[item.id] : 1;
+  return { y1: y1 * scale, y2: y2 * scale, y3: y3 * scale };
 }
 
 function getItemTotal(item) {
@@ -897,7 +913,6 @@ function getItemTotal(item) {
   return v.y1 + v.y2 + v.y3;
 }
 
-// For editing: get the active baseCost / modifiers (for the current tier if tiered)
 function getActiveBase(item) {
   if (item.tiers) {
     const tierIdx = state.tiers[item.id] ?? item.defaultTier;
@@ -987,11 +1002,13 @@ function render() {
       const mods = getActiveMods(item);
       const v = computeYearValues(item);
       const total = v.y1 + v.y2 + v.y3;
+      const scale = state.scales && state.scales[item.id];
+      const scaleBadge = (scale != null && scale !== 1) ? `<span class="scale-badge">×${Math.round(scale * 100)}% (preset)</span>` : '';
 
       html += `<tr class="${enabled ? '' : 'disabled'}" data-id="${item.id}">
         <td class="item-checkbox"><input type="checkbox" ${enabled ? 'checked' : ''} data-id="${item.id}" class="item-toggle" aria-label="Toggle ${escapeHTML(item.name)}"></td>
         <td>
-          <input type="text" class="item-name-input" data-id="${item.id}" value="${escapeHTML(item.name)}" placeholder="Line item">
+          <input type="text" class="item-name-input" data-id="${item.id}" value="${escapeHTML(item.name)}" placeholder="Line item">${scaleBadge}
           <div class="item-note" contenteditable="true" data-id="${item.id}" data-placeholder="Add note…">${escapeHTML(item.note || '')}</div>`;
       if (item.tiers) {
         const tierIdx = state.tiers[item.id] ?? item.defaultTier;
@@ -1227,7 +1244,6 @@ document.getElementById('add-submit').addEventListener('click', () => {
   renderSummary();
   refreshCategoryDatalist();
 
-  // Reset form
   document.getElementById('add-category').value = '';
   document.getElementById('add-name').value = '';
   document.getElementById('add-note').value = '';
@@ -1246,12 +1262,23 @@ document.getElementById('add-cancel').addEventListener('click', () => {
 // =====================
 // PRESETS
 // =====================
-function applyPreset(preset) {
+function updateActivePresetBtn(key) {
+  document.querySelectorAll('.preset-btn[data-preset]').forEach(b => b.classList.remove('active'));
+  if (key) {
+    const btn = document.querySelector(`.preset-btn[data-preset="${key}"]`);
+    if (btn) btn.classList.add('active');
+  }
+}
+
+function applyPreset(preset, key) {
   state.enabled = new Set(preset.enable);
+  state.scales = preset.scales || {};
   items.filter(i => i.tiers).forEach(i => { state.tiers[i.id] = i.defaultTier; });
   if (preset.tierOverrides) {
     Object.entries(preset.tierOverrides).forEach(([id, tier]) => { state.tiers[id] = tier; });
   }
+  try { localStorage.setItem(STORAGE_ACTIVE_PRESET, key || ''); } catch(e) {}
+  updateActivePresetBtn(key);
   save();
   render();
   renderSummary();
@@ -1283,7 +1310,8 @@ document.querySelector('.controls').addEventListener('click', e => {
   if (!btn) return;
 
   if (btn.dataset.preset) {
-    applyPreset(presets[btn.dataset.preset]);
+    const key = btn.dataset.preset;
+    if (presets[key]) applyPreset(presets[key], key);
   } else if (btn.dataset.customIdx !== undefined) {
     const preset = customPresets[parseInt(btn.dataset.customIdx, 10)];
     if (preset) applyPreset(preset);
@@ -1291,7 +1319,7 @@ document.querySelector('.controls').addEventListener('click', e => {
 });
 
 // =====================
-// SAVE PRESET (inline form — replaces blocked prompt())
+// SAVE PRESET
 // =====================
 function showSavePresetForm() {
   document.getElementById('save-preset-btn').style.display = 'none';
@@ -1368,16 +1396,18 @@ document.getElementById('reset-defaults').addEventListener('click', () => {
   items.filter(i => i.tiers).forEach(i => { initTiers[i.id] = i.defaultTier; });
   state = {
     enabled: new Set(items.filter(i => i.isBase).map(i => i.id)),
-    tiers: initTiers
+    tiers: initTiers,
+    scales: {}
   };
   save();
+  updateActivePresetBtn('nmh_custom_1');
   render();
   renderSummary();
   refreshCategoryDatalist();
 });
 
 // =====================
-// CSV EXPORT (plain text, no styling)
+// CSV EXPORT
 // =====================
 function buildExportRows() {
   const rows = [['Category', 'Line item', 'Selected', 'Base annual $', 'Compound?', 'Y1 mod %', 'Y2 mod %', 'Y3 mod %', 'Y1 $', 'Y2 $', 'Y3 $', '3-yr total', 'Notes']];
@@ -1435,7 +1465,7 @@ document.getElementById('export-csv').addEventListener('click', () => {
 });
 
 // =====================
-// XLSX EXPORT (styled, via xlsx-js-style)
+// XLSX EXPORT (styled)
 // =====================
 const XLSX_FMT = {
   money: '"$"#,##0;"-$"#,##0;"$0"',
@@ -1508,7 +1538,7 @@ function buildSummarySheet(ty1, ty2, ty3, tAll) {
   const ws = XLSX.utils.aoa_to_sheet(rows);
   ws['!cols'] = [{ wch: 38 }, { wch: 22 }];
   ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 1 } }];
-  ws['!rows'] = [{ hpt: 22 }]; // give title row a bit more height
+  ws['!rows'] = [{ hpt: 22 }];
   xlsxApplyStyles(ws, styles);
   return ws;
 }
@@ -1594,6 +1624,12 @@ refreshCategoryDatalist();
 renderCustomPresets();
 render();
 renderSummary();
+try {
+  const savedPreset = localStorage.getItem(STORAGE_ACTIVE_PRESET) || 'nmh_custom_1';
+  updateActivePresetBtn(savedPreset);
+} catch(e) {
+  updateActivePresetBtn('nmh_custom_1');
+}
 </script>
 
 </body>
