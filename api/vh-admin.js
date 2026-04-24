@@ -32,7 +32,9 @@ export default async function handler(req, res) {
         sb(`/vh_analysis?client_id=eq.${encodeURIComponent(client_id)}&select=scores,narrative,created_at&order=created_at.desc&limit=1`)
       ]);
 
-      if (!clientRes.ok) return res.status(404).json({ error: 'Client not found' });
+      if (!clientRes.ok || !responsesRes.ok || !analysisRes.ok) {
+        return res.status(500).json({ error: 'Upstream fetch failed' });
+      }
 
       const [clients, responses, analysis] = await Promise.all([
         clientRes.json(),
@@ -63,7 +65,7 @@ export default async function handler(req, res) {
     const counts = await Promise.all(
       clients.map(c =>
         sb(`/vh_responses?client_id=eq.${c.id}&select=id,completed_at&order=completed_at.desc`)
-          .then(r => r.json())
+          .then(r => { if (!r.ok) throw new Error('Response fetch failed'); return r.json(); })
           .then(rows => ({ client_id: c.id, count: rows.length, latest: rows[0]?.completed_at || null }))
       )
     );
