@@ -30,6 +30,7 @@ CREATE TABLE vh_analysis (
 
 CREATE INDEX vh_responses_client_id_idx ON vh_responses(client_id);
 CREATE INDEX vh_analysis_client_id_created_idx ON vh_analysis(client_id, created_at DESC);
+CREATE INDEX vh_analysis_triggered_by_response_id_idx ON vh_analysis(triggered_by_response_id);
 
 -- Disable RLS — auth is enforced at the API route layer
 ALTER TABLE vh_clients DISABLE ROW LEVEL SECURITY;
