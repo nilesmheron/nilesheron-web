@@ -26,5 +26,5 @@ export default function handler(req, res) {
 
   if (password !== adminPassword) return res.status(401).json({ error: 'Invalid password' });
 
-  return res.status(200).json({ token: computeToken(password) });
+  return res.status(200).json({ token: computeToken(adminPassword) });
 }
