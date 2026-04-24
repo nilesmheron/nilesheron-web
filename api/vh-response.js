@@ -19,7 +19,10 @@ function sb(path, options = {}) {
 
 async function runAnalysis(client_id, extraction_goal, response_id) {
   const config = GOAL_CONFIGS[extraction_goal];
-  if (!config) return;
+  if (!config) {
+    console.warn(`runAnalysis: no GOAL_CONFIGS entry for extraction_goal="${extraction_goal}"`);
+    return;
+  }
 
   const r = await sb(
     `/vh_responses?client_id=eq.${client_id}&select=respondent_name,respondent_title,transcript&order=completed_at.asc`
@@ -30,6 +33,7 @@ async function runAnalysis(client_id, extraction_goal, response_id) {
 
   const transcriptBlocks = responses.map(resp => {
     const turns = (resp.transcript || [])
+      // role: 'user' = respondent, role: 'assistant' = interviewer (matches intake page convo array)
       .map(t => `${t.role === 'user' ? resp.respondent_name : 'Interviewer'}: ${t.content}`)
       .join('\n\n');
     return `--- ${resp.respondent_name}, ${resp.respondent_title} ---\n${turns}`;
@@ -120,6 +124,7 @@ export default async function handler(req, res) {
     }
 
     const rows = await saveRes.json();
+    if (!rows || !rows[0]) return res.status(500).json({ error: 'Response saved but row not returned' });
     const response_id = rows[0].id;
 
     // Run analysis synchronously (respondent waits ~3-6s; acceptable after a 10-15min interview)
