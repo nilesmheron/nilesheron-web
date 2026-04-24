@@ -2,7 +2,7 @@
 import { validateAdminToken } from './vh-auth.js';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 function sb(path) {
   return fetch(`${SUPABASE_URL}/rest/v1${path}`, {

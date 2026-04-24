@@ -285,7 +285,7 @@ function renderClientList(clients) {
   clients.forEach(function(c) {
     var lastDate = c.last_response_at ? new Date(c.last_response_at).toLocaleDateString() : '—';
     var countLabel = c.response_count === 1 ? '1 response' : c.response_count + ' responses';
-    html += '<div class="client-row" onclick="loadClientDetail(\'' + c.id + '\')">';
+    html += '<div class="client-row" onclick="loadClientDetail(\'' + esc(c.id) + '\')">';
     html += '<span class="client-name">' + esc(c.client_name) + '</span>';
     html += '<span class="goal-badge">' + esc(GOAL_LABELS[c.extraction_goal] || c.extraction_goal) + '</span>';
     html += '<span class="response-count">' + countLabel + '</span>';
