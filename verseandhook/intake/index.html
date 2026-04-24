@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verse and Hook — Client Intake</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #F5F4F0;
+  --bg-alt: #FFFFFF;
+  --text: #1C1C1A;
+  --text-muted: #5E5E58;
+  --text-dim: #9A9A93;
+  --accent: #1D3FE8;
+  --accent-ink: #FFFFFF;
+  --border: #E2E1DB;
+}
+body { background: var(--bg); color: var(--text); font-family: 'Inter', -apple-system, sans-serif; font-size: 15px; line-height: 1.6; min-height: 100vh; display: flex; flex-direction: column; }
+
+/* Header */
+#site-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.wordmark { font-size: 11px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-dim); }
+
+/* Progress bar — bottom fixed */
+#progress-bar-wrap { position: fixed; bottom: 0; left: 0; right: 0; height: 3px; background: var(--border); z-index: 100; }
+#progress-bar-fill { height: 100%; background: var(--accent); transition: width 0.5s ease; width: 0%; }
+
+/* Loading */
+#view-loading { flex: 1; display: flex; align-items: center; justify-content: center; }
+.loading-text { font-size: 14px; color: var(--text-dim); }
+
+/* Error */
+#view-error { display: none; flex: 1; align-items: center; justify-content: center; text-align: center; padding: 2rem; }
+.error-head { font-family: 'Fraunces', serif; font-size: 22px; margin-bottom: 0.75rem; }
+.error-body { font-size: 14px; color: var(--text-muted); }
+
+/* Landing */
+#view-landing { display: none; flex: 1; align-items: center; justify-content: center; padding: 2rem 1.5rem; }
+.landing-inner { max-width: 480px; width: 100%; }
+.landing-label { font-size: 11px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 1rem; }
+.landing-head { font-family: 'Fraunces', serif; font-size: 32px; font-weight: 500; line-height: 1.2; margin-bottom: 1rem; }
+.landing-sub { font-size: 15px; color: var(--text-muted); line-height: 1.65; margin-bottom: 1.75rem; max-width: 380px; }
+.landing-goal { display: inline-block; font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); background: rgba(29,63,232,0.07); border-radius: 4px; padding: 3px 8px; margin-bottom: 1.25rem; }
+.btn-primary { display: inline-block; background: var(--accent); color: var(--accent-ink); border: none; border-radius: 10px; padding: 13px 28px; font-size: 15px; font-family: 'Inter', sans-serif; font-weight: 500; cursor: pointer; transition: opacity 0.15s; }
+.btn-primary:hover { opacity: 0.88; }
+
+/* Identity form */
+#view-identity { display: none; flex: 1; align-items: center; justify-content: center; padding: 2rem 1.5rem; }
+.identity-inner { max-width: 420px; width: 100%; }
+.identity-head { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 500; margin-bottom: 0.5rem; }
+.identity-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 1.75rem; }
+.field { margin-bottom: 1.1rem; }
+.field label { display: block; font-size: 12px; font-weight: 500; color: var(--text-muted); margin-bottom: 5px; }
+.field input { width: 100%; background: var(--bg-alt); border: 1px solid var(--border); border-radius: 8px; padding: 10px 13px; font-size: 15px; font-family: 'Inter', sans-serif; color: var(--text); }
+.field input:focus { outline: none; border-color: var(--accent); }
+.field input::placeholder { color: var(--text-dim); }
+.identity-submit { margin-top: 1.5rem; }
+.field-error { font-size: 12px; color: #C94040; margin-top: 4px; display: none; }
+
+/* Chat */
+#view-chat { display: none; flex: 1; flex-direction: column; overflow: hidden; padding-bottom: 3px; }
+#chat-main { flex: 1; overflow-y: auto; padding: 1.5rem; }
+#messages { max-width: 620px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; padding-bottom: 5rem; }
+.msg { word-wrap: break-word; }
+.msg.ai { align-self: flex-start; max-width: 86%; }
+.msg.ai .author { font-size: 10px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 6px; }
+.msg.ai .ai-text { font-family: 'Fraunces', serif; font-size: 16px; line-height: 1.65; color: var(--text); }
+.msg.ai .ai-text p { margin: 0 0 0.7em; }
+.msg.ai .ai-text p:last-child { margin-bottom: 0; }
+.msg.user { align-self: flex-end; background: transparent; border: 1px solid var(--border); border-radius: 14px; padding: 9px 14px; font-size: 14.5px; line-height: 1.45; color: var(--text); max-width: 82%; }
+.msg.note { align-self: center; font-size: 12px; color: var(--text-dim); padding: 2px 0; text-align: center; }
+.msg.ai.typing-wrap { padding: 2px 0; }
+.typing-dots { display: flex; gap: 5px; align-items: center; padding-top: 2px; }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-dim); animation: bounce 1.2s ease-in-out infinite; }
+.dot:nth-child(2) { animation-delay: 0.18s; }
+.dot:nth-child(3) { animation-delay: 0.36s; }
+@keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-5px)} }
+#chat-footer { flex-shrink: 0; border-top: 1px solid var(--border); padding: 0.85rem 1.5rem 1.25rem; }
+.input-row { max-width: 620px; margin: 0 auto; display: flex; gap: 10px; align-items: flex-end; }
+textarea { flex: 1; background: var(--bg-alt); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 15px; font-family: 'Inter', sans-serif; line-height: 1.5; padding: 10px 14px; resize: none; min-height: 44px; max-height: 160px; overflow-y: auto; }
+textarea:focus { outline: none; border-color: var(--accent); }
+textarea::placeholder { color: var(--text-dim); }
+textarea:disabled { opacity: 0.4; }
+#btn-send { background: var(--accent); color: var(--accent-ink); border: none; border-radius: 6px; padding: 10px 16px; font-size: 11px; font-family: 'Inter', sans-serif; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; flex-shrink: 0; height: 44px; transition: opacity 0.15s; }
+#btn-send:disabled { opacity: 0.3; cursor: default; }
+#btn-send:hover:not(:disabled) { opacity: 0.85; }
+#btn-skip { display: none; background: transparent; border: 1px solid var(--border); border-radius: 6px; padding: 10px 14px; font-size: 11px; font-family: 'Inter', sans-serif; color: var(--text-muted); cursor: pointer; flex-shrink: 0; height: 44px; transition: color 0.15s; }
+#btn-skip:hover { color: var(--text); }
+
+/* Thank you */
+#view-thankyou { display: none; flex: 1; align-items: center; justify-content: center; padding: 2rem 1.5rem; text-align: center; }
+.thankyou-inner { max-width: 460px; }
+.thankyou-mark { font-family: 'Fraunces', serif; font-size: 48px; font-weight: 500; color: var(--accent); margin-bottom: 1.25rem; line-height: 1; }
+.thankyou-head { font-family: 'Fraunces', serif; font-size: 28px; font-weight: 500; line-height: 1.25; margin-bottom: 1rem; }
+.thankyou-body { font-size: 15px; color: var(--text-muted); line-height: 1.65; }
+
+@media (max-width: 480px) {
+  .landing-head { font-size: 26px; }
+  .thankyou-head { font-size: 24px; }
+}
+</style>
+</head>
+<body>
+<div id="site-header">
+  <span class="wordmark">Verse &amp; Hook</span>
+</div>
+
+<div id="view-loading" style="flex:1;display:flex;">
+  <p class="loading-text">Loading...</p>
+</div>
+
+<div id="view-error" style="display:none;flex:1;">
+  <div>
+    <p class="error-head">Invalid link</p>
+    <p class="error-body">This intake link is not recognized. Please check the URL you were sent.</p>
+  </div>
+</div>
+
+<div id="view-landing" style="display:none;flex:1;">
+  <div class="landing-inner">
+    <p class="landing-label">Verse &amp; Hook — Client Intake</p>
+    <div id="landing-goal-badge" class="landing-goal"></div>
+    <h1 class="landing-head" id="landing-head"></h1>
+    <p class="landing-sub" id="landing-sub"></p>
+    <button class="btn-primary" onclick="showIdentity()">Get started &rarr;</button>
+  </div>
+</div>
+
+<div id="view-identity" style="display:none;flex:1;">
+  <div class="identity-inner">
+    <h2 class="identity-head">Before we begin</h2>
+    <p class="identity-sub">Please tell us a bit about yourself.</p>
+    <div class="field">
+      <label for="f-name">Full name</label>
+      <input type="text" id="f-name" placeholder="Jane Smith">
+      <p class="field-error" id="err-name">Required</p>
+    </div>
+    <div class="field">
+      <label for="f-title">Title</label>
+      <input type="text" id="f-title" placeholder="Chief Marketing Officer">
+      <p class="field-error" id="err-title">Required</p>
+    </div>
+    <div class="field">
+      <label for="f-email">Email</label>
+      <input type="email" id="f-email" placeholder="jane@company.com">
+      <p class="field-error" id="err-email">Required</p>
+    </div>
+    <div class="identity-submit">
+      <button class="btn-primary" onclick="startChat()">Begin &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<div id="view-chat" style="display:none;flex-direction:column;">
+  <div id="chat-main"><div id="messages"></div></div>
+  <div id="chat-footer">
+    <div class="input-row">
+      <textarea id="chat-input" placeholder="Type your response..." rows="1"></textarea>
+      <button id="btn-skip" onclick="skipClosing()">Nothing to add</button>
+      <button id="btn-send" disabled>Send</button>
+    </div>
+  </div>
+</div>
+
+<div id="view-thankyou" style="display:none;flex:1;">
+  <div class="thankyou-inner">
+    <div class="thankyou-mark">V&amp;H</div>
+    <h2 class="thankyou-head">Thank you for your time.</h2>
+    <p class="thankyou-body">Your responses have been recorded. The Verse and Hook team will review them as part of the onboarding process.</p>
+  </div>
+</div>
+
+<div id="progress-bar-wrap"><div id="progress-bar-fill"></div></div>
+
+<script>
+var INTAKE_SYS = {
+  discovery: "You are a warm, focused intake interviewer for Verse and Hook, a marketing agency. You are speaking with a stakeholder of a new client. Your job is to understand their perspective on the brand so the agency can develop effective marketing and storytelling strategy.\n\nMove through this as a real conversation. One question per turn. Match their register. Mirror what you hear before asking the next thing. Do not announce phases or topic areas.\n\nCover these areas naturally:\n- Their role and relationship to the brand\n- How they describe the brand — what it stands for, what makes it distinct\n- Target audience — specific, not generic\n- Competitive landscape — who they compete with, how they differ\n- Value proposition — what they believe the brand offers that competitors don't\n- Goals for the next 12–24 months\n\nWhen you have solid answers across all areas, close the conversation:\nSend a message thanking them for their time and asking if there's anything they want to add as they reflect on the conversation. Include [CLOSING] at the end of this message on its own line.\n\nAfter their response (or if they say nothing to add), send a brief warm acknowledgment, then [INTAKE_COMPLETE] on its own line.\n\nStyle rules:\n- Warm, not effusive. Never say 'Great!' or 'Amazing!'\n- One question per turn\n- Short responses, no bullets\n- Mirror before probing\n- Lowercase is fine. Match their energy.",
+
+  intake: "You are a warm, focused intake interviewer for Verse and Hook, a marketing agency. You are speaking with a stakeholder of a new client project. Your job is to understand scope, expectations, and constraints before work begins.\n\nMove through this as a real conversation. One question per turn. Match their register. Mirror what you hear before asking the next thing. Do not announce phases or topic areas.\n\nCover these areas naturally:\n- Their role and involvement in the project\n- How they describe the scope — what's in and what's out\n- Timeline expectations and why they matter\n- Budget comfort — constraints and flexibility (no exact numbers needed)\n- How decisions get made — the decision-making structure\n- What success looks like — their definition of done\n- Known constraints, concerns, or risks going in\n\nWhen you have solid answers across all areas, close the conversation:\nSend a message thanking them for their time and asking if there's anything they want to add as they reflect on the conversation. Include [CLOSING] at the end of this message on its own line.\n\nAfter their response (or if they say nothing to add), send a brief warm acknowledgment, then [INTAKE_COMPLETE] on its own line.\n\nStyle rules:\n- Warm, not effusive. Never say 'Great!' or 'Amazing!'\n- One question per turn\n- Short responses, no bullets\n- Mirror before probing\n- Lowercase is fine. Match their energy.",
+
+  feedback: "You are a warm, focused intake interviewer for Verse and Hook, a marketing agency. You are speaking with a stakeholder of an existing client. Your job is to understand their honest perspective on how the engagement is going.\n\nMove through this as a real conversation. One question per turn. Match their register. Mirror what you hear before asking the next thing. Do not announce phases or topic areas.\n\nCover these areas naturally:\n- Their role and involvement in the engagement\n- What's working well — what they'd keep exactly as is\n- What isn't working — what's falling short or feeling off\n- Priorities for what should change or improve\n- Overall satisfaction with direction and results\n- What they'd do differently if starting over\n\nWhen you have solid answers across all areas, close the conversation:\nSend a message thanking them for their time and asking if there's anything they want to add as they reflect on the conversation. Include [CLOSING] at the end of this message on its own line.\n\nAfter their response (or if they say nothing to add), send a brief warm acknowledgment, then [INTAKE_COMPLETE] on its own line.\n\nStyle rules:\n- Warm, not effusive. Never say 'Great!' or 'Amazing!'\n- One question per turn\n- Short responses, no bullets\n- Mirror before probing\n- Lowercase is fine. Match their energy."
+};
+
+var OPENERS = {
+  discovery: "Hi — thanks for making time for this. I'm here to understand your perspective on the brand: where it stands, who it serves, and where you want it to go. There are no right or wrong answers — I'm just here to listen.\n\nTo get started: can you tell me a bit about your role and how long you've been connected to the brand?",
+  intake: "Hi — thanks for taking the time. I want to make sure we understand scope and expectations clearly before the work begins. This should take about 10–15 minutes.\n\nTo start: can you tell me your role and how involved you expect to be in this project?",
+  feedback: "Hi — thanks for making time. I want to hear your honest take on how things have been going — what's working, what isn't, and where you'd like to see change. Your perspective matters.\n\nTo start: can you tell me your role and how involved you've been in the work so far?"
+};
+
+var GOAL_LABELS = { discovery: 'Brand Discovery', intake: 'Project Intake', feedback: 'Engagement Feedback' };
+
+var clientId = null, extractionGoal = null, clientName = null;
+var respondentName = '', respondentTitle = '', respondentEmail = '';
+var convo = [], exchanges = 0, busy = false, isClosing = false;
+
+var pbar = document.getElementById('progress-bar-fill');
+
+function setProgress(p) { pbar.style.width = p + '%'; }
+
+function show(viewId) {
+  ['loading','error','landing','identity','chat','thankyou'].forEach(function(id) {
+    var el = document.getElementById('view-' + id);
+    if (el) { el.style.display = id === viewId ? 'flex' : 'none'; }
+  });
+}
+
+// Load client by token on page load
+(function init() {
+  var params = new URLSearchParams(window.location.search);
+  var token = params.get('token');
+  if (!token) { show('error'); return; }
+
+  fetch('/api/vh-session?token=' + encodeURIComponent(token))
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.error) { show('error'); return; }
+      clientId = data.id;
+      extractionGoal = data.extraction_goal;
+      clientName = data.client_name;
+
+      document.getElementById('landing-goal-badge').textContent = GOAL_LABELS[extractionGoal] || extractionGoal;
+      document.getElementById('landing-head').textContent = clientName;
+      document.getElementById('landing-sub').textContent =
+        'We\'d like to understand your perspective as a stakeholder of ' + clientName + '. This conversation takes about 10–15 minutes.';
+      show('landing');
+    })
+    .catch(function() { show('error'); });
+})();
+
+function showIdentity() { show('identity'); setProgress(5); }
+
+function startChat() {
+  var name = document.getElementById('f-name').value.trim();
+  var title = document.getElementById('f-title').value.trim();
+  var email = document.getElementById('f-email').value.trim();
+  var valid = true;
+
+  ['name','title','email'].forEach(function(f) { document.getElementById('err-' + f).style.display = 'none'; });
+
+  if (!name) { document.getElementById('err-name').style.display = 'block'; valid = false; }
+  if (!title) { document.getElementById('err-title').style.display = 'block'; valid = false; }
+  if (!email) { document.getElementById('err-email').style.display = 'block'; valid = false; }
+  if (!valid) return;
+
+  respondentName = name;
+  respondentTitle = title;
+  respondentEmail = email;
+
+  show('chat');
+  addAiMsg(OPENERS[extractionGoal] || OPENERS.discovery);
+  setProgress(8);
+
+  var input = document.getElementById('chat-input');
+  input.addEventListener('input', function() {
+    document.getElementById('btn-send').disabled = busy || !input.value.trim();
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 160) + 'px';
+  });
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey && !busy) {
+      e.preventDefault();
+      var val = input.value.trim();
+      if (!val) return;
+      addUserMsg(val);
+      input.value = ''; input.style.height = 'auto';
+      sendMessage(val);
+    }
+  });
+  document.getElementById('btn-send').addEventListener('click', function() {
+    var val = input.value.trim();
+    if (!val || busy) return;
+    addUserMsg(val);
+    input.value = ''; input.style.height = 'auto';
+    sendMessage(val);
+  });
+}
+
+function addAiMsg(text) {
+  var d = document.createElement('div');
+  d.className = 'msg ai';
+  var author = document.createElement('div');
+  author.className = 'author';
+  author.textContent = 'Verse & Hook';
+  var body = document.createElement('div');
+  body.className = 'ai-text';
+  text.split(/\n\n+/).forEach(function(para) {
+    if (!para.trim()) return;
+    var p = document.createElement('p');
+    p.textContent = para.trim();
+    body.appendChild(p);
+  });
+  d.appendChild(author);
+  d.appendChild(body);
+  document.getElementById('messages').appendChild(d);
+  scroll();
+}
+
+function addUserMsg(text) {
+  var d = document.createElement('div');
+  d.className = 'msg user';
+  d.textContent = text;
+  document.getElementById('messages').appendChild(d);
+  scroll();
+}
+
+function addNote(text) {
+  var d = document.createElement('div');
+  d.className = 'msg note';
+  d.textContent = text;
+  document.getElementById('messages').appendChild(d);
+  scroll();
+}
+
+function showTyping() {
+  var d = document.createElement('div');
+  d.className = 'msg ai typing-wrap';
+  d.id = 'typing';
+  d.innerHTML = '<div class="author">Verse &amp; Hook</div><div class="typing-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
+  document.getElementById('messages').appendChild(d);
+  scroll();
+}
+
+function hideTyping() { var t = document.getElementById('typing'); if (t) t.remove(); }
+
+function scroll() {
+  var m = document.getElementById('chat-main');
+  setTimeout(function() { m.scrollTop = m.scrollHeight; }, 80);
+}
+
+function lock() {
+  busy = true;
+  document.getElementById('chat-input').disabled = true;
+  document.getElementById('btn-send').disabled = true;
+}
+
+function unlock() {
+  busy = false;
+  document.getElementById('chat-input').disabled = false;
+  document.getElementById('btn-send').disabled = !document.getElementById('chat-input').value.trim();
+  document.getElementById('chat-input').focus();
+}
+
+function sendMessage(userText) {
+  lock();
+  convo.push({ role: 'user', content: userText });
+  showTyping();
+
+  fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 500,
+      system: INTAKE_SYS[extractionGoal],
+      messages: convo
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    if (d.error) throw new Error(d.error.message || d.error);
+    var text = (d.content || []).map(function(b) { return b.text || ''; }).join('');
+
+    var hasClosing = text.indexOf('[CLOSING]') !== -1;
+    var hasComplete = text.indexOf('[INTAKE_COMPLETE]') !== -1;
+
+    text = text.replace(/\[CLOSING\]/g, '').replace(/\[INTAKE_COMPLETE\]/g, '').trim();
+
+    convo.push({ role: 'assistant', content: text });
+    hideTyping();
+    addAiMsg(text);
+
+    exchanges++;
+    setProgress(Math.min(88, 8 + exchanges * 8));
+
+    if (hasComplete) {
+      submitIntake();
+    } else if (hasClosing) {
+      isClosing = true;
+      document.getElementById('btn-skip').style.display = 'inline-block';
+      unlock();
+    } else {
+      unlock();
+    }
+  })
+  .catch(function(e) {
+    hideTyping();
+    convo.pop();
+    console.error('Chat error:', e.message);
+    addAiMsg('Something went wrong. Please try again.');
+    unlock();
+  });
+}
+
+function skipClosing() {
+  // User skips the reflection — submit immediately without another AI turn
+  document.getElementById('btn-skip').style.display = 'none';
+  convo.push({ role: 'user', content: "No, that's all." });
+  submitIntake();
+}
+
+function submitIntake() {
+  lock();
+  setProgress(96);
+  addNote('Submitting your responses...');
+
+  fetch('/api/vh-response', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      client_id: clientId,
+      respondent_name: respondentName,
+      respondent_title: respondentTitle,
+      respondent_email: respondentEmail,
+      transcript: convo
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.ok) {
+      setProgress(100);
+      show('thankyou');
+    } else {
+      addAiMsg('Something went wrong saving your responses. Please refresh and try again.');
+      unlock();
+    }
+  })
+  .catch(function(e) {
+    console.error('Submit error:', e.message);
+    addAiMsg('Something went wrong saving your responses. Please refresh and try again.');
+    unlock();
+  });
+}
+</script>
+</body>
+</html>
