@@ -204,11 +204,8 @@ function setProgress(p) { pbar.style.width = p + '%'; }
 function show(viewId) {
   ['loading','error','landing','identity','chat','thankyou'].forEach(function(id) {
     var el = document.getElementById('view-' + id);
-    if (el) { el.style.display = id === viewId ? (id === 'chat' ? 'flex' : 'flex') : 'none'; }
+    if (el) { el.style.display = id === viewId ? 'flex' : 'none'; }
   });
-  if (viewId === 'chat') {
-    document.getElementById('view-chat').style.flexDirection = 'column';
-  }
 }
 
 // Load client by token on page load
@@ -392,7 +389,8 @@ function sendMessage(userText) {
   .catch(function(e) {
     hideTyping();
     convo.pop();
-    addAiMsg('Something went wrong — ' + e.message + '. Please try again.');
+    console.error('Chat error:', e.message);
+    addAiMsg('Something went wrong. Please try again.');
     unlock();
   });
 }
@@ -431,7 +429,8 @@ function submitIntake() {
     }
   })
   .catch(function(e) {
-    addAiMsg('Something went wrong saving your responses: ' + e.message + '. Please refresh and try again.');
+    console.error('Submit error:', e.message);
+    addAiMsg('Something went wrong saving your responses. Please refresh and try again.');
     unlock();
   });
 }
