@@ -36,19 +36,23 @@ export default async function handler(req, res) {
 
     const token = crypto.randomBytes(16).toString('hex');
 
-    const r = await sb('/vh_clients', {
-      method: 'POST',
-      headers: { Prefer: 'return=representation' },
-      body: JSON.stringify({ client_name: client_name.trim(), extraction_goal, token })
-    });
+    try {
+      const r = await sb('/vh_clients', {
+        method: 'POST',
+        headers: { Prefer: 'return=representation' },
+        body: JSON.stringify({ client_name: client_name.trim(), extraction_goal, token })
+      });
 
-    if (!r.ok) {
-      const err = await r.text();
-      return res.status(r.status).json({ error: err });
+      if (!r.ok) {
+        const err = await r.text();
+        return res.status(r.status).json({ error: err });
+      }
+
+      const rows = await r.json();
+      return res.status(200).json(rows[0]);
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
     }
-
-    const rows = await r.json();
-    return res.status(200).json(rows[0]);
   }
 
   // GET — fetch client record by token (public, for respondent page load)
@@ -56,18 +60,22 @@ export default async function handler(req, res) {
     const { token } = req.query;
     if (!token) return res.status(400).json({ error: 'token required' });
 
-    const r = await sb(
-      `/vh_clients?token=eq.${encodeURIComponent(token)}&select=id,client_name,extraction_goal`
-    );
+    try {
+      const r = await sb(
+        `/vh_clients?token=eq.${encodeURIComponent(token)}&select=id,client_name,extraction_goal`
+      );
 
-    if (!r.ok) {
-      const err = await r.text();
-      return res.status(r.status).json({ error: err });
+      if (!r.ok) {
+        const err = await r.text();
+        return res.status(r.status).json({ error: err });
+      }
+
+      const rows = await r.json();
+      if (!rows.length) return res.status(404).json({ error: 'Invalid session token' });
+      return res.status(200).json(rows[0]);
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
     }
-
-    const rows = await r.json();
-    if (!rows.length) return res.status(404).json({ error: 'Invalid session token' });
-    return res.status(200).json(rows[0]);
   }
 
   return res.status(405).json({ error: 'Method not allowed' });
