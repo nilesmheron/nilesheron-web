@@ -1,5 +1,5 @@
 // api/vh-response.js
-import { GOAL_CONFIGS } from './vh-config.js';
+import { runAnalysis } from './vh-analysis-utils.js';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -14,77 +14,6 @@ function sb(path, options = {}) {
       Authorization: `Bearer ${SUPABASE_KEY}`,
       ...(options.headers || {})
     }
-  });
-}
-
-async function runAnalysis(client_id, extraction_goal, response_id) {
-  const config = GOAL_CONFIGS[extraction_goal];
-  if (!config) {
-    console.warn(`runAnalysis: no GOAL_CONFIGS entry for extraction_goal="${extraction_goal}"`);
-    return;
-  }
-
-  const r = await sb(
-    `/vh_responses?client_id=eq.${client_id}&select=respondent_name,respondent_title,transcript&order=completed_at.asc`
-  );
-  if (!r.ok) return;
-
-  const responses = await r.json();
-
-  const transcriptBlocks = responses.map(resp => {
-    const turns = (resp.transcript || [])
-      // role: 'user' = respondent, role: 'assistant' = interviewer (matches intake page convo array)
-      .map(t => `${t.role === 'user' ? resp.respondent_name : 'Interviewer'}: ${t.content}`)
-      .join('\n\n');
-    return `--- ${resp.respondent_name}, ${resp.respondent_title} ---\n${turns}`;
-  });
-
-  const userMessage = [
-    `Extraction goal: ${extraction_goal}`,
-    `Scoring dimensions: ${config.scoringDimensions.join(', ')}`,
-    '',
-    'Transcripts:',
-    '',
-    transcriptBlocks.join('\n\n')
-  ].join('\n');
-
-  const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': ANTHROPIC_KEY,
-      'anthropic-version': '2023-06-01'
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 1024,
-      system: config.analysisSystemPrompt,
-      messages: [{ role: 'user', content: userMessage }]
-    })
-  });
-
-  if (!anthropicRes.ok) return;
-
-  const data = await anthropicRes.json();
-  const text = (data.content || []).map(b => b.text || '').join('').trim();
-
-  let parsed;
-  try {
-    parsed = JSON.parse(text);
-  } catch {
-    // Sonnet returned non-JSON — skip writing analysis rather than storing garbage
-    return;
-  }
-
-  await sb('/vh_analysis', {
-    method: 'POST',
-    headers: { Prefer: 'return=minimal' },
-    body: JSON.stringify({
-      client_id,
-      triggered_by_response_id: response_id,
-      scores: parsed.scores || null,
-      narrative: parsed.narrative || null
-    })
   });
 }
 
@@ -132,7 +61,11 @@ export default async function handler(req, res) {
 
     // Run analysis synchronously (respondent waits ~3-6s; acceptable after a 10-15min interview)
     try {
-      await runAnalysis(client_id, extraction_goal, response_id);
+      await runAnalysis(client_id, extraction_goal, response_id, {
+        supabaseUrl: SUPABASE_URL,
+        supabaseKey: SUPABASE_KEY,
+        anthropicKey: ANTHROPIC_KEY
+      });
     } catch (e) {
       // Analysis failure does not fail the submission
       console.error('Analysis error:', e.message);
