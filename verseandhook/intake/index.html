@@ -177,23 +177,8 @@ textarea:disabled { opacity: 0.4; }
 <div id="progress-bar-wrap"><div id="progress-bar-fill"></div></div>
 
 <script>
-var INTAKE_SYS = {
-  discovery: "You are a warm, focused intake interviewer for Verse and Hook, a marketing agency. You are speaking with a stakeholder of a new client. Your job is to understand their perspective on the brand so the agency can develop effective marketing and storytelling strategy.\n\nMove through this as a real conversation. One question per turn. Match their register. Mirror what you hear before asking the next thing. Do not announce phases or topic areas.\n\nCover these areas naturally:\n- Their role and relationship to the brand\n- How they describe the brand — what it stands for, what makes it distinct\n- Target audience — specific, not generic\n- Competitive landscape — who they compete with, how they differ\n- Value proposition — what they believe the brand offers that competitors don't\n- Goals for the next 12–24 months\n\nWhen you have solid answers across all areas, close the conversation:\nSend a message thanking them for their time and asking if there's anything they want to add as they reflect on the conversation. Include [CLOSING] at the end of this message on its own line.\n\nAfter their response (or if they say nothing to add), send a brief warm acknowledgment, then [INTAKE_COMPLETE] on its own line.\n\nStyle rules:\n- Warm, not effusive. Never say 'Great!' or 'Amazing!'\n- One question per turn\n- Short responses, no bullets\n- Mirror before probing\n- Lowercase is fine. Match their energy.",
-
-  intake: "You are a warm, focused intake interviewer for Verse and Hook, a marketing agency. You are speaking with a stakeholder of a new client project. Your job is to understand scope, expectations, and constraints before work begins.\n\nMove through this as a real conversation. One question per turn. Match their register. Mirror what you hear before asking the next thing. Do not announce phases or topic areas.\n\nCover these areas naturally:\n- Their role and involvement in the project\n- How they describe the scope — what's in and what's out\n- Timeline expectations and why they matter\n- Budget comfort — constraints and flexibility (no exact numbers needed)\n- How decisions get made — the decision-making structure\n- What success looks like — their definition of done\n- Known constraints, concerns, or risks going in\n\nWhen you have solid answers across all areas, close the conversation:\nSend a message thanking them for their time and asking if there's anything they want to add as they reflect on the conversation. Include [CLOSING] at the end of this message on its own line.\n\nAfter their response (or if they say nothing to add), send a brief warm acknowledgment, then [INTAKE_COMPLETE] on its own line.\n\nStyle rules:\n- Warm, not effusive. Never say 'Great!' or 'Amazing!'\n- One question per turn\n- Short responses, no bullets\n- Mirror before probing\n- Lowercase is fine. Match their energy.",
-
-  feedback: "You are a warm, focused intake interviewer for Verse and Hook, a marketing agency. You are speaking with a stakeholder of an existing client. Your job is to understand their honest perspective on how the engagement is going.\n\nMove through this as a real conversation. One question per turn. Match their register. Mirror what you hear before asking the next thing. Do not announce phases or topic areas.\n\nCover these areas naturally:\n- Their role and involvement in the engagement\n- What's working well — what they'd keep exactly as is\n- What isn't working — what's falling short or feeling off\n- Priorities for what should change or improve\n- Overall satisfaction with direction and results\n- What they'd do differently if starting over\n\nWhen you have solid answers across all areas, close the conversation:\nSend a message thanking them for their time and asking if there's anything they want to add as they reflect on the conversation. Include [CLOSING] at the end of this message on its own line.\n\nAfter their response (or if they say nothing to add), send a brief warm acknowledgment, then [INTAKE_COMPLETE] on its own line.\n\nStyle rules:\n- Warm, not effusive. Never say 'Great!' or 'Amazing!'\n- One question per turn\n- Short responses, no bullets\n- Mirror before probing\n- Lowercase is fine. Match their energy."
-};
-
-var OPENERS = {
-  discovery: "Hi — thanks for making time for this. I'm here to understand your perspective on the brand: where it stands, who it serves, and where you want it to go. There are no right or wrong answers — I'm just here to listen.\n\nTo get started: can you tell me a bit about your role and how long you've been connected to the brand?",
-  intake: "Hi — thanks for taking the time. I want to make sure we understand scope and expectations clearly before the work begins. This should take about 10–15 minutes.\n\nTo start: can you tell me your role and how involved you expect to be in this project?",
-  feedback: "Hi — thanks for making time. I want to hear your honest take on how things have been going — what's working, what isn't, and where you'd like to see change. Your perspective matters.\n\nTo start: can you tell me your role and how involved you've been in the work so far?"
-};
-
-var GOAL_LABELS = { discovery: 'Brand Discovery', intake: 'Project Intake', feedback: 'Engagement Feedback' };
-
 var clientId = null, extractionGoal = null, clientName = null;
+var intakeSystemPrompt = '', openerMessage = '';
 var respondentName = '', respondentTitle = '', respondentEmail = '';
 var convo = [], exchanges = 0, busy = false, isClosing = false;
 
@@ -214,15 +199,25 @@ function show(viewId) {
   var token = params.get('token');
   if (!token) { show('error'); return; }
 
+  var sessionData;
+
   fetch('/api/vh-session?token=' + encodeURIComponent(token))
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      if (data.error) { show('error'); return; }
-      clientId = data.id;
-      extractionGoal = data.extraction_goal;
-      clientName = data.client_name;
+      if (data.error) { show('error'); return Promise.reject('invalid token'); }
+      sessionData = data;
+      return fetch('/api/vh-goal-config?goal=' + encodeURIComponent(data.extraction_goal))
+        .then(function(r) { return r.json(); });
+    })
+    .then(function(config) {
+      if (!config || config.error) { show('error'); return; }
+      clientId = sessionData.id;
+      extractionGoal = sessionData.extraction_goal;
+      clientName = sessionData.client_name;
+      intakeSystemPrompt = config.intake_system_prompt;
+      openerMessage = config.opener_message;
 
-      document.getElementById('landing-goal-badge').textContent = GOAL_LABELS[extractionGoal] || extractionGoal;
+      document.getElementById('landing-goal-badge').textContent = config.name || extractionGoal;
       document.getElementById('landing-head').textContent = clientName;
       document.getElementById('landing-sub').textContent =
         'We\'d like to understand your perspective as a stakeholder of ' + clientName + '. This conversation takes about 10–15 minutes.';
@@ -251,7 +246,7 @@ function startChat() {
   respondentEmail = email;
 
   show('chat');
-  addAiMsg(OPENERS[extractionGoal] || OPENERS.discovery);
+  addAiMsg(openerMessage);
   setProgress(8);
 
   var input = document.getElementById('chat-input');
@@ -355,7 +350,7 @@ function sendMessage(userText) {
     body: JSON.stringify({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 500,
-      system: INTAKE_SYS[extractionGoal],
+      system: intakeSystemPrompt,
       messages: convo
     })
   })
