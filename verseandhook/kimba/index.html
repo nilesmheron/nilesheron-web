@@ -196,6 +196,22 @@ hr.k-rule { border: 0; border-top: 1px solid var(--kimba-rule); }
   40%           { opacity: 1;    transform: translateY(-3px); }
 }
 
+/* --- Progress dots --- */
+.kimba-progress-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.kimba-progress-dots .dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--kimba-rule);
+  transition: background 0.3s ease, transform 0.3s ease;
+  flex-shrink: 0;
+}
+.kimba-progress-dots .dot.filled { background: var(--kimba-ink); }
+.kimba-progress-dots .dot.current { background: var(--kimba-red); transform: scale(1.4); }
+
 /* --- Pulse ring (BeginTransition) --- */
 @keyframes kimba-pulse {
   0%, 100% { transform: scale(1);    opacity: 0.4; }
@@ -314,9 +330,7 @@ hr.k-rule { border: 0; border-top: 1px solid var(--kimba-rule); }
   letter-spacing: -0.01em;
 }
 .landing-lede em { font-style: italic; }
-.landing-section-label {
-  margin-bottom: 14px;
-}
+.landing-section-label { margin-bottom: 14px; }
 .landing-section-label .slash { color: var(--kimba-red); }
 .landing-form {
   display: grid;
@@ -365,50 +379,274 @@ hr.k-rule { border: 0; border-top: 1px solid var(--kimba-rule); }
 }
 
 /* =================================================
-   VIEW: Chat placeholder (phase 2 stub)
+   VIEW: Chat
    ================================================= */
 #view-chat {
   flex: 1;
   flex-direction: column;
-  min-height: 100vh;
 }
-.chat-placeholder-header {
+.surface-chat {
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  background: var(--kimba-paper);
+}
+
+/* Header bar */
+.chat-header {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 18px 36px;
+  justify-content: space-between;
+  padding: 14px 32px;
   border-bottom: 1px solid var(--kimba-rule);
+  background: var(--kimba-paper);
   flex-shrink: 0;
+  gap: 16px;
 }
-.chat-placeholder-header .name-block { display: flex; flex-direction: column; gap: 2px; }
-.chat-placeholder-header .kimba-name {
-  font-family: var(--kimba-display);
-  font-weight: 800;
-  font-stretch: 75%;
-  font-size: 18px;
-  letter-spacing: -0.02em;
-  text-transform: lowercase;
-  line-height: 1;
+.chat-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
 }
-.chat-placeholder-stage {
+.chat-header-name {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.chat-header-name .kimba-wordmark { font-size: 18px; }
+.chat-header-meta {
+  font-family: var(--kimba-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--kimba-mute-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.chat-header-meta .slash { color: var(--kimba-red); }
+
+/* Scrollable thread */
+.chat-stage {
   flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+}
+.chat-thread {
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 48px 32px 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* AI message */
+.chat-msg { display: flex; flex-direction: column; gap: 8px; }
+.chat-msg-meta {
+  font-family: var(--kimba-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--kimba-mute);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.chat-msg-meta .who { color: var(--kimba-ink); font-weight: 600; }
+.chat-msg-meta.kimba .who { color: var(--kimba-red); }
+.chat-msg-ai .body {
+  font-family: var(--kimba-serif);
+  font-size: 26px;
+  line-height: 1.3;
+  color: var(--kimba-ink);
+  letter-spacing: -0.01em;
+}
+.chat-msg-ai .body p { margin: 0 0 0.65em; }
+.chat-msg-ai .body p:last-child { margin-bottom: 0; }
+
+/* User message */
+.chat-msg-user { align-items: flex-end; }
+.chat-msg-user .body {
+  font-family: var(--kimba-body);
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--kimba-ink-2);
+  background: var(--kimba-rule-soft);
+  padding: 14px 18px;
+  border-left: 2px solid var(--kimba-ink);
+  max-width: 80%;
+}
+
+/* Skip/wrap-up button */
+.chat-skip {
+  align-self: flex-end;
+  margin-top: 4px;
+  background: transparent;
+  border: 1px dashed var(--kimba-mute-2);
+  color: var(--kimba-mute);
+  padding: 10px 16px;
+  font-family: var(--kimba-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.18s, border-color 0.18s;
+}
+.chat-skip:hover { color: var(--kimba-ink); border-color: var(--kimba-ink); }
+
+/* Composer — absolute bottom with gradient fade */
+.chat-composer-wrap {
+  position: absolute;
+  inset: auto 0 0 0;
+  background: linear-gradient(to top, var(--kimba-paper) 55%, transparent);
+  padding: 32px 32px 24px;
+  pointer-events: none;
+  transition: transform 0.1s ease;
+}
+.chat-composer {
+  pointer-events: auto;
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  border: 1px solid var(--kimba-ink);
+  background: var(--kimba-white);
+  padding: 10px 10px 10px 18px;
+}
+.chat-composer textarea {
+  flex: 1;
+  border: 0;
+  outline: none;
+  resize: none;
+  font-family: var(--kimba-body);
+  font-size: 16px;
+  line-height: 1.5;
+  background: transparent;
+  color: var(--kimba-ink);
+  padding: 8px 0;
+  min-height: 24px;
+  max-height: 160px;
+  overflow-y: auto;
+  -webkit-appearance: none;
+}
+.chat-composer textarea::placeholder { color: var(--kimba-mute-2); }
+.chat-composer textarea:disabled { opacity: 0.4; }
+.chat-composer .send {
+  width: 40px; height: 40px;
+  flex-shrink: 0;
+  border: 0;
+  background: var(--kimba-ink);
+  color: var(--kimba-paper);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.18s ease;
+  border-radius: 0;
+}
+.chat-composer .send:hover { background: var(--kimba-red); }
+.chat-composer .send:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  background: var(--kimba-mute-2);
+}
+.chat-composer .send:disabled:hover { background: var(--kimba-mute-2); }
+
+/* Network error overlay */
+.network-error-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(13, 13, 13, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 40;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 48px 32px;
+  padding: 24px;
 }
-.chat-placeholder-note {
+.network-error-card {
+  background: var(--kimba-white);
+  border: 1px solid var(--kimba-ink);
   max-width: 420px;
+  width: 100%;
+  padding: 28px;
   display: flex;
   flex-direction: column;
   gap: 14px;
-  align-items: flex-start;
+}
+.network-error-card .slash { color: var(--kimba-red); }
+
+/* =================================================
+   VIEW: Thanks (phase 2 stub with design intent)
+   ================================================= */
+#view-thanks {
+  flex: 1;
+  flex-direction: column;
+  min-height: 100vh;
+}
+.surface-thanks {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--kimba-paper);
+  min-height: 0;
+}
+.thanks-content {
+  padding: 80px 64px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 48px;
+}
+.thanks-top { display: flex; flex-direction: column; gap: 32px; }
+.thanks-headline {
+  font-family: var(--kimba-display);
+  font-weight: 800;
+  font-stretch: 75%;
+  font-size: clamp(56px, 7vw, 96px);
+  letter-spacing: -0.025em;
+  text-transform: lowercase;
+  line-height: 0.92;
+  margin: 0;
+}
+.thanks-headline .red { color: var(--kimba-red); }
+.thanks-body {
+  font-family: var(--kimba-serif);
+  font-size: 20px;
+  line-height: 1.5;
+  color: var(--kimba-ink-2);
+  max-width: 44ch;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+.thanks-image {
+  background: var(--kimba-red);
+  position: relative;
+  overflow: hidden;
+}
+.thanks-image img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+  object-position: 50% 30%;
 }
 
 /* =================================================
    RESPONSIVE
    ================================================= */
 @media (max-width: 640px) {
+  /* Landing */
   .landing-inner { padding: 28px 22px 32px; gap: 24px; }
   .landing-form { grid-template-columns: 1fr; gap: 16px; }
   .landing-form .full { grid-column: 1; }
@@ -416,9 +654,21 @@ hr.k-rule { border: 0; border-top: 1px solid var(--kimba-rule); }
   .landing-lede { font-size: 17px; }
   .landing-meta { flex-direction: column; align-items: flex-start; gap: 10px; }
   .landing-cta-row { flex-direction: column-reverse; align-items: flex-start; gap: 12px; }
+  /* Error */
   .error-topbar { padding: 18px 22px; }
   .error-stage { padding: 24px 22px; }
-  .chat-placeholder-header { padding: 14px 18px; }
+  /* Chat */
+  .chat-header { padding: 12px 18px; }
+  .chat-thread { padding: 24px 18px 200px; gap: 20px; }
+  .chat-msg-ai .body { font-size: 19px; }
+  .chat-msg-user .body { max-width: 90%; font-size: 15px; }
+  .chat-composer-wrap { padding: 20px 16px 16px; }
+  /* Thanks */
+  .surface-thanks { grid-template-columns: 1fr; }
+  .thanks-image { display: none; }
+  .thanks-content { padding: 48px 28px; gap: 32px; }
+  .thanks-headline { font-size: 56px; font-stretch: 100%; }
+  .thanks-body { font-size: 17px; }
 }
 </style>
 </head>
@@ -426,7 +676,7 @@ hr.k-rule { border: 0; border-top: 1px solid var(--kimba-rule); }
 <div class="kimba-app" id="app">
 
   <!-- =====================================================
-       VIEW: Loading — while token validates
+       VIEW: Loading
        ===================================================== -->
   <div class="view active" id="view-loading">
     <span class="k-mono" style="color: var(--kimba-mute-2);">
@@ -436,9 +686,9 @@ hr.k-rule { border: 0; border-top: 1px solid var(--kimba-rule); }
 
   <!-- =====================================================
        VIEW: Token error
-       All error variants collapse to "invalid" copy for
-       phase 1. TODO phase 3: differentiate expired/used
-       states once used_at is added to the session schema.
+       All variants collapse to "invalid" copy for phase 1.
+       TODO phase 3: differentiate expired/used states once
+       used_at is added to vh_clients schema.
        ===================================================== -->
   <div class="view" id="view-error">
     <div class="error-topbar">
@@ -473,7 +723,6 @@ hr.k-rule { border: 0; border-top: 1px solid var(--kimba-rule); }
     <div class="surface-landing">
       <div class="landing-inner">
 
-        <!-- Goal badge + client attribution -->
         <div class="landing-meta">
           <span class="goal-badge">
             <span class="slash" id="goal-index">/01</span>
@@ -485,14 +734,12 @@ hr.k-rule { border: 0; border-top: 1px solid var(--kimba-rule); }
           </span>
         </div>
 
-        <!-- Kimba mark -->
         <div class="landing-mark-wrap">
           <div class="kimba-mark-circle" style="width: 140px; height: 140px;">
             <img src="/verseandhook/design_handoff_kimba/assets/kimba-portrait.jpg" alt="Kimba">
           </div>
         </div>
 
-        <!-- Headline + lede -->
         <div>
           <h1 class="landing-headline">
             hey — i'm kimba<span style="color: var(--kimba-red);">.</span>
@@ -504,7 +751,6 @@ hr.k-rule { border: 0; border-top: 1px solid var(--kimba-rule); }
 
         <hr class="k-rule">
 
-        <!-- Identity form (folded into landing per design) -->
         <div>
           <div class="k-mono landing-section-label">
             <span class="slash">/</span> before we start
@@ -525,7 +771,6 @@ hr.k-rule { border: 0; border-top: 1px solid var(--kimba-rule); }
           </div>
         </div>
 
-        <!-- CTA row -->
         <div class="landing-cta-row">
           <p class="landing-fineprint">
             this is for attribution only.<br>no marketing list, no follow-up email.
@@ -538,7 +783,6 @@ hr.k-rule { border: 0; border-top: 1px solid var(--kimba-rule); }
           </button>
         </div>
 
-        <!-- Attribution footer -->
         <div class="landing-attribution-row">
           <span class="k-mono">/operated by verse and hook</span>
           <span class="k-mono" style="color: var(--kimba-mute-2);">/session active</span>
@@ -549,9 +793,8 @@ hr.k-rule { border: 0; border-top: 1px solid var(--kimba-rule); }
   </div>
 
   <!-- =====================================================
-       VIEW: Begin transition — ~600ms pacing beat
-       Shown between Begin click and chat view.
-       No API call here; this is a designed delay.
+       VIEW: Begin transition — ~650ms pacing beat
+       No API call. Designed delay per spec.
        TODO phase 3: extend to POST /api/vh-session/{token}/start
        ===================================================== -->
   <div class="view" id="view-begin">
@@ -573,30 +816,87 @@ hr.k-rule { border: 0; border-top: 1px solid var(--kimba-rule); }
   </div>
 
   <!-- =====================================================
-       VIEW: Chat — phase 2 stub
-       Full chat surface built in phase 2.
+       VIEW: Chat
        ===================================================== -->
   <div class="view" id="view-chat">
-    <!-- Chat header (stub — gives correct visual framing) -->
-    <div class="chat-placeholder-header">
-      <div class="kimba-mark-circle" style="width: 40px; height: 40px;">
-        <img src="/verseandhook/design_handoff_kimba/assets/kimba-portrait.jpg" alt="">
-      </div>
-      <div class="name-block">
-        <span class="kimba-name">kimba<span style="color: var(--kimba-red);">.</span></span>
-        <span class="k-mono" id="chat-goal-line" style="color: var(--kimba-mute-2);"></span>
-      </div>
-    </div>
-    <!-- Placeholder stage -->
-    <div class="chat-placeholder-stage">
-      <div class="chat-placeholder-note">
-        <span class="k-mono"><span style="color: var(--kimba-red);">/</span>chat · phase 2</span>
-        <div class="k-display" style="font-size: 36px; line-height: 0.95;">
-          conversation coming<span style="color: var(--kimba-red);">.</span>
+    <div class="surface-chat">
+
+      <!-- Header bar -->
+      <div class="chat-header">
+        <div class="chat-header-left">
+          <div class="kimba-mark-circle" style="width: 36px; height: 36px;">
+            <img src="/verseandhook/design_handoff_kimba/assets/kimba-portrait.jpg" alt="">
+          </div>
+          <div class="chat-header-name">
+            <div class="kimba-wordmark" style="font-size: 18px;">kimba<span class="dot">.</span></div>
+            <div class="chat-header-meta" id="chat-header-meta"></div>
+          </div>
         </div>
-        <p class="k-serif" style="font-size: 17px; color: var(--kimba-ink-2);">
-          the chat surface is being built in phase 2. landing and transition are complete.
-        </p>
+        <div class="kimba-progress-dots" id="progress-dots" aria-label="conversation progress"></div>
+      </div>
+
+      <!-- Thread -->
+      <div class="chat-stage" id="chat-stage">
+        <div class="chat-thread" id="chat-thread"></div>
+      </div>
+
+      <!-- Composer -->
+      <div class="chat-composer-wrap" id="composer-wrap">
+        <div class="chat-composer">
+          <textarea
+            id="chat-input"
+            placeholder="type your reply…"
+            rows="1"
+            aria-label="your reply"
+          ></textarea>
+          <button class="send" id="btn-send" disabled aria-label="send">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M2 8H14M14 8L9 3M14 8L9 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Network error overlay (hidden by default) -->
+      <div class="network-error-overlay" id="network-error" style="display: none;">
+        <div class="network-error-card">
+          <span class="k-mono"><span class="slash">/</span>connection lost</span>
+          <h2 class="k-display" style="font-size: 36px; line-height: 0.95;">
+            kimba can't hear you<span style="color: var(--kimba-red);">.</span>
+          </h2>
+          <p class="k-serif" style="font-size: 17px; color: var(--kimba-ink-2);">
+            your last reply didn't go through. your previous answers are saved.
+          </p>
+          <div style="display: flex; gap: 8px; margin-top: 4px;">
+            <button class="k-btn k-btn-red" id="btn-retry">retry</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- =====================================================
+       VIEW: Thanks — phase 2 stub with design intent
+       TODO phase 3: wire POST /api/vh-session/{token}/complete
+       and POST /api/vh-response for transcript persistence.
+       ===================================================== -->
+  <div class="view" id="view-thanks">
+    <div class="surface-thanks">
+      <div class="thanks-content">
+        <div class="thanks-top">
+          <div class="kimba-wordmark">kimba<span class="dot">.</span></div>
+          <h1 class="thanks-headline">
+            thank you<span class="red">.</span>
+          </h1>
+          <p class="thanks-body" id="thanks-body">
+            your voice is part of how this work gets shaped. the verse and hook team will review your responses as part of their process.
+          </p>
+        </div>
+        <span class="k-mono" style="color: var(--kimba-mute-2);">/session complete · transcript saved</span>
+      </div>
+      <div class="thanks-image">
+        <img src="/verseandhook/design_handoff_kimba/assets/kimba-side.jpg" alt="">
       </div>
     </div>
   </div>
@@ -604,9 +904,19 @@ hr.k-rule { border: 0; border-top: 1px solid var(--kimba-rule); }
 </div>
 
 <script>
-// --- State ---
-var sessionData = null;
-var identity = { name: '', title: '', email: '' };
+// ==========================================================
+// State
+// ==========================================================
+var sessionData  = null;   // { id, client_name, extraction_goal }
+var goalConfig   = null;   // { intake_system_prompt, opener_message }
+var identity     = { name: '', title: '', email: '' };
+var convo        = [];     // [{ role: 'user'|'assistant', content }]
+var exchanges    = 0;
+var busy         = false;
+var isClosing    = false;
+var lastUserText = '';     // buffered for network retry
+
+var TOTAL_EXCHANGES = 8;
 
 var GOAL_MAP = {
   'discovery': { index: '01', name: 'brand discovery' },
@@ -614,7 +924,9 @@ var GOAL_MAP = {
   'feedback':  { index: '03', name: 'engagement feedback' }
 };
 
-// --- View management ---
+// ==========================================================
+// View management
+// ==========================================================
 function show(viewId) {
   var els = document.querySelectorAll('.view');
   for (var i = 0; i < els.length; i++) els[i].classList.remove('active');
@@ -622,7 +934,27 @@ function show(viewId) {
   if (el) el.classList.add('active');
 }
 
-// --- Token validation on mount ---
+// ==========================================================
+// HTML escaping
+// ==========================================================
+function esc(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// Renders AI text: split on double-newlines into paragraphs
+function aiTextToHtml(text) {
+  return text.trim().split(/\n\n+/).map(function(p) {
+    return '<p>' + esc(p.trim()) + '</p>';
+  }).join('');
+}
+
+// ==========================================================
+// Token validation + goal config fetch
+// ==========================================================
 (function init() {
   var params = new URLSearchParams(window.location.search);
   var token = params.get('token');
@@ -633,45 +965,50 @@ function show(viewId) {
     .then(function(data) {
       if (data.error) {
         // TODO phase 3: differentiate error kinds once used_at is added
-        // to vh_clients schema. For now all errors show the same copy.
+        // to vh_clients schema. All errors show the same copy for now.
         show('error');
-        return;
+        return Promise.reject('invalid');
       }
       sessionData = data;
 
       var goal = GOAL_MAP[data.extraction_goal] || { index: '01', name: data.extraction_goal };
-      document.getElementById('goal-index').textContent = '/' + goal.index;
-      document.getElementById('goal-name').textContent = goal.name;
+      document.getElementById('goal-index').textContent    = '/' + goal.index;
+      document.getElementById('goal-name').textContent     = goal.name;
       document.getElementById('client-name-meta').textContent = data.client_name;
       document.getElementById('client-name-lede').textContent = data.client_name;
-      document.getElementById('chat-goal-line').textContent = '/' + goal.name;
       document.title = 'kimba. — ' + data.client_name;
+
+      // Populate chat header meta
+      document.getElementById('chat-header-meta').innerHTML =
+        '<span class="slash">/' + esc(goal.index) + '</span> ' +
+        esc(goal.name) + ' &middot; ' + esc(data.client_name);
 
       show('landing');
     })
-    .catch(function() { show('error'); });
+    .catch(function() { /* error already shown */ });
 })();
 
-// --- Form validation: enable Begin when name + email are filled ---
+// ==========================================================
+// Landing — form validation
+// ==========================================================
 function updateBeginBtn() {
   var name  = document.getElementById('f-name').value.trim();
   var email = document.getElementById('f-email').value.trim();
   var btn   = document.getElementById('btn-begin');
   var ready = name.length > 0 && email.length > 0;
-  btn.disabled = !ready;
+  btn.disabled    = !ready;
   btn.style.opacity = ready ? '1' : '0.45';
-  if (ready) {
-    btn.classList.add('k-btn-red');
-  } else {
-    btn.classList.remove('k-btn-red');
-  }
+  if (ready) { btn.classList.add('k-btn-red'); }
+  else        { btn.classList.remove('k-btn-red'); }
 }
 
 ['f-name', 'f-title', 'f-email'].forEach(function(id) {
   document.getElementById(id).addEventListener('input', updateBeginBtn);
 });
 
-// --- Begin: save identity, show transition beat, advance to chat ---
+// ==========================================================
+// Begin — fetch goal config during 650ms pacing beat
+// ==========================================================
 document.getElementById('btn-begin').addEventListener('click', function() {
   var name  = document.getElementById('f-name').value.trim();
   var email = document.getElementById('f-email').value.trim();
@@ -681,16 +1018,288 @@ document.getElementById('btn-begin').addEventListener('click', function() {
   identity.title = document.getElementById('f-title').value.trim();
   identity.email = email;
 
-  // TODO phase 3: POST /api/vh-session/{token}/start with identity
-  // before transitioning, once that endpoint exists.
+  // TODO phase 3: POST /api/vh-session/{token}/start with identity.
 
   show('begin');
 
-  // ~600ms pacing beat per design spec, then advance to chat
-  setTimeout(function() {
-    show('chat');
-  }, 650);
+  // Race goal config fetch against 650ms pacing beat — use whichever is slower
+  var configFetch = fetch(
+    '/api/vh-goal-config?goal=' + encodeURIComponent(sessionData.extraction_goal)
+  ).then(function(r) { return r.json(); });
+
+  var pacing = new Promise(function(resolve) { setTimeout(resolve, 650); });
+
+  Promise.all([configFetch, pacing])
+    .then(function(results) {
+      var config = results[0];
+      if (!config || config.error) { show('error'); return; }
+      goalConfig = config;
+      initChat();
+      show('chat');
+    })
+    .catch(function() { show('error'); });
 });
+
+// ==========================================================
+// Chat — init
+// ==========================================================
+function initChat() {
+  renderProgress();
+  addAiMessage(goalConfig.opener_message);
+  initComposer();
+  initKeyboard();
+}
+
+// ==========================================================
+// Chat — progress dots
+// ==========================================================
+function renderProgress() {
+  var container = document.getElementById('progress-dots');
+  container.innerHTML = '';
+  for (var i = 0; i < TOTAL_EXCHANGES; i++) {
+    var dot = document.createElement('span');
+    dot.className = 'dot' +
+      (i < exchanges ? ' filled' : '') +
+      (i === exchanges && exchanges < TOTAL_EXCHANGES ? ' current' : '');
+    container.appendChild(dot);
+  }
+}
+
+// ==========================================================
+// Chat — message rendering
+// ==========================================================
+var MARK_HTML =
+  '<div class="kimba-mark-circle" style="width:16px;height:16px;">' +
+  '<img src="/verseandhook/design_handoff_kimba/assets/kimba-portrait.jpg" alt="">' +
+  '</div>';
+
+function addAiMessage(text) {
+  removeTyping();
+  var div = document.createElement('div');
+  div.className = 'chat-msg chat-msg-ai';
+  div.innerHTML =
+    '<div class="chat-msg-meta kimba">' +
+      MARK_HTML +
+      '<span class="who">kimba</span>' +
+    '</div>' +
+    '<div class="body">' + aiTextToHtml(text) + '</div>';
+  document.getElementById('chat-thread').appendChild(div);
+  scrollToBottom();
+}
+
+function addUserMessage(text) {
+  var div = document.createElement('div');
+  div.className = 'chat-msg chat-msg-user';
+  div.innerHTML = '<div class="body">' + esc(text) + '</div>';
+  document.getElementById('chat-thread').appendChild(div);
+  scrollToBottom();
+}
+
+function showTyping() {
+  removeTyping();
+  var div = document.createElement('div');
+  div.id = 'typing-indicator';
+  div.className = 'chat-msg chat-msg-ai';
+  div.innerHTML =
+    '<div class="chat-msg-meta kimba">' +
+      MARK_HTML +
+      '<span class="who">kimba</span>' +
+    '</div>' +
+    '<div class="kimba-typing"><span></span><span></span><span></span></div>';
+  document.getElementById('chat-thread').appendChild(div);
+  scrollToBottom();
+}
+
+function removeTyping() {
+  var el = document.getElementById('typing-indicator');
+  if (el) el.remove();
+}
+
+function showSkipButton() {
+  var existing = document.getElementById('btn-skip');
+  if (existing) return;
+  var btn = document.createElement('button');
+  btn.id = 'btn-skip';
+  btn.className = 'chat-skip';
+  btn.textContent = 'nothing more to add — wrap up →';
+  btn.addEventListener('click', function() {
+    btn.remove();
+    show('thanks');
+    // TODO phase 3: POST /api/vh-response + /api/vh-session/{token}/complete
+  });
+  document.getElementById('chat-thread').appendChild(btn);
+  scrollToBottom();
+}
+
+// ==========================================================
+// Chat — scroll
+// ==========================================================
+function scrollToBottom() {
+  var stage = document.getElementById('chat-stage');
+  if (stage) stage.scrollTo({ top: stage.scrollHeight });
+}
+
+// ==========================================================
+// Chat — lock / unlock input
+// ==========================================================
+function lock() {
+  busy = true;
+  var input = document.getElementById('chat-input');
+  var btn   = document.getElementById('btn-send');
+  input.disabled = true;
+  btn.disabled   = true;
+}
+
+function unlock() {
+  busy = false;
+  var input = document.getElementById('chat-input');
+  var btn   = document.getElementById('btn-send');
+  input.disabled = false;
+  btn.disabled   = !input.value.trim();
+  input.focus();
+}
+
+// ==========================================================
+// Chat — send message + API
+// ==========================================================
+function sendMessage(text) {
+  if (busy || !text.trim()) return;
+
+  lastUserText = text;
+  addUserMessage(text);
+  lock();
+  showTyping();
+
+  postToChat(text);
+}
+
+function postToChat(userText) {
+  // Build the messages payload: committed convo + this user turn
+  var messages = convo.concat([{ role: 'user', content: userText }]);
+
+  fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 500,
+      system: goalConfig.intake_system_prompt,
+      messages: messages
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.error) throw new Error(data.error.message || 'api error');
+
+    var text = (data.content || []).map(function(b) { return b.text || ''; }).join('');
+    var hasComplete = text.indexOf('[INTAKE_COMPLETE]') !== -1;
+    var hasClosing  = text.indexOf('[CLOSING]') !== -1;
+    text = text.replace(/\[INTAKE_COMPLETE\]/g, '').replace(/\[CLOSING\]/g, '').trim();
+
+    // Commit this exchange to convo
+    convo.push({ role: 'user', content: userText });
+    convo.push({ role: 'assistant', content: text });
+    exchanges++;
+    lastUserText = '';
+
+    addAiMessage(text);
+    renderProgress();
+
+    if (hasComplete) {
+      show('thanks');
+      // TODO phase 3: POST /api/vh-response + /api/vh-session/{token}/complete
+    } else if (hasClosing) {
+      isClosing = true;
+      showSkipButton();
+      unlock();
+    } else {
+      unlock();
+    }
+  })
+  .catch(function() {
+    removeTyping();
+    showNetworkError();
+    // don't unlock — force retry or user navigates away
+  });
+}
+
+// ==========================================================
+// Chat — network error overlay
+// ==========================================================
+function showNetworkError() {
+  document.getElementById('network-error').style.display = 'flex';
+}
+
+function hideNetworkError() {
+  document.getElementById('network-error').style.display = 'none';
+}
+
+document.getElementById('btn-retry').addEventListener('click', function() {
+  if (!lastUserText) return;
+  hideNetworkError();
+  showTyping();
+  postToChat(lastUserText);
+});
+
+// ==========================================================
+// Chat — composer: textarea auto-resize + keyboard events
+// ==========================================================
+function initComposer() {
+  var input = document.getElementById('chat-input');
+  var btn   = document.getElementById('btn-send');
+
+  input.addEventListener('input', function() {
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 160) + 'px';
+    btn.disabled = busy || !input.value.trim();
+  });
+
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey && !busy) {
+      e.preventDefault();
+      var val = input.value.trim();
+      if (!val) return;
+      input.value = '';
+      input.style.height = 'auto';
+      btn.disabled = true;
+      sendMessage(val);
+    }
+  });
+
+  btn.addEventListener('click', function() {
+    var val = input.value.trim();
+    if (!val || busy) return;
+    input.value = '';
+    input.style.height = 'auto';
+    btn.disabled = true;
+    sendMessage(val);
+  });
+}
+
+// ==========================================================
+// Chat — mobile keyboard (visualViewport API)
+// Per IMPLEMENTATION.md: visualViewport resize listener,
+// padding-bottom on thread, scroll with scrollTo — no scrollIntoView.
+// ==========================================================
+function initKeyboard() {
+  if (!window.visualViewport) return;
+
+  var composerWrap = document.getElementById('composer-wrap');
+  var chatThread   = document.getElementById('chat-thread');
+  var BASE_PAD     = 200; // matches CSS padding-bottom on .chat-thread
+
+  function update() {
+    var vv = window.visualViewport;
+    var kbHeight = Math.max(0, window.innerHeight - vv.height);
+    composerWrap.style.transform =
+      kbHeight > 0 ? 'translateY(-' + kbHeight + 'px)' : '';
+    chatThread.style.paddingBottom = (BASE_PAD + kbHeight) + 'px';
+    scrollToBottom();
+  }
+
+  window.visualViewport.addEventListener('resize', update);
+  window.visualViewport.addEventListener('scroll', update);
+}
 </script>
 </body>
 </html>
