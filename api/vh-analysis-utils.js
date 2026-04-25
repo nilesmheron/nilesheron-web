@@ -33,9 +33,13 @@ export async function runAnalysis(client_id, extraction_goal, response_id, { sup
   const r = await sb(
     `/vh_responses?client_id=eq.${client_id}&select=respondent_name,respondent_title,transcript&order=completed_at.asc`
   );
-  if (!r.ok) return;
+  if (!r.ok) {
+    console.warn(`runAnalysis: failed to fetch responses for client "${client_id}" — status ${r.status}`);
+    return;
+  }
 
   const responses = await r.json();
+  console.log(`runAnalysis: ${responses.length} response(s) for client "${client_id}", goal "${extraction_goal}"`);
 
   const transcriptBlocks = responses.map(resp => {
     const turns = (resp.transcript || [])
@@ -68,19 +72,25 @@ export async function runAnalysis(client_id, extraction_goal, response_id, { sup
     })
   });
 
-  if (!anthropicRes.ok) return;
+  if (!anthropicRes.ok) {
+    const errBody = await anthropicRes.text().catch(() => '(unreadable)');
+    console.warn(`runAnalysis: Anthropic returned ${anthropicRes.status} — ${errBody.slice(0, 300)}`);
+    return;
+  }
 
   const data = await anthropicRes.json();
   const text = (data.content || []).map(b => b.text || '').join('').trim();
+  console.log(`runAnalysis: Anthropic response text (first 200 chars): ${text.slice(0, 200)}`);
 
   let parsed;
   try {
     parsed = JSON.parse(text);
-  } catch {
+  } catch (e) {
+    console.warn(`runAnalysis: JSON.parse failed — ${e.message} — raw: ${text.slice(0, 200)}`);
     return;
   }
 
-  await sb('/vh_analysis', {
+  const insertRes = await sb('/vh_analysis', {
     method: 'POST',
     headers: { Prefer: 'return=minimal' },
     body: JSON.stringify({
@@ -90,4 +100,10 @@ export async function runAnalysis(client_id, extraction_goal, response_id, { sup
       narrative: parsed.narrative || null
     })
   });
+  if (!insertRes.ok) {
+    const errBody = await insertRes.text().catch(() => '(unreadable)');
+    console.warn(`runAnalysis: vh_analysis INSERT failed — status ${insertRes.status} — ${errBody.slice(0, 300)}`);
+  } else {
+    console.log(`runAnalysis: analysis row written for client "${client_id}"`);
+  }
 }
