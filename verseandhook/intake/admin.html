@@ -69,12 +69,12 @@ body { background: var(--bg); color: var(--text); font-family: 'Inter', -apple-s
 
 /* Client detail */
 #view-detail { display: none; }
-.detail-body { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+.detail-body { max-width: 900px; margin: 0 auto; padding: 1.5rem; }
 .back-btn { background: none; border: none; font-family: 'Inter', sans-serif; font-size: 13px; color: var(--text-muted); cursor: pointer; padding: 0 0 1rem; display: flex; align-items: center; gap: 6px; }
 .back-btn:hover { color: var(--text); }
 .detail-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 1.5rem; }
 .detail-title { font-family: 'Fraunces', serif; font-size: 26px; font-weight: 500; }
-.detail-panels { display: grid; grid-template-columns: 1fr 340px; gap: 1.25rem; align-items: start; }
+.detail-panels { display: flex; flex-direction: column; gap: 1.25rem; }
 .panel { background: var(--bg-alt); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
 .panel-head { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); }
 .panel-body { padding: 0; }
@@ -93,16 +93,24 @@ body { background: var(--bg); color: var(--text); font-family: 'Inter', -apple-s
 
 /* Analysis panel */
 .analysis-pending { padding: 1.25rem 1rem; text-align: center; color: var(--text-dim); font-size: 13px; line-height: 1.6; }
-.scores-grid { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
-.score-row { display: flex; align-items: center; gap: 10px; }
-.score-label { font-size: 12px; color: var(--text-muted); flex: 1; text-transform: capitalize; }
-.score-bar-wrap { width: 80px; height: 4px; background: var(--border); border-radius: 2px; flex-shrink: 0; }
-.score-bar-fill { height: 100%; border-radius: 2px; background: var(--accent); }
-.score-value { font-size: 12px; font-weight: 500; color: var(--text); width: 28px; text-align: right; flex-shrink: 0; }
-.score-bar-fill.low { background: var(--danger); }
-.score-bar-fill.mid { background: #C98E1A; }
-.narrative-block { padding: 14px 16px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-muted); line-height: 1.65; font-family: 'Fraunces', serif; }
+.narrative-block { padding: 14px 16px; font-size: 14px; color: var(--text-muted); line-height: 1.7; font-family: 'Fraunces', serif; border-bottom: 1px solid var(--border); }
 .analysis-ts { padding: 10px 16px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-dim); }
+
+/* Dimension rows (expandable) */
+.dim-row { border-bottom: 1px solid var(--border); }
+.dim-row:last-child { border-bottom: none; }
+.dim-summary { padding: 12px 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; list-style: none; user-select: none; }
+.dim-summary::-webkit-details-marker { display: none; }
+.dim-row[open] > .dim-summary { border-bottom: 1px solid var(--border); }
+.dim-label { font-size: 12px; color: var(--text-muted); flex: 1; text-transform: capitalize; }
+.dim-bar-wrap { width: 80px; height: 4px; background: var(--border); border-radius: 2px; flex-shrink: 0; }
+.dim-bar-fill { display: block; height: 100%; border-radius: 2px; background: var(--accent); }
+.dim-bar-fill.low { background: var(--danger); }
+.dim-bar-fill.mid { background: #C98E1A; }
+.dim-score { font-size: 12px; font-weight: 500; color: var(--text); width: 28px; text-align: right; flex-shrink: 0; }
+.dim-chevron { font-size: 16px; color: var(--text-dim); transition: transform 0.15s; flex-shrink: 0; line-height: 1; }
+.dim-row[open] > .dim-summary .dim-chevron { transform: rotate(90deg); }
+.dim-insight { padding: 10px 16px 14px; font-size: 13px; color: var(--text-muted); line-height: 1.7; font-family: 'Fraunces', serif; }
 
 /* Modal */
 .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 200; align-items: center; justify-content: center; padding: 1.5rem; }
@@ -118,9 +126,6 @@ body { background: var(--bg); color: var(--text); font-family: 'Inter', -apple-s
 .generated-link { margin-top: 1rem; padding: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; word-break: break-all; font-size: 13px; color: var(--text-muted); display: none; }
 .generated-link-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); margin-bottom: 4px; }
 
-@media (max-width: 680px) {
-  .detail-panels { grid-template-columns: 1fr; }
-}
 
 /* Goal editor */
 .editor-section { margin-bottom: 1.5rem; }
@@ -436,37 +441,65 @@ function renderClientDetail(client, responses, analysis) {
   }
 
   // Analysis
-  var analysisContainer = document.getElementById('analysis-panel');
-  if (!analysis || !analysis.scores) {
-    var msg = responses.length < 2
-      ? '<p class="analysis-pending">Awaiting more responses to generate alignment scores.</p>'
-      : '<p class="analysis-pending">' + (analysis && analysis.narrative ? '' : 'Analysis pending.') + '</p>';
-    var narrative = analysis && analysis.narrative
-      ? '<div class="narrative-block">' + esc(analysis.narrative) + '</div>'
-      : '';
-    var ts = analysis && analysis.created_at
-      ? '<div class="analysis-ts">Last run: ' + new Date(analysis.created_at).toLocaleString() + '</div>'
-      : '';
-    analysisContainer.innerHTML = msg + narrative + ts;
-  } else {
-    var scoresHtml = '<div class="scores-grid">';
+  document.getElementById('analysis-panel').innerHTML = renderAnalysisContent(analysis, responses.length);
+}
+
+function renderAnalysisContent(analysis, responseCount) {
+  if (!analysis) {
+    var msg = (responseCount || 0) < 2
+      ? 'Awaiting more responses to generate alignment scores.'
+      : 'Analysis pending. Use Re-run to generate.';
+    return '<p class="analysis-pending">' + msg + '</p>';
+  }
+
+  var html = '';
+
+  if (analysis.narrative) {
+    html += '<div class="narrative-block">' + esc(analysis.narrative) + '</div>';
+  }
+
+  if (analysis.dimensions && Object.keys(analysis.dimensions).length) {
+    // New schema: per-dimension scores + insight
+    Object.entries(analysis.dimensions).forEach(function(entry) {
+      var key = entry[0];
+      var dim = entry[1];
+      var score = dim.score;
+      var insight = dim.insight || '';
+      var barClass = score < 40 ? 'low' : score < 70 ? 'mid' : '';
+      var clampedScore = Math.min(100, Math.max(0, score || 0));
+      html += '<details class="dim-row">';
+      html += '<summary class="dim-summary">';
+      html += '<span class="dim-label">' + esc(key.replace(/_/g, ' ')) + '</span>';
+      html += '<div class="dim-bar-wrap"><div class="dim-bar-fill ' + barClass + '" style="width:' + clampedScore + '%"></div></div>';
+      html += '<span class="dim-score">' + (score !== null ? score : '—') + '</span>';
+      html += '<span class="dim-chevron">›</span>';
+      html += '</summary>';
+      if (insight) {
+        html += '<div class="dim-insight">' + esc(insight) + '</div>';
+      }
+      html += '</details>';
+    });
+  } else if (analysis.scores && Object.keys(analysis.scores).length) {
+    // Legacy schema: flat scores, no insight
     Object.entries(analysis.scores).forEach(function(entry) {
       var key = entry[0], val = entry[1];
       var barClass = val < 40 ? 'low' : val < 70 ? 'mid' : '';
-      scoresHtml += '<div class="score-row">';
-      scoresHtml += '<span class="score-label">' + esc(key.replace(/_/g, ' ')) + '</span>';
       var clampedVal = Math.min(100, Math.max(0, val));
-      scoresHtml += '<div class="score-bar-wrap"><div class="score-bar-fill ' + barClass + '" style="width:' + clampedVal + '%"></div></div>';
-      scoresHtml += '<span class="score-value">' + val + '</span>';
-      scoresHtml += '</div>';
+      html += '<div style="padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);">';
+      html += '<span class="dim-label">' + esc(key.replace(/_/g, ' ')) + '</span>';
+      html += '<div class="dim-bar-wrap"><div class="dim-bar-fill ' + barClass + '" style="width:' + clampedVal + '%"></div></div>';
+      html += '<span class="dim-score">' + val + '</span>';
+      html += '</div>';
     });
-    scoresHtml += '</div>';
-    var narrativeHtml = analysis.narrative
-      ? '<div class="narrative-block">' + esc(analysis.narrative) + '</div>'
-      : '';
-    var tsHtml = '<div class="analysis-ts">Last run: ' + new Date(analysis.created_at).toLocaleString() + '</div>';
-    analysisContainer.innerHTML = scoresHtml + narrativeHtml + tsHtml;
+  } else if (!analysis.narrative) {
+    html += '<p class="analysis-pending">Analysis pending. Use Re-run to generate.</p>';
   }
+
+  if (analysis.created_at) {
+    html += '<div class="analysis-ts">Last run: ' + new Date(analysis.created_at).toLocaleString() + '</div>';
+  }
+
+  return html;
 }
 
 function toggleTranscript(i) {

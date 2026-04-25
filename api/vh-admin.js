@@ -55,7 +55,7 @@ export default async function handler(req, res) {
       const [clientRes, responsesRes, analysisRes] = await Promise.all([
         sb(`/vh_clients?id=eq.${encodeURIComponent(client_id)}&select=id,client_name,extraction_goal,token,created_at`),
         sb(`/vh_responses?client_id=eq.${encodeURIComponent(client_id)}&select=id,respondent_name,respondent_title,respondent_email,transcript,completed_at&order=completed_at.asc`),
-        sb(`/vh_analysis?client_id=eq.${encodeURIComponent(client_id)}&select=scores,narrative,created_at&order=created_at.desc&limit=1`)
+        sb(`/vh_analysis?client_id=eq.${encodeURIComponent(client_id)}&select=scores,narrative,dimensions,created_at&order=created_at.desc&limit=1`)
       ]);
 
       if (!clientRes.ok || !responsesRes.ok || !analysisRes.ok) {

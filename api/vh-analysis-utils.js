@@ -80,15 +80,26 @@ export async function runAnalysis(client_id, extraction_goal, response_id, { sup
 
   const data = await anthropicRes.json();
   const raw = (data.content || []).map(b => b.text || '').join('').trim();
-  const text = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim();
+
+  // Extract JSON object regardless of fences or preamble text
+  const jsonMatch = raw.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    console.warn(`runAnalysis: no JSON object found in response — raw: ${raw.slice(0, 300)}`);
+    return;
+  }
 
   let parsed;
   try {
-    parsed = JSON.parse(text);
+    parsed = JSON.parse(jsonMatch[0]);
   } catch (e) {
     console.warn(`runAnalysis: JSON.parse failed — ${e.message} — raw: ${raw.slice(0, 300)}`);
     return;
   }
+
+  // Derive flat scores from dimensions (new schema) or use legacy scores field
+  const scores = parsed.dimensions
+    ? Object.fromEntries(Object.entries(parsed.dimensions).map(([k, v]) => [k, v.score]))
+    : (parsed.scores || null);
 
   const insertRes = await sb('/vh_analysis', {
     method: 'POST',
@@ -96,8 +107,9 @@ export async function runAnalysis(client_id, extraction_goal, response_id, { sup
     body: JSON.stringify({
       client_id,
       triggered_by_response_id: response_id || null,
-      scores: parsed.scores || null,
-      narrative: parsed.narrative || null
+      scores,
+      narrative: parsed.narrative || null,
+      dimensions: parsed.dimensions || null
     })
   });
   if (!insertRes.ok) {
