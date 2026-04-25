@@ -1,0 +1,229 @@
+/* ============================================
+   KIMBA — design tokens
+   palette pulled from the verse and hook brand;
+   typography softened to lowercase, slightly less
+   aggressive than the parent system.
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Archivo+Narrow:wght@400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  /* Color — V&H borrowed, Kimba-tuned */
+  --kimba-red:        #D9181E;        /* primary — slightly warmer than pure V&H red */
+  --kimba-red-deep:   #A6121A;
+  --kimba-red-soft:   #F2E2E2;
+
+  --kimba-ink:        #0D0D0D;        /* off-black */
+  --kimba-ink-2:      #1A1A1A;
+  --kimba-ink-3:      #2E2E2E;
+  --kimba-mute:       #6B6B6B;
+  --kimba-mute-2:     #9A9A9A;
+  --kimba-rule:       #E5E2DD;
+  --kimba-rule-soft:  #EFECE6;
+
+  --kimba-paper:      #F6F2EC;        /* warm cream — softer than V&H pure white */
+  --kimba-paper-2:    #FBF8F3;
+  --kimba-white:      #FFFFFF;
+
+  /* Type */
+  --kimba-display: 'Archivo', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --kimba-display-narrow: 'Archivo Narrow', 'Archivo', sans-serif;
+  --kimba-serif:   'Fraunces', 'Times New Roman', serif;
+  --kimba-mono:    'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --kimba-body:    'Archivo', system-ui, -apple-system, sans-serif;
+
+  /* Display weights — heavy condensed feel */
+  --kimba-display-weight: 800;
+
+  /* Spacing scale */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+  --s-8: 64px;
+  --s-9: 96px;
+
+  /* Radii — kept tight; V&H is hard-edged */
+  --r-sm: 2px;
+  --r-md: 4px;
+  --r-lg: 8px;
+  --r-pill: 999px;
+
+  /* Type scale */
+  --t-meta: 11px;
+  --t-body: 15px;
+  --t-body-lg: 17px;
+  --t-h4: 20px;
+  --t-h3: 28px;
+  --t-h2: 44px;
+  --t-h1: 72px;
+  --t-display: 120px;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--kimba-body);
+  font-size: var(--t-body);
+  line-height: 1.5;
+  color: var(--kimba-ink);
+  background: var(--kimba-paper);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Utility classes — used liberally across surfaces */
+.k-mono {
+  font-family: var(--kimba-mono);
+  font-size: var(--t-meta);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--kimba-mute);
+}
+.k-mono-ink { color: var(--kimba-ink); }
+.k-mono-red { color: var(--kimba-red); }
+.k-mono-paper { color: var(--kimba-paper); }
+
+.k-display {
+  font-family: var(--kimba-display);
+  font-weight: 800;
+  font-stretch: 75%;          /* condensed */
+  letter-spacing: -0.025em;
+  line-height: 0.9;
+  text-transform: lowercase;  /* the kimba twist */
+}
+.k-display-narrow {
+  font-family: var(--kimba-display-narrow);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 0.95;
+  text-transform: lowercase;
+}
+.k-serif {
+  font-family: var(--kimba-serif);
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+}
+.k-serif-it {
+  font-family: var(--kimba-serif);
+  font-style: italic;
+  font-weight: 400;
+}
+
+/* Slash prefix used as a section marker, V&H DNA */
+.k-slash::before {
+  content: "/";
+  color: var(--kimba-red);
+  margin-right: 0.25em;
+}
+
+/* Hairline rule */
+.k-rule {
+  border: 0;
+  border-top: 1px solid var(--kimba-ink);
+  margin: 0;
+}
+.k-rule-soft { border-top-color: var(--kimba-rule); }
+
+/* Buttons */
+.k-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 22px;
+  font-family: var(--kimba-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid var(--kimba-ink);
+  background: var(--kimba-ink);
+  color: var(--kimba-paper);
+  cursor: pointer;
+  transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease;
+  border-radius: 0;
+  text-decoration: none;
+}
+.k-btn:hover { background: var(--kimba-red); border-color: var(--kimba-red); }
+.k-btn:active { transform: translateY(1px); }
+.k-btn-ghost {
+  background: transparent;
+  color: var(--kimba-ink);
+}
+.k-btn-ghost:hover { background: var(--kimba-ink); color: var(--kimba-paper); border-color: var(--kimba-ink); }
+.k-btn-red { background: var(--kimba-red); border-color: var(--kimba-red); color: var(--kimba-paper); }
+.k-btn-red:hover { background: var(--kimba-ink); border-color: var(--kimba-ink); }
+
+/* Inputs */
+.k-input, .k-textarea {
+  width: 100%;
+  padding: 10px 0;
+  border: 0;
+  border-bottom: 1px solid var(--kimba-ink);
+  background: transparent;
+  font-family: var(--kimba-body);
+  font-size: 16px;
+  color: var(--kimba-ink);
+  outline: none;
+  border-radius: 0;
+}
+.k-input::placeholder, .k-textarea::placeholder {
+  color: var(--kimba-mute-2);
+}
+.k-input:focus, .k-textarea:focus {
+  border-bottom-color: var(--kimba-red);
+}
+.k-textarea { resize: none; min-height: 80px; }
+
+/* Badges */
+.k-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  font-family: var(--kimba-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid var(--kimba-ink);
+  color: var(--kimba-ink);
+  background: transparent;
+  border-radius: 0;
+}
+.k-badge-red {
+  border-color: var(--kimba-red);
+  color: var(--kimba-red);
+}
+.k-badge-solid {
+  background: var(--kimba-ink);
+  color: var(--kimba-paper);
+  border-color: var(--kimba-ink);
+}
+.k-badge-solid-red {
+  background: var(--kimba-red);
+  color: var(--kimba-paper);
+  border-color: var(--kimba-red);
+}
+.k-badge .dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: currentColor;
+}
+
+/* Card */
+.k-card {
+  background: var(--kimba-white);
+  border: 1px solid var(--kimba-ink);
+  border-radius: 0;
+}
+
+/* Scrollbar polish */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--kimba-rule); border-radius: 0; }
+::-webkit-scrollbar-thumb:hover { background: var(--kimba-mute-2); }

@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover">
+<title>kimba.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,75,400;0,75,500;0,75,800;0,100,400;0,100,500;0,100,800&family=Fraunces:ital,opsz,wght@0,9..144,400;1,9..144,400&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+/* =================================================
+   KIMBA DESIGN TOKENS — verbatim from tokens.css
+   ================================================= */
+:root {
+  --kimba-red:       #D9181E;
+  --kimba-red-deep:  #A6121A;
+  --kimba-red-soft:  #F2E2E2;
+  --kimba-ink:       #0D0D0D;
+  --kimba-ink-2:     #1A1A1A;
+  --kimba-ink-3:     #2E2E2E;
+  --kimba-mute:      #6B6B6B;
+  --kimba-mute-2:    #9A9A9A;
+  --kimba-rule:      #E5E2DD;
+  --kimba-rule-soft: #EFECE6;
+  --kimba-paper:     #F6F2EC;
+  --kimba-paper-2:   #FBF8F3;
+  --kimba-white:     #FFFFFF;
+
+  --kimba-display:  'Archivo', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --kimba-serif:    'Fraunces', 'Times New Roman', serif;
+  --kimba-mono:     'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --kimba-body:     'Archivo', system-ui, -apple-system, sans-serif;
+
+  --s-1: 4px;  --s-2: 8px;  --s-3: 12px; --s-4: 16px; --s-5: 24px;
+  --s-6: 32px; --s-7: 48px; --s-8: 64px; --s-9: 96px;
+  --t-meta: 11px; --t-body: 15px; --t-body-lg: 17px;
+  --t-h4: 20px;   --t-h3: 28px;  --t-h2: 44px;
+  --t-h1: 72px;   --t-display: 120px;
+}
+
+/* ================================================= */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { height: 100%; }
+body {
+  min-height: 100%;
+  font-family: var(--kimba-body);
+  font-size: var(--t-body);
+  line-height: 1.5;
+  color: var(--kimba-ink);
+  background: var(--kimba-paper);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* --- Utilities --- */
+.k-mono {
+  font-family: var(--kimba-mono);
+  font-size: var(--t-meta);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--kimba-mute);
+}
+.k-display {
+  font-family: var(--kimba-display);
+  font-weight: 800;
+  font-stretch: 75%;
+  letter-spacing: -0.025em;
+  line-height: 0.9;
+  text-transform: lowercase;
+}
+.k-serif {
+  font-family: var(--kimba-serif);
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 1.4;
+}
+hr.k-rule { border: 0; border-top: 1px solid var(--kimba-rule); }
+
+/* --- Kimba mark (circle variant) --- */
+.kimba-mark-circle {
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--kimba-red);
+  position: relative;
+  flex-shrink: 0;
+  display: block;
+}
+.kimba-mark-circle img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: 50% 28%;
+  transform: scale(1.35);
+  display: block;
+}
+
+/* --- Wordmark --- */
+.kimba-wordmark {
+  font-family: var(--kimba-display);
+  font-weight: 900;
+  font-stretch: 75%;
+  font-size: 22px;
+  letter-spacing: -0.04em;
+  text-transform: lowercase;
+  line-height: 1;
+  color: var(--kimba-ink);
+  display: inline-flex;
+  align-items: baseline;
+}
+.kimba-wordmark .dot { color: var(--kimba-red); }
+
+/* --- Goal badge --- */
+.goal-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--kimba-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--kimba-ink);
+}
+.goal-badge .slash { color: var(--kimba-red); }
+.goal-badge .dash { width: 18px; height: 1px; background: var(--kimba-ink); flex-shrink: 0; display: block; }
+
+/* --- Button --- */
+.k-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 22px;
+  font-family: var(--kimba-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid var(--kimba-ink);
+  background: var(--kimba-ink);
+  color: var(--kimba-paper);
+  cursor: pointer;
+  border-radius: 0;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+.k-btn:not(:disabled):hover { background: var(--kimba-red); border-color: var(--kimba-red); }
+.k-btn-red { background: var(--kimba-red); border-color: var(--kimba-red); }
+.k-btn-red:not(:disabled):hover { background: var(--kimba-ink); border-color: var(--kimba-ink); }
+.k-btn:disabled { pointer-events: none; }
+
+/* --- Input --- */
+.k-input {
+  width: 100%;
+  padding: 10px 0;
+  border: 0;
+  border-bottom: 1px solid var(--kimba-ink);
+  background: transparent;
+  font-family: var(--kimba-body);
+  font-size: 16px;
+  color: var(--kimba-ink);
+  outline: none;
+  border-radius: 0;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.k-input::placeholder { color: var(--kimba-mute-2); }
+.k-input:focus { border-bottom-color: var(--kimba-red); }
+.field-label {
+  font-family: var(--kimba-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--kimba-mute);
+  display: block;
+  margin-bottom: 4px;
+}
+
+/* --- Typing dots --- */
+.kimba-typing {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+}
+.kimba-typing span {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--kimba-ink);
+  opacity: 0.25;
+  animation: kimba-bounce 1.2s infinite ease-in-out;
+}
+.kimba-typing span:nth-child(2) { animation-delay: 0.15s; }
+.kimba-typing span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes kimba-bounce {
+  0%, 80%, 100% { opacity: 0.25; transform: translateY(0); }
+  40%           { opacity: 1;    transform: translateY(-3px); }
+}
+
+/* --- Pulse ring (BeginTransition) --- */
+@keyframes kimba-pulse {
+  0%, 100% { transform: scale(1);    opacity: 0.4; }
+  50%       { transform: scale(1.06); opacity: 0;   }
+}
+.pulse-ring {
+  position: absolute;
+  inset: -12px;
+  border: 1px solid var(--kimba-ink);
+  border-radius: 50%;
+  animation: kimba-pulse 1.6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* --- App shell --- */
+.kimba-app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- View switching --- */
+.view { display: none; }
+.view.active { display: flex; }
+
+/* =================================================
+   VIEW: Loading
+   ================================================= */
+#view-loading {
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+}
+
+/* =================================================
+   VIEW: Token error
+   ================================================= */
+#view-error {
+  flex: 1;
+  flex-direction: column;
+  min-height: 100vh;
+}
+.error-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 36px;
+  border-bottom: 1px solid var(--kimba-rule);
+  flex-shrink: 0;
+}
+.error-stage {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 36px;
+}
+.error-content {
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* =================================================
+   VIEW: Landing
+   ================================================= */
+#view-landing {
+  flex: 1;
+  flex-direction: column;
+  min-height: 100vh;
+}
+.surface-landing {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.landing-inner {
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 64px 32px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+.landing-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+.landing-mark-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 0 8px;
+}
+.landing-headline {
+  font-family: var(--kimba-display);
+  font-weight: 800;
+  font-stretch: 75%;
+  letter-spacing: -0.025em;
+  line-height: 0.9;
+  text-transform: lowercase;
+  font-size: clamp(48px, 7vw, 84px);
+  margin: 0;
+}
+.landing-lede {
+  font-family: var(--kimba-serif);
+  font-size: 21px;
+  line-height: 1.4;
+  color: var(--kimba-ink-2);
+  max-width: 56ch;
+  margin: 18px 0 0;
+  letter-spacing: -0.01em;
+}
+.landing-lede em { font-style: italic; }
+.landing-section-label {
+  margin-bottom: 14px;
+}
+.landing-section-label .slash { color: var(--kimba-red); }
+.landing-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 28px;
+}
+.landing-form .full { grid-column: 1 / -1; }
+.landing-cta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.landing-fineprint {
+  font-family: var(--kimba-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--kimba-mute-2);
+  max-width: 280px;
+  line-height: 1.6;
+}
+.landing-attribution-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--kimba-rule);
+}
+
+/* =================================================
+   VIEW: Begin transition
+   ================================================= */
+#view-begin {
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  min-height: 100vh;
+}
+.begin-mark-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+/* =================================================
+   VIEW: Chat placeholder (phase 2 stub)
+   ================================================= */
+#view-chat {
+  flex: 1;
+  flex-direction: column;
+  min-height: 100vh;
+}
+.chat-placeholder-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 36px;
+  border-bottom: 1px solid var(--kimba-rule);
+  flex-shrink: 0;
+}
+.chat-placeholder-header .name-block { display: flex; flex-direction: column; gap: 2px; }
+.chat-placeholder-header .kimba-name {
+  font-family: var(--kimba-display);
+  font-weight: 800;
+  font-stretch: 75%;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+  text-transform: lowercase;
+  line-height: 1;
+}
+.chat-placeholder-stage {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 32px;
+}
+.chat-placeholder-note {
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+/* =================================================
+   RESPONSIVE
+   ================================================= */
+@media (max-width: 640px) {
+  .landing-inner { padding: 28px 22px 32px; gap: 24px; }
+  .landing-form { grid-template-columns: 1fr; gap: 16px; }
+  .landing-form .full { grid-column: 1; }
+  .landing-headline { font-size: 44px; font-stretch: 100%; }
+  .landing-lede { font-size: 17px; }
+  .landing-meta { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .landing-cta-row { flex-direction: column-reverse; align-items: flex-start; gap: 12px; }
+  .error-topbar { padding: 18px 22px; }
+  .error-stage { padding: 24px 22px; }
+  .chat-placeholder-header { padding: 14px 18px; }
+}
+</style>
+</head>
+<body>
+<div class="kimba-app" id="app">
+
+  <!-- =====================================================
+       VIEW: Loading — while token validates
+       ===================================================== -->
+  <div class="view active" id="view-loading">
+    <span class="k-mono" style="color: var(--kimba-mute-2);">
+      <span style="color: var(--kimba-red);">/</span>loading
+    </span>
+  </div>
+
+  <!-- =====================================================
+       VIEW: Token error
+       All error variants collapse to "invalid" copy for
+       phase 1. TODO phase 3: differentiate expired/used
+       states once used_at is added to the session schema.
+       ===================================================== -->
+  <div class="view" id="view-error">
+    <div class="error-topbar">
+      <div class="kimba-wordmark">kimba<span class="dot">.</span></div>
+      <span class="k-mono">/operated by verse and hook</span>
+    </div>
+    <div class="error-stage">
+      <div class="error-content">
+        <div class="kimba-mark-circle" style="width: 120px; height: 120px;">
+          <img src="/verseandhook/design_handoff_kimba/assets/kimba-portrait.jpg" alt="">
+        </div>
+        <span class="k-mono" style="color: var(--kimba-red);">
+          <span style="color: var(--kimba-red);">/</span>link not recognized
+        </span>
+        <h1 class="k-display" style="font-size: 64px; line-height: 0.95;">
+          this link doesn't work<span style="color: var(--kimba-red);">.</span>
+        </h1>
+        <p class="k-serif" style="font-size: 19px; color: var(--kimba-ink-2); max-width: 52ch;">
+          the token in this url didn't match any active session. it might be a typo, or the link might have been replaced. ping the person who sent it.
+        </p>
+        <span class="k-mono" style="color: var(--kimba-mute-2); margin-top: 12px;">
+          /no further action available
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================
+       VIEW: Landing + folded identity form
+       ===================================================== -->
+  <div class="view" id="view-landing">
+    <div class="surface-landing">
+      <div class="landing-inner">
+
+        <!-- Goal badge + client attribution -->
+        <div class="landing-meta">
+          <span class="goal-badge">
+            <span class="slash" id="goal-index">/01</span>
+            <span class="dash"></span>
+            <span id="goal-name">brand discovery</span>
+          </span>
+          <span class="k-mono">
+            for <span style="color: var(--kimba-ink); font-weight: 600;" id="client-name-meta"></span>
+          </span>
+        </div>
+
+        <!-- Kimba mark -->
+        <div class="landing-mark-wrap">
+          <div class="kimba-mark-circle" style="width: 140px; height: 140px;">
+            <img src="/verseandhook/design_handoff_kimba/assets/kimba-portrait.jpg" alt="Kimba">
+          </div>
+        </div>
+
+        <!-- Headline + lede -->
+        <div>
+          <h1 class="landing-headline">
+            hey — i'm kimba<span style="color: var(--kimba-red);">.</span>
+          </h1>
+          <p class="landing-lede">
+            i'm here to ask you a few questions about <em id="client-name-lede"></em> on behalf of the verse and hook team. it's a real conversation, not a form — about ten minutes, and there are no right answers.
+          </p>
+        </div>
+
+        <hr class="k-rule">
+
+        <!-- Identity form (folded into landing per design) -->
+        <div>
+          <div class="k-mono landing-section-label">
+            <span class="slash">/</span> before we start
+          </div>
+          <div class="landing-form">
+            <div>
+              <label class="field-label" for="f-name">name</label>
+              <input class="k-input" id="f-name" type="text" placeholder="first and last" autocomplete="given-name">
+            </div>
+            <div>
+              <label class="field-label" for="f-title">role / title</label>
+              <input class="k-input" id="f-title" type="text" placeholder="head of marketing" autocomplete="organization-title">
+            </div>
+            <div class="full">
+              <label class="field-label" for="f-email">email</label>
+              <input class="k-input" id="f-email" type="email" placeholder="you@company.com" autocomplete="email">
+            </div>
+          </div>
+        </div>
+
+        <!-- CTA row -->
+        <div class="landing-cta-row">
+          <p class="landing-fineprint">
+            this is for attribution only.<br>no marketing list, no follow-up email.
+          </p>
+          <button class="k-btn" id="btn-begin" disabled style="opacity: 0.45;">
+            begin
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M2 7H12M12 7L8 3M12 7L8 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Attribution footer -->
+        <div class="landing-attribution-row">
+          <span class="k-mono">/operated by verse and hook</span>
+          <span class="k-mono" style="color: var(--kimba-mute-2);">/session active</span>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================
+       VIEW: Begin transition — ~600ms pacing beat
+       Shown between Begin click and chat view.
+       No API call here; this is a designed delay.
+       TODO phase 3: extend to POST /api/vh-session/{token}/start
+       ===================================================== -->
+  <div class="view" id="view-begin">
+    <div class="begin-mark-wrap">
+      <div class="kimba-mark-circle" style="width: 120px; height: 120px;">
+        <img src="/verseandhook/design_handoff_kimba/assets/kimba-portrait.jpg" alt="">
+      </div>
+      <div class="pulse-ring"></div>
+    </div>
+    <span class="k-mono" style="color: var(--kimba-mute);">
+      <span style="color: var(--kimba-red);">/</span>connecting
+    </span>
+    <div class="k-display" style="font-size: 36px; line-height: 1;">
+      kimba's getting ready<span style="color: var(--kimba-red);">.</span>
+    </div>
+    <div class="kimba-typing" aria-label="loading">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+
+  <!-- =====================================================
+       VIEW: Chat — phase 2 stub
+       Full chat surface built in phase 2.
+       ===================================================== -->
+  <div class="view" id="view-chat">
+    <!-- Chat header (stub — gives correct visual framing) -->
+    <div class="chat-placeholder-header">
+      <div class="kimba-mark-circle" style="width: 40px; height: 40px;">
+        <img src="/verseandhook/design_handoff_kimba/assets/kimba-portrait.jpg" alt="">
+      </div>
+      <div class="name-block">
+        <span class="kimba-name">kimba<span style="color: var(--kimba-red);">.</span></span>
+        <span class="k-mono" id="chat-goal-line" style="color: var(--kimba-mute-2);"></span>
+      </div>
+    </div>
+    <!-- Placeholder stage -->
+    <div class="chat-placeholder-stage">
+      <div class="chat-placeholder-note">
+        <span class="k-mono"><span style="color: var(--kimba-red);">/</span>chat · phase 2</span>
+        <div class="k-display" style="font-size: 36px; line-height: 0.95;">
+          conversation coming<span style="color: var(--kimba-red);">.</span>
+        </div>
+        <p class="k-serif" style="font-size: 17px; color: var(--kimba-ink-2);">
+          the chat surface is being built in phase 2. landing and transition are complete.
+        </p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// --- State ---
+var sessionData = null;
+var identity = { name: '', title: '', email: '' };
+
+var GOAL_MAP = {
+  'discovery': { index: '01', name: 'brand discovery' },
+  'intake':    { index: '02', name: 'project intake' },
+  'feedback':  { index: '03', name: 'engagement feedback' }
+};
+
+// --- View management ---
+function show(viewId) {
+  var els = document.querySelectorAll('.view');
+  for (var i = 0; i < els.length; i++) els[i].classList.remove('active');
+  var el = document.getElementById('view-' + viewId);
+  if (el) el.classList.add('active');
+}
+
+// --- Token validation on mount ---
+(function init() {
+  var params = new URLSearchParams(window.location.search);
+  var token = params.get('token');
+  if (!token) { show('error'); return; }
+
+  fetch('/api/vh-session?token=' + encodeURIComponent(token))
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.error) {
+        // TODO phase 3: differentiate error kinds once used_at is added
+        // to vh_clients schema. For now all errors show the same copy.
+        show('error');
+        return;
+      }
+      sessionData = data;
+
+      var goal = GOAL_MAP[data.extraction_goal] || { index: '01', name: data.extraction_goal };
+      document.getElementById('goal-index').textContent = '/' + goal.index;
+      document.getElementById('goal-name').textContent = goal.name;
+      document.getElementById('client-name-meta').textContent = data.client_name;
+      document.getElementById('client-name-lede').textContent = data.client_name;
+      document.getElementById('chat-goal-line').textContent = '/' + goal.name;
+      document.title = 'kimba. — ' + data.client_name;
+
+      show('landing');
+    })
+    .catch(function() { show('error'); });
+})();
+
+// --- Form validation: enable Begin when name + email are filled ---
+function updateBeginBtn() {
+  var name  = document.getElementById('f-name').value.trim();
+  var email = document.getElementById('f-email').value.trim();
+  var btn   = document.getElementById('btn-begin');
+  var ready = name.length > 0 && email.length > 0;
+  btn.disabled = !ready;
+  btn.style.opacity = ready ? '1' : '0.45';
+  if (ready) {
+    btn.classList.add('k-btn-red');
+  } else {
+    btn.classList.remove('k-btn-red');
+  }
+}
+
+['f-name', 'f-title', 'f-email'].forEach(function(id) {
+  document.getElementById(id).addEventListener('input', updateBeginBtn);
+});
+
+// --- Begin: save identity, show transition beat, advance to chat ---
+document.getElementById('btn-begin').addEventListener('click', function() {
+  var name  = document.getElementById('f-name').value.trim();
+  var email = document.getElementById('f-email').value.trim();
+  if (!name || !email) return;
+
+  identity.name  = name;
+  identity.title = document.getElementById('f-title').value.trim();
+  identity.email = email;
+
+  // TODO phase 3: POST /api/vh-session/{token}/start with identity
+  // before transitioning, once that endpoint exists.
+
+  show('begin');
+
+  // ~600ms pacing beat per design spec, then advance to chat
+  setTimeout(function() {
+    show('chat');
+  }, 650);
+});
+</script>
+</body>
+</html>

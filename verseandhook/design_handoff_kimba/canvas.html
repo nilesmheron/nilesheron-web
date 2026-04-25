@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>kimba — brand canvas</title>
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="styles.css" />
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <style>
+    body { background: #f0eee9; }
+    .ab-frame {
+      position: relative;
+      background: var(--kimba-paper);
+      width: 100%; height: 100%;
+      overflow: hidden;
+    }
+    .ab-frame.dark { background: var(--kimba-ink); color: var(--kimba-paper); }
+    .ab-frame.red { background: var(--kimba-red); color: var(--kimba-paper); }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel" src="components.jsx"></script>
+  <script type="text/babel" src="canvas-boards.jsx"></script>
+  <script type="text/babel">
+    const { useState } = React;
+
+    function Page() {
+      return (
+        <DesignCanvas>
+          <DCSection id="brand" title="kimba — brand exploration" subtitle="System rooted in V&H red/black/white. Lowercase display + mono meta + warm cream paper. The dog is the warmth anchor.">
+            <DCArtboard id="brand-tokens" label="01 · tokens" width={1200} height={780}>
+              <BoardTokens />
+            </DCArtboard>
+            <DCArtboard id="brand-marks" label="02 · kimba marks" width={1000} height={780}>
+              <BoardMarks />
+            </DCArtboard>
+            <DCArtboard id="brand-system" label="03 · system in use" width={1400} height={780}>
+              <BoardSystem />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection id="landing" title="landing — three directions" subtitle="Same content, different rhythm. Centered minimal is the spec; the others probe what else is possible inside the brand.">
+            <DCArtboard id="landing-a" label="A · centered minimal" width={1100} height={820}>
+              <LandingA />
+            </DCArtboard>
+            <DCArtboard id="landing-b" label="B · editorial split" width={1100} height={820}>
+              <LandingB />
+            </DCArtboard>
+            <DCArtboard id="landing-c" label="C · red bleed" width={1100} height={820}>
+              <LandingC />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection id="thanks" title="thank you — two endings" subtitle="A grateful close that doesn't feel like a receipt.">
+            <DCArtboard id="thanks-a" label="A · split portrait" width={1100} height={720}>
+              <ThanksA />
+            </DCArtboard>
+            <DCArtboard id="thanks-b" label="B · full-bleed red" width={1100} height={720}>
+              <ThanksB />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection id="chat" title="chat — density study" subtitle="The serif AI line is the through-line. What changes is breathing room and progress affordance.">
+            <DCArtboard id="chat-a" label="A · comfortable / dots" width={780} height={900}>
+              <ChatStudy density="comfortable" progress="dots" />
+            </DCArtboard>
+            <DCArtboard id="chat-b" label="B · compact / hairline" width={780} height={900}>
+              <ChatStudy density="compact" progress="bar" />
+            </DCArtboard>
+            <DCArtboard id="chat-c" label="C · comfortable / fraction" width={780} height={900}>
+              <ChatStudy density="comfortable" progress="fraction" />
+            </DCArtboard>
+          </DCSection>
+        </DesignCanvas>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<Page />);
+  </script>
+</body>
+</html>
