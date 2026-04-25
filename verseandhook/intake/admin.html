@@ -116,6 +116,16 @@ body { background: var(--bg); color: var(--text); font-family: 'Inter', -apple-s
 @media (max-width: 680px) {
   .detail-panels { grid-template-columns: 1fr; }
 }
+
+/* Goal editor */
+.editor-section { margin-bottom: 1.5rem; }
+.editor-label { display: block; font-size: 12px; font-weight: 500; color: var(--text-muted); margin-bottom: 5px; }
+.editor-hint { font-size: 11px; color: var(--text-dim); margin-top: 3px; }
+.editor-textarea { width: 100%; background: var(--bg-alt); border: 1px solid var(--border); border-radius: 8px; padding: 10px 13px; font-size: 13px; font-family: 'Inter', sans-serif; color: var(--text); line-height: 1.55; resize: vertical; }
+.editor-textarea:focus { outline: none; border-color: var(--accent); }
+.goal-row { background: var(--bg-alt); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.goal-key { font-family: monospace; font-size: 12px; color: var(--text-dim); flex-shrink: 0; }
+.goal-name { font-weight: 500; font-size: 15px; flex: 1; }
 </style>
 </head>
 <body>
@@ -123,6 +133,7 @@ body { background: var(--bg); color: var(--text); font-family: 'Inter', -apple-s
 <div class="admin-header" id="app-header" style="display:none;">
   <span class="admin-wordmark">V&amp;H Intake — Admin</span>
   <div class="admin-actions">
+    <button class="btn-outline btn-sm" onclick="showGoals()">Goals</button>
     <button class="btn btn-sm" onclick="openNewClientModal()">+ New Client</button>
     <button class="btn-outline btn-sm" onclick="logout()">Sign out</button>
   </div>
@@ -164,9 +175,66 @@ body { background: var(--bg); color: var(--text); font-family: 'Inter', -apple-s
         <div class="panel-body" id="respondents-list"></div>
       </div>
       <div class="panel">
-        <div class="panel-head">Alignment Analysis</div>
+        <div class="panel-head" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>Alignment Analysis</span>
+          <button class="btn-outline btn-sm" id="rerun-btn" onclick="rerunAnalysis()">Re-run</button>
+        </div>
         <div id="analysis-panel"></div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Goals list -->
+<div id="view-goals" style="display:none;">
+  <div class="page-body">
+    <h1 class="page-title">Interview Goals</h1>
+    <p class="page-sub">Configure interview prompts and scoring dimensions per goal type.</p>
+    <div style="margin-bottom:1.25rem;">
+      <button class="btn btn-sm" onclick="openGoalEditor(null)">+ New Goal</button>
+    </div>
+    <div id="goals-list-container"></div>
+  </div>
+</div>
+
+<!-- Goal editor -->
+<div id="view-goal-editor" style="display:none;">
+  <div class="page-body" style="max-width:720px;">
+    <button class="back-btn" onclick="showGoals()">&larr; All goals</button>
+    <h2 class="page-title" id="goal-editor-title" style="margin-bottom:1.5rem;">Edit Goal</h2>
+
+    <div class="editor-section">
+      <label class="editor-label" for="ge-key">Goal key</label>
+      <input type="text" id="ge-key" class="editor-textarea" style="resize:none;height:auto;" placeholder="discovery-clientname">
+      <p class="editor-hint">Lowercase letters, numbers, hyphens only. Cannot be changed after creation.</p>
+    </div>
+    <div class="editor-section">
+      <label class="editor-label" for="ge-name">Display name</label>
+      <input type="text" id="ge-name" class="editor-textarea" style="resize:none;height:auto;" placeholder="Brand Discovery">
+    </div>
+    <div class="editor-section">
+      <label class="editor-label" for="ge-intake-prompt">Interview prompt (Haiku — controls the conversation)</label>
+      <textarea id="ge-intake-prompt" class="editor-textarea" rows="14"></textarea>
+    </div>
+    <div class="editor-section">
+      <label class="editor-label" for="ge-opener">Opening message (first message respondent sees)</label>
+      <textarea id="ge-opener" class="editor-textarea" rows="4"></textarea>
+    </div>
+    <div class="editor-section">
+      <label class="editor-label" for="ge-analysis-prompt">Analysis prompt (Sonnet — scores alignment across respondents)</label>
+      <textarea id="ge-analysis-prompt" class="editor-textarea" rows="10"></textarea>
+      <p class="editor-hint">Must reference the scoring dimensions by name. Update both together when changing dimensions.</p>
+    </div>
+    <div class="editor-section">
+      <label class="editor-label" for="ge-dimensions">Scoring dimensions (one per line, lowercase_with_underscores)</label>
+      <textarea id="ge-dimensions" class="editor-textarea" rows="6"></textarea>
+      <p class="editor-hint">Changing dimensions affects future analysis runs. Use Re-run analysis on existing clients to rescore.</p>
+    </div>
+
+    <p class="modal-error" id="ge-error" style="margin-bottom:1rem;"></p>
+    <div style="display:flex;gap:10px;">
+      <button class="btn" id="ge-save-btn" onclick="saveGoal()">Save goal</button>
+      <button class="btn-outline" onclick="showGoals()">Cancel</button>
     </div>
   </div>
 </div>
@@ -202,7 +270,10 @@ body { background: var(--bg); color: var(--text); font-family: 'Inter', -apple-s
 
 <script>
 var authToken = sessionStorage.getItem('vh-admin-token') || null;
-var GOAL_LABELS = { discovery: 'Brand Discovery', intake: 'Project Intake', feedback: 'Engagement Feedback' };
+var GOAL_LABELS = {};
+var goalConfigs = [];
+var currentClientId = null;
+var currentGoalKey = null;
 
 function apiFetch(path, options) {
   var opts = options || {};
@@ -213,14 +284,15 @@ function apiFetch(path, options) {
 }
 
 function show(viewId) {
-  ['login','dashboard','detail'].forEach(function(id) {
-    document.getElementById('view-' + id).style.display = id === viewId ? 'block' : 'none';
+  ['login','dashboard','detail','goals','goal-editor'].forEach(function(id) {
+    var el = document.getElementById('view-' + id);
+    if (el) el.style.display = id === viewId ? 'block' : 'none';
   });
   document.getElementById('app-header').style.display = viewId === 'login' ? 'none' : 'flex';
 }
 
 // --- Auth ---
-if (authToken) { show('dashboard'); loadDashboard(); } else { show('login'); }
+if (authToken) { show('dashboard'); loadDashboard(); loadGoalConfigs(); } else { show('login'); }
 
 function doLogin() {
   var pw = document.getElementById('login-pw').value;
@@ -241,6 +313,7 @@ function doLogin() {
       sessionStorage.setItem('vh-admin-token', authToken);
       show('dashboard');
       loadDashboard();
+      loadGoalConfigs();
     } else {
       document.getElementById('login-err').style.display = 'block';
       btn.disabled = false; btn.textContent = 'Sign in';
@@ -303,6 +376,7 @@ function showDashboard() {
 
 // --- Client detail ---
 function loadClientDetail(clientId) {
+  currentClientId = clientId;
   show('detail');
   document.getElementById('detail-title').textContent = 'Loading...';
   document.getElementById('respondents-list').innerHTML = '';
@@ -389,11 +463,16 @@ function toggleTranscript(i) {
 // --- New client modal ---
 function openNewClientModal() {
   document.getElementById('nc-name').value = '';
-  document.getElementById('nc-goal').value = 'discovery';
   document.getElementById('nc-error').style.display = 'none';
   document.getElementById('generated-link').style.display = 'none';
   document.getElementById('nc-submit-btn').disabled = false;
   document.getElementById('nc-submit-btn').textContent = 'Generate link';
+
+  var sel = document.getElementById('nc-goal');
+  sel.innerHTML = goalConfigs.length
+    ? goalConfigs.map(function(g) { return '<option value="' + esc(g.goal_key) + '">' + esc(g.name) + '</option>'; }).join('')
+    : '<option value="discovery">Brand Discovery</option><option value="intake">Project Intake</option><option value="feedback">Engagement Feedback</option>';
+
   document.getElementById('new-client-modal').classList.add('open');
 }
 
@@ -439,6 +518,144 @@ function copyGeneratedLink(btn) {
   navigator.clipboard.writeText(url).then(function() {
     btn.textContent = 'Copied!';
     setTimeout(function() { btn.textContent = 'Copy link'; }, 2000);
+  });
+}
+
+// --- Goal configs ---
+function loadGoalConfigs() {
+  apiFetch('/api/vh-goal-config')
+    .then(function(data) {
+      if (!Array.isArray(data)) return;
+      goalConfigs = data;
+      GOAL_LABELS = {};
+      data.forEach(function(g) { GOAL_LABELS[g.goal_key] = g.name; });
+    })
+    .catch(function() {});
+}
+
+function showGoals() {
+  show('goals');
+  loadGoals();
+}
+
+function loadGoals() {
+  var container = document.getElementById('goals-list-container');
+  container.innerHTML = '<p style="color:var(--text-dim);font-size:13px;">Loading...</p>';
+  apiFetch('/api/vh-goal-config')
+    .then(function(data) {
+      if (!Array.isArray(data)) { container.innerHTML = '<p style="color:var(--danger);">Error loading goals.</p>'; return; }
+      goalConfigs = data;
+      data.forEach(function(g) { GOAL_LABELS[g.goal_key] = g.name; });
+      if (!data.length) {
+        container.innerHTML = '<p style="color:var(--text-dim);font-size:13px;">No goal configs yet.</p>';
+        return;
+      }
+      container.innerHTML = data.map(function(g) {
+        return '<div class="goal-row">'
+          + '<span class="goal-key">' + esc(g.goal_key) + '</span>'
+          + '<span class="goal-name">' + esc(g.name) + '</span>'
+          + '<button class="btn-outline btn-sm" onclick="openGoalEditor(\'' + esc(g.goal_key) + '\')">Edit</button>'
+          + '</div>';
+      }).join('');
+    })
+    .catch(function() { container.innerHTML = '<p style="color:var(--danger);">Error loading goals.</p>'; });
+}
+
+function openGoalEditor(goalKey) {
+  currentGoalKey = goalKey;
+  document.getElementById('ge-error').style.display = 'none';
+  document.getElementById('ge-save-btn').disabled = false;
+  document.getElementById('ge-save-btn').textContent = 'Save goal';
+
+  if (goalKey) {
+    var g = goalConfigs.find(function(gc) { return gc.goal_key === goalKey; });
+    document.getElementById('goal-editor-title').textContent = 'Edit: ' + (g ? g.name : goalKey);
+    document.getElementById('ge-key').value = goalKey;
+    document.getElementById('ge-key').readOnly = true;
+    document.getElementById('ge-name').value = g ? g.name : '';
+    document.getElementById('ge-intake-prompt').value = g ? g.intake_system_prompt : '';
+    document.getElementById('ge-opener').value = g ? g.opener_message : '';
+    document.getElementById('ge-analysis-prompt').value = g ? g.analysis_system_prompt : '';
+    document.getElementById('ge-dimensions').value = g ? (g.scoring_dimensions || []).join('\n') : '';
+  } else {
+    document.getElementById('goal-editor-title').textContent = 'New Goal';
+    document.getElementById('ge-key').value = '';
+    document.getElementById('ge-key').readOnly = false;
+    document.getElementById('ge-name').value = '';
+    document.getElementById('ge-intake-prompt').value = '';
+    document.getElementById('ge-opener').value = '';
+    document.getElementById('ge-analysis-prompt').value = '';
+    document.getElementById('ge-dimensions').value = '';
+  }
+  show('goal-editor');
+}
+
+function saveGoal() {
+  var key = document.getElementById('ge-key').value.trim();
+  var name = document.getElementById('ge-name').value.trim();
+  var intakePrompt = document.getElementById('ge-intake-prompt').value.trim();
+  var opener = document.getElementById('ge-opener').value.trim();
+  var analysisPrompt = document.getElementById('ge-analysis-prompt').value.trim();
+  var dimensions = document.getElementById('ge-dimensions').value
+    .split('\n').map(function(s) { return s.trim(); }).filter(Boolean);
+
+  var errEl = document.getElementById('ge-error');
+  errEl.style.display = 'none';
+
+  if (!key || !name || !intakePrompt || !opener || !analysisPrompt || !dimensions.length) {
+    errEl.textContent = 'All fields are required.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  var btn = document.getElementById('ge-save-btn');
+  btn.disabled = true; btn.textContent = 'Saving...';
+
+  apiFetch('/api/vh-goal-config', {
+    method: 'PUT',
+    body: JSON.stringify({
+      goal_key: key,
+      name: name,
+      intake_system_prompt: intakePrompt,
+      opener_message: opener,
+      analysis_system_prompt: analysisPrompt,
+      scoring_dimensions: dimensions
+    })
+  })
+  .then(function(data) {
+    if (data.error) {
+      errEl.textContent = data.error; errEl.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Save goal';
+      return;
+    }
+    showGoals();
+  })
+  .catch(function() {
+    errEl.textContent = 'Something went wrong.'; errEl.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Save goal';
+  });
+}
+
+function rerunAnalysis() {
+  if (!currentClientId) return;
+  var btn = document.getElementById('rerun-btn');
+  btn.disabled = true; btn.textContent = 'Running...';
+
+  apiFetch('/api/vh-admin', {
+    method: 'POST',
+    body: JSON.stringify({ action: 'rerun_analysis', client_id: currentClientId })
+  })
+  .then(function(data) {
+    if (data.error) {
+      btn.disabled = false; btn.textContent = 'Re-run';
+      alert('Analysis error: ' + data.error);
+      return;
+    }
+    btn.textContent = 'Done ✓';
+    setTimeout(function() { loadClientDetail(currentClientId); }, 800);
+  })
+  .catch(function() {
+    btn.disabled = false; btn.textContent = 'Re-run';
   });
 }
 
