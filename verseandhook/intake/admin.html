@@ -25,9 +25,14 @@
 body { background: var(--bg); color: var(--text); font-family: 'Inter', -apple-system, sans-serif; font-size: 14px; line-height: 1.6; min-height: 100vh; }
 
 /* Header */
-.admin-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--bg-alt); }
-.admin-wordmark { font-size: 11px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-dim); }
-.admin-actions { display: flex; gap: 10px; align-items: center; }
+.admin-header { padding: 0.75rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 2rem; background: var(--bg-alt); }
+.admin-wordmark { background: none; border: none; font-size: 11px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-dim); cursor: pointer; padding: 0; flex-shrink: 0; font-family: 'Inter', sans-serif; }
+.admin-wordmark:hover { color: var(--text); }
+.admin-nav { display: flex; gap: 2px; align-items: center; flex: 1; }
+.nav-link { background: none; border: none; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; color: var(--text-muted); cursor: pointer; padding: 6px 12px; border-radius: 6px; transition: background 0.12s, color 0.12s; }
+.nav-link:hover { background: var(--bg); color: var(--text); }
+.nav-link.active { background: var(--bg); color: var(--text); }
+.admin-actions { display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
 
 /* Login */
 #view-login { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 2rem; }
@@ -131,10 +136,12 @@ body { background: var(--bg); color: var(--text); font-family: 'Inter', -apple-s
 <body>
 
 <div class="admin-header" id="app-header" style="display:none;">
-  <span class="admin-wordmark">V&amp;H Intake — Admin</span>
+  <button class="admin-wordmark" onclick="showDashboard()">V&amp;H Intake</button>
+  <nav class="admin-nav">
+    <button class="nav-link" id="nav-clients" onclick="showDashboard()">Clients</button>
+    <button class="nav-link" id="nav-goals" onclick="showGoals()">Goals</button>
+  </nav>
   <div class="admin-actions">
-    <button class="btn-outline btn-sm" onclick="showDashboard()">Clients</button>
-    <button class="btn-outline btn-sm" onclick="showGoals()">Goals</button>
     <button class="btn btn-sm" onclick="openNewClientModal()">+ New Client</button>
     <button class="btn-outline btn-sm" onclick="logout()">Sign out</button>
   </div>
@@ -290,6 +297,12 @@ function show(viewId) {
     if (el) el.style.display = id === viewId ? 'block' : 'none';
   });
   document.getElementById('app-header').style.display = viewId === 'login' ? 'none' : 'flex';
+  var clientViews = ['dashboard', 'detail'];
+  var goalViews = ['goals', 'goal-editor'];
+  var nc = document.getElementById('nav-clients');
+  var ng = document.getElementById('nav-goals');
+  if (nc) nc.classList.toggle('active', clientViews.indexOf(viewId) !== -1);
+  if (ng) ng.classList.toggle('active', goalViews.indexOf(viewId) !== -1);
 }
 
 // --- Auth ---
