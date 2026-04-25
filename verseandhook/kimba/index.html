@@ -878,8 +878,8 @@ hr.k-rule { border: 0; border-top: 1px solid var(--kimba-rule); }
 
   <!-- =====================================================
        VIEW: Thanks — phase 2 stub with design intent
-       TODO phase 3: wire POST /api/vh-session/{token}/complete
-       and POST /api/vh-response for transcript persistence.
+       TODO phase 3: wire POST /api/vh-response for transcript persistence
+       and POST /api/vh-session/{token}/complete. See IMPLEMENTATION.md §phase-3.
        ===================================================== -->
   <div class="view" id="view-thanks">
     <div class="surface-thanks">
@@ -896,7 +896,7 @@ hr.k-rule { border: 0; border-top: 1px solid var(--kimba-rule); }
         <span class="k-mono" style="color: var(--kimba-mute-2);">/session complete · transcript saved</span>
       </div>
       <div class="thanks-image">
-        <img src="/verseandhook/design_handoff_kimba/assets/kimba-side.jpg" alt="">
+        <img src="/verseandhook/kimba/assets/kimba-side.jpg" alt="">
       </div>
     </div>
   </div>
@@ -916,7 +916,7 @@ var busy         = false;
 var isClosing    = false;
 var lastUserText = '';     // buffered for network retry
 
-var TOTAL_EXCHANGES = 8;
+var TOTAL_EXCHANGES = 8; // TODO phase 4: pull from goalConfig.expected_exchange_count once DB column exists (IMPLEMENTATION.md §phase-4)
 
 var GOAL_MAP = {
   'discovery': { index: '01', name: 'brand discovery' },
@@ -1045,9 +1045,24 @@ document.getElementById('btn-begin').addEventListener('click', function() {
 // ==========================================================
 function initChat() {
   renderProgress();
-  addAiMessage(goalConfig.opener_message);
+  // Opener is rendered directly — no typing-dots beat — so Kimba feels present on mount.
+  // Subsequent messages go through showTyping() → addAiMessage() path.
+  renderOpener(goalConfig.opener_message);
   initComposer();
   initKeyboard();
+}
+
+function renderOpener(text) {
+  var div = document.createElement('div');
+  div.className = 'chat-msg chat-msg-ai';
+  div.innerHTML =
+    '<div class="chat-msg-meta kimba">' +
+      MARK_HTML +
+      '<span class="who">kimba</span>' +
+    '</div>' +
+    '<div class="body">' + aiTextToHtml(text) + '</div>';
+  document.getElementById('chat-thread').appendChild(div);
+  scrollToBottom();
 }
 
 // ==========================================================
@@ -1070,7 +1085,7 @@ function renderProgress() {
 // ==========================================================
 var MARK_HTML =
   '<div class="kimba-mark-circle" style="width:16px;height:16px;">' +
-  '<img src="/verseandhook/design_handoff_kimba/assets/kimba-portrait.jpg" alt="">' +
+  '<img src="/verseandhook/kimba/assets/kimba-portrait.jpg" alt="">' +
   '</div>';
 
 function addAiMessage(text) {
@@ -1125,7 +1140,7 @@ function showSkipButton() {
   btn.addEventListener('click', function() {
     btn.remove();
     show('thanks');
-    // TODO phase 3: POST /api/vh-response + /api/vh-session/{token}/complete
+    // TODO phase 3: POST /api/vh-response + /api/vh-session/{token}/complete — see IMPLEMENTATION.md §phase-3
   });
   document.getElementById('chat-thread').appendChild(btn);
   scrollToBottom();
@@ -1207,7 +1222,7 @@ function postToChat(userText) {
 
     if (hasComplete) {
       show('thanks');
-      // TODO phase 3: POST /api/vh-response + /api/vh-session/{token}/complete
+      // TODO phase 3: POST /api/vh-response + /api/vh-session/{token}/complete — see IMPLEMENTATION.md §phase-3
     } else if (hasClosing) {
       isClosing = true;
       showSkipButton();
