@@ -1,8 +1,10 @@
 // api/vh-admin.js
 import { validateAdminToken } from './vh-auth.js';
+import { runAnalysis } from './vh-analysis-utils.js';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
 
 function sb(path) {
   return fetch(`${SUPABASE_URL}/rest/v1${path}`, {
@@ -18,8 +20,32 @@ export default async function handler(req, res) {
   if (!SUPABASE_URL || !SUPABASE_KEY) {
     return res.status(500).json({ error: 'Supabase not configured' });
   }
-  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
   if (!validateAdminToken(req)) return res.status(401).json({ error: 'Unauthorized' });
+
+  // POST — re-run analysis for a client
+  if (req.method === 'POST') {
+    const { action, client_id } = req.body || {};
+    if (action !== 'rerun_analysis') return res.status(400).json({ error: 'Unknown action' });
+    if (!client_id) return res.status(400).json({ error: 'client_id required' });
+
+    try {
+      const clientRes = await sb(`/vh_clients?id=eq.${encodeURIComponent(client_id)}&select=id,extraction_goal`);
+      if (!clientRes.ok) return res.status(500).json({ error: 'Failed to fetch client' });
+      const clients = await clientRes.json();
+      if (!clients.length) return res.status(404).json({ error: 'Client not found' });
+
+      await runAnalysis(client_id, clients[0].extraction_goal, null, {
+        supabaseUrl: SUPABASE_URL,
+        supabaseKey: SUPABASE_KEY,
+        anthropicKey: ANTHROPIC_KEY
+      });
+      return res.status(200).json({ ok: true });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
   const { client_id } = req.query;
 
