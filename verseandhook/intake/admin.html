@@ -91,6 +91,11 @@ body { background: var(--bg); color: var(--text); font-family: 'Inter', -apple-s
 .turn-role { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 3px; }
 .turn-content { font-size: 13px; color: var(--text-muted); line-height: 1.55; }
 
+/* Detail link row */
+.detail-link-row { display: none; align-items: center; gap: 10px; background: var(--bg-alt); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; margin-bottom: 1.25rem; }
+.detail-link-url { flex: 1; color: var(--text-muted); font-family: monospace; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.detail-link-label { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); flex-shrink: 0; }
+
 /* Analysis panel */
 .analysis-pending { padding: 1.25rem 1rem; text-align: center; color: var(--text-dim); font-size: 13px; line-height: 1.6; }
 .narrative-block { padding: 14px 16px; font-size: 14px; color: var(--text-muted); line-height: 1.7; font-family: 'Fraunces', serif; border-bottom: 1px solid var(--border); }
@@ -181,6 +186,11 @@ body { background: var(--bg); color: var(--text); font-family: 'Inter', -apple-s
     <div class="detail-head">
       <h2 class="detail-title" id="detail-title"></h2>
       <span class="goal-badge" id="detail-goal-badge"></span>
+    </div>
+    <div class="detail-link-row" id="detail-link-row">
+      <span class="detail-link-label">Link</span>
+      <span class="detail-link-url" id="detail-link-url"></span>
+      <button class="btn-outline btn-sm" id="detail-link-copy" onclick="copyDetailLink()">Copy</button>
     </div>
     <div class="detail-panels">
       <div class="panel">
@@ -415,6 +425,15 @@ function renderClientDetail(client, responses, analysis) {
   document.getElementById('detail-title').textContent = client.client_name;
   document.getElementById('detail-goal-badge').textContent = GOAL_LABELS[client.extraction_goal] || client.extraction_goal;
 
+  var linkRow = document.getElementById('detail-link-row');
+  if (client.token) {
+    document.getElementById('detail-link-url').textContent = window.location.origin + '/verseandhook/intake?token=' + client.token;
+    document.getElementById('detail-link-copy').textContent = 'Copy';
+    linkRow.style.display = 'flex';
+  } else {
+    linkRow.style.display = 'none';
+  }
+
   // Respondents
   var respContainer = document.getElementById('respondents-list');
   if (!responses.length) {
@@ -557,6 +576,15 @@ function createClient() {
   .catch(function() {
     errEl.textContent = 'Something went wrong.'; errEl.style.display = 'block';
     btn.disabled = false; btn.textContent = 'Generate link';
+  });
+}
+
+function copyDetailLink() {
+  var url = document.getElementById('detail-link-url').textContent;
+  var btn = document.getElementById('detail-link-copy');
+  navigator.clipboard.writeText(url).then(function() {
+    btn.textContent = 'Copied!';
+    setTimeout(function() { btn.textContent = 'Copy'; }, 2000);
   });
 }
 
