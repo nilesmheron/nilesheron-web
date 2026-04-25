@@ -79,14 +79,14 @@ export async function runAnalysis(client_id, extraction_goal, response_id, { sup
   }
 
   const data = await anthropicRes.json();
-  const text = (data.content || []).map(b => b.text || '').join('').trim();
-  console.log(`runAnalysis: Anthropic response text (first 200 chars): ${text.slice(0, 200)}`);
+  const raw = (data.content || []).map(b => b.text || '').join('').trim();
+  const text = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim();
 
   let parsed;
   try {
     parsed = JSON.parse(text);
   } catch (e) {
-    console.warn(`runAnalysis: JSON.parse failed — ${e.message} — raw: ${text.slice(0, 200)}`);
+    console.warn(`runAnalysis: JSON.parse failed — ${e.message} — raw: ${raw.slice(0, 300)}`);
     return;
   }
 
