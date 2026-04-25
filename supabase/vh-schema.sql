@@ -36,3 +36,16 @@ CREATE INDEX vh_analysis_triggered_by_response_id_idx ON vh_analysis(triggered_b
 ALTER TABLE vh_clients DISABLE ROW LEVEL SECURITY;
 ALTER TABLE vh_responses DISABLE ROW LEVEL SECURITY;
 ALTER TABLE vh_analysis DISABLE ROW LEVEL SECURITY;
+
+-- Goal configurations (interview prompts and scoring dimensions, editable from admin)
+CREATE TABLE IF NOT EXISTS vh_goal_configs (
+  goal_key TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  intake_system_prompt TEXT NOT NULL,
+  opener_message TEXT NOT NULL,
+  analysis_system_prompt TEXT NOT NULL,
+  scoring_dimensions JSONB NOT NULL DEFAULT '[]'::jsonb,
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE vh_goal_configs DISABLE ROW LEVEL SECURITY;
