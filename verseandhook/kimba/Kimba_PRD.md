@@ -1,6 +1,6 @@
 # Kimba — Product Requirements Document
 
-**Version:** 1.0 (DRAFT)
+**Version:** 1.1 (DRAFT)
 **Last Updated:** 2026-04-25
 **Owner:** Verse and Hook
 **Status:** Active — Pre-redesign
@@ -60,7 +60,7 @@ The prototype at `verseandhook/intake/index.html` and `admin.html` covers:
 - Analysis gated behind response count (requires 2+ responses)
 
 **What's missing:**
-- Kimba brand identity — name, visual system, dog-inspired character elements
+- Kimba brand identity — name, visual system, Kimba illustration asset
 - Cohesive UX across all three client screens (landing, chat, thank you)
 - Design system with Kimba-specific tokens (colors, type, illustration/icon language)
 - Admin analysis is functional but spartan — not presentable to a client as-is
@@ -73,16 +73,21 @@ The prototype at `verseandhook/intake/index.html` and `admin.html` covers:
 
 ## Product Rename and Identity
 
-The tool is being renamed **Kimba**. The name is not a reference to any IP — it's the founder's dog, and the metaphor is intentional: Kimba goes out, does the work, comes back with what you need.
-
-The visual and interaction language should carry this without being heavy-handed. This is not a cartoon product. It's a sharp professional tool that happens to be warm and approachable. Think: a well-trained dog with good instincts — not a mascot, not a gimmick.
+The tool is being renamed **Kimba**. The name is not a reference to any IP — it's the founder's dog, and the origin story is the brand: a real dog, with a real look, used as a real visual asset in the product.
 
 **Brand direction:**
-- Lighthearted but precise. The copy should feel like a person, not a chatbot.
-- Dog-inspired without being literal. Paw prints and dog emoji are off the table. Think texture, warmth, attentiveness.
-- Color palette should feel distinct from Verse and Hook's own identity — Kimba is a product, not a sub-brand.
-- Typography: a display face with character (not neutral/utilitarian) paired with a readable body font. The current Fraunces/Inter pairing is a reasonable starting point but should be evaluated against the identity direction.
-- The "cute" is in the experience — in the pacing of the conversation, the copy tone, the small moments of warmth on the landing and thank you screens — not in the visual design.
+
+The visual anchor is an illustration of Kimba — the actual dog. This is not a generic "dog as metaphor" approach. The product has a specific character asset, and that asset should appear intentionally across the client experience: on the landing page, likely on the thank you screen, possibly as the typing indicator in the chat. The illustration style should be determined once reference photos are available, but the direction is warm and characterful without being cartoonish or childlike — think editorial illustration, not app store icon.
+
+What the dog visual does for the product: it gives Kimba a face. Respondents aren't filling out a form for a faceless tool. They're talking to something. The illustration is the warmth anchor; the rest of the design can be as clean and professional as it needs to be.
+
+The interaction language does not need to "act like a dog" — that framing is off the table. Kimba doesn't fetch in the copy, doesn't bark, doesn't wag. The product is named after the dog. The dog appears in the design. That's the extent of the metaphor.
+
+Additional brand parameters:
+- Lighthearted but precise. Copy should feel like a person, not a chatbot.
+- Color palette should feel distinct from Verse and Hook's own identity — Kimba is a product, not a sub-brand. The palette should be warm enough to carry the illustration without competing with it.
+- Typography: a display face with character paired with a readable body font. Fraunces/Inter is a reasonable starting point and consistent with V&H's broader aesthetic — worth evaluating whether Kimba gets its own type treatment or inherits from V&H intentionally.
+- Generic dog iconography (paw prints, bones, emoji) is off the table. The actual Kimba illustration is the only dog element.
 
 ---
 
