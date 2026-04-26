@@ -53,7 +53,7 @@ export default async function handler(req, res) {
   if (client_id) {
     try {
       const [clientRes, responsesRes, analysisRes] = await Promise.all([
-        sb(`/vh_clients?id=eq.${encodeURIComponent(client_id)}&select=id,client_name,extraction_goal,token,created_at`),
+        sb(`/vh_clients?id=eq.${encodeURIComponent(client_id)}&select=id,client_name,extraction_goal,token,created_at,expected_respondent_count`),
         sb(`/vh_responses?client_id=eq.${encodeURIComponent(client_id)}&select=id,respondent_name,respondent_title,respondent_email,transcript,completed_at&order=completed_at.asc`),
         sb(`/vh_analysis?client_id=eq.${encodeURIComponent(client_id)}&select=scores,narrative,dimensions,created_at&order=created_at.desc&limit=1`)
       ]);
@@ -82,7 +82,7 @@ export default async function handler(req, res) {
 
   // All clients list with per-client response count and last response date
   try {
-    const clientsRes = await sb('/vh_clients?select=id,client_name,extraction_goal,created_at&order=created_at.desc');
+    const clientsRes = await sb('/vh_clients?select=id,client_name,extraction_goal,created_at,expected_respondent_count&order=created_at.desc');
     if (!clientsRes.ok) return res.status(500).json({ error: 'Failed to fetch clients' });
 
     const clients = await clientsRes.json();

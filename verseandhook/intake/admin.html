@@ -3,333 +3,822 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>V&H Intake — Admin</title>
+<title>kimba. — admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,75,400;0,75,500;0,75,800;0,100,400;0,100,500;0,100,800&family=Fraunces:ital,opsz,wght@0,9..144,400;1,9..144,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* =============================================================
+   KIMBA DESIGN TOKENS
+   ============================================================= */
 :root {
-  --bg: #F5F4F0;
-  --bg-alt: #FFFFFF;
-  --text: #1C1C1A;
-  --text-muted: #5E5E58;
-  --text-dim: #9A9A93;
-  --accent: #1D3FE8;
-  --accent-ink: #FFFFFF;
-  --accent-light: #EEF1FD;
-  --border: #E2E1DB;
-  --danger: #C94040;
-  --success: #2E7D4F;
+  --kimba-red:       #D9181E;
+  --kimba-red-deep:  #A6121A;
+  --kimba-ink:       #0D0D0D;
+  --kimba-ink-2:     #1A1A1A;
+  --kimba-mute:      #6B6B6B;
+  --kimba-mute-2:    #9A9A9A;
+  --kimba-rule:      #E5E2DD;
+  --kimba-rule-soft: #EFECE6;
+  --kimba-paper:     #F6F2EC;
+  --kimba-paper-2:   #FBF8F3;
+  --kimba-white:     #FFFFFF;
+
+  --kimba-display: 'Archivo', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --kimba-serif:   'Fraunces', 'Times New Roman', serif;
+  --kimba-mono:    'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --kimba-body:    'Archivo', system-ui, -apple-system, sans-serif;
 }
-body { background: var(--bg); color: var(--text); font-family: 'Inter', -apple-system, sans-serif; font-size: 14px; line-height: 1.6; min-height: 100vh; }
 
-/* Header */
-.admin-header { padding: 0.75rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 2rem; background: var(--bg-alt); }
-.admin-wordmark { background: none; border: none; font-size: 11px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-dim); cursor: pointer; padding: 0; flex-shrink: 0; font-family: 'Inter', sans-serif; }
-.admin-wordmark:hover { color: var(--text); }
-.admin-nav { display: flex; gap: 2px; align-items: center; flex: 1; }
-.nav-link { background: none; border: none; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; color: var(--text-muted); cursor: pointer; padding: 6px 12px; border-radius: 6px; transition: background 0.12s, color 0.12s; }
-.nav-link:hover { background: var(--bg); color: var(--text); }
-.nav-link.active { background: var(--bg); color: var(--text); }
-.admin-actions { display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: var(--kimba-body);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--kimba-ink);
+  background: var(--kimba-paper);
+  -webkit-font-smoothing: antialiased;
+}
 
-/* Login */
-#view-login { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 2rem; }
-.login-card { background: var(--bg-alt); border: 1px solid var(--border); border-radius: 14px; padding: 2rem; max-width: 360px; width: 100%; }
-.login-head { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 500; margin-bottom: 0.4rem; }
-.login-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 1.5rem; }
-.login-field { margin-bottom: 1rem; }
-.login-field input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 13px; font-size: 14px; font-family: 'Inter', sans-serif; color: var(--text); }
-.login-field input:focus { outline: none; border-color: var(--accent); }
-.login-error { font-size: 12px; color: var(--danger); margin-bottom: 10px; display: none; }
-.btn { display: inline-block; background: var(--accent); color: var(--accent-ink); border: none; border-radius: 8px; padding: 10px 20px; font-size: 14px; font-family: 'Inter', sans-serif; font-weight: 500; cursor: pointer; transition: opacity 0.15s; }
-.btn:hover { opacity: 0.88; }
-.btn:disabled { opacity: 0.35; cursor: default; }
-.btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-muted); border-radius: 8px; padding: 8px 16px; font-size: 13px; font-family: 'Inter', sans-serif; cursor: pointer; }
-.btn-outline:hover { border-color: var(--text-muted); color: var(--text); }
-.btn-sm { padding: 7px 14px; font-size: 12px; border-radius: 6px; }
+/* Typography utilities */
+.k-mono {
+  font-family: var(--kimba-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--kimba-mute);
+}
+.k-display {
+  font-family: var(--kimba-display);
+  font-weight: 800;
+  font-stretch: 75%;
+  letter-spacing: -0.025em;
+  line-height: 0.95;
+  text-transform: lowercase;
+}
+.k-serif {
+  font-family: var(--kimba-serif);
+  font-weight: 400;
+}
+.k-slash::before { content: "/"; color: var(--kimba-red); margin-right: 0.3em; }
+.red { color: var(--kimba-red); }
 
-/* Dashboard */
-#view-dashboard { display: none; }
-.page-body { max-width: 900px; margin: 0 auto; padding: 1.5rem; }
-.page-title { font-family: 'Fraunces', serif; font-size: 24px; font-weight: 500; margin-bottom: 0.25rem; }
-.page-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 1.5rem; }
+/* Buttons */
+.k-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 18px;
+  font-family: var(--kimba-mono); font-size: 11px; font-weight: 500;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  border: 1px solid var(--kimba-ink);
+  background: var(--kimba-ink); color: var(--kimba-paper);
+  cursor: pointer; border-radius: 0; text-decoration: none;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.k-btn:hover { background: var(--kimba-red); border-color: var(--kimba-red); }
+.k-btn:active { transform: translateY(1px); }
+.k-btn:disabled { opacity: 0.4; cursor: default; pointer-events: none; }
+.k-btn-ghost { background: transparent; color: var(--kimba-ink); }
+.k-btn-ghost:hover { background: var(--kimba-ink); color: var(--kimba-paper); }
+.k-btn-red { background: var(--kimba-red); border-color: var(--kimba-red); }
+.k-btn-red:hover { background: var(--kimba-ink); border-color: var(--kimba-ink); }
 
-/* Client list */
-.client-list { display: flex; flex-direction: column; gap: 10px; }
-.client-row { background: var(--bg-alt); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: border-color 0.15s; }
-.client-row:hover { border-color: var(--accent); }
-.client-name { font-weight: 500; font-size: 15px; flex: 1; }
-.goal-badge { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; background: var(--accent-light); color: var(--accent); border-radius: 4px; padding: 3px 8px; flex-shrink: 0; }
-.client-meta { font-size: 12px; color: var(--text-dim); flex-shrink: 0; text-align: right; }
-.response-count { font-size: 12px; color: var(--text-muted); flex-shrink: 0; }
-.empty-state { text-align: center; padding: 3rem 1rem; color: var(--text-dim); }
-.empty-state p { margin-bottom: 1rem; }
+/* Inputs */
+.k-input {
+  width: 100%; padding: 10px 0;
+  border: 0; border-bottom: 1px solid var(--kimba-ink);
+  background: transparent;
+  font-family: var(--kimba-body); font-size: 16px; color: var(--kimba-ink);
+  outline: none; border-radius: 0;
+}
+.k-input::placeholder { color: var(--kimba-mute-2); }
+.k-input:focus { border-bottom-color: var(--kimba-red); }
+input[type="number"].k-input { width: 90px; }
 
-/* Client detail */
-#view-detail { display: none; }
-.detail-body { max-width: 900px; margin: 0 auto; padding: 1.5rem; }
-.back-btn { background: none; border: none; font-family: 'Inter', sans-serif; font-size: 13px; color: var(--text-muted); cursor: pointer; padding: 0 0 1rem; display: flex; align-items: center; gap: 6px; }
-.back-btn:hover { color: var(--text); }
-.detail-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 1.5rem; }
-.detail-title { font-family: 'Fraunces', serif; font-size: 26px; font-weight: 500; }
-.detail-panels { display: flex; flex-direction: column; gap: 1.25rem; }
-.panel { background: var(--bg-alt); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-.panel-head { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); }
-.panel-body { padding: 0; }
+/* Badges */
+.k-badge {
+  display: inline-flex; align-items: center;
+  padding: 4px 8px;
+  font-family: var(--kimba-mono); font-size: 10px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  border: 1px solid var(--kimba-ink); color: var(--kimba-ink);
+  background: transparent; border-radius: 0;
+}
+.k-badge-mute { border-color: var(--kimba-rule); color: var(--kimba-mute); }
 
-/* Respondents panel */
-.respondent-row { padding: 12px 16px; border-bottom: 1px solid var(--border); cursor: pointer; }
-.respondent-row:last-child { border-bottom: none; }
-.respondent-row:hover { background: var(--bg); }
-.resp-name { font-weight: 500; font-size: 14px; }
-.resp-meta { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
-.resp-transcript { display: none; padding: 12px 16px; background: var(--bg); border-top: 1px solid var(--border); }
-.transcript-turn { margin-bottom: 10px; }
-.transcript-turn:last-child { margin-bottom: 0; }
-.turn-role { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 3px; }
-.turn-content { font-size: 13px; color: var(--text-muted); line-height: 1.55; }
+/* =============================================================
+   LOGIN VIEW
+   ============================================================= */
+#view-login {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: 100vh;
+}
+.login-photo {
+  background: var(--kimba-red);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  padding: 36px;
+}
+.login-photo img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+.login-photo span { position: relative; }
+.login-form-wrap {
+  padding: 60px 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  justify-content: center;
+  background: var(--kimba-paper-2);
+  overflow-y: auto;
+}
+.login-wordmark { font-size: 22px; }
+.login-headline { font-size: 56px; margin: 0; }
+.login-field { display: flex; flex-direction: column; gap: 6px; }
+.login-label { font-size: 11px; }
+.login-err { color: var(--kimba-red); font-size: 11px; margin-top: 8px; min-height: 1em; }
 
-/* Detail link row */
-.detail-link-row { display: none; align-items: center; gap: 10px; background: var(--bg-alt); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; margin-bottom: 1.25rem; }
-.detail-link-url { flex: 1; color: var(--text-muted); font-family: monospace; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.detail-link-label { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); flex-shrink: 0; }
+/* =============================================================
+   ADMIN SHELL
+   ============================================================= */
+#admin-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
 
-/* Analysis panel */
-.analysis-pending { padding: 1.25rem 1rem; text-align: center; color: var(--text-dim); font-size: 13px; line-height: 1.6; }
-.narrative-block { padding: 14px 16px; font-size: 14px; color: var(--text-muted); line-height: 1.7; font-family: 'Fraunces', serif; border-bottom: 1px solid var(--border); }
-.analysis-ts { padding: 10px 16px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-dim); }
+/* Topbar */
+.admin-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 52px;
+  background: var(--kimba-ink);
+  color: var(--kimba-paper);
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.topbar-left { display: flex; align-items: center; gap: 20px; }
+.topbar-brand { display: flex; align-items: center; gap: 8px; }
+.topbar-mark {
+  width: 22px; height: 22px; border-radius: 50%;
+  overflow: hidden; flex-shrink: 0; background: var(--kimba-red);
+}
+.topbar-mark img { width: 100%; height: 100%; object-fit: cover; }
+.topbar-wordmark { font-size: 16px; color: var(--kimba-paper); }
+.topbar-tag { color: var(--kimba-mute); margin-left: 4px; }
+.topbar-crumbs {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--kimba-mono); font-size: 11px;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--kimba-mute-2);
+}
+.topbar-crumbs a { color: var(--kimba-paper); cursor: pointer; text-decoration: none; }
+.topbar-crumbs a:hover { color: var(--kimba-mute-2); }
+.topbar-crumbs .sep { color: var(--kimba-mute); }
+.topbar-right {
+  display: flex; align-items: center; gap: 16px;
+  font-family: var(--kimba-mono); font-size: 11px;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--kimba-mute-2);
+}
+.topbar-signout {
+  padding: 5px 10px; font-size: 10px;
+  background: transparent; border-color: rgba(255,255,255,0.2);
+  color: var(--kimba-mute-2);
+}
+.topbar-signout:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.3); color: var(--kimba-paper); }
 
-/* Dimension rows (expandable) */
-.dim-row { border-bottom: 1px solid var(--border); }
-.dim-row:last-child { border-bottom: none; }
-.dim-summary { padding: 12px 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; list-style: none; user-select: none; }
-.dim-summary::-webkit-details-marker { display: none; }
-.dim-row[open] > .dim-summary { border-bottom: 1px solid var(--border); }
-.dim-label { font-size: 12px; color: var(--text-muted); flex: 1; text-transform: capitalize; }
-.dim-bar-wrap { width: 80px; height: 4px; background: var(--border); border-radius: 2px; flex-shrink: 0; }
-.dim-bar-fill { display: block; height: 100%; border-radius: 2px; background: var(--accent); }
-.dim-bar-fill.low { background: var(--danger); }
-.dim-bar-fill.mid { background: #C98E1A; }
-.dim-score { font-size: 12px; font-weight: 500; color: var(--text); width: 28px; text-align: right; flex-shrink: 0; }
-.dim-chevron { font-size: 16px; color: var(--text-dim); transition: transform 0.15s; flex-shrink: 0; line-height: 1; }
-.dim-row[open] > .dim-summary .dim-chevron { transform: rotate(90deg); }
-.dim-insight { padding: 10px 16px 14px; font-size: 13px; color: var(--text-muted); line-height: 1.7; font-family: 'Fraunces', serif; }
+/* Body */
+.admin-body {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  flex: 1;
+  min-height: 0;
+}
 
-/* Modal */
-.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 200; align-items: center; justify-content: center; padding: 1.5rem; }
-.modal-overlay.open { display: flex; }
-.modal { background: var(--bg-alt); border-radius: 14px; padding: 1.75rem; max-width: 420px; width: 100%; }
-.modal-head { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 500; margin-bottom: 1.25rem; }
-.modal-field { margin-bottom: 1rem; }
-.modal-field label { display: block; font-size: 12px; font-weight: 500; color: var(--text-muted); margin-bottom: 5px; }
-.modal-field input, .modal-field select { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 13px; font-size: 14px; font-family: 'Inter', sans-serif; color: var(--text); }
-.modal-field input:focus, .modal-field select:focus { outline: none; border-color: var(--accent); }
-.modal-actions { display: flex; gap: 10px; margin-top: 1.25rem; align-items: center; }
-.modal-error { font-size: 12px; color: var(--danger); margin-top: 8px; display: none; }
-.generated-link { margin-top: 1rem; padding: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; word-break: break-all; font-size: 13px; color: var(--text-muted); display: none; }
-.generated-link-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); margin-bottom: 4px; }
+/* Sidebar */
+.admin-sidebar {
+  border-right: 1px solid var(--kimba-rule);
+  background: var(--kimba-paper-2);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 20px 0 0;
+}
+.sidebar-section {
+  padding: 14px 24px 6px;
+  font-family: var(--kimba-mono); font-size: 10px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--kimba-mute-2);
+}
+.sidebar-section:first-child { padding-top: 4px; }
+.admin-nav-item {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; padding: 10px 24px;
+  font-family: var(--kimba-body); font-size: 14px;
+  color: var(--kimba-ink-2);
+  cursor: pointer; border: 0; width: 100%; text-align: left;
+  background: transparent;
+  border-left: 2px solid transparent;
+  transition: background 0.1s;
+}
+.admin-nav-item:hover { background: var(--kimba-rule-soft); }
+.admin-nav-item.active { background: var(--kimba-rule-soft); border-left-color: var(--kimba-red); color: var(--kimba-ink); font-weight: 600; }
+.admin-nav-item .count { font-family: var(--kimba-mono); font-size: 10px; color: var(--kimba-mute); }
+.sidebar-foot { margin-top: auto; padding: 20px 20px; border-top: 1px solid var(--kimba-rule); }
+.sidebar-foot .k-btn { width: 100%; justify-content: center; }
 
+/* Main */
+.admin-main { overflow-y: auto; background: var(--kimba-paper-2); }
 
-/* Goal editor */
-.editor-section { margin-bottom: 1.5rem; }
-.editor-label { display: block; font-size: 12px; font-weight: 500; color: var(--text-muted); margin-bottom: 5px; }
-.editor-hint { font-size: 11px; color: var(--text-dim); margin-top: 3px; }
-.editor-textarea { width: 100%; background: var(--bg-alt); border: 1px solid var(--border); border-radius: 8px; padding: 10px 13px; font-size: 13px; font-family: 'Inter', sans-serif; color: var(--text); line-height: 1.55; resize: vertical; }
-.editor-textarea:focus { outline: none; border-color: var(--accent); }
-.goal-row { background: var(--bg-alt); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
-.goal-key { font-family: monospace; font-size: 12px; color: var(--text-dim); flex-shrink: 0; }
-.goal-name { font-weight: 500; font-size: 15px; flex: 1; }
+/* Page header */
+.admin-pageheader {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  padding: 28px 32px 20px;
+  border-bottom: 1px solid var(--kimba-rule);
+  background: var(--kimba-paper-2);
+}
+.admin-pageheader h1 {
+  margin: 0; font-size: 36px;
+  font-family: var(--kimba-display);
+  font-weight: 800; font-stretch: 75%;
+  letter-spacing: -0.025em;
+  text-transform: lowercase; line-height: 1;
+}
+.admin-pageheader .actions { display: flex; gap: 8px; }
+
+/* Client table */
+.admin-table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--kimba-paper-2); }
+.admin-table thead th {
+  position: sticky; top: 0; z-index: 1;
+  background: var(--kimba-paper-2);
+  text-align: left;
+  font-family: var(--kimba-mono); font-size: 10px;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--kimba-mute);
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--kimba-ink);
+}
+.admin-table tbody td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--kimba-rule);
+  color: var(--kimba-ink-2); vertical-align: middle;
+}
+.admin-table tbody tr { cursor: pointer; }
+.admin-table tbody tr:hover td { background: var(--kimba-rule-soft); }
+.admin-table .name { font-weight: 600; font-size: 15px; color: var(--kimba-ink); }
+.completion-cell {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--kimba-mono); font-size: 12px; color: var(--kimba-ink-2);
+}
+.completion-track { width: 80px; height: 4px; background: var(--kimba-rule); position: relative; flex-shrink: 0; }
+.completion-fill { position: absolute; inset: 0 auto 0 0; background: var(--kimba-red); }
+.completion-fill.done { background: var(--kimba-ink); }
+
+/* Detail layout */
+.admin-detail { display: grid; grid-template-columns: 1fr 320px; height: 100%; min-height: 0; }
+.admin-detail-main { padding: 28px 32px; overflow-y: auto; min-width: 0; }
+.admin-detail-aside {
+  border-left: 1px solid var(--kimba-rule);
+  background: var(--kimba-white);
+  padding: 24px;
+  overflow-y: auto;
+}
+
+/* Stat row */
+.admin-stats {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  border: 1px solid var(--kimba-rule); background: var(--kimba-white);
+  margin-bottom: 24px;
+}
+.admin-stat { padding: 18px 20px; border-right: 1px solid var(--kimba-rule); }
+.admin-stat:last-child { border-right: 0; }
+.admin-stat .label {
+  font-family: var(--kimba-mono); font-size: 10px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--kimba-mute); margin-bottom: 6px;
+}
+.admin-stat .value {
+  font-family: var(--kimba-display); font-weight: 800; font-stretch: 75%;
+  font-size: 30px; line-height: 1;
+  letter-spacing: -0.02em; text-transform: lowercase; color: var(--kimba-ink);
+}
+.admin-stat .value .red { color: var(--kimba-red); }
+.admin-stat .sub {
+  margin-top: 4px; font-family: var(--kimba-mono);
+  font-size: 10px; color: var(--kimba-mute);
+}
+
+/* Section title */
+.admin-section-title {
+  font-family: var(--kimba-mono); font-size: 11px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--kimba-mute); margin: 0 0 12px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.admin-section-title::before { content: "/"; color: var(--kimba-red); margin-right: 4px; }
+
+/* Tab strip */
+.tab-strip {
+  display: flex; border-bottom: 1px solid var(--kimba-rule);
+  margin-bottom: 24px; gap: 0;
+}
+.tab-btn {
+  background: transparent; border: 0;
+  padding: 12px 16px;
+  font-family: var(--kimba-mono); font-size: 11px;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--kimba-mute);
+  cursor: pointer; border-bottom: 2px solid transparent;
+  margin-bottom: -1px; font-weight: 500;
+  transition: color 0.12s;
+}
+.tab-btn:hover { color: var(--kimba-ink-2); }
+.tab-btn.active { color: var(--kimba-ink); border-bottom-color: var(--kimba-red); font-weight: 600; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* Respondent rows */
+.respondent-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 16px; align-items: center;
+  padding: 12px 0; border-bottom: 1px solid var(--kimba-rule);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.respondent-row:hover { background: var(--kimba-rule-soft); padding-left: 8px; }
+.respondent-row .rname { font-weight: 600; font-size: 14px; color: var(--kimba-ink); }
+.respondent-row .rrole {
+  font-family: var(--kimba-mono); font-size: 10px;
+  letter-spacing: 0.06em; text-transform: uppercase; color: var(--kimba-mute);
+  margin-top: 2px;
+}
+.respondent-row .rdate { font-family: var(--kimba-mono); font-size: 11px; color: var(--kimba-mute); }
+
+/* Settings field rows */
+.field-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 0; border-bottom: 1px solid var(--kimba-rule);
+}
+.field-row .field-label {
+  font-family: var(--kimba-mono); font-size: 10px;
+  letter-spacing: 0.06em; text-transform: uppercase; color: var(--kimba-mute);
+}
+.field-row .field-value { font-size: 14px; font-weight: 500; color: var(--kimba-ink); }
+
+/* Analysis locked */
+.analysis-locked {
+  border: 1px dashed var(--kimba-rule); background: var(--kimba-white);
+  padding: 60px 32px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+}
+
+/* Aside: link box + activity */
+.link-box {
+  background: var(--kimba-paper-2); border: 1px solid var(--kimba-rule);
+  padding: 10px 12px; margin-bottom: 10px;
+  font-family: var(--kimba-mono); font-size: 11px; color: var(--kimba-ink-2);
+  word-break: break-all; line-height: 1.5;
+}
+.activity-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 7px 0; border-bottom: 1px solid var(--kimba-rule);
+  font-size: 13px; color: var(--kimba-ink-2);
+}
+.activity-item:last-child { border-bottom: 0; }
+.activity-action {
+  font-family: var(--kimba-mono); font-size: 9px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  margin-right: 8px;
+}
+.activity-action.completed { color: var(--kimba-ink); }
+.activity-action.pending { color: var(--kimba-mute); }
+.activity-time { font-family: var(--kimba-mono); font-size: 10px; color: var(--kimba-mute); }
+
+/* Empty state */
+.empty-state {
+  padding: 80px 32px; display: flex; flex-direction: column;
+  align-items: center; text-align: center; gap: 18px;
+}
+.empty-mark {
+  width: 120px; height: 120px; border-radius: 50%;
+  overflow: hidden; background: var(--kimba-red);
+  flex-shrink: 0;
+}
+.empty-mark img { width: 100%; height: 100%; object-fit: cover; }
+
+/* =============================================================
+   TRANSCRIPT DRAWER
+   ============================================================= */
+.drawer-overlay {
+  position: fixed; inset: 0;
+  background: rgba(13,13,13,0.35);
+  z-index: 40; display: none;
+}
+.transcript-drawer {
+  position: fixed; top: 0; right: -480px; width: 480px; height: 100vh;
+  background: var(--kimba-white);
+  border-left: 1px solid var(--kimba-rule);
+  box-shadow: -8px 0 32px rgba(13,13,13,0.08);
+  z-index: 41; display: flex; flex-direction: column;
+  transition: right 0.25s cubic-bezier(0.2,0.7,0.3,1);
+}
+.transcript-drawer.open { right: 0; }
+.drawer-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  padding: 20px 24px; border-bottom: 1px solid var(--kimba-rule);
+  flex-shrink: 0; background: var(--kimba-paper-2);
+  gap: 16px;
+}
+.drawer-respondent-info { flex: 1; }
+.drawer-respondent-name { font-weight: 600; font-size: 15px; color: var(--kimba-ink); margin-bottom: 2px; }
+.drawer-respondent-meta { font-family: var(--kimba-mono); font-size: 10px; color: var(--kimba-mute); }
+.drawer-close {
+  background: transparent; border: 0; cursor: pointer;
+  font-family: var(--kimba-mono); font-size: 11px; color: var(--kimba-mute);
+  flex-shrink: 0; padding: 0;
+}
+.drawer-close:hover { color: var(--kimba-ink); }
+.drawer-content { flex: 1; overflow-y: auto; padding: 24px; }
+.transcript-msg { margin-bottom: 20px; }
+.transcript-msg-who { font-family: var(--kimba-mono); font-size: 10px; color: var(--kimba-mute); margin-bottom: 6px; }
+.transcript-msg.ai .transcript-msg-body {
+  font-family: var(--kimba-serif); font-size: 15px; line-height: 1.55; color: var(--kimba-ink);
+}
+.transcript-msg.user .transcript-msg-body {
+  font-size: 14px; line-height: 1.5; color: var(--kimba-ink-2);
+  background: var(--kimba-paper-2); border: 1px solid var(--kimba-rule);
+  padding: 10px 12px;
+}
+
+/* =============================================================
+   NEW SESSION MODAL
+   ============================================================= */
+.modal-backdrop {
+  position: fixed; inset: 0; z-index: 60;
+  background: rgba(13,13,13,0.55);
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+}
+.modal-inner {
+  background: var(--kimba-paper); border: 1px solid var(--kimba-ink);
+  width: min(900px, 100%); max-height: 90vh; overflow: auto;
+  display: grid; grid-template-columns: 1.1fr 1fr;
+}
+.modal-form-col {
+  padding: 32px; display: flex; flex-direction: column; gap: 22px;
+  border-right: 1px solid var(--kimba-rule);
+}
+.modal-preview-col {
+  padding: 32px 28px; background: var(--kimba-paper-2);
+  display: flex; flex-direction: column; gap: 18px;
+}
+.modal-top { display: flex; justify-content: space-between; align-items: center; }
+.modal-close {
+  background: transparent; border: 0; cursor: pointer;
+  font-family: var(--kimba-mono); font-size: 11px; color: var(--kimba-mute);
+}
+.modal-close:hover { color: var(--kimba-ink); }
+.modal-headline { font-size: 40px; margin: 0; }
+.modal-label { display: block; margin-bottom: 6px; font-size: 11px; }
+.mode-options { border: 1px solid var(--kimba-rule); display: flex; flex-direction: column; }
+.mode-option {
+  text-align: left; padding: 12px 14px;
+  background: var(--kimba-white); border: 0;
+  border-bottom: 1px solid var(--kimba-rule);
+  border-left: 3px solid transparent;
+  cursor: pointer; width: 100%;
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 14px; transition: background 0.1s;
+}
+.mode-option:last-child { border-bottom: 0; }
+.mode-option:hover { background: var(--kimba-paper); }
+.mode-option.selected { background: var(--kimba-paper); border-left-color: var(--kimba-red); }
+.mode-option-key { font-family: var(--kimba-mono); font-size: 11px; color: var(--kimba-red); margin-right: 8px; }
+.mode-option-selected { font-family: var(--kimba-mono); font-size: 10px; color: var(--kimba-red); }
+.modal-count-row { display: flex; align-items: center; gap: 12px; }
+.modal-count-note { font-family: var(--kimba-mono); font-size: 10px; color: var(--kimba-mute); }
+.modal-footer { display: flex; gap: 8px; margin-top: auto; padding-top: 16px; }
+.modal-preview-preview-tag { font-size: 11px; }
+.modal-preview-title { font-size: 28px; margin: 0; }
+.modal-preview-section { display: flex; flex-direction: column; gap: 6px; }
+.modal-preview-section-label { font-size: 11px; }
+.modal-preview-section-body { font-size: 13px; color: var(--kimba-ink-2); }
+.modal-preview-opener {
+  background: var(--kimba-white); border: 1px solid var(--kimba-rule); padding: 14px;
+}
+.modal-preview-opener-meta { font-family: var(--kimba-mono); font-size: 10px; color: var(--kimba-mute); margin-bottom: 6px; }
+.modal-preview-opener-body { font-family: var(--kimba-serif); font-size: 15px; line-height: 1.5; color: var(--kimba-ink); }
+.modal-preview-foot {
+  margin-top: auto; padding-top: 16px; border-top: 1px solid var(--kimba-rule);
+  font-family: var(--kimba-mono); font-size: 10px; color: var(--kimba-mute-2); word-break: break-all;
+}
+
+/* Created state */
+.modal-created {
+  grid-column: 1 / -1;
+  padding: 40px; display: flex; flex-direction: column; gap: 22px;
+}
+.created-link-box {
+  background: var(--kimba-paper-2); border: 1px solid var(--kimba-rule);
+  padding: 12px 14px; margin-top: 8px;
+  font-family: var(--kimba-mono); font-size: 12px; color: var(--kimba-ink-2);
+  word-break: break-all; line-height: 1.6;
+}
+.created-actions { display: flex; gap: 8px; }
+
+/* =============================================================
+   SCROLLBAR
+   ============================================================= */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--kimba-rule); }
+::-webkit-scrollbar-thumb:hover { background: var(--kimba-mute-2); }
 </style>
 </head>
 <body>
 
-<div class="admin-header" id="app-header" style="display:none;">
-  <button class="admin-wordmark" onclick="showDashboard()">V&amp;H Intake</button>
-  <nav class="admin-nav">
-    <button class="nav-link" id="nav-clients" onclick="showDashboard()">Clients</button>
-    <button class="nav-link" id="nav-goals" onclick="showGoals()">Goals</button>
-  </nav>
-  <div class="admin-actions">
-    <button class="btn btn-sm" onclick="openNewClientModal()">+ New Client</button>
-    <button class="btn-outline btn-sm" onclick="logout()">Sign out</button>
-  </div>
-</div>
-
-<!-- Login -->
+<!-- =====================================================================
+     VIEW: LOGIN
+     ===================================================================== -->
 <div id="view-login">
-  <div class="login-card">
-    <h1 class="login-head">Admin access</h1>
-    <p class="login-sub">Verse and Hook — Intake Dashboard</p>
-    <div class="login-field">
-      <input type="password" id="login-pw" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
-    </div>
-    <p class="login-error" id="login-err">Incorrect password.</p>
-    <button class="btn" id="login-btn" onclick="doLogin()">Sign in</button>
+  <div class="login-photo">
+    <img src="../kimba/assets/kimba-portrait.jpg" alt="">
+    <span class="k-mono">/admin · authorized personnel only</span>
   </div>
-</div>
-
-<!-- Dashboard -->
-<div id="view-dashboard">
-  <div class="page-body">
-    <h1 class="page-title">Clients</h1>
-    <p class="page-sub">Click a client to view responses and alignment analysis.</p>
-    <div id="client-list-container"></div>
-  </div>
-</div>
-
-<!-- Client detail -->
-<div id="view-detail">
-  <div class="detail-body">
-    <button class="back-btn" onclick="showDashboard()">&larr; All clients</button>
-    <div class="detail-head">
-      <h2 class="detail-title" id="detail-title"></h2>
-      <span class="goal-badge" id="detail-goal-badge"></span>
+  <div class="login-form-wrap">
+    <span class="k-display login-wordmark">kimba<span class="red">.</span></span>
+    <div>
+      <div class="k-mono k-slash" style="margin-bottom:10px">verse and hook · admin</div>
+      <h1 class="k-display login-headline">sign in<span class="red">.</span></h1>
     </div>
-    <div class="detail-link-row" id="detail-link-row">
-      <span class="detail-link-label">Link</span>
-      <span class="detail-link-url" id="detail-link-url"></span>
-      <button class="btn-outline btn-sm" id="detail-link-copy" onclick="copyDetailLink()">Copy</button>
-    </div>
-    <div class="detail-panels">
-      <div class="panel">
-        <div class="panel-head">Respondents</div>
-        <div class="panel-body" id="respondents-list"></div>
+    <form id="login-form" onsubmit="doLogin(event)">
+      <div class="login-field">
+        <label class="k-mono login-label" for="login-pw">password</label>
+        <input class="k-input" type="password" id="login-pw" placeholder="••••••••" autocomplete="current-password" autofocus>
+        <div class="login-err k-mono" id="login-err"></div>
       </div>
-      <div class="panel">
-        <div class="panel-head" style="display:flex;align-items:center;justify-content:space-between;">
-          <span>Alignment Analysis</span>
-          <button class="btn-outline btn-sm" id="rerun-btn" onclick="rerunAnalysis()">Re-run</button>
+      <button type="submit" class="k-btn k-btn-red" id="login-btn" style="margin-top:4px">enter →</button>
+    </form>
+    <span class="k-mono" style="color:var(--kimba-mute-2);margin-top:auto">/questions? ping niles.</span>
+  </div>
+</div>
+
+<!-- =====================================================================
+     ADMIN SHELL
+     ===================================================================== -->
+<div id="admin-shell" style="display:none">
+
+  <!-- TOPBAR -->
+  <div class="admin-topbar">
+    <div class="topbar-left">
+      <div class="topbar-brand">
+        <div class="topbar-mark">
+          <img src="../kimba/assets/kimba-portrait.jpg" alt="">
         </div>
-        <div id="analysis-panel"></div>
+        <span class="k-display topbar-wordmark">kimba<span class="red">.</span></span>
+        <span class="k-mono topbar-tag">/admin</span>
+      </div>
+      <div class="topbar-crumbs" id="topbar-crumbs">
+        <a onclick="showList()">all clients</a>
       </div>
     </div>
+    <div class="topbar-right">
+      <span>verse and hook</span>
+      <span>·</span>
+      <span>n. heron</span>
+      <button class="k-btn topbar-signout" onclick="signOut()">sign out</button>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div class="admin-body">
+
+    <!-- SIDEBAR -->
+    <aside class="admin-sidebar">
+      <div class="sidebar-section">/sessions</div>
+      <button class="admin-nav-item active" id="nav-all" onclick="showList()">
+        <span>all clients</span>
+        <span class="count" id="sidebar-all">—</span>
+      </button>
+      <button class="admin-nav-item" id="nav-active">
+        <span>active</span>
+        <span class="count" id="sidebar-active">—</span>
+      </button>
+      <button class="admin-nav-item" id="nav-complete">
+        <span>complete</span>
+        <span class="count" id="sidebar-complete">—</span>
+      </button>
+      <div class="sidebar-section">/views</div>
+      <button class="admin-nav-item">
+        <span>respondents</span>
+        <span class="count" id="sidebar-respondents">—</span>
+      </button>
+      <button class="admin-nav-item">
+        <span>analysis runs</span>
+        <span class="count">—</span>
+      </button>
+      <div class="sidebar-section">/account</div>
+      <button class="admin-nav-item"><span>team</span></button>
+      <button class="admin-nav-item"><span>settings</span></button>
+      <div class="sidebar-foot">
+        <button class="k-btn k-btn-red" onclick="openModal()">+ new session</button>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="admin-main" id="admin-main">
+
+      <!-- LIST VIEW -->
+      <div id="view-list">
+        <div class="admin-pageheader">
+          <div>
+            <div class="k-mono k-slash" style="margin-bottom:8px">active sessions</div>
+            <h1>clients<span class="red">.</span></h1>
+          </div>
+          <div class="actions">
+            <button class="k-btn k-btn-ghost">export csv</button>
+            <button class="k-btn k-btn-red" onclick="openModal()">+ new session</button>
+          </div>
+        </div>
+        <div id="list-content"></div>
+      </div>
+
+      <!-- DETAIL VIEW -->
+      <div id="view-detail" style="display:none">
+        <div class="admin-pageheader">
+          <div>
+            <div id="detail-goal" class="k-mono" style="margin-bottom:8px"></div>
+            <h1 id="detail-name"></h1>
+          </div>
+          <div class="actions">
+            <button class="k-btn k-btn-ghost" id="btn-copy-link" onclick="copyDetailLink()">copy link</button>
+            <button class="k-btn" id="btn-run-analysis" onclick="runAnalysis()">run analysis →</button>
+          </div>
+        </div>
+
+        <div class="admin-detail">
+          <div class="admin-detail-main">
+            <div class="admin-stats" id="detail-stats"></div>
+            <div class="tab-strip">
+              <button class="tab-btn active" data-tab="analysis" onclick="switchTab('analysis')">/ alignment analysis</button>
+              <button class="tab-btn" data-tab="respondents" onclick="switchTab('respondents')">/ respondents</button>
+              <button class="tab-btn" data-tab="settings" onclick="switchTab('settings')">/ session settings</button>
+            </div>
+            <div id="tab-analysis" class="tab-panel active"></div>
+            <div id="tab-respondents" class="tab-panel"></div>
+            <div id="tab-settings" class="tab-panel"></div>
+          </div>
+          <aside class="admin-detail-aside">
+            <h3 class="admin-section-title" style="margin-bottom:14px">share link</h3>
+            <div class="link-box" id="detail-link-box"></div>
+            <button class="k-btn k-btn-ghost" style="width:100%;justify-content:center;margin-bottom:28px" onclick="copyDetailLink()">copy link</button>
+            <h3 class="admin-section-title" style="margin-bottom:14px">recent activity</h3>
+            <div id="detail-activity"></div>
+          </aside>
+        </div>
+      </div>
+
+    </main>
   </div>
 </div>
 
-<!-- Goals list -->
-<div id="view-goals" style="display:none;">
-  <div class="page-body">
-    <h1 class="page-title">Interview Goals</h1>
-    <p class="page-sub">Configure interview prompts and scoring dimensions per goal type.</p>
-    <div style="margin-bottom:1.25rem;">
-      <button class="btn btn-sm" onclick="openGoalEditor(null)">+ New Goal</button>
+<!-- =====================================================================
+     TRANSCRIPT DRAWER
+     ===================================================================== -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+<div class="transcript-drawer" id="transcript-drawer">
+  <div class="drawer-header">
+    <div class="drawer-respondent-info">
+      <div class="drawer-respondent-name" id="drawer-name"></div>
+      <div class="drawer-respondent-meta" id="drawer-meta"></div>
     </div>
-    <div id="goals-list-container"></div>
+    <button class="drawer-close" onclick="closeDrawer()">close ✕</button>
   </div>
+  <div class="drawer-content" id="drawer-content"></div>
 </div>
 
-<!-- Goal editor -->
-<div id="view-goal-editor" style="display:none;">
-  <div class="page-body" style="max-width:720px;">
-    <button class="back-btn" onclick="showGoals()">&larr; All goals</button>
-    <h2 class="page-title" id="goal-editor-title" style="margin-bottom:1.5rem;">Edit Goal</h2>
+<!-- =====================================================================
+     NEW SESSION MODAL
+     ===================================================================== -->
+<div class="modal-backdrop" id="modal-new-session" style="display:none" onclick="handleModalBackdropClick(event)">
+  <div class="modal-inner" id="modal-inner">
 
-    <div class="editor-section">
-      <label class="editor-label" for="ge-key">Goal key</label>
-      <input type="text" id="ge-key" class="editor-textarea" style="resize:none;height:auto;" placeholder="discovery-clientname">
-      <p class="editor-hint">Lowercase letters, numbers, hyphens only. Cannot be changed after creation.</p>
-    </div>
-    <div class="editor-section">
-      <label class="editor-label" for="ge-name">Display name</label>
-      <input type="text" id="ge-name" class="editor-textarea" style="resize:none;height:auto;" placeholder="Brand Discovery">
-    </div>
-    <div class="editor-section">
-      <label class="editor-label" for="ge-intake-prompt">Interview prompt (Haiku — controls the conversation)</label>
-      <textarea id="ge-intake-prompt" class="editor-textarea" rows="14"></textarea>
-    </div>
-    <div class="editor-section">
-      <label class="editor-label" for="ge-opener">Opening message (first message respondent sees)</label>
-      <textarea id="ge-opener" class="editor-textarea" rows="4"></textarea>
-    </div>
-    <div class="editor-section">
-      <label class="editor-label" for="ge-analysis-prompt">Analysis prompt (Sonnet — scores alignment across respondents)</label>
-      <textarea id="ge-analysis-prompt" class="editor-textarea" rows="10"></textarea>
-      <p class="editor-hint">Must reference the scoring dimensions by name. Update both together when changing dimensions.</p>
-    </div>
-    <div class="editor-section">
-      <label class="editor-label" for="ge-dimensions">Scoring dimensions (one per line, lowercase_with_underscores)</label>
-      <textarea id="ge-dimensions" class="editor-textarea" rows="6"></textarea>
-      <p class="editor-hint">Changing dimensions affects future analysis runs. Use Re-run analysis on existing clients to rescore.</p>
+    <!-- FORM COLUMN -->
+    <div class="modal-form-col" id="modal-form-col">
+      <div class="modal-top">
+        <span class="k-mono k-slash">new session</span>
+        <button class="modal-close" onclick="closeModal()">close ✕</button>
+      </div>
+      <h2 class="k-display modal-headline">configure<span class="red">.</span></h2>
+
+      <div>
+        <label class="k-mono modal-label" for="modal-name">client name</label>
+        <input class="k-input" type="text" id="modal-name" placeholder="e.g. altona coffee co." oninput="onModalNameInput()" autofocus>
+      </div>
+
+      <div>
+        <label class="k-mono modal-label">extraction goal</label>
+        <div class="mode-options" id="mode-options"></div>
+      </div>
+
+      <div>
+        <label class="k-mono modal-label" for="modal-count">expected respondents</label>
+        <div class="modal-count-row">
+          <input class="k-input" type="number" id="modal-count" min="1" max="200" value="8">
+          <span class="k-mono modal-count-note">used to compute completion %</span>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="k-btn k-btn-ghost" onclick="closeModal()">cancel</button>
+        <button class="k-btn k-btn-red" id="modal-submit" onclick="submitNewSession()" disabled style="margin-left:auto;opacity:0.45">create &amp; generate link →</button>
+      </div>
     </div>
 
-    <p class="modal-error" id="ge-error" style="margin-bottom:1rem;"></p>
-    <div style="display:flex;gap:10px;">
-      <button class="btn" id="ge-save-btn" onclick="saveGoal()">Save goal</button>
-      <button class="btn-outline" onclick="showGoals()">Cancel</button>
+    <!-- PREVIEW COLUMN -->
+    <div class="modal-preview-col" id="modal-preview-col">
+      <span class="k-mono k-slash modal-preview-preview-tag">preview · what kimba will cover</span>
+      <h3 class="k-display modal-preview-title" id="preview-title"></h3>
+      <div class="modal-preview-section">
+        <div class="k-mono k-slash modal-preview-section-label">coverage</div>
+        <div class="modal-preview-section-body" id="preview-coverage"></div>
+      </div>
+      <div class="modal-preview-section">
+        <div class="k-mono k-slash modal-preview-section-label">recommended</div>
+        <div class="modal-preview-section-body" id="preview-rec"></div>
+      </div>
+      <div class="modal-preview-section">
+        <div class="k-mono k-slash modal-preview-section-label">opener</div>
+        <div class="modal-preview-opener">
+          <div class="modal-preview-opener-meta">kimba</div>
+          <div class="modal-preview-opener-body" id="preview-opener"></div>
+        </div>
+      </div>
+      <div class="modal-preview-foot" id="preview-foot">/link · kimba.vh/s/client-{token}</div>
     </div>
-  </div>
-</div>
 
-<!-- New client modal -->
-<div class="modal-overlay" id="new-client-modal">
-  <div class="modal">
-    <h2 class="modal-head">New client session</h2>
-    <div class="modal-field">
-      <label for="nc-name">Client name</label>
-      <input type="text" id="nc-name" placeholder="Acme Corporation">
-    </div>
-    <div class="modal-field">
-      <label for="nc-goal">Extraction goal</label>
-      <select id="nc-goal">
-        <option value="discovery">Brand Discovery</option>
-        <option value="intake">Project Intake</option>
-        <option value="feedback">Engagement Feedback</option>
-      </select>
-    </div>
-    <p class="modal-error" id="nc-error"></p>
-    <div class="modal-actions">
-      <button class="btn" id="nc-submit-btn" onclick="createClient()">Generate link</button>
-      <button class="btn-outline" onclick="closeNewClientModal()">Cancel</button>
-    </div>
-    <div class="generated-link" id="generated-link">
-      <p class="generated-link-label">Shareable link</p>
-      <p id="generated-link-url"></p>
-      <button class="btn btn-sm" style="margin-top:10px;" onclick="copyGeneratedLink(this)">Copy link</button>
-    </div>
   </div>
 </div>
 
 <script>
-var authToken = sessionStorage.getItem('vh-admin-token') || null;
-var GOAL_LABELS = {};
-var goalConfigs = [];
-var currentClientId = null;
-var currentGoalKey = null;
+// =====================================================================
+// Constants
+// =====================================================================
+var GOAL_MAP = {
+  discovery: { idx: '01', name: 'brand discovery' },
+  intake:    { idx: '02', name: 'project intake' },
+  feedback:  { idx: '03', name: 'engagement feedback' }
+};
 
-function apiFetch(path, options) {
-  var opts = options || {};
-  opts.headers = opts.headers || {};
-  opts.headers['Content-Type'] = 'application/json';
-  if (authToken) opts.headers['x-vh-token'] = authToken;
-  return fetch(path, opts).then(function(r) { return r.json(); });
-}
+var MODE_DETAILS = {
+  '01': {
+    key: 'discovery', name: 'brand discovery',
+    coverage: 'company identity · audience · competitive position · voice',
+    rec: '5–20 stakeholders',
+    opener: 'when someone outside the company asks what you actually do, what do you tell them?'
+  },
+  '02': {
+    key: 'intake', name: 'project intake',
+    coverage: 'scope · constraints · success criteria · stakeholders',
+    rec: '3–8 stakeholders',
+    opener: 'in plain language, what does this project need to do that nothing currently does?'
+  },
+  '03': {
+    key: 'feedback', name: 'engagement feedback',
+    coverage: 'process · communication · deliverables · what to repeat',
+    rec: '3–10 stakeholders',
+    opener: 'looking back at the engagement so far, what\'s the one thing you\'d change about how we worked together?'
+  }
+};
 
-function show(viewId) {
-  ['login','dashboard','detail','goals','goal-editor'].forEach(function(id) {
-    var el = document.getElementById('view-' + id);
-    if (el) el.style.display = id === viewId ? 'block' : 'none';
-  });
-  document.getElementById('app-header').style.display = viewId === 'login' ? 'none' : 'flex';
-  var clientViews = ['dashboard', 'detail'];
-  var goalViews = ['goals', 'goal-editor'];
-  var nc = document.getElementById('nav-clients');
-  var ng = document.getElementById('nav-goals');
-  if (nc) nc.classList.toggle('active', clientViews.indexOf(viewId) !== -1);
-  if (ng) ng.classList.toggle('active', goalViews.indexOf(viewId) !== -1);
-}
+// =====================================================================
+// State
+// =====================================================================
+var authToken    = sessionStorage.getItem('vh-admin-token') || null;
+var allClients   = [];
+var currentDetail = null;  // { client, responses, analysis }
+var selectedMode  = '01';
+var runningAnalysis = false;
 
-// --- Auth ---
-if (authToken) { show('dashboard'); loadDashboard(); loadGoalConfigs(); } else { show('login'); }
-
-function doLogin() {
-  var pw = document.getElementById('login-pw').value;
+// =====================================================================
+// Auth
+// =====================================================================
+function doLogin(e) {
+  e.preventDefault();
+  var pw   = document.getElementById('login-pw').value;
+  var btn  = document.getElementById('login-btn');
+  var err  = document.getElementById('login-err');
   if (!pw) return;
-  var btn = document.getElementById('login-btn');
-  btn.disabled = true; btn.textContent = 'Signing in...';
-  document.getElementById('login-err').style.display = 'none';
-
+  err.textContent = '';
+  btn.disabled = true;
+  btn.textContent = 'checking…';
   fetch('/api/vh-auth', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -340,410 +829,665 @@ function doLogin() {
     if (data.token) {
       authToken = data.token;
       sessionStorage.setItem('vh-admin-token', authToken);
-      show('dashboard');
-      loadDashboard();
-      loadGoalConfigs();
+      enterAdmin();
     } else {
-      document.getElementById('login-err').style.display = 'block';
-      btn.disabled = false; btn.textContent = 'Sign in';
+      err.textContent = '/error · ' + (data.error || 'password not recognized');
+      btn.disabled = false;
+      btn.textContent = 'enter →';
     }
   })
   .catch(function() {
-    document.getElementById('login-err').style.display = 'block';
-    btn.disabled = false; btn.textContent = 'Sign in';
+    err.textContent = '/error · connection failed';
+    btn.disabled = false;
+    btn.textContent = 'enter →';
   });
 }
 
-function logout() {
-  sessionStorage.removeItem('vh-admin-token');
+function signOut() {
   authToken = null;
-  show('login');
+  sessionStorage.removeItem('vh-admin-token');
+  document.getElementById('admin-shell').style.display = 'none';
+  document.getElementById('view-login').style.display = '';
+  document.getElementById('login-pw').value = '';
+  document.getElementById('login-err').textContent = '';
+  document.getElementById('login-btn').disabled = false;
+  document.getElementById('login-btn').textContent = 'enter →';
 }
 
-// --- Dashboard ---
-function loadDashboard() {
-  document.getElementById('client-list-container').innerHTML = '<p style="color:var(--text-dim);font-size:13px;">Loading...</p>';
+function enterAdmin() {
+  document.getElementById('view-login').style.display = 'none';
+  document.getElementById('admin-shell').style.display = 'flex';
+  showList();
+}
+
+// =====================================================================
+// API helpers
+// =====================================================================
+function apiFetch(path, opts) {
+  return fetch(path, Object.assign({ headers: { 'Content-Type': 'application/json', 'X-Vh-Token': authToken } }, opts || {}));
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function relativeTime(dateStr) {
+  if (!dateStr) return '—';
+  var d   = new Date(dateStr);
+  var now = new Date();
+  var sec = (now - d) / 1000;
+  if (sec < 3600)   return Math.floor(sec / 60) + 'm ago';
+  if (sec < 86400)  return Math.floor(sec / 3600) + 'h ago';
+  if (sec < 604800) return Math.floor(sec / 86400) + 'd ago';
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function fmtDate(dateStr) {
+  if (!dateStr) return '—';
+  var d = new Date(dateStr);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function buildLink(token) {
+  return window.location.origin + '/verseandhook/kimba?token=' + token;
+}
+
+// =====================================================================
+// List view
+// =====================================================================
+function showList() {
+  document.getElementById('view-list').style.display = '';
+  document.getElementById('view-detail').style.display = 'none';
+  document.getElementById('nav-all').classList.add('active');
+  document.getElementById('topbar-crumbs').innerHTML = '<a onclick="showList()">all clients</a>';
+  loadClients();
+}
+
+function loadClients() {
+  document.getElementById('list-content').innerHTML = '<div style="padding:40px 32px;color:var(--kimba-mute);font-family:var(--kimba-mono);font-size:11px">loading…</div>';
   apiFetch('/api/vh-admin')
-    .then(function(clients) {
-      if (clients.error) {
-        if (clients.error === 'Unauthorized') { logout(); return; }
-        document.getElementById('client-list-container').innerHTML = '<p style="color:var(--danger);">Error loading clients.</p>';
-        return;
-      }
-      renderClientList(clients);
-    })
-    .catch(function() {
-      document.getElementById('client-list-container').innerHTML = '<p style="color:var(--danger);">Error loading clients.</p>';
-    });
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.error) { renderListError(data.error); return; }
+    allClients = data;
+    renderList(data);
+    updateSidebarCounts(data);
+  })
+  .catch(function(e) { renderListError(e.message); });
 }
 
-function renderClientList(clients) {
-  var container = document.getElementById('client-list-container');
+function updateSidebarCounts(clients) {
+  var active   = clients.filter(function(c) { return c.response_count < (c.expected_respondent_count || 999); });
+  var complete = clients.filter(function(c) { return c.expected_respondent_count && c.response_count >= c.expected_respondent_count; });
+  var totalResp = clients.reduce(function(sum, c) { return sum + (c.response_count || 0); }, 0);
+  document.getElementById('sidebar-all').textContent       = clients.length;
+  document.getElementById('sidebar-active').textContent   = active.length;
+  document.getElementById('sidebar-complete').textContent = complete.length;
+  document.getElementById('sidebar-respondents').textContent = totalResp;
+}
+
+function renderList(clients) {
   if (!clients.length) {
-    container.innerHTML = '<div class="empty-state"><p>No clients yet.</p><button class="btn" onclick="openNewClientModal()">Create your first client</button></div>';
+    document.getElementById('list-content').innerHTML =
+      '<div class="empty-state">' +
+        '<div class="empty-mark"><img src="../kimba/assets/kimba-portrait.jpg" alt=""></div>' +
+        '<span class="k-mono k-slash">no sessions yet</span>' +
+        '<h1 class="k-display" style="font-size:54px">kimba is sitting<span class="red">.</span></h1>' +
+        '<p class="k-serif" style="font-size:18px;color:var(--kimba-ink-2);max-width:44ch">create a session to generate a tokenized link, send it to client stakeholders, and watch responses roll in.</p>' +
+        '<button class="k-btn k-btn-red" onclick="openModal()" style="margin-top:8px">+ new session</button>' +
+      '</div>';
     return;
   }
-  var html = '<div class="client-list">';
-  clients.forEach(function(c) {
-    var lastDate = c.last_response_at ? new Date(c.last_response_at).toLocaleDateString() : '—';
-    var countLabel = c.response_count === 1 ? '1 response' : c.response_count + ' responses';
-    html += '<div class="client-row" onclick="loadClientDetail(\'' + esc(c.id) + '\')">';
-    html += '<span class="client-name">' + esc(c.client_name) + '</span>';
-    html += '<span class="goal-badge">' + esc(GOAL_LABELS[c.extraction_goal] || c.extraction_goal) + '</span>';
-    html += '<span class="response-count">' + countLabel + '</span>';
-    html += '<span class="client-meta">' + lastDate + '</span>';
-    html += '</div>';
-  });
-  html += '</div>';
-  container.innerHTML = html;
+
+  var rows = clients.map(function(c) {
+    var goal   = GOAL_MAP[c.extraction_goal] || { idx: '?', name: c.extraction_goal };
+    var count  = c.response_count || 0;
+    var exp    = c.expected_respondent_count;
+    var pct    = exp ? Math.min(100, Math.round(count / exp * 100)) : 0;
+    var done   = exp && count >= exp;
+    var fillCls = done ? 'completion-fill done' : 'completion-fill';
+    var analysisReady = count >= 2;
+    var completionHtml = exp
+      ? '<div class="completion-cell"><div class="completion-track"><div class="' + fillCls + '" style="width:' + pct + '%"></div></div><span>' + count + '/' + exp + '</span></div>'
+      : '<span class="k-mono" style="font-size:12px;color:var(--kimba-ink-2)">' + count + ' received</span>';
+
+    return '<tr onclick="openDetail(\'' + c.id + '\')">' +
+      '<td class="name">' + esc(c.client_name) + '</td>' +
+      '<td><span class="k-mono"><span style="color:var(--kimba-red)">/' + goal.idx + '</span> ' + esc(goal.name) + '</span></td>' +
+      '<td>' + completionHtml + '</td>' +
+      '<td><span class="k-mono" style="font-size:12px;color:var(--kimba-ink-2)">' + (exp ? exp + ' expected' : '—') + '</span></td>' +
+      '<td><span class="k-mono" style="font-size:11px;color:var(--kimba-mute)">' + relativeTime(c.last_response_at) + '</span></td>' +
+      '<td>' + (analysisReady
+        ? '<span class="k-badge">ready</span>'
+        : '<span class="k-badge k-badge-mute">pending</span>') + '</td>' +
+    '</tr>';
+  }).join('');
+
+  document.getElementById('list-content').innerHTML =
+    '<table class="admin-table">' +
+      '<thead><tr><th>client</th><th>goal</th><th>completion</th><th>respondents</th><th>last response</th><th>analysis</th></tr></thead>' +
+      '<tbody>' + rows + '</tbody>' +
+    '</table>';
 }
 
-function showDashboard() {
-  show('dashboard');
-  loadDashboard();
+function renderListError(msg) {
+  document.getElementById('list-content').innerHTML =
+    '<div style="padding:40px 32px"><span class="k-mono" style="color:var(--kimba-red)">/error · ' + esc(msg) + '</span></div>';
 }
 
-// --- Client detail ---
-function loadClientDetail(clientId) {
-  currentClientId = clientId;
-  show('detail');
-  document.getElementById('detail-title').textContent = 'Loading...';
-  document.getElementById('respondents-list').innerHTML = '';
-  document.getElementById('analysis-panel').innerHTML = '';
+// =====================================================================
+// Detail view
+// =====================================================================
+function openDetail(clientId) {
+  document.getElementById('view-list').style.display = 'none';
+  document.getElementById('view-detail').style.display = '';
+  document.getElementById('nav-all').classList.remove('active');
+  document.getElementById('tab-analysis').innerHTML = '<div style="padding:40px 0;color:var(--kimba-mute);font-family:var(--kimba-mono);font-size:11px">loading…</div>';
+  document.getElementById('tab-respondents').innerHTML = '';
+  document.getElementById('tab-settings').innerHTML = '';
+  document.getElementById('detail-stats').innerHTML = '';
+  document.getElementById('detail-activity').innerHTML = '';
 
   apiFetch('/api/vh-admin?client_id=' + encodeURIComponent(clientId))
-    .then(function(data) {
-      if (data.error) { document.getElementById('detail-title').textContent = 'Error'; return; }
-      renderClientDetail(data.client, data.responses, data.analysis);
-    })
-    .catch(function() {
-      document.getElementById('detail-title').textContent = 'Error loading client.';
-    });
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.error) { return; }
+    currentDetail = data;
+    renderDetail(data);
+  })
+  .catch(function() {});
 }
 
-function renderClientDetail(client, responses, analysis) {
-  document.getElementById('detail-title').textContent = client.client_name;
-  document.getElementById('detail-goal-badge').textContent = GOAL_LABELS[client.extraction_goal] || client.extraction_goal;
+function renderDetail(data) {
+  var c   = data.client;
+  var res = data.responses || [];
+  var ana = data.analysis;
+  var goal = GOAL_MAP[c.extraction_goal] || { idx: '?', name: c.extraction_goal };
 
-  var linkRow = document.getElementById('detail-link-row');
-  if (client.token) {
-    document.getElementById('detail-link-url').textContent = window.location.origin + '/verseandhook/intake?token=' + client.token;
-    document.getElementById('detail-link-copy').textContent = 'Copy';
-    linkRow.style.display = 'flex';
-  } else {
-    linkRow.style.display = 'none';
+  // Topbar crumbs
+  document.getElementById('topbar-crumbs').innerHTML =
+    '<a onclick="showList()">all clients</a>' +
+    '<span class="sep">/</span>' +
+    '<span style="color:var(--kimba-paper-2)">' + esc(c.client_name) + '</span>';
+
+  // Page header
+  document.getElementById('detail-goal').innerHTML =
+    '<span style="color:var(--kimba-red)">/' + goal.idx + '</span> ' +
+    '<span style="color:var(--kimba-mute)">' + esc(goal.name) + '</span>';
+  document.getElementById('detail-name').innerHTML = esc(c.client_name) + '<span class="red">.</span>';
+
+  // Store token for copy link
+  document.getElementById('btn-copy-link').dataset.token = c.token;
+  document.getElementById('detail-link-box').textContent = buildLink(c.token);
+
+  // Stats
+  var exp       = c.expected_respondent_count;
+  var count     = res.length;
+  var pct       = exp ? Math.round(count / exp * 100) : null;
+  var anaTime   = ana ? relativeTime(ana.created_at) : '—';
+  var anaDate   = ana ? fmtDate(ana.created_at) : '';
+
+  var alignIdx = '—';
+  if (ana && ana.scores) {
+    var vals = Object.values(ana.scores).filter(function(v) { return typeof v === 'number'; });
+    if (vals.length) alignIdx = Math.round(vals.reduce(function(a,b){return a+b;},0) / vals.length);
   }
 
-  // Respondents
-  var respContainer = document.getElementById('respondents-list');
-  if (!responses.length) {
-    respContainer.innerHTML = '<p style="padding:1rem;font-size:13px;color:var(--text-dim);">No responses yet.</p>';
-  } else {
-    var html = '';
-    responses.forEach(function(r, i) {
-      var date = new Date(r.completed_at).toLocaleDateString();
-      html += '<div class="respondent-row" onclick="toggleTranscript(' + i + ')">';
-      html += '<div class="resp-name">' + esc(r.respondent_name) + '</div>';
-      html += '<div class="resp-meta">' + esc(r.respondent_title) + ' &middot; ' + date + '</div>';
-      html += '</div>';
-      html += '<div class="resp-transcript" id="transcript-' + i + '">';
-      var turns = r.transcript || [];
-      turns.forEach(function(t) {
-        html += '<div class="transcript-turn">';
-        html += '<div class="turn-role">' + (t.role === 'user' ? esc(r.respondent_name) : 'Verse &amp; Hook') + '</div>';
-        html += '<div class="turn-content">' + esc(t.content) + '</div>';
-        html += '</div>';
-      });
-      html += '</div>';
-    });
-    respContainer.innerHTML = html;
-  }
+  var completionVal = exp
+    ? '<span class="red">' + count + '</span>/' + exp
+    : String(count);
+  var completionSub = exp ? pct + '% complete' : count + ' received';
 
-  // Analysis
-  document.getElementById('analysis-panel').innerHTML = renderAnalysisContent(analysis, responses.length);
+  document.getElementById('detail-stats').innerHTML =
+    '<div class="admin-stat">' +
+      '<div class="label">/completion</div>' +
+      '<div class="value">' + completionVal + '</div>' +
+      '<div class="sub">' + completionSub + '</div>' +
+    '</div>' +
+    '<div class="admin-stat">' +
+      '<div class="label">/responses</div>' +
+      '<div class="value">' + count + '</div>' +
+      '<div class="sub">transcripts saved</div>' +
+    '</div>' +
+    '<div class="admin-stat">' +
+      '<div class="label">/last analysis</div>' +
+      '<div class="value" style="font-size:22px">' + anaTime + '</div>' +
+      '<div class="sub">' + esc(anaDate) + '</div>' +
+    '</div>' +
+    '<div class="admin-stat">' +
+      '<div class="label">/alignment index</div>' +
+      '<div class="value">' + (alignIdx !== '—' ? '<span class="red">' + alignIdx + '</span>' : '—') + '</div>' +
+      '<div class="sub">' + (alignIdx !== '—' ? 'across dimensions' : 'run analysis first') + '</div>' +
+    '</div>';
+
+  // Tabs — render all three
+  renderAnalysisTab(data);
+  renderRespondentsTab(data);
+  renderSettingsTab(data);
+  renderAside(data);
+
+  // Switch to default tab
+  switchTab('analysis');
 }
 
-function renderAnalysisContent(analysis, responseCount) {
-  if (!analysis) {
-    var msg = (responseCount || 0) < 2
-      ? 'Awaiting more responses to generate alignment scores.'
-      : 'Analysis pending. Use Re-run to generate.';
-    return '<p class="analysis-pending">' + msg + '</p>';
+function renderAnalysisTab(data) {
+  var res = data.responses || [];
+  var ana = data.analysis;
+
+  if (res.length < 2) {
+    var need = Math.max(0, 2 - res.length);
+    document.getElementById('tab-analysis').innerHTML =
+      '<div class="analysis-locked">' +
+        '<span class="k-mono k-slash">analysis locked</span>' +
+        '<h2 class="k-display" style="font-size:36px;margin:0">need ' + need + ' more ' + (need === 1 ? 'voice' : 'voices') + '<span class="red">.</span></h2>' +
+        '<p class="k-serif" style="font-size:17px;color:var(--kimba-ink-2);margin:0;max-width:44ch">' +
+          'alignment requires at least 2 completed responses. ' +
+          (res.length === 0 ? 'no responses yet.' : res.length + ' of 2 received.') +
+          ' outlier detection unlocks at 5+.' +
+        '</p>' +
+        '<div style="display:flex;gap:12px;margin-top:8px">' +
+          '<span class="k-badge">2 · alignment</span>' +
+          '<span class="k-badge k-badge-mute">5 · outliers</span>' +
+        '</div>' +
+      '</div>';
+    return;
+  }
+
+  if (!ana) {
+    document.getElementById('tab-analysis').innerHTML =
+      '<div class="analysis-locked">' +
+        '<span class="k-mono k-slash">no analysis yet</span>' +
+        '<h2 class="k-display" style="font-size:36px;margin:0">' + res.length + ' responses ready<span class="red">.</span></h2>' +
+        '<p class="k-serif" style="font-size:17px;color:var(--kimba-ink-2);margin:0;max-width:44ch">click "run analysis" to generate alignment scores and narrative across all transcripts.</p>' +
+        '<button class="k-btn k-btn-red" onclick="runAnalysis()" style="margin-top:8px">run analysis →</button>' +
+      '</div>';
+    return;
   }
 
   var html = '';
 
-  if (analysis.narrative) {
-    html += '<div class="narrative-block">' + esc(analysis.narrative) + '</div>';
+  // Narrative
+  if (ana.narrative) {
+    html += '<div style="background:var(--kimba-white);border:1px solid var(--kimba-rule);padding:20px 22px;margin-bottom:24px">' +
+      '<div class="admin-section-title">narrative</div>' +
+      '<p class="k-serif" style="font-size:17px;line-height:1.55;color:var(--kimba-ink-2);margin:0">' + esc(ana.narrative) + '</p>' +
+    '</div>';
   }
 
-  if (analysis.dimensions && Object.keys(analysis.dimensions).length) {
-    // New schema: per-dimension scores + insight
-    Object.entries(analysis.dimensions).forEach(function(entry) {
-      var key = entry[0];
-      var dim = entry[1];
-      var score = dim.score;
-      var insight = dim.insight || '';
-      var barClass = score < 40 ? 'low' : score < 70 ? 'mid' : '';
-      var clampedScore = Math.min(100, Math.max(0, score || 0));
-      html += '<details class="dim-row">';
-      html += '<summary class="dim-summary">';
-      html += '<span class="dim-label">' + esc(key.replace(/_/g, ' ')) + '</span>';
-      html += '<div class="dim-bar-wrap"><div class="dim-bar-fill ' + barClass + '" style="width:' + clampedScore + '%"></div></div>';
-      html += '<span class="dim-score">' + (score !== null ? score : '—') + '</span>';
-      html += '<span class="dim-chevron">›</span>';
-      html += '</summary>';
-      if (insight) {
-        html += '<div class="dim-insight">' + esc(insight) + '</div>';
-      }
-      html += '</details>';
+  // Scores / dimensions
+  if (ana.dimensions && Array.isArray(ana.dimensions) && ana.dimensions.length) {
+    html += '<div class="admin-section-title">dimensions</div>';
+    ana.dimensions.forEach(function(dim) {
+      var kind = dim.score >= 65 ? 'alignment' : dim.score >= 40 ? 'outlier' : 'conflict';
+      var tag  = kind === 'alignment' ? '● convergence' : kind === 'conflict' ? '● conflict' : '○ mixed';
+      html += '<div class="analysis-card ' + kind + '" style="background:var(--kimba-white);border:1px solid var(--kimba-rule);padding:18px 20px;margin-bottom:14px">' +
+        '<div class="head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">' +
+          '<div class="dimension" style="font-family:var(--kimba-display);font-weight:800;font-size:20px;text-transform:lowercase;color:var(--kimba-ink)">' + esc(dim.name || dim.dimension || '') + '</div>' +
+          '<span class="tag" style="font-family:var(--kimba-mono);font-size:10px;letter-spacing:0.08em;text-transform:uppercase">' + tag + '</span>' +
+        '</div>' +
+        '<div class="scoreline ' + kind + '" style="display:flex;align-items:center;gap:10px;margin:8px 0">' +
+          '<div class="track" style="flex:1;height:2px;background:var(--kimba-rule);position:relative"><div class="fill" style="position:absolute;inset:0 auto 0 0;width:' + (dim.score||0) + '%"></div></div>' +
+          '<span style="font-family:var(--kimba-mono);font-size:12px;font-weight:600;min-width:30px;text-align:right">' + (dim.score||0) + '</span>' +
+        '</div>' +
+        (dim.narrative ? '<p class="narrative" style="font-family:var(--kimba-serif);font-size:15px;line-height:1.45;color:var(--kimba-ink-2);margin-top:8px">' + esc(dim.narrative) + '</p>' : '') +
+      '</div>';
     });
-  } else if (analysis.scores && Object.keys(analysis.scores).length) {
-    // Legacy schema: flat scores, no insight
-    Object.entries(analysis.scores).forEach(function(entry) {
-      var key = entry[0], val = entry[1];
-      var barClass = val < 40 ? 'low' : val < 70 ? 'mid' : '';
-      var clampedVal = Math.min(100, Math.max(0, val));
-      html += '<div style="padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);">';
-      html += '<span class="dim-label">' + esc(key.replace(/_/g, ' ')) + '</span>';
-      html += '<div class="dim-bar-wrap"><div class="dim-bar-fill ' + barClass + '" style="width:' + clampedVal + '%"></div></div>';
-      html += '<span class="dim-score">' + val + '</span>';
-      html += '</div>';
+  } else if (ana.scores) {
+    html += '<div class="admin-section-title">dimension scores</div>';
+    Object.entries(ana.scores).forEach(function(entry) {
+      var name  = entry[0];
+      var score = entry[1];
+      var kind  = score >= 65 ? 'alignment' : score >= 40 ? 'outlier' : 'conflict';
+      html += '<div style="background:var(--kimba-white);border:1px solid var(--kimba-rule);padding:14px 16px;margin-bottom:10px">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">' +
+          '<span style="font-family:var(--kimba-display);font-weight:800;font-size:17px;text-transform:lowercase">' + esc(name.replace(/_/g,' ')) + '</span>' +
+          '<span class="k-mono" style="font-size:11px;font-weight:600">' + score + '</span>' +
+        '</div>' +
+        '<div style="height:3px;background:var(--kimba-rule);position:relative">' +
+          '<div style="position:absolute;inset:0 auto 0 0;width:' + score + '%;background:' + (kind === 'alignment' ? 'var(--kimba-ink)' : kind === 'conflict' ? 'var(--kimba-red)' : 'var(--kimba-mute)') + '"></div>' +
+        '</div>' +
+      '</div>';
     });
-  } else if (!analysis.narrative) {
-    html += '<p class="analysis-pending">Analysis pending. Use Re-run to generate.</p>';
   }
 
-  if (analysis.created_at) {
-    html += '<div class="analysis-ts">Last run: ' + new Date(analysis.created_at).toLocaleString() + '</div>';
-  }
-
-  return html;
+  document.getElementById('tab-analysis').innerHTML = html || '<div style="padding:20px 0;color:var(--kimba-mute);font-family:var(--kimba-mono);font-size:11px">no analysis data available.</div>';
 }
 
-function toggleTranscript(i) {
-  var el = document.getElementById('transcript-' + i);
-  el.style.display = el.style.display === 'block' ? 'none' : 'block';
-}
-
-// --- New client modal ---
-function openNewClientModal() {
-  document.getElementById('nc-name').value = '';
-  document.getElementById('nc-error').style.display = 'none';
-  document.getElementById('generated-link').style.display = 'none';
-  document.getElementById('nc-submit-btn').disabled = false;
-  document.getElementById('nc-submit-btn').textContent = 'Generate link';
-
-  var sel = document.getElementById('nc-goal');
-  sel.innerHTML = goalConfigs.length
-    ? goalConfigs.map(function(g) { return '<option value="' + esc(g.goal_key) + '">' + esc(g.name) + '</option>'; }).join('')
-    : '<option value="discovery">Brand Discovery</option><option value="intake">Project Intake</option><option value="feedback">Engagement Feedback</option>';
-
-  document.getElementById('new-client-modal').classList.add('open');
-}
-
-function closeNewClientModal() {
-  document.getElementById('new-client-modal').classList.remove('open');
-}
-
-function createClient() {
-  var name = document.getElementById('nc-name').value.trim();
-  var goal = document.getElementById('nc-goal').value;
-  var errEl = document.getElementById('nc-error');
-  errEl.style.display = 'none';
-
-  if (!name) { errEl.textContent = 'Client name is required.'; errEl.style.display = 'block'; return; }
-
-  var btn = document.getElementById('nc-submit-btn');
-  btn.disabled = true; btn.textContent = 'Creating...';
-
-  apiFetch('/api/vh-session', {
-    method: 'POST',
-    body: JSON.stringify({ client_name: name, extraction_goal: goal })
-  })
-  .then(function(data) {
-    if (data.error) {
-      errEl.textContent = data.error; errEl.style.display = 'block';
-      btn.disabled = false; btn.textContent = 'Generate link';
-      return;
-    }
-    var url = window.location.origin + '/verseandhook/intake?token=' + data.token;
-    document.getElementById('generated-link-url').textContent = url;
-    document.getElementById('generated-link').style.display = 'block';
-    btn.textContent = 'Created ✓';
-    loadDashboard(); // refresh the list in background
-  })
-  .catch(function() {
-    errEl.textContent = 'Something went wrong.'; errEl.style.display = 'block';
-    btn.disabled = false; btn.textContent = 'Generate link';
-  });
-}
-
-function copyDetailLink() {
-  var url = document.getElementById('detail-link-url').textContent;
-  var btn = document.getElementById('detail-link-copy');
-  navigator.clipboard.writeText(url).then(function() {
-    btn.textContent = 'Copied!';
-    setTimeout(function() { btn.textContent = 'Copy'; }, 2000);
-  });
-}
-
-function copyGeneratedLink(btn) {
-  var url = document.getElementById('generated-link-url').textContent;
-  navigator.clipboard.writeText(url).then(function() {
-    btn.textContent = 'Copied!';
-    setTimeout(function() { btn.textContent = 'Copy link'; }, 2000);
-  });
-}
-
-// --- Goal configs ---
-function loadGoalConfigs() {
-  apiFetch('/api/vh-goal-config')
-    .then(function(data) {
-      if (!Array.isArray(data)) return;
-      goalConfigs = data;
-      GOAL_LABELS = {};
-      data.forEach(function(g) { GOAL_LABELS[g.goal_key] = g.name; });
-    })
-    .catch(function() {});
-}
-
-function showGoals() {
-  show('goals');
-  loadGoals();
-}
-
-function loadGoals() {
-  var container = document.getElementById('goals-list-container');
-  container.innerHTML = '<p style="color:var(--text-dim);font-size:13px;">Loading...</p>';
-  apiFetch('/api/vh-goal-config')
-    .then(function(data) {
-      if (!Array.isArray(data)) { container.innerHTML = '<p style="color:var(--danger);">Error loading goals.</p>'; return; }
-      goalConfigs = data;
-      data.forEach(function(g) { GOAL_LABELS[g.goal_key] = g.name; });
-      if (!data.length) {
-        container.innerHTML = '<p style="color:var(--text-dim);font-size:13px;">No goal configs yet.</p>';
-        return;
-      }
-      container.innerHTML = data.map(function(g) {
-        return '<div class="goal-row">'
-          + '<span class="goal-key">' + esc(g.goal_key) + '</span>'
-          + '<span class="goal-name">' + esc(g.name) + '</span>'
-          + '<button class="btn-outline btn-sm" onclick="openGoalEditor(\'' + esc(g.goal_key) + '\')">Edit</button>'
-          + '</div>';
-      }).join('');
-    })
-    .catch(function() { container.innerHTML = '<p style="color:var(--danger);">Error loading goals.</p>'; });
-}
-
-function openGoalEditor(goalKey) {
-  currentGoalKey = goalKey;
-  document.getElementById('ge-error').style.display = 'none';
-  document.getElementById('ge-save-btn').disabled = false;
-  document.getElementById('ge-save-btn').textContent = 'Save goal';
-
-  if (goalKey) {
-    var g = goalConfigs.find(function(gc) { return gc.goal_key === goalKey; });
-    document.getElementById('goal-editor-title').textContent = 'Edit: ' + (g ? g.name : goalKey);
-    document.getElementById('ge-key').value = goalKey;
-    document.getElementById('ge-key').readOnly = true;
-    document.getElementById('ge-name').value = g ? g.name : '';
-    document.getElementById('ge-intake-prompt').value = g ? g.intake_system_prompt : '';
-    document.getElementById('ge-opener').value = g ? g.opener_message : '';
-    document.getElementById('ge-analysis-prompt').value = g ? g.analysis_system_prompt : '';
-    document.getElementById('ge-dimensions').value = g ? (g.scoring_dimensions || []).join('\n') : '';
-  } else {
-    document.getElementById('goal-editor-title').textContent = 'New Goal';
-    document.getElementById('ge-key').value = '';
-    document.getElementById('ge-key').readOnly = false;
-    document.getElementById('ge-name').value = '';
-    document.getElementById('ge-intake-prompt').value = '';
-    document.getElementById('ge-opener').value = '';
-    document.getElementById('ge-analysis-prompt').value = '';
-    document.getElementById('ge-dimensions').value = '';
-  }
-  show('goal-editor');
-}
-
-function saveGoal() {
-  var key = document.getElementById('ge-key').value.trim();
-  var name = document.getElementById('ge-name').value.trim();
-  var intakePrompt = document.getElementById('ge-intake-prompt').value.trim();
-  var opener = document.getElementById('ge-opener').value.trim();
-  var analysisPrompt = document.getElementById('ge-analysis-prompt').value.trim();
-  var dimensions = document.getElementById('ge-dimensions').value
-    .split('\n').map(function(s) { return s.trim(); }).filter(Boolean);
-
-  var errEl = document.getElementById('ge-error');
-  errEl.style.display = 'none';
-
-  if (!key || !name || !intakePrompt || !opener || !analysisPrompt || !dimensions.length) {
-    errEl.textContent = 'All fields are required.';
-    errEl.style.display = 'block';
+function renderRespondentsTab(data) {
+  var res = data.responses || [];
+  if (!res.length) {
+    document.getElementById('tab-respondents').innerHTML =
+      '<div style="padding:40px 0;text-align:center;color:var(--kimba-mute);font-family:var(--kimba-mono);font-size:11px">/no responses yet</div>';
     return;
   }
 
-  var btn = document.getElementById('ge-save-btn');
-  btn.disabled = true; btn.textContent = 'Saving...';
+  var html = '<div style="margin-bottom:16px"><span class="k-mono" style="color:var(--kimba-mute)">' + res.length + ' respondent' + (res.length !== 1 ? 's' : '') + '</span></div>';
+  res.forEach(function(r, i) {
+    html += '<div class="respondent-row" onclick="openDrawer(' + i + ')">' +
+      '<div>' +
+        '<div class="rname">' + esc(r.respondent_name) + '</div>' +
+        '<div class="rrole">' + esc(r.respondent_title) + '</div>' +
+      '</div>' +
+      '<span class="k-mono" style="font-size:11px;color:var(--kimba-mute)">' + esc(r.respondent_email) + '</span>' +
+      '<span class="rdate">' + relativeTime(r.completed_at) + '</span>' +
+    '</div>';
+  });
 
-  apiFetch('/api/vh-goal-config', {
-    method: 'PUT',
-    body: JSON.stringify({
-      goal_key: key,
-      name: name,
-      intake_system_prompt: intakePrompt,
-      opener_message: opener,
-      analysis_system_prompt: analysisPrompt,
-      scoring_dimensions: dimensions
-    })
-  })
-  .then(function(data) {
-    if (data.error) {
-      errEl.textContent = data.error; errEl.style.display = 'block';
-      btn.disabled = false; btn.textContent = 'Save goal';
-      return;
-    }
-    showGoals();
-  })
-  .catch(function() {
-    errEl.textContent = 'Something went wrong.'; errEl.style.display = 'block';
-    btn.disabled = false; btn.textContent = 'Save goal';
+  document.getElementById('tab-respondents').innerHTML = html;
+}
+
+function renderSettingsTab(data) {
+  var c    = data.client;
+  var goal = GOAL_MAP[c.extraction_goal] || { idx: '?', name: c.extraction_goal };
+
+  function field(label, value) {
+    return '<div class="field-row">' +
+      '<span class="field-label k-mono k-slash">' + esc(label) + '</span>' +
+      '<span class="field-value">' + esc(String(value || '—')) + '</span>' +
+    '</div>';
+  }
+
+  var html =
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:32px">' +
+      '<div>' +
+        '<div class="admin-section-title">session details</div>' +
+        field('client name', c.client_name) +
+        field('extraction goal', goal.name) +
+        field('expected respondents', c.expected_respondent_count || '—') +
+        field('created', fmtDate(c.created_at)) +
+      '</div>' +
+      '<div>' +
+        '<div class="admin-section-title">behavior</div>' +
+        field('model', 'claude haiku 4.5') +
+        field('max exchanges', '8') +
+        field('closing trigger', 'auto') +
+        field('auto-run analysis', 'on completion') +
+      '</div>' +
+    '</div>';
+
+  document.getElementById('tab-settings').innerHTML = html;
+}
+
+function renderAside(data) {
+  var c   = data.client;
+  var res = data.responses || [];
+
+  // Link box
+  document.getElementById('detail-link-box').textContent = buildLink(c.token);
+
+  // Recent activity (last 5 responses, newest first)
+  var actHtml = '';
+  var sorted = res.slice().sort(function(a,b){ return new Date(b.completed_at) - new Date(a.completed_at); });
+  sorted.slice(0,5).forEach(function(r) {
+    actHtml += '<div class="activity-item">' +
+      '<span><span class="activity-action completed">completed</span>' + esc(r.respondent_name) + '</span>' +
+      '<span class="activity-time">' + relativeTime(r.completed_at) + '</span>' +
+    '</div>';
+  });
+  if (!actHtml) {
+    actHtml = '<div class="k-mono" style="font-size:10px;color:var(--kimba-mute);padding:8px 0">/no activity yet</div>';
+  }
+  document.getElementById('detail-activity').innerHTML = actHtml;
+}
+
+// =====================================================================
+// Tab switching
+// =====================================================================
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-btn').forEach(function(btn) {
+    btn.classList.toggle('active', btn.dataset.tab === tabId);
+  });
+  document.querySelectorAll('.tab-panel').forEach(function(panel) {
+    panel.classList.toggle('active', panel.id === 'tab-' + tabId);
   });
 }
 
-function rerunAnalysis() {
-  if (!currentClientId) return;
-  var btn = document.getElementById('rerun-btn');
-  btn.disabled = true; btn.textContent = 'Running...';
+// =====================================================================
+// Copy link
+// =====================================================================
+function copyDetailLink() {
+  if (!currentDetail) return;
+  var link = buildLink(currentDetail.client.token);
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(link).then(function() { flashCopyBtn(); });
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = link; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+    flashCopyBtn();
+  }
+}
+
+function flashCopyBtn() {
+  var btn = document.getElementById('btn-copy-link');
+  var orig = btn.textContent;
+  btn.textContent = 'copied ✓';
+  setTimeout(function() { btn.textContent = orig; }, 1800);
+}
+
+// =====================================================================
+// Run analysis
+// =====================================================================
+function runAnalysis() {
+  if (!currentDetail || runningAnalysis) return;
+  var btn = document.getElementById('btn-run-analysis');
+  runningAnalysis = true;
+  btn.disabled = true;
+  btn.textContent = 'running…';
 
   apiFetch('/api/vh-admin', {
     method: 'POST',
-    body: JSON.stringify({ action: 'rerun_analysis', client_id: currentClientId })
+    body: JSON.stringify({ action: 'rerun_analysis', client_id: currentDetail.client.id })
   })
+  .then(function(r) { return r.json(); })
   .then(function(data) {
-    if (data.error) {
-      btn.disabled = false; btn.textContent = 'Re-run';
-      alert('Analysis error: ' + data.error);
-      return;
+    runningAnalysis = false;
+    btn.disabled = false;
+    btn.textContent = 'run analysis →';
+    if (data.ok) {
+      openDetail(currentDetail.client.id);
     }
-    btn.textContent = 'Done ✓';
-    setTimeout(function() { loadClientDetail(currentClientId); }, 800);
   })
   .catch(function() {
-    btn.disabled = false; btn.textContent = 'Re-run';
+    runningAnalysis = false;
+    btn.disabled = false;
+    btn.textContent = 'run analysis →';
   });
 }
 
-// Escape HTML
-function esc(str) {
-  if (!str) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+// =====================================================================
+// Transcript drawer
+// =====================================================================
+function openDrawer(idx) {
+  if (!currentDetail) return;
+  var r = currentDetail.responses[idx];
+  if (!r) return;
+
+  document.getElementById('drawer-name').textContent = r.respondent_name;
+  document.getElementById('drawer-meta').textContent = r.respondent_title + ' · ' + r.respondent_email + ' · ' + relativeTime(r.completed_at);
+
+  var transcript = r.transcript || [];
+  var html = '';
+  if (!transcript.length) {
+    html = '<div class="k-mono" style="color:var(--kimba-mute);font-size:11px">/no transcript available</div>';
+  } else {
+    transcript.forEach(function(msg) {
+      var isAi = msg.role === 'assistant';
+      html += '<div class="transcript-msg ' + (isAi ? 'ai' : 'user') + '">' +
+        '<div class="transcript-msg-who">' + (isAi ? 'kimba' : 'respondent') + '</div>' +
+        '<div class="transcript-msg-body">' + esc(msg.content) + '</div>' +
+      '</div>';
+    });
+  }
+  document.getElementById('drawer-content').innerHTML = html;
+
+  document.getElementById('drawer-overlay').style.display = '';
+  document.getElementById('transcript-drawer').classList.add('open');
 }
+
+function closeDrawer() {
+  document.getElementById('transcript-drawer').classList.remove('open');
+  document.getElementById('drawer-overlay').style.display = 'none';
+}
+
+// =====================================================================
+// New session modal
+// =====================================================================
+var modalSubmitted = false;
+
+function openModal() {
+  modalSubmitted = false;
+  selectedMode = '01';
+  document.getElementById('modal-name').value = '';
+  document.getElementById('modal-count').value = '8';
+  document.getElementById('modal-submit').disabled = true;
+  document.getElementById('modal-submit').style.opacity = '0.45';
+
+  // Restore form/preview columns if in created state
+  var formCol    = document.getElementById('modal-form-col');
+  var previewCol = document.getElementById('modal-preview-col');
+  formCol.style.display    = '';
+  previewCol.style.display = '';
+  var created = document.getElementById('modal-created');
+  if (created) created.remove();
+
+  renderModeOptions();
+  updatePreview();
+  document.getElementById('modal-new-session').style.display = 'flex';
+  setTimeout(function() { document.getElementById('modal-name').focus(); }, 50);
+}
+
+function closeModal() {
+  document.getElementById('modal-new-session').style.display = 'none';
+}
+
+function handleModalBackdropClick(e) {
+  if (e.target === document.getElementById('modal-new-session')) closeModal();
+}
+
+function renderModeOptions() {
+  var html = Object.entries(MODE_DETAILS).map(function(entry) {
+    var key = entry[0]; var m = entry[1];
+    var sel = key === selectedMode ? ' selected' : '';
+    return '<button class="mode-option' + sel + '" onclick="selectMode(\'' + key + '\')">' +
+      '<span><span class="mode-option-key">/' + key + '</span>' + esc(m.name) + '</span>' +
+      (key === selectedMode ? '<span class="mode-option-selected">● selected</span>' : '') +
+    '</button>';
+  }).join('');
+  document.getElementById('mode-options').innerHTML = html;
+}
+
+function selectMode(key) {
+  selectedMode = key;
+  renderModeOptions();
+  updatePreview();
+}
+
+function updatePreview() {
+  var m    = MODE_DETAILS[selectedMode];
+  var name = document.getElementById('modal-name').value.trim();
+  var slug = name ? name.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 18) : 'client';
+  document.getElementById('preview-title').innerHTML    = esc(m.name) + '<span class="red">.</span>';
+  document.getElementById('preview-coverage').textContent = m.coverage;
+  document.getElementById('preview-rec').textContent     = m.rec;
+  document.getElementById('preview-opener').textContent  = m.opener;
+  document.getElementById('preview-foot').textContent    = '/link · dev.nilesheron.com/verseandhook/kimba?token={token}';
+}
+
+function onModalNameInput() {
+  var name = document.getElementById('modal-name').value.trim();
+  var btn  = document.getElementById('modal-submit');
+  btn.disabled     = !name;
+  btn.style.opacity = name ? '1' : '0.45';
+  updatePreview();
+}
+
+function submitNewSession() {
+  if (modalSubmitted) return;
+  var name  = document.getElementById('modal-name').value.trim();
+  var count = parseInt(document.getElementById('modal-count').value, 10);
+  var key   = MODE_DETAILS[selectedMode].key;
+  if (!name) return;
+
+  modalSubmitted = true;
+  var btn = document.getElementById('modal-submit');
+  btn.disabled = true;
+  btn.textContent = 'creating…';
+
+  apiFetch('/api/vh-session', {
+    method: 'POST',
+    body: JSON.stringify({ client_name: name, extraction_goal: key, expected_respondent_count: count || 8 })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.token) {
+      showSessionCreated(data);
+    } else {
+      modalSubmitted = false;
+      btn.disabled = false;
+      btn.textContent = 'create & generate link →';
+    }
+  })
+  .catch(function() {
+    modalSubmitted = false;
+    btn.disabled = false;
+    btn.textContent = 'create & generate link →';
+  });
+}
+
+function showSessionCreated(session) {
+  var link = buildLink(session.token);
+  document.getElementById('modal-form-col').style.display    = 'none';
+  document.getElementById('modal-preview-col').style.display = 'none';
+
+  var div = document.createElement('div');
+  div.id = 'modal-created';
+  div.className = 'modal-created';
+  div.innerHTML =
+    '<span class="k-mono k-slash">session created</span>' +
+    '<h2 class="k-display" style="font-size:40px;margin:0">' + esc(session.client_name) + '<span class="red">.</span></h2>' +
+    '<p class="k-serif" style="font-size:17px;color:var(--kimba-ink-2);margin:0">share this link with respondents. each person uses the same link — kimba tracks completion by email.</p>' +
+    '<div>' +
+      '<div class="k-mono" style="margin-bottom:8px">/respondent link</div>' +
+      '<div class="created-link-box" id="created-link-text">' + esc(link) + '</div>' +
+    '</div>' +
+    '<div class="created-actions">' +
+      '<button class="k-btn k-btn-red" onclick="copyCreatedLink(\'' + esc(link) + '\')" id="created-copy-btn">copy link</button>' +
+      '<button class="k-btn k-btn-ghost" onclick="closeModal();showList()">done</button>' +
+    '</div>';
+
+  document.getElementById('modal-inner').appendChild(div);
+}
+
+function copyCreatedLink(link) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(link).then(function() {
+      var btn = document.getElementById('created-copy-btn');
+      if (btn) { btn.textContent = 'copied ✓'; setTimeout(function(){ btn.textContent = 'copy link'; }, 1800); }
+    });
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = link; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+  }
+}
+
+// =====================================================================
+// Boot
+// =====================================================================
+(function init() {
+  if (authToken) {
+    enterAdmin();
+  }
+  // Escape key: close drawer or modal
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      if (document.getElementById('transcript-drawer').classList.contains('open')) { closeDrawer(); return; }
+      if (document.getElementById('modal-new-session').style.display !== 'none') { closeModal(); return; }
+    }
+  });
+})();
 </script>
 </body>
 </html>

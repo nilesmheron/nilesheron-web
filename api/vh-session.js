@@ -26,7 +26,7 @@ export default async function handler(req, res) {
   if (req.method === 'POST') {
     if (!validateAdminToken(req)) return res.status(401).json({ error: 'Unauthorized' });
 
-    const { client_name, extraction_goal } = req.body || {};
+    const { client_name, extraction_goal, expected_respondent_count } = req.body || {};
     if (!client_name || !client_name.trim()) {
       return res.status(400).json({ error: 'client_name required' });
     }
@@ -35,12 +35,16 @@ export default async function handler(req, res) {
     }
 
     const token = crypto.randomBytes(16).toString('hex');
+    const insertRow = { client_name: client_name.trim(), extraction_goal, token };
+    if (expected_respondent_count && Number.isInteger(Number(expected_respondent_count)) && Number(expected_respondent_count) > 0) {
+      insertRow.expected_respondent_count = Number(expected_respondent_count);
+    }
 
     try {
       const r = await sb('/vh_clients', {
         method: 'POST',
         headers: { Prefer: 'return=representation' },
-        body: JSON.stringify({ client_name: client_name.trim(), extraction_goal, token })
+        body: JSON.stringify(insertRow)
       });
 
       if (!r.ok) {
