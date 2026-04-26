@@ -1294,7 +1294,7 @@ function renderAnalysisTab(data) {
       var x    = Math.max(5, Math.min(95, (r.x || 0.5) * 100)).toFixed(1) + '%';
       var y    = Math.max(5, Math.min(95, (1 - (r.y || 0.5)) * 100)).toFixed(1) + '%';
       var kind = r.kind || 'alignment';
-      html += '<div class="point ' + kind + '" style="left:' + x + ';top:' + y + '" title="' + esc(r.name || '') + '">' + (i+1) + '</div>';
+      html += '<div class="point ' + kind + '" data-rname="' + esc(r.name || '') + '" onclick="openDrawerByName(this.dataset.rname)" style="left:' + x + ';top:' + y + '" title="' + esc(r.name || '') + '">' + (i+1) + '</div>';
     });
   } else {
     html += '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">' +
@@ -1579,6 +1579,17 @@ function runAnalysis() {
 // =====================================================================
 // Transcript drawer
 // =====================================================================
+function openDrawerByName(name) {
+  if (!currentDetail) return;
+  var responses = currentDetail.responses || [];
+  for (var i = 0; i < responses.length; i++) {
+    if (responses[i].respondent_name.toLowerCase() === name.toLowerCase()) {
+      openDrawer(i);
+      return;
+    }
+  }
+}
+
 function openDrawer(idx) {
   if (!currentDetail) return;
   var r = currentDetail.responses[idx];
