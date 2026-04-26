@@ -540,6 +540,137 @@ input[type="number"].k-input { width: 90px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--kimba-rule); }
 ::-webkit-scrollbar-thumb:hover { background: var(--kimba-mute-2); }
+
+/* =============================================================
+   PHASE 5 — ANALYSIS
+   ============================================================= */
+.analysis-top-grid {
+  display: grid; grid-template-columns: 1.4fr 1fr; gap: 28px; margin-bottom: 8px;
+}
+
+/* Quadrant chart */
+.quadrant {
+  position: relative; width: 100%; aspect-ratio: 1.4 / 1;
+  background: var(--kimba-white); border: 1px solid var(--kimba-ink); overflow: hidden;
+}
+.quadrant .axis-h, .quadrant .axis-v { position: absolute; background: var(--kimba-rule); }
+.quadrant .axis-h { left: 0; right: 0; top: 50%; height: 1px; }
+.quadrant .axis-v { top: 0; bottom: 0; left: 50%; width: 1px; }
+.quadrant .label {
+  position: absolute; font-family: var(--kimba-mono); font-size: 9px;
+  letter-spacing: 0.05em; text-transform: uppercase; color: var(--kimba-mute);
+  padding: 6px 10px; line-height: 1.4; pointer-events: none;
+}
+.quadrant .label.tl { top: 0; left: 0; }
+.quadrant .label.tr { top: 0; right: 0; text-align: right; }
+.quadrant .label.bl { bottom: 0; left: 0; }
+.quadrant .label.br { bottom: 0; right: 0; text-align: right; }
+.quadrant .point {
+  position: absolute; width: 18px; height: 18px; border-radius: 50%;
+  transform: translate(-50%, -50%); cursor: pointer;
+  transition: transform 0.18s ease; z-index: 2;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--kimba-mono); font-size: 9px; font-weight: 700; color: var(--kimba-paper);
+}
+.quadrant .point:hover { transform: translate(-50%, -50%) scale(1.4); }
+.quadrant .point.alignment { background: var(--kimba-ink); }
+.quadrant .point.conflict { background: var(--kimba-red); }
+.quadrant .point.outlier { background: var(--kimba-paper); color: var(--kimba-ink); border: 1.5px solid var(--kimba-ink); }
+
+/* Quadrant legend + respondent index */
+.quadrant-legend {
+  display: flex; gap: 18px; margin-top: 12px;
+  font-family: var(--kimba-mono); font-size: 10px;
+  text-transform: uppercase; letter-spacing: 0.08em; color: var(--kimba-mute);
+}
+.quadrant-legend span { display: flex; align-items: center; gap: 6px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.legend-dot.alignment { background: var(--kimba-ink); }
+.legend-dot.conflict { background: var(--kimba-red); }
+.legend-dot.outlier { background: var(--kimba-paper); border: 1.5px solid var(--kimba-ink); }
+
+.respondent-index { margin-top: 12px; display: flex; flex-direction: column; }
+.respondent-index-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 5px 0; border-bottom: 1px solid var(--kimba-rule); font-size: 13px;
+}
+.respondent-index-item:last-child { border-bottom: 0; }
+.respondent-index-item .r-num {
+  width: 18px; height: 18px; border-radius: 50%; background: var(--kimba-ink);
+  color: var(--kimba-paper); display: flex; align-items: center; justify-content: center;
+  font-family: var(--kimba-mono); font-size: 8px; font-weight: 700; flex-shrink: 0;
+}
+.respondent-index-item .r-num.conflict { background: var(--kimba-red); }
+.respondent-index-item .r-num.outlier { background: var(--kimba-paper); color: var(--kimba-ink); border: 1.5px solid var(--kimba-ink); }
+.respondent-index-item .r-name { flex: 1; color: var(--kimba-ink-2); }
+.k-badge-alignment { border-color: var(--kimba-ink); color: var(--kimba-ink); }
+.k-badge-conflict { border-color: var(--kimba-red); color: var(--kimba-red); }
+.k-badge-outlier { border-color: var(--kimba-mute); color: var(--kimba-mute); }
+
+/* At a glance pills */
+.glance-pills { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; }
+.glance-pill { border: 1px solid var(--kimba-rule); padding: 12px 14px; background: var(--kimba-white); }
+.glance-pill .k-mono { font-size: 10px; color: var(--kimba-mute); margin-bottom: 4px; }
+.glance-num { font-family: var(--kimba-display); font-weight: 800; font-stretch: 75%; font-size: 32px; line-height: 1; letter-spacing: -0.02em; }
+
+/* Analysis cards */
+.analysis-card {
+  background: var(--kimba-white); border: 1px solid var(--kimba-rule);
+  padding: 16px 20px; margin-bottom: 10px;
+  cursor: pointer; transition: border-color 0.12s;
+}
+.analysis-card:hover { border-color: var(--kimba-mute-2); }
+.analysis-card .head { display: flex; align-items: center; justify-content: space-between; }
+.analysis-card .dimension {
+  font-family: var(--kimba-display); font-weight: 800; font-stretch: 75%;
+  font-size: 20px; line-height: 1.1; letter-spacing: -0.02em;
+  text-transform: lowercase; color: var(--kimba-ink);
+}
+.analysis-card .tag {
+  font-family: var(--kimba-mono); font-size: 10px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+}
+.analysis-card.alignment .tag { color: var(--kimba-ink); }
+.analysis-card.conflict .tag { color: var(--kimba-red); }
+.analysis-card.outlier .tag { color: var(--kimba-mute); }
+.analysis-card .scoreline { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+.analysis-card .scoreline .track { flex: 1; height: 2px; background: var(--kimba-rule); position: relative; }
+.analysis-card .scoreline .fill { position: absolute; inset: 0 auto 0 0; }
+.analysis-card.alignment .scoreline .fill { background: var(--kimba-ink); }
+.analysis-card.conflict .scoreline .fill { background: var(--kimba-red); }
+.analysis-card.outlier .scoreline .fill { background: var(--kimba-mute); }
+.analysis-card .scoreline .num {
+  font-family: var(--kimba-mono); font-size: 12px; font-weight: 600;
+  color: var(--kimba-ink); min-width: 28px; text-align: right;
+}
+.analysis-card .narrative {
+  font-family: var(--kimba-serif); font-size: 15px; line-height: 1.5;
+  color: var(--kimba-ink-2); margin-top: 12px; padding-top: 12px;
+  border-top: 1px solid var(--kimba-rule);
+}
+.analysis-card.collapsed .narrative { display: none; }
+
+/* Analysis running overlay */
+.analysis-overlay-backdrop {
+  position: fixed; inset: 0; z-index: 60;
+  background: rgba(13,13,13,0.55);
+  display: flex; align-items: center; justify-content: center;
+}
+.analysis-overlay-card {
+  background: var(--kimba-paper); border: 1px solid var(--kimba-ink);
+  width: min(480px, 90vw); padding: 32px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.analysis-overlay-track { height: 2px; background: var(--kimba-rule); position: relative; overflow: hidden; }
+.analysis-overlay-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--kimba-red); width: 0%; }
+@keyframes analysis-progress {
+  0%   { width: 0%; }
+  15%  { width: 28%; }
+  40%  { width: 54%; }
+  70%  { width: 76%; }
+  100% { width: 88%; }
+}
+.analysis-overlay-fill.running { animation: analysis-progress 30s cubic-bezier(0.3,0.8,0.4,1) forwards; }
 </style>
 </head>
 <body>
@@ -1029,7 +1160,9 @@ function renderDetail(data) {
 
   var alignIdx = '—';
   if (ana && ana.scores) {
-    var vals = Object.values(ana.scores).filter(function(v) { return typeof v === 'number'; });
+    var vals = Object.entries(ana.scores)
+      .filter(function(e) { return typeof e[1] === 'number' && e[0] !== '_respondents'; })
+      .map(function(e) { return e[1]; });
     if (vals.length) alignIdx = Math.round(vals.reduce(function(a,b){return a+b;},0) / vals.length);
   }
 
@@ -1073,10 +1206,12 @@ function renderDetail(data) {
 function renderAnalysisTab(data) {
   var res = data.responses || [];
   var ana = data.analysis;
+  var el  = document.getElementById('tab-analysis');
 
+  // Locked: fewer than 2 responses
   if (res.length < 2) {
     var need = Math.max(0, 2 - res.length);
-    document.getElementById('tab-analysis').innerHTML =
+    el.innerHTML =
       '<div class="analysis-locked">' +
         '<span class="k-mono k-slash">analysis locked</span>' +
         '<h2 class="k-display" style="font-size:36px;margin:0">need ' + need + ' more ' + (need === 1 ? 'voice' : 'voices') + '<span class="red">.</span></h2>' +
@@ -1093,8 +1228,9 @@ function renderAnalysisTab(data) {
     return;
   }
 
+  // Ready but no analysis run yet
   if (!ana) {
-    document.getElementById('tab-analysis').innerHTML =
+    el.innerHTML =
       '<div class="analysis-locked">' +
         '<span class="k-mono k-slash">no analysis yet</span>' +
         '<h2 class="k-display" style="font-size:36px;margin:0">' + res.length + ' responses ready<span class="red">.</span></h2>' +
@@ -1104,53 +1240,129 @@ function renderAnalysisTab(data) {
     return;
   }
 
+  // Normalize dimensions — LLM returns an object { dim_name: { score, narrative } }
+  // The admin-tab check Array.isArray was wrong; handle both object and array formats
+  var dims = [];
+  if (ana.dimensions) {
+    if (Array.isArray(ana.dimensions)) {
+      dims = ana.dimensions.map(function(d) {
+        return { name: d.name || d.dimension || '', score: d.score || 0, narrative: d.narrative || '' };
+      });
+    } else if (typeof ana.dimensions === 'object') {
+      dims = Object.entries(ana.dimensions).map(function(e) {
+        return { name: e[0], score: e[1].score || 0, narrative: e[1].narrative || '' };
+      });
+    }
+  } else if (ana.scores) {
+    dims = Object.entries(ana.scores)
+      .filter(function(e) { return typeof e[1] === 'number'; })
+      .map(function(e) { return { name: e[0].replace(/_/g,' '), score: e[1], narrative: '' }; });
+  }
+
+  // Classify by score
+  dims = dims.map(function(d) {
+    return Object.assign({}, d, {
+      kind: d.score >= 65 ? 'alignment' : d.score >= 40 ? 'conflict' : 'outlier'
+    });
+  });
+
+  var alignCount   = dims.filter(function(d) { return d.kind === 'alignment'; }).length;
+  var conflictCount = dims.filter(function(d) { return d.kind === 'conflict'; }).length;
+  var outlierCount  = dims.filter(function(d) { return d.kind === 'outlier'; }).length;
+
+  // Respondent positioning (stored in scores._respondents by runAnalysis)
+  var respondents = (ana.scores && Array.isArray(ana.scores._respondents)) ? ana.scores._respondents : null;
+
   var html = '';
 
-  // Narrative
-  if (ana.narrative) {
-    html += '<div style="background:var(--kimba-white);border:1px solid var(--kimba-rule);padding:20px 22px;margin-bottom:24px">' +
-      '<div class="admin-section-title">narrative</div>' +
-      '<p class="k-serif" style="font-size:17px;line-height:1.55;color:var(--kimba-ink-2);margin:0">' + esc(ana.narrative) + '</p>' +
+  // ── Top grid: quadrant + at-a-glance ──────────────────────────────
+  html += '<div class="analysis-top-grid">';
+
+  // Left: quadrant chart
+  html += '<div>';
+  html += '<div class="admin-section-title">respondent quadrant <span style="font-size:10px;color:var(--kimba-mute-2)">clarity × alignment</span></div>';
+  html += '<div class="quadrant">';
+  html += '<span class="label tl">low clarity<br>aligned</span>';
+  html += '<span class="label tr">clear brand<br>aligned</span>';
+  html += '<span class="label bl">low clarity<br>split</span>';
+  html += '<span class="label br">clear brand<br>split</span>';
+  html += '<div class="axis-h"></div>';
+  html += '<div class="axis-v"></div>';
+
+  if (respondents && respondents.length) {
+    respondents.forEach(function(r, i) {
+      var x    = Math.max(5, Math.min(95, (r.x || 0.5) * 100)).toFixed(1) + '%';
+      var y    = Math.max(5, Math.min(95, (1 - (r.y || 0.5)) * 100)).toFixed(1) + '%';
+      var kind = r.kind || 'alignment';
+      html += '<div class="point ' + kind + '" style="left:' + x + ';top:' + y + '" title="' + esc(r.name || '') + '">' + (i+1) + '</div>';
+    });
+  } else {
+    html += '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">' +
+      '<span class="k-mono" style="font-size:10px;color:var(--kimba-mute)">re-run analysis to plot respondents</span>' +
     '</div>';
   }
+  html += '</div>'; // .quadrant
 
-  // Scores / dimensions
-  if (ana.dimensions && Array.isArray(ana.dimensions) && ana.dimensions.length) {
-    html += '<div class="admin-section-title">dimensions</div>';
-    ana.dimensions.forEach(function(dim) {
-      var kind = dim.score >= 65 ? 'alignment' : dim.score >= 40 ? 'outlier' : 'conflict';
-      var tag  = kind === 'alignment' ? '● convergence' : kind === 'conflict' ? '● conflict' : '○ mixed';
-      html += '<div class="analysis-card ' + kind + '" style="background:var(--kimba-white);border:1px solid var(--kimba-rule);padding:18px 20px;margin-bottom:14px">' +
-        '<div class="head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">' +
-          '<div class="dimension" style="font-family:var(--kimba-display);font-weight:800;font-size:20px;text-transform:lowercase;color:var(--kimba-ink)">' + esc(dim.name || dim.dimension || '') + '</div>' +
-          '<span class="tag" style="font-family:var(--kimba-mono);font-size:10px;letter-spacing:0.08em;text-transform:uppercase">' + tag + '</span>' +
-        '</div>' +
-        '<div class="scoreline ' + kind + '" style="display:flex;align-items:center;gap:10px;margin:8px 0">' +
-          '<div class="track" style="flex:1;height:2px;background:var(--kimba-rule);position:relative"><div class="fill" style="position:absolute;inset:0 auto 0 0;width:' + (dim.score||0) + '%"></div></div>' +
-          '<span style="font-family:var(--kimba-mono);font-size:12px;font-weight:600;min-width:30px;text-align:right">' + (dim.score||0) + '</span>' +
-        '</div>' +
-        (dim.narrative ? '<p class="narrative" style="font-family:var(--kimba-serif);font-size:15px;line-height:1.45;color:var(--kimba-ink-2);margin-top:8px">' + esc(dim.narrative) + '</p>' : '') +
+  html += '<div class="quadrant-legend">';
+  html += '<span><span class="legend-dot alignment"></span>alignment</span>';
+  html += '<span><span class="legend-dot conflict"></span>conflict</span>';
+  html += '<span><span class="legend-dot outlier"></span>outlier</span>';
+  html += '</div>';
+
+  if (respondents && respondents.length) {
+    html += '<div class="respondent-index">';
+    respondents.forEach(function(r, i) {
+      var kind = r.kind || 'alignment';
+      html += '<div class="respondent-index-item">' +
+        '<span class="r-num ' + kind + '">' + (i+1) + '</span>' +
+        '<span class="r-name">' + esc(r.name || '') + '</span>' +
+        '<span class="k-badge k-badge-' + kind + '">' + kind + '</span>' +
       '</div>';
     });
-  } else if (ana.scores) {
-    html += '<div class="admin-section-title">dimension scores</div>';
-    Object.entries(ana.scores).forEach(function(entry) {
-      var name  = entry[0];
-      var score = entry[1];
-      var kind  = score >= 65 ? 'alignment' : score >= 40 ? 'outlier' : 'conflict';
-      html += '<div style="background:var(--kimba-white);border:1px solid var(--kimba-rule);padding:14px 16px;margin-bottom:10px">' +
-        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">' +
-          '<span style="font-family:var(--kimba-display);font-weight:800;font-size:17px;text-transform:lowercase">' + esc(name.replace(/_/g,' ')) + '</span>' +
-          '<span class="k-mono" style="font-size:11px;font-weight:600">' + score + '</span>' +
+    html += '</div>';
+  }
+  html += '</div>'; // left col
+
+  // Right: at a glance
+  html += '<div>';
+  html += '<div class="admin-section-title">at a glance</div>';
+  if (ana.narrative) {
+    html += '<p class="k-serif" style="font-size:16px;line-height:1.5;color:var(--kimba-ink-2);margin:0 0 0">' + esc(ana.narrative) + '</p>';
+  }
+  html += '<div class="glance-pills">';
+  html += '<div class="glance-pill"><div class="k-mono">/strong convergence</div><div class="glance-num">' + alignCount + '</div></div>';
+  html += '<div class="glance-pill"><div class="k-mono">/material conflict</div><div class="glance-num red">' + conflictCount + '</div></div>';
+  html += '<div class="glance-pill"><div class="k-mono">/outlier voices</div><div class="glance-num" style="color:var(--kimba-mute)">' + outlierCount + '</div></div>';
+  html += '<div class="glance-pill"><div class="k-mono">/dimensions scored</div><div class="glance-num">' + dims.length + '</div></div>';
+  html += '</div>';
+  html += '</div>'; // right col
+
+  html += '</div>'; // .analysis-top-grid
+
+  // ── Dimension cards ───────────────────────────────────────────────
+  if (dims.length) {
+    html += '<div class="admin-section-title" style="margin-top:24px">narrative breakdown <span style="font-size:10px;color:var(--kimba-mute-2)">click to expand</span></div>';
+    dims.forEach(function(dim, i) {
+      var tag  = dim.kind === 'alignment' ? '● convergence' : dim.kind === 'conflict' ? '● conflict' : '○ outlier';
+      html += '<div class="analysis-card ' + dim.kind + ' collapsed" onclick="toggleCard(this)">' +
+        '<div class="head">' +
+          '<div class="dimension">/' + String(i+1).padStart(2,'0') + ' · ' + esc(dim.name.replace(/_/g,' ')) + '</div>' +
+          '<span class="tag">' + tag + '</span>' +
         '</div>' +
-        '<div style="height:3px;background:var(--kimba-rule);position:relative">' +
-          '<div style="position:absolute;inset:0 auto 0 0;width:' + score + '%;background:' + (kind === 'alignment' ? 'var(--kimba-ink)' : kind === 'conflict' ? 'var(--kimba-red)' : 'var(--kimba-mute)') + '"></div>' +
+        '<div class="scoreline ' + dim.kind + '">' +
+          '<div class="track"><div class="fill" style="width:' + (dim.score||0) + '%"></div></div>' +
+          '<span class="num">' + (dim.score||0) + '</span>' +
         '</div>' +
+        (dim.narrative ? '<p class="narrative">' + esc(dim.narrative) + '</p>' : '') +
       '</div>';
     });
   }
 
-  document.getElementById('tab-analysis').innerHTML = html || '<div style="padding:20px 0;color:var(--kimba-mute);font-family:var(--kimba-mono);font-size:11px">no analysis data available.</div>';
+  el.innerHTML = html || '<div style="padding:20px 0;color:var(--kimba-mute);font-family:var(--kimba-mono);font-size:11px">no analysis data available.</div>';
+}
+
+function toggleCard(card) {
+  card.classList.toggle('collapsed');
 }
 
 function renderRespondentsTab(data) {
@@ -1271,28 +1483,45 @@ function flashCopyBtn() {
 // =====================================================================
 function runAnalysis() {
   if (!currentDetail || runningAnalysis) return;
-  var btn = document.getElementById('btn-run-analysis');
   runningAnalysis = true;
-  btn.disabled = true;
-  btn.textContent = 'running…';
+
+  // Show overlay
+  var count = (currentDetail.responses || []).length;
+  document.getElementById('overlay-count').textContent = count;
+  document.getElementById('overlay-plural').textContent = count === 1 ? '' : 's';
+  var fill = document.getElementById('overlay-fill');
+  fill.classList.remove('running');
+  fill.style.width = '0%';
+  var overlay = document.getElementById('analysis-overlay');
+  overlay.style.display = '';
+  // Trigger animation after reflow
+  fill.getBoundingClientRect();
+  fill.classList.add('running');
+
+  var btn = document.getElementById('btn-run-analysis');
+  if (btn) { btn.disabled = true; btn.textContent = 'running…'; }
 
   apiFetch('/api/vh-admin', {
     method: 'POST',
     body: JSON.stringify({ action: 'rerun_analysis', client_id: currentDetail.client.id })
   })
   .then(function(r) { return r.json(); })
-  .then(function(data) {
-    runningAnalysis = false;
-    btn.disabled = false;
-    btn.textContent = 'run analysis →';
-    if (data.ok) {
-      openDetail(currentDetail.client.id);
-    }
+  .then(function(result) {
+    fill.classList.remove('running');
+    fill.style.width = '100%';
+    setTimeout(function() {
+      overlay.style.display = 'none';
+      fill.style.width = '0%';
+      runningAnalysis = false;
+      if (btn) { btn.disabled = false; btn.textContent = 'run analysis →'; }
+      if (result.ok) { openDetail(currentDetail.client.id); }
+    }, 350);
   })
   .catch(function() {
+    fill.classList.remove('running');
+    overlay.style.display = 'none';
     runningAnalysis = false;
-    btn.disabled = false;
-    btn.textContent = 'run analysis →';
+    if (btn) { btn.disabled = false; btn.textContent = 'run analysis →'; }
   });
 }
 
@@ -1485,9 +1714,26 @@ function copyCreatedLink(link) {
     if (e.key === 'Escape') {
       if (document.getElementById('transcript-drawer').classList.contains('open')) { closeDrawer(); return; }
       if (document.getElementById('modal-new-session').style.display !== 'none') { closeModal(); return; }
+      if (document.getElementById('analysis-overlay').style.display !== 'none') return; // can't cancel analysis
     }
   });
 })();
 </script>
+
+<!-- =====================================================================
+     ANALYSIS RUNNING OVERLAY
+     ===================================================================== -->
+<div id="analysis-overlay" class="analysis-overlay-backdrop" style="display:none">
+  <div class="analysis-overlay-card">
+    <span class="k-mono k-slash">running alignment analysis</span>
+    <h3 class="k-display" style="font-size:32px;margin:0">reading <span id="overlay-count">?</span> transcript<span id="overlay-plural">s</span><span class="red">.</span></h3>
+    <p class="k-serif" style="font-size:16px;color:var(--kimba-ink-2);margin:0">identifying convergence, conflict, and outlier perspectives across dimensions.</p>
+    <div class="analysis-overlay-track">
+      <div class="analysis-overlay-fill" id="overlay-fill"></div>
+    </div>
+    <div class="k-mono" style="color:var(--kimba-mute);font-size:11px">this may take 10–30 seconds.</div>
+  </div>
+</div>
+
 </body>
 </html>

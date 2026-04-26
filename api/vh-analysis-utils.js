@@ -48,13 +48,21 @@ export async function runAnalysis(client_id, extraction_goal, response_id, { sup
     return `--- ${resp.respondent_name}, ${resp.respondent_title} ---\n${turns}`;
   });
 
+  const respondentNames = responses.map(r => r.respondent_name).join(', ');
+
   const userMessage = [
     `Extraction goal: ${extraction_goal}`,
     `Scoring dimensions: ${(scoring_dimensions || []).join(', ')}`,
+    `Respondents: ${respondentNames}`,
     '',
     'Transcripts:',
     '',
-    transcriptBlocks.join('\n\n')
+    transcriptBlocks.join('\n\n'),
+    '',
+    'After scoring the dimensions, also classify each respondent individually.',
+    'Add a "respondents" array to your JSON: [{"name":"respondent name","kind":"alignment|conflict|outlier","x":0.0,"y":0.0}]',
+    'where x = brand_clarity (0=very unclear, 1=very clear) and y = alignment_depth (0=split from group consensus, 1=deeply aligned).',
+    'Use the same respondent names as listed above.'
   ].join('\n');
 
   const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
@@ -66,7 +74,8 @@ export async function runAnalysis(client_id, extraction_goal, response_id, { sup
     },
     body: JSON.stringify({
       model: 'claude-sonnet-4-6',
-      max_tokens: 1024,
+      max_tokens: 2048,
+      temperature: 0,
       system: analysis_system_prompt,
       messages: [{ role: 'user', content: userMessage }]
     })
@@ -97,9 +106,15 @@ export async function runAnalysis(client_id, extraction_goal, response_id, { sup
   }
 
   // Derive flat scores from dimensions (new schema) or use legacy scores field
-  const scores = parsed.dimensions
+  const dimScores = parsed.dimensions
     ? Object.fromEntries(Object.entries(parsed.dimensions).map(([k, v]) => [k, v.score]))
     : (parsed.scores || null);
+
+  // Store respondent classifications alongside scores (no schema change needed)
+  const scores = { ...dimScores };
+  if (parsed.respondents && Array.isArray(parsed.respondents)) {
+    scores._respondents = parsed.respondents;
+  }
 
   const insertRes = await sb('/vh_analysis', {
     method: 'POST',
