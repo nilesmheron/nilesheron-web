@@ -66,7 +66,7 @@ export default async function handler(req, res) {
 
     try {
       const r = await sb(
-        `/vh_clients?token=eq.${encodeURIComponent(token)}&select=id,client_name,extraction_goal`
+        `/vh_clients?token=eq.${encodeURIComponent(token)}&select=id,client_name,extraction_goal,max_exchanges`
       );
 
       if (!r.ok) {

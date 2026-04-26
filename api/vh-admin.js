@@ -6,12 +6,14 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
 
-function sb(path) {
+function sb(path, options = {}) {
   return fetch(`${SUPABASE_URL}/rest/v1${path}`, {
+    ...options,
     headers: {
       'Content-Type': 'application/json',
       apikey: SUPABASE_KEY,
-      Authorization: `Bearer ${SUPABASE_KEY}`
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      ...(options.headers || {})
     }
   });
 }
@@ -45,6 +47,35 @@ export default async function handler(req, res) {
     }
   }
 
+  // PATCH — update editable client settings
+  if (req.method === 'PATCH') {
+    const { client_id, expected_respondent_count, max_exchanges } = req.body || {};
+    if (!client_id) return res.status(400).json({ error: 'client_id required' });
+
+    const updates = {};
+    if (expected_respondent_count != null) {
+      const n = Number(expected_respondent_count);
+      if (Number.isInteger(n) && n > 0) updates.expected_respondent_count = n;
+    }
+    if (max_exchanges != null) {
+      const n = Number(max_exchanges);
+      if (Number.isInteger(n) && n >= 2 && n <= 30) updates.max_exchanges = n;
+    }
+    if (!Object.keys(updates).length) return res.status(400).json({ error: 'no valid fields' });
+
+    try {
+      const r = await sb(`/vh_clients?id=eq.${encodeURIComponent(client_id)}`, {
+        method: 'PATCH',
+        headers: { Prefer: 'return=minimal' },
+        body: JSON.stringify(updates)
+      });
+      if (!r.ok) return res.status(500).json({ error: 'Update failed' });
+      return res.status(200).json({ ok: true });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
   const { client_id } = req.query;
@@ -53,7 +84,7 @@ export default async function handler(req, res) {
   if (client_id) {
     try {
       const [clientRes, responsesRes, analysisRes] = await Promise.all([
-        sb(`/vh_clients?id=eq.${encodeURIComponent(client_id)}&select=id,client_name,extraction_goal,token,created_at,expected_respondent_count`),
+        sb(`/vh_clients?id=eq.${encodeURIComponent(client_id)}&select=id,client_name,extraction_goal,token,created_at,expected_respondent_count,max_exchanges`),
         sb(`/vh_responses?client_id=eq.${encodeURIComponent(client_id)}&select=id,respondent_name,respondent_title,respondent_email,transcript,completed_at&order=completed_at.asc`),
         sb(`/vh_analysis?client_id=eq.${encodeURIComponent(client_id)}&select=scores,narrative,dimensions,created_at&order=created_at.desc&limit=1`)
       ]);

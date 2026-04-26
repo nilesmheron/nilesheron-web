@@ -970,6 +970,7 @@ function aiTextToHtml(text) {
         return Promise.reject('invalid');
       }
       sessionData = data;
+      TOTAL_EXCHANGES = data.max_exchanges || TOTAL_EXCHANGES;
 
       var goal = GOAL_MAP[data.extraction_goal] || { index: '01', name: data.extraction_goal };
       document.getElementById('goal-index').textContent    = '/' + goal.index;

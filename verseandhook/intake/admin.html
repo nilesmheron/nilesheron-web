@@ -1250,7 +1250,7 @@ function renderAnalysisTab(data) {
       });
     } else if (typeof ana.dimensions === 'object') {
       dims = Object.entries(ana.dimensions).map(function(e) {
-        return { name: e[0], score: e[1].score || 0, narrative: e[1].narrative || '' };
+        return { name: e[0], score: e[1].score || 0, narrative: e[1].insight || e[1].narrative || '' };
       });
     }
   } else if (ana.scores) {
@@ -1399,25 +1399,76 @@ function renderSettingsTab(data) {
     '</div>';
   }
 
+  function editField(label, inputId, value, type, min, max, helpText) {
+    return '<div class="field-row" style="flex-direction:column;align-items:flex-start;gap:8px;padding:14px 0">' +
+      '<label class="field-label k-mono k-slash" for="' + inputId + '">' + esc(label) + '</label>' +
+      '<div style="display:flex;align-items:center;gap:10px;width:100%">' +
+        '<input class="k-input" id="' + inputId + '" type="' + type + '" value="' + esc(String(value || '')) + '"' +
+          (min != null ? ' min="' + min + '"' : '') +
+          (max != null ? ' max="' + max + '"' : '') +
+          ' style="width:' + (type === 'number' ? '90px' : '100%') + '">' +
+        (helpText ? '<span class="k-mono" style="color:var(--kimba-mute);white-space:nowrap">' + esc(helpText) + '</span>' : '') +
+      '</div>' +
+    '</div>';
+  }
+
   var html =
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:32px">' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:40px">' +
       '<div>' +
         '<div class="admin-section-title">session details</div>' +
         field('client name', c.client_name) +
         field('extraction goal', goal.name) +
-        field('expected respondents', c.expected_respondent_count || '—') +
         field('created', fmtDate(c.created_at)) +
+        editField('expected respondents', 'setting-respondents', c.expected_respondent_count || 8, 'number', 1, 200, 'used for completion %') +
       '</div>' +
       '<div>' +
         '<div class="admin-section-title">behavior</div>' +
         field('model', 'claude haiku 4.5') +
-        field('max exchanges', '8') +
+        editField('max exchanges', 'setting-max-exchanges', c.max_exchanges || 8, 'number', 2, 30, 'turns before closing') +
         field('closing trigger', 'auto') +
         field('auto-run analysis', 'on completion') +
       '</div>' +
+    '</div>' +
+    '<div style="margin-top:24px;display:flex;gap:8px;align-items:center">' +
+      '<button class="k-btn k-btn-red" onclick="saveSettings()">save changes</button>' +
+      '<span class="k-mono" id="settings-save-status" style="color:var(--kimba-mute)"></span>' +
     '</div>';
 
   document.getElementById('tab-settings').innerHTML = html;
+}
+
+function saveSettings() {
+  if (!currentDetail) return;
+  var respondents  = document.getElementById('setting-respondents');
+  var maxExchanges = document.getElementById('setting-max-exchanges');
+  if (!respondents || !maxExchanges) return;
+
+  var payload = {
+    client_id: currentDetail.client.id,
+    expected_respondent_count: parseInt(respondents.value, 10) || null,
+    max_exchanges: parseInt(maxExchanges.value, 10) || null
+  };
+
+  var statusEl = document.getElementById('settings-save-status');
+  statusEl.textContent = 'saving…';
+
+  apiFetch('/api/vh-admin', {
+    method: 'PATCH',
+    body: JSON.stringify(payload)
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(result) {
+    if (result.ok) {
+      statusEl.textContent = 'saved ✓';
+      // Refresh local client data
+      currentDetail.client.expected_respondent_count = payload.expected_respondent_count;
+      currentDetail.client.max_exchanges = payload.max_exchanges;
+      setTimeout(function() { statusEl.textContent = ''; }, 2500);
+    } else {
+      statusEl.textContent = 'error: ' + (result.error || 'unknown');
+    }
+  })
+  .catch(function() { statusEl.textContent = 'network error'; });
 }
 
 function renderAside(data) {
@@ -1536,11 +1587,40 @@ function openDrawer(idx) {
   document.getElementById('drawer-name').textContent = r.respondent_name;
   document.getElementById('drawer-meta').textContent = r.respondent_title + ' · ' + r.respondent_email + ' · ' + relativeTime(r.completed_at);
 
-  var transcript = r.transcript || [];
+  // Look up analysis summary and classification for this respondent
+  var summary = null;
+  var kind    = null;
+  var ana = currentDetail.analysis;
+  if (ana && ana.scores && Array.isArray(ana.scores._respondents)) {
+    var match = ana.scores._respondents.find(function(rp) {
+      return rp.name && rp.name.toLowerCase() === r.respondent_name.toLowerCase();
+    });
+    if (match) { summary = match.summary || null; kind = match.kind || null; }
+  }
+
   var html = '';
+
+  // Summary block
+  if (summary || kind) {
+    html += '<div style="background:var(--kimba-paper-2);border:1px solid var(--kimba-rule);padding:14px 16px;margin-bottom:20px">';
+    if (kind) {
+      var kindColor = kind === 'conflict' ? 'var(--kimba-red)' : kind === 'outlier' ? 'var(--kimba-mute)' : 'var(--kimba-ink)';
+      html += '<div class="k-mono" style="color:' + kindColor + ';margin-bottom:8px">' +
+        (kind === 'alignment' ? '● convergence' : kind === 'conflict' ? '● conflict' : '○ outlier') +
+      '</div>';
+    }
+    if (summary) {
+      html += '<p class="k-serif" style="font-size:15px;line-height:1.5;color:var(--kimba-ink-2);margin:0">' + esc(summary) + '</p>';
+    }
+    html += '</div>';
+  }
+
+  // Transcript
+  var transcript = r.transcript || [];
   if (!transcript.length) {
-    html = '<div class="k-mono" style="color:var(--kimba-mute);font-size:11px">/no transcript available</div>';
+    html += '<div class="k-mono" style="color:var(--kimba-mute);font-size:11px">/no transcript available</div>';
   } else {
+    html += '<div class="admin-section-title" style="margin-bottom:16px">transcript</div>';
     transcript.forEach(function(msg) {
       var isAi = msg.role === 'assistant';
       html += '<div class="transcript-msg ' + (isAi ? 'ai' : 'user') + '">' +
