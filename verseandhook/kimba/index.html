@@ -700,13 +700,13 @@ hr.k-rule { border: 0; border-top: 1px solid var(--kimba-rule); }
         <div class="kimba-mark-circle" style="width: 120px; height: 120px;">
           <img src="/verseandhook/design_handoff_kimba/assets/kimba-portrait.jpg" alt="">
         </div>
-        <span class="k-mono" style="color: var(--kimba-red);">
+        <span class="k-mono" id="error-tag" style="color: var(--kimba-red);">
           <span style="color: var(--kimba-red);">/</span>link not recognized
         </span>
-        <h1 class="k-display" style="font-size: 64px; line-height: 0.95;">
+        <h1 class="k-display" id="error-h" style="font-size: 64px; line-height: 0.95;">
           this link doesn't work<span style="color: var(--kimba-red);">.</span>
         </h1>
-        <p class="k-serif" style="font-size: 19px; color: var(--kimba-ink-2); max-width: 52ch;">
+        <p class="k-serif" id="error-body" style="font-size: 19px; color: var(--kimba-ink-2); max-width: 52ch;">
           the token in this url didn't match any active session. it might be a typo, or the link might have been replaced. ping the person who sent it.
         </p>
         <span class="k-mono" style="color: var(--kimba-mute-2); margin-top: 12px;">
@@ -923,6 +923,33 @@ var GOAL_MAP = {
   'feedback':  { index: '03', name: 'engagement feedback' }
 };
 
+var ERROR_COPY = {
+  invalid: {
+    tag: '/link not recognized',
+    h:   "this link doesn't work",
+    body: "the token in this url didn't match any active session. it might be a typo, or the link might have been replaced. ping the person who sent it."
+  },
+  used: {
+    tag: '/already submitted',
+    h:   "you've already done this one",
+    body: "this link was already used to submit a response. each respondent gets one conversation. if you'd like to add something, reach out to v&h directly."
+  }
+};
+
+function showError(kind, meta) {
+  var copy = ERROR_COPY[kind] || ERROR_COPY.invalid;
+  var body = copy.body;
+  if (kind === 'used' && meta && meta.used_at) {
+    var d = new Date(meta.used_at);
+    var dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toLowerCase();
+    body = "this link was used to submit a response on " + dateStr + ". each respondent gets one conversation. if you'd like to add something, reach out to v&h directly.";
+  }
+  document.getElementById('error-tag').textContent = copy.tag;
+  document.getElementById('error-h').innerHTML = copy.h + '<span style="color:var(--kimba-red)">.</span>';
+  document.getElementById('error-body').textContent = body;
+  show('error');
+}
+
 // ==========================================================
 // View management
 // ==========================================================
@@ -964,9 +991,7 @@ function aiTextToHtml(text) {
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (data.error) {
-        // TODO phase 3: differentiate error kinds once used_at is added
-        // to vh_clients schema. All errors show the same copy for now.
-        show('error');
+        showError(data.error, data);
         return Promise.reject('invalid');
       }
       sessionData = data;

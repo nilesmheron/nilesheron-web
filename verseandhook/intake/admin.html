@@ -734,30 +734,30 @@ input[type="number"].k-input { width: 90px; }
     <!-- SIDEBAR -->
     <aside class="admin-sidebar">
       <div class="sidebar-section">/sessions</div>
-      <button class="admin-nav-item active" id="nav-all" onclick="showList()">
+      <button class="admin-nav-item active" id="nav-all" onclick="showList('all')">
         <span>all clients</span>
         <span class="count" id="sidebar-all">—</span>
       </button>
-      <button class="admin-nav-item" id="nav-active">
+      <button class="admin-nav-item" id="nav-active" onclick="showList('active')">
         <span>active</span>
         <span class="count" id="sidebar-active">—</span>
       </button>
-      <button class="admin-nav-item" id="nav-complete">
+      <button class="admin-nav-item" id="nav-complete" onclick="showList('complete')">
         <span>complete</span>
         <span class="count" id="sidebar-complete">—</span>
       </button>
       <div class="sidebar-section">/views</div>
-      <button class="admin-nav-item">
+      <button class="admin-nav-item" id="nav-respondents" onclick="showList('all')">
         <span>respondents</span>
         <span class="count" id="sidebar-respondents">—</span>
       </button>
-      <button class="admin-nav-item">
+      <button class="admin-nav-item" id="nav-analysis-runs" onclick="showPlaceholder('analysis runs', 'cross-session analysis history is coming in a future update.')">
         <span>analysis runs</span>
-        <span class="count">—</span>
+        <span class="count" id="sidebar-analysis-runs">—</span>
       </button>
       <div class="sidebar-section">/account</div>
-      <button class="admin-nav-item"><span>team</span></button>
-      <button class="admin-nav-item"><span>settings</span></button>
+      <button class="admin-nav-item" id="nav-team" onclick="showPlaceholder('team', 'team management and seat invites are coming in a future update.')"><span>team</span></button>
+      <button class="admin-nav-item" id="nav-account-settings" onclick="showPlaceholder('account settings', 'global account settings are coming in a future update.')"><span>settings</span></button>
       <div class="sidebar-foot">
         <button class="k-btn k-btn-red" onclick="openModal()">+ new session</button>
       </div>
@@ -813,6 +813,20 @@ input[type="number"].k-input { width: 90px; }
             <h3 class="admin-section-title" style="margin-bottom:14px">recent activity</h3>
             <div id="detail-activity"></div>
           </aside>
+        </div>
+      </div>
+
+      <!-- PLACEHOLDER VIEW -->
+      <div id="view-placeholder" style="display:none">
+        <div class="admin-pageheader">
+          <div>
+            <div class="k-mono k-slash" style="margin-bottom:8px" id="placeholder-tag">coming soon</div>
+            <h1 id="placeholder-title">—<span class="red">.</span></h1>
+          </div>
+        </div>
+        <div style="padding:60px 32px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px">
+          <div class="empty-mark"><img src="../kimba/assets/kimba-portrait.jpg" alt=""></div>
+          <p class="k-serif" id="placeholder-body" style="font-size:18px;color:var(--kimba-ink-2);max-width:44ch"></p>
         </div>
       </div>
 
@@ -1026,12 +1040,46 @@ function buildLink(token) {
 // =====================================================================
 // List view
 // =====================================================================
-function showList() {
+var currentFilter = 'all';
+
+function setNavActive(id) {
+  document.querySelectorAll('.admin-nav-item').forEach(function(el) { el.classList.remove('active'); });
+  var el = document.getElementById(id);
+  if (el) el.classList.add('active');
+}
+
+function showList(filter) {
+  currentFilter = filter || 'all';
   document.getElementById('view-list').style.display = '';
   document.getElementById('view-detail').style.display = 'none';
-  document.getElementById('nav-all').classList.add('active');
-  document.getElementById('topbar-crumbs').innerHTML = '<a onclick="showList()">all clients</a>';
-  loadClients();
+  document.getElementById('view-placeholder').style.display = 'none';
+
+  var navId = currentFilter === 'active' ? 'nav-active' : currentFilter === 'complete' ? 'nav-complete' : 'nav-all';
+  setNavActive(navId);
+
+  var label = currentFilter === 'active' ? 'active clients' : currentFilter === 'complete' ? 'complete clients' : 'all clients';
+  document.getElementById('topbar-crumbs').innerHTML = '<a onclick="showList(\'all\')">all clients</a>';
+
+  if (allClients.length) {
+    renderList(filterClients(allClients, currentFilter));
+  } else {
+    loadClients();
+  }
+}
+
+function filterClients(clients, filter) {
+  if (filter === 'active') return clients.filter(function(c) { return !c.expected_respondent_count || c.response_count < c.expected_respondent_count; });
+  if (filter === 'complete') return clients.filter(function(c) { return c.expected_respondent_count && c.response_count >= c.expected_respondent_count; });
+  return clients;
+}
+
+function showPlaceholder(title, body) {
+  document.getElementById('view-list').style.display = 'none';
+  document.getElementById('view-detail').style.display = 'none';
+  document.getElementById('view-placeholder').style.display = '';
+  document.getElementById('placeholder-title').innerHTML = title + '<span class="red">.</span>';
+  document.getElementById('placeholder-body').textContent = body;
+  document.getElementById('topbar-crumbs').innerHTML = '<a onclick="showList(\'all\')">all clients</a>';
 }
 
 function loadClients() {
@@ -1041,7 +1089,7 @@ function loadClients() {
   .then(function(data) {
     if (data.error) { renderListError(data.error); return; }
     allClients = data;
-    renderList(data);
+    renderList(filterClients(data, currentFilter));
     updateSidebarCounts(data);
   })
   .catch(function(e) { renderListError(e.message); });
@@ -1112,7 +1160,8 @@ function renderListError(msg) {
 function openDetail(clientId) {
   document.getElementById('view-list').style.display = 'none';
   document.getElementById('view-detail').style.display = '';
-  document.getElementById('nav-all').classList.remove('active');
+  document.getElementById('view-placeholder').style.display = 'none';
+  document.querySelectorAll('.admin-nav-item').forEach(function(el) { el.classList.remove('active'); });
   document.getElementById('tab-analysis').innerHTML = '<div style="padding:40px 0;color:var(--kimba-mute);font-family:var(--kimba-mono);font-size:11px">loading…</div>';
   document.getElementById('tab-respondents').innerHTML = '';
   document.getElementById('tab-settings').innerHTML = '';
