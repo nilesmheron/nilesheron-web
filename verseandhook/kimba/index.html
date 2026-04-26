@@ -1188,13 +1188,17 @@ function submitIntake() {
       respondent_email: identity.email,
       transcript: convo
     })
-  }).catch(function(e) { console.error('[vh-response]', e.message); });
+  })
+  .then(function(r) { if (!r.ok) r.text().then(function(t) { console.error('[vh-response]', r.status, t); }); })
+  .catch(function(e) { console.error('[vh-response network]', e.message); });
 
   fetch('/api/vh-session', {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ token: sessionToken })
-  }).catch(function(e) { console.error('[vh-session complete]', e.message); });
+  })
+  .then(function(r) { if (!r.ok) r.text().then(function(t) { console.error('[vh-session complete]', r.status, t); }); })
+  .catch(function(e) { console.error('[vh-session complete network]', e.message); });
 }
 
 // ==========================================================
