@@ -747,7 +747,7 @@ input[type="number"].k-input { width: 90px; }
         <span class="count" id="sidebar-complete">—</span>
       </button>
       <div class="sidebar-section">/views</div>
-      <button class="admin-nav-item" id="nav-respondents" onclick="showList('all')">
+      <button class="admin-nav-item" id="nav-respondents" onclick="showAllRespondents()">
         <span>respondents</span>
         <span class="count" id="sidebar-respondents">—</span>
       </button>
@@ -770,10 +770,10 @@ input[type="number"].k-input { width: 90px; }
       <div id="view-list">
         <div class="admin-pageheader">
           <div>
-            <div class="k-mono k-slash" style="margin-bottom:8px">active sessions</div>
-            <h1>clients<span class="red">.</span></h1>
+            <div class="k-mono k-slash" id="list-page-tag" style="margin-bottom:8px">active sessions</div>
+            <h1 id="list-page-title">clients<span class="red">.</span></h1>
           </div>
-          <div class="actions">
+          <div class="actions" id="list-page-actions">
             <button class="k-btn k-btn-ghost">export csv</button>
             <button class="k-btn k-btn-red" onclick="openModal()">+ new session</button>
           </div>
@@ -1074,6 +1074,9 @@ function showList(filter) {
   document.getElementById('view-list').style.display = '';
   document.getElementById('view-detail').style.display = 'none';
   document.getElementById('view-placeholder').style.display = 'none';
+  document.getElementById('list-page-tag').textContent = 'active sessions';
+  document.getElementById('list-page-title').innerHTML = 'clients<span class="red">.</span>';
+  document.getElementById('list-page-actions').style.display = '';
 
   var navId = currentFilter === 'active' ? 'nav-active' : currentFilter === 'complete' ? 'nav-complete' : 'nav-all';
   setNavActive(navId);
@@ -1092,6 +1095,67 @@ function filterClients(clients, filter) {
   if (filter === 'active') return clients.filter(function(c) { return !c.expected_respondent_count || c.response_count < c.expected_respondent_count; });
   if (filter === 'complete') return clients.filter(function(c) { return c.expected_respondent_count && c.response_count >= c.expected_respondent_count; });
   return clients;
+}
+
+var pendingRespondentOpen = null; // name to auto-open drawer after detail loads
+
+function showAllRespondents() {
+  currentFilter = 'respondents';
+  document.getElementById('view-list').style.display = '';
+  document.getElementById('view-detail').style.display = 'none';
+  document.getElementById('view-placeholder').style.display = 'none';
+  setNavActive('nav-respondents');
+  document.getElementById('topbar-crumbs').innerHTML = '<a onclick="showList(\'all\')">all clients</a><span class="sep">/</span><span style="color:var(--kimba-paper-2)">respondents</span>';
+  document.getElementById('list-page-tag').textContent = 'all sessions';
+  document.getElementById('list-page-title').innerHTML = 'respondents<span class="red">.</span>';
+  document.getElementById('list-page-actions').style.display = 'none';
+  document.getElementById('list-content').innerHTML = '<div style="padding:40px 32px;color:var(--kimba-mute);font-family:var(--kimba-mono);font-size:11px">loading…</div>';
+
+  apiFetch('/api/vh-admin?all_responses=true')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.error) {
+        document.getElementById('list-content').innerHTML = '<div style="padding:40px 32px"><span class="k-mono" style="color:var(--kimba-red)">/error · ' + esc(data.error) + '</span></div>';
+        return;
+      }
+      if (!data.length) {
+        document.getElementById('list-content').innerHTML =
+          '<div class="empty-state">' +
+            '<div class="empty-mark"><img src="../kimba/assets/kimba-portrait.jpg" alt=""></div>' +
+            '<span class="k-mono k-slash">no responses yet</span>' +
+            '<h1 class="k-display" style="font-size:54px">nobody\'s talked yet<span class="red">.</span></h1>' +
+          '</div>';
+        return;
+      }
+
+      var rows = data.map(function(r) {
+        var client = r.vh_clients || {};
+        return '<tr role="button" tabindex="0"' +
+          ' onclick="openRespondentDetail(\'' + esc(client.id || '') + '\',\'' + esc(r.respondent_name) + '\')"' +
+          ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openRespondentDetail(\'' + esc(client.id || '') + '\',\'' + esc(r.respondent_name) + '\')}"' +
+          ' style="cursor:pointer">' +
+          '<td class="name">' + esc(r.respondent_name) + '</td>' +
+          '<td><span style="color:var(--kimba-mute-2)">' + esc(r.respondent_title || '—') + '</span></td>' +
+          '<td><span class="k-mono" style="font-size:12px;color:var(--kimba-ink-2)">' + esc(r.respondent_email || '—') + '</span></td>' +
+          '<td><span class="k-mono" style="font-size:12px">' + esc(client.client_name || '—') + '</span></td>' +
+          '<td><span class="k-mono" style="font-size:11px;color:var(--kimba-mute)">' + relativeTime(r.completed_at) + '</span></td>' +
+        '</tr>';
+      }).join('');
+
+      document.getElementById('list-content').innerHTML =
+        '<table class="admin-table">' +
+          '<thead><tr><th>name</th><th>role</th><th>email</th><th>session</th><th>responded</th></tr></thead>' +
+          '<tbody>' + rows + '</tbody>' +
+        '</table>';
+    })
+    .catch(function() {
+      document.getElementById('list-content').innerHTML = '<div style="padding:40px 32px"><span class="k-mono" style="color:var(--kimba-red)">/error · connection failed</span></div>';
+    });
+}
+
+function openRespondentDetail(clientId, respondentName) {
+  pendingRespondentOpen = respondentName;
+  openDetail(clientId);
 }
 
 function showPlaceholder(title, body) {
@@ -1269,8 +1333,15 @@ function renderDetail(data) {
   renderSettingsTab(data);
   renderAside(data);
 
-  // Switch to default tab
-  switchTab('analysis');
+  // If navigated from respondents view, open that respondent's drawer directly
+  if (pendingRespondentOpen) {
+    var name = pendingRespondentOpen;
+    pendingRespondentOpen = null;
+    switchTab('respondents');
+    setTimeout(function() { openDrawerByName(name); }, 100);
+  } else {
+    switchTab('analysis');
+  }
 }
 
 function renderAnalysisTab(data) {

@@ -78,7 +78,21 @@ export default async function handler(req, res) {
 
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { client_id } = req.query;
+  const { client_id, all_responses } = req.query;
+
+  // All respondents across all clients (for the respondents sidebar view)
+  if (all_responses === 'true') {
+    try {
+      const r = await sb(
+        '/vh_responses?select=id,respondent_name,respondent_title,respondent_email,completed_at,client_id,vh_clients(id,client_name)&order=completed_at.desc'
+      );
+      if (!r.ok) return res.status(500).json({ error: 'Failed to fetch respondents' });
+      const rows = await r.json();
+      return res.status(200).json(rows);
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
 
   // Single client detail: client record + all responses + latest analysis
   if (client_id) {
