@@ -78,5 +78,31 @@ export default async function handler(req, res) {
     }
   }
 
+  // PATCH — mark token used after intake completes (called by respondent page, no auth required)
+  if (req.method === 'PATCH') {
+    const { token } = req.body || {};
+    if (!token) return res.status(400).json({ error: 'token required' });
+
+    try {
+      const r = await sb(
+        `/vh_clients?token=eq.${encodeURIComponent(token)}`,
+        {
+          method: 'PATCH',
+          headers: { Prefer: 'return=minimal' },
+          body: JSON.stringify({ used_at: new Date().toISOString() })
+        }
+      );
+
+      if (!r.ok) {
+        const err = await r.text();
+        return res.status(r.status).json({ error: err });
+      }
+
+      return res.status(200).json({ ok: true });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
   return res.status(405).json({ error: 'Method not allowed' });
 }

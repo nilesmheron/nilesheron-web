@@ -877,9 +877,7 @@ hr.k-rule { border: 0; border-top: 1px solid var(--kimba-rule); }
   </div>
 
   <!-- =====================================================
-       VIEW: Thanks — phase 2 stub with design intent
-       TODO phase 3: wire POST /api/vh-response for transcript persistence
-       and POST /api/vh-session/{token}/complete. See IMPLEMENTATION.md §phase-3.
+       VIEW: Thanks — phase 3 complete (submitIntake fires on show)
        ===================================================== -->
   <div class="view" id="view-thanks">
     <div class="surface-thanks">
@@ -908,6 +906,7 @@ hr.k-rule { border: 0; border-top: 1px solid var(--kimba-rule); }
 // State
 // ==========================================================
 var sessionData  = null;   // { id, client_name, extraction_goal }
+var sessionToken = null;   // raw token from URL, kept for /complete call
 var goalConfig   = null;   // { intake_system_prompt, opener_message }
 var identity     = { name: '', title: '', email: '' };
 var convo        = [];     // [{ role: 'user'|'assistant', content }]
@@ -959,6 +958,7 @@ function aiTextToHtml(text) {
   var params = new URLSearchParams(window.location.search);
   var token = params.get('token');
   if (!token) { show('error'); return; }
+  sessionToken = token;
 
   fetch('/api/vh-session?token=' + encodeURIComponent(token))
     .then(function(r) { return r.json(); })
@@ -1140,7 +1140,7 @@ function showSkipButton() {
   btn.addEventListener('click', function() {
     btn.remove();
     show('thanks');
-    // TODO phase 3: POST /api/vh-response + /api/vh-session/{token}/complete — see IMPLEMENTATION.md §phase-3
+    submitIntake();
   });
   document.getElementById('chat-thread').appendChild(btn);
   scrollToBottom();
@@ -1172,6 +1172,29 @@ function unlock() {
   input.disabled = false;
   btn.disabled   = !input.value.trim();
   input.focus();
+}
+
+// ==========================================================
+// Intake submission (fire-and-forget; thanks view already shown)
+// ==========================================================
+function submitIntake() {
+  fetch('/api/vh-response', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      client_id: sessionData.id,
+      respondent_name: identity.name,
+      respondent_title: identity.title,
+      respondent_email: identity.email,
+      transcript: convo
+    })
+  }).catch(function(e) { console.error('[vh-response]', e.message); });
+
+  fetch('/api/vh-session', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token: sessionToken })
+  }).catch(function(e) { console.error('[vh-session complete]', e.message); });
 }
 
 // ==========================================================
@@ -1222,7 +1245,7 @@ function postToChat(userText) {
 
     if (hasComplete) {
       show('thanks');
-      // TODO phase 3: POST /api/vh-response + /api/vh-session/{token}/complete — see IMPLEMENTATION.md §phase-3
+      submitIntake();
     } else if (hasClosing) {
       isClosing = true;
       showSkipButton();
