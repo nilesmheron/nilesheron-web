@@ -109,12 +109,12 @@ Two buckets. Both can post to a single `/api/track` Vercel edge function that wr
 - `total_duration_ms`
 - `completion_mode` — `complete | wrap_up | timeout`
 
-**Admin view** (not yet designed — propose adding to the analysis screen):
+**Admin view** — deferred to a future phase. Events are instrumented as of Phase 6 (`vh_events` table, `POST /api/vh-track`). Build the surface once real data has accumulated. Proposed additions to the admin analysis screen:
 - Per-mode completion rate (Brand Discovery vs Project Intake vs Engagement Feedback)
 - Average exchange depth before completion
 - Drop-off heatmap by exchange number
 
-If this is out of scope for v1, defer — but instrument the events from day one so the data exists when the surface gets designed.
+Data is available now. Surface design is the next step when V&H is ready to act on it.
 
 ---
 

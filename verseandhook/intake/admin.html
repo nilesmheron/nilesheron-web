@@ -838,10 +838,10 @@ input[type="number"].k-input { width: 90px; }
      TRANSCRIPT DRAWER
      ===================================================================== -->
 <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
-<div class="transcript-drawer" id="transcript-drawer">
+<div class="transcript-drawer" id="transcript-drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-name">
   <div class="drawer-header">
     <div class="drawer-respondent-info">
-      <div class="drawer-respondent-name" id="drawer-name"></div>
+      <div class="drawer-respondent-name" id="drawer-name" tabindex="-1"></div>
       <div class="drawer-respondent-meta" id="drawer-meta"></div>
     </div>
     <button class="drawer-close" onclick="closeDrawer()">close ✕</button>
@@ -852,7 +852,7 @@ input[type="number"].k-input { width: 90px; }
 <!-- =====================================================================
      NEW SESSION MODAL
      ===================================================================== -->
-<div class="modal-backdrop" id="modal-new-session" style="display:none" onclick="handleModalBackdropClick(event)">
+<div class="modal-backdrop" id="modal-new-session" role="dialog" aria-modal="true" aria-labelledby="modal-heading" style="display:none" onclick="handleModalBackdropClick(event)">
   <div class="modal-inner" id="modal-inner">
 
     <!-- FORM COLUMN -->
@@ -861,7 +861,7 @@ input[type="number"].k-input { width: 90px; }
         <span class="k-mono k-slash">new session</span>
         <button class="modal-close" onclick="closeModal()">close ✕</button>
       </div>
-      <h2 class="k-display modal-headline">configure<span class="red">.</span></h2>
+      <h2 class="k-display modal-headline" id="modal-heading">configure<span class="red">.</span></h2>
 
       <div>
         <label class="k-mono modal-label" for="modal-name">client name</label>
@@ -913,6 +913,27 @@ input[type="number"].k-input { width: 90px; }
 </div>
 
 <script>
+// =====================================================================
+// Focus trap — returns a cleanup function
+// =====================================================================
+function trapFocus(container) {
+  var sel = 'button:not([disabled]), [href], input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])';
+  function handler(e) {
+    if (e.key !== 'Tab') return;
+    var nodes = Array.prototype.slice.call(container.querySelectorAll(sel));
+    if (!nodes.length) return;
+    var first = nodes[0];
+    var last  = nodes[nodes.length - 1];
+    if (e.shiftKey) {
+      if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+    } else {
+      if (document.activeElement === last)  { e.preventDefault(); first.focus(); }
+    }
+  }
+  container.addEventListener('keydown', handler);
+  return function() { container.removeEventListener('keydown', handler); };
+}
+
 // =====================================================================
 // Constants
 // =====================================================================
@@ -1343,7 +1364,12 @@ function renderAnalysisTab(data) {
       var x    = Math.max(5, Math.min(95, (r.x || 0.5) * 100)).toFixed(1) + '%';
       var y    = Math.max(5, Math.min(95, (1 - (r.y || 0.5)) * 100)).toFixed(1) + '%';
       var kind = r.kind || 'alignment';
-      html += '<div class="point ' + kind + '" data-rname="' + esc(r.name || '') + '" onclick="openDrawerByName(this.dataset.rname)" style="left:' + x + ';top:' + y + '" title="' + esc(r.name || '') + '">' + (i+1) + '</div>';
+      html += '<div class="point ' + kind + '" role="button" tabindex="0"' +
+        ' data-rname="' + esc(r.name || '') + '"' +
+        ' onclick="openDrawerByName(this.dataset.rname)"' +
+        ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openDrawerByName(this.dataset.rname)}"' +
+        ' aria-label="' + esc(r.name || '') + ', ' + kind + ', open transcript"' +
+        ' style="left:' + x + ';top:' + y + '" title="' + esc(r.name || '') + '">' + (i+1) + '</div>';
     });
   } else {
     html += '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">' +
@@ -1424,7 +1450,10 @@ function renderRespondentsTab(data) {
 
   var html = '<div style="margin-bottom:16px"><span class="k-mono" style="color:var(--kimba-mute)">' + res.length + ' respondent' + (res.length !== 1 ? 's' : '') + '</span></div>';
   res.forEach(function(r, i) {
-    html += '<div class="respondent-row" onclick="openDrawer(' + i + ')">' +
+    html += '<div class="respondent-row" role="button" tabindex="0"' +
+      ' onclick="openDrawer(' + i + ')"' +
+      ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openDrawer(' + i + ')}"' +
+      ' aria-label="' + esc(r.respondent_name) + ', open transcript">' +
       '<div>' +
         '<div class="rname">' + esc(r.respondent_name) + '</div>' +
         '<div class="rrole">' + esc(r.respondent_title) + '</div>' +
@@ -1597,6 +1626,7 @@ function runAnalysis() {
   // Trigger animation after reflow
   fill.getBoundingClientRect();
   fill.classList.add('running');
+  setTimeout(function() { document.getElementById('overlay-heading').focus(); }, 50);
 
   var btn = document.getElementById('btn-run-analysis');
   if (btn) { btn.disabled = true; btn.textContent = 'running…'; }
@@ -1628,6 +1658,9 @@ function runAnalysis() {
 // =====================================================================
 // Transcript drawer
 // =====================================================================
+var drawerOpener    = null;
+var drawerTrapClean = null;
+
 function openDrawerByName(name) {
   if (!currentDetail) return;
   var responses = currentDetail.responses || [];
@@ -1692,18 +1725,27 @@ function openDrawer(idx) {
   document.getElementById('drawer-content').innerHTML = html;
 
   document.getElementById('drawer-overlay').style.display = '';
-  document.getElementById('transcript-drawer').classList.add('open');
+  var drawer = document.getElementById('transcript-drawer');
+  drawer.classList.add('open');
+  drawerOpener = document.activeElement;
+  drawerTrapClean = trapFocus(drawer);
+  // Focus the name heading so screen readers announce who's drawer this is
+  setTimeout(function() { document.getElementById('drawer-name').focus(); }, 50);
 }
 
 function closeDrawer() {
+  if (drawerTrapClean) { drawerTrapClean(); drawerTrapClean = null; }
   document.getElementById('transcript-drawer').classList.remove('open');
   document.getElementById('drawer-overlay').style.display = 'none';
+  if (drawerOpener) { drawerOpener.focus(); drawerOpener = null; }
 }
 
 // =====================================================================
 // New session modal
 // =====================================================================
 var modalSubmitted = false;
+var modalOpener    = null;
+var modalTrapClean = null;
 
 function openModal() {
   modalSubmitted = false;
@@ -1723,12 +1765,17 @@ function openModal() {
 
   renderModeOptions();
   updatePreview();
-  document.getElementById('modal-new-session').style.display = 'flex';
+  modalOpener = document.activeElement;
+  var modal = document.getElementById('modal-new-session');
+  modal.style.display = 'flex';
+  modalTrapClean = trapFocus(modal);
   setTimeout(function() { document.getElementById('modal-name').focus(); }, 50);
 }
 
 function closeModal() {
+  if (modalTrapClean) { modalTrapClean(); modalTrapClean = null; }
   document.getElementById('modal-new-session').style.display = 'none';
+  if (modalOpener) { modalOpener.focus(); modalOpener = null; }
 }
 
 function handleModalBackdropClick(e) {
@@ -1863,10 +1910,10 @@ function copyCreatedLink(link) {
 <!-- =====================================================================
      ANALYSIS RUNNING OVERLAY
      ===================================================================== -->
-<div id="analysis-overlay" class="analysis-overlay-backdrop" style="display:none">
+<div id="analysis-overlay" class="analysis-overlay-backdrop" role="alertdialog" aria-modal="true" aria-labelledby="overlay-heading" style="display:none">
   <div class="analysis-overlay-card">
     <span class="k-mono k-slash">running alignment analysis</span>
-    <h3 class="k-display" style="font-size:32px;margin:0">reading <span id="overlay-count">?</span> transcript<span id="overlay-plural">s</span><span class="red">.</span></h3>
+    <h3 class="k-display" id="overlay-heading" tabindex="-1" style="font-size:32px;margin:0">reading <span id="overlay-count">?</span> transcript<span id="overlay-plural">s</span><span class="red">.</span></h3>
     <p class="k-serif" style="font-size:16px;color:var(--kimba-ink-2);margin:0">identifying convergence, conflict, and outlier perspectives across dimensions.</p>
     <div class="analysis-overlay-track">
       <div class="analysis-overlay-fill" id="overlay-fill"></div>
