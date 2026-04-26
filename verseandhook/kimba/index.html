@@ -1250,7 +1250,7 @@ function postToChat(userText) {
     if (hasComplete) {
       show('thanks');
       submitIntake();
-    } else if (hasClosing) {
+    } else if (hasClosing || exchanges >= TOTAL_EXCHANGES) {
       isClosing = true;
       showSkipButton();
       unlock();
