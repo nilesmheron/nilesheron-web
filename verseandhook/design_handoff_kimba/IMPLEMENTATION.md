@@ -109,12 +109,30 @@ Two buckets. Both can post to a single `/api/track` Vercel edge function that wr
 - `total_duration_ms`
 - `completion_mode` — `complete | wrap_up | timeout`
 
-**Admin view** — deferred to a future phase. Events are instrumented as of Phase 6 (`vh_events` table, `POST /api/vh-track`). Build the surface once real data has accumulated. Proposed additions to the admin analysis screen:
-- Per-mode completion rate (Brand Discovery vs Project Intake vs Engagement Feedback)
-- Average exchange depth before completion
-- Drop-off heatmap by exchange number
+**Admin view** — deferred to a future phase. Events are instrumented as of Phase 6 (`vh_events` table, `POST /api/vh-track`). Data is available now; build the surface once meaningful volume has accumulated (suggest 50+ sessions as a threshold).
 
-Data is available now. Surface design is the next step when V&H is ready to act on it.
+**Phase 7A — Useful analytics** (est. 1–2 hours)
+
+A new `/analytics` view in the admin sidebar. New `GET /api/vh-admin?analytics=true` endpoint that aggregates `vh_events` into summary stats. No new DB tables needed — reads from `vh_events.meta`.
+
+- Completion funnel: landed → started → completed, with drop-off % at each step
+- Per-mode breakdown: completion rate for Brand Discovery vs Project Intake vs Engagement Feedback
+- Average exchange depth at completion (`meta.exchange_count` average across `session.completed` rows)
+- Average conversation duration (`meta.total_duration_ms`)
+- Error rate: `session.errored` count by kind (invalid / used / network)
+
+Rendering: a stats grid at the top (same `.admin-stat` pattern as the detail view), followed by a per-mode table. No charts — numbers only.
+
+**Phase 7B — Polished analytics** (est. half day, build after 7A)
+
+Adds to 7A with visual treatment and filtering. Requires a charting library (recommend Chart.js via CDN — lightweight, no build step).
+
+- Drop-off heatmap by exchange number: bar chart of how many sessions ended at each exchange count, sourced from `session.completed` rows with `meta.exchange_count`
+- Time-range filter: last 7 days / 30 days / all time — filter applied server-side via `created_at` range on `vh_events`
+- Trend line: completion rate over time (weekly buckets) — only meaningful at 100+ sessions
+- Export: CSV download of raw `vh_events` rows for the selected range
+
+Note: hold Phase 7B until there's enough data for the trend line to mean something. 7A is useful at any volume; 7B needs scale.
 
 ---
 
