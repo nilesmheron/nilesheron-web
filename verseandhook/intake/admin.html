@@ -2049,37 +2049,83 @@ function generatePrompt() {
   });
 }
 
-function submitNewSession() {
-  if (modalSubmitted) return;
-  var name  = document.getElementById('modal-name').value.trim();
-  var count = parseInt(document.getElementById('modal-count').value, 10);
-  var key   = MODE_DETAILS[selectedMode].key;
-  if (!name) return;
+function generateGoalKey() {
+  var arr = new Uint8Array(4);
+  window.crypto.getRandomValues(arr);
+  return 'custom-' + Array.from(arr).map(function(b) {
+    return b.toString(16).padStart(2, '0');
+  }).join('');
+}
 
-  modalSubmitted = true;
-  var btn = document.getElementById('modal-submit');
-  btn.disabled = true;
+function createSessionFromPrompt() {
+  var btn = document.getElementById('phase3-submit');
+  if (!btn || btn.disabled) return;
+  btn.disabled    = true;
   btn.textContent = 'creating…';
 
-  apiFetch('/api/vh-session', {
-    method: 'POST',
-    body: JSON.stringify({ client_name: name, extraction_goal: key, expected_respondent_count: count || 8 })
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(data) {
-    if (data.token) {
-      showSessionCreated(data);
-    } else {
-      modalSubmitted = false;
-      btn.disabled = false;
-      btn.textContent = 'create & generate link →';
-    }
-  })
-  .catch(function() {
-    modalSubmitted = false;
-    btn.disabled = false;
-    btn.textContent = 'create & generate link →';
-  });
+  var goalKey      = generateGoalKey();
+  var systemPrompt = document.getElementById('phase3-prompt').value;
+  var opener       = document.getElementById('phase3-opener').value;
+  var templateNameEl = document.getElementById('template-name');
+  var templateName = (modalSaveAsTemplate && templateNameEl) ? templateNameEl.value.trim() : '';
+
+  var goalConfig = {
+    goal_key:               goalKey,
+    name:                   (modalSaveAsTemplate && templateName) ? templateName : modalPhase1.name,
+    intake_system_prompt:   systemPrompt,
+    opener_message:         opener,
+    analysis_system_prompt: modalGenerated.analysis_system_prompt,
+    scoring_dimensions:     modalGenerated.scoring_dimensions,
+    closing_message:        modalClosingMessage || null,
+    is_template:            modalSaveAsTemplate
+  };
+
+  apiFetch('/api/vh-goal-config', { method: 'PUT', body: JSON.stringify(goalConfig) })
+    .then(function(r) {
+      if (!r.ok) throw new Error('goal config save failed');
+      return apiFetch('/api/vh-session', {
+        method: 'POST',
+        body: JSON.stringify({
+          client_name:               modalPhase1.name,
+          extraction_goal:           goalKey,
+          expected_respondent_count: modalPhase1.count,
+          max_exchanges:             modalPhase1.maxEx
+        })
+      });
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.token) {
+        var phaseContent = document.getElementById('modal-phase-content');
+        if (phaseContent) phaseContent.remove();
+        showSessionCreated(data);
+      } else {
+        if (btn) { btn.disabled = false; btn.textContent = 'create & generate link →'; }
+      }
+    })
+    .catch(function() {
+      if (btn) { btn.disabled = false; btn.textContent = 'create & generate link →'; }
+    });
+}
+
+function showSaveAsTemplate() {
+  document.getElementById('save-template-btn').style.display = 'none';
+  var form = document.getElementById('save-template-form');
+  form.style.display       = 'flex';
+  form.style.flexDirection = 'column';
+  setTimeout(function() {
+    var nameEl = document.getElementById('template-name');
+    if (nameEl) nameEl.focus();
+  }, 50);
+}
+
+function confirmSaveAsTemplate() {
+  modalSaveAsTemplate = true;
+  document.getElementById('save-template-form').style.display = 'none';
+  var btn = document.getElementById('save-template-btn');
+  btn.textContent   = '✓ will save as template';
+  btn.disabled      = true;
+  btn.style.display = '';
 }
 
 function showSessionCreated(session) {
