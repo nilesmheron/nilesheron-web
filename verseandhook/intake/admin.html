@@ -471,6 +471,9 @@ input[type="number"].k-input { width: 90px; }
   width: min(900px, 100%); max-height: 90vh; overflow: auto;
   display: grid; grid-template-columns: 1.1fr 1fr;
 }
+.modal-inner.phase3-view {
+  width: min(1200px, 96vw); height: 88vh; max-height: 88vh; overflow: hidden;
+}
 .modal-form-col {
   padding: 32px; display: flex; flex-direction: column; gap: 22px;
   border-right: 1px solid var(--kimba-rule);
@@ -1863,6 +1866,7 @@ function openModal() {
   if (phaseContent) phaseContent.remove();
   var created = document.getElementById('modal-created');
   if (created) created.remove();
+  document.getElementById('modal-inner').classList.remove('phase3-view');
   document.getElementById('modal-form-col').style.display    = '';
   document.getElementById('modal-preview-col').style.display = '';
 
@@ -1928,6 +1932,7 @@ function backToPhase1(e) {
   if (e) e.preventDefault();
   var phaseContent = document.getElementById('modal-phase-content');
   if (phaseContent) phaseContent.remove();
+  document.getElementById('modal-inner').classList.remove('phase3-view');
   document.getElementById('modal-form-col').style.display    = '';
   document.getElementById('modal-preview-col').style.display = '';
   if (modalTrapClean) { modalTrapClean(); modalTrapClean = null; }
@@ -2014,6 +2019,7 @@ function showPhase3(data) {
       '</div>' +
     '</div>';
   document.getElementById('modal-inner').appendChild(div);
+  document.getElementById('modal-inner').classList.add('phase3-view');
   if (modalTrapClean) { modalTrapClean(); modalTrapClean = null; }
   modalTrapClean = trapFocus(document.getElementById('modal-new-session'));
 }
