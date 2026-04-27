@@ -1859,6 +1859,8 @@ function openModal() {
   // Remove any injected phase content from a previous open
   var phaseContent = document.getElementById('modal-phase-content');
   if (phaseContent) phaseContent.remove();
+  var created = document.getElementById('modal-created');
+  if (created) created.remove();
   document.getElementById('modal-form-col').style.display    = '';
   document.getElementById('modal-preview-col').style.display = '';
 
