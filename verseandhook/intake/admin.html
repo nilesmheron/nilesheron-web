@@ -899,6 +899,36 @@ input[type="number"].k-input { width: 90px; }
         <textarea class="k-input" id="modal-desc" rows="6" placeholder="e.g. understand how this client's stakeholders think about their brand voice and whether the team is aligned on positioning" style="resize:vertical;font-family:inherit;font-size:inherit;line-height:1.5;width:100%"></textarea>
       </div>
 
+      <div>
+        <label class="k-mono modal-label">attach a file <span style="color:var(--kimba-mute-2);text-transform:none;letter-spacing:0">(optional · pdf, jpg, png, doc · max 4mb)</span></label>
+        <div id="modal-file-drop"
+          onclick="document.getElementById('modal-attachment-file').click()"
+          style="border:1px dashed var(--kimba-mute-2);padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;margin-top:4px;transition:border-color 0.15s">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true" style="flex-shrink:0;color:var(--kimba-mute)"><path d="M8 1v10M3 6l5-5 5 5M2 14h12" stroke="currentColor" stroke-width="1.4" stroke-linecap="square"/></svg>
+          <span id="modal-file-label" class="k-mono" style="color:var(--kimba-mute);text-transform:none;letter-spacing:0;font-size:12px">click to upload</span>
+          <input type="file" id="modal-attachment-file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.ppt,.pptx" style="display:none" onchange="onFileSelected(this)">
+        </div>
+        <div id="modal-attachment-extras" style="display:none;flex-direction:column;gap:14px;margin-top:12px">
+          <div>
+            <label class="k-mono modal-label" for="modal-attachment-prompt">file intro message</label>
+            <input class="k-input" type="text" id="modal-attachment-prompt" placeholder="e.g. we sent you our brand deck for review — can we talk through it?" style="width:100%">
+          </div>
+          <div>
+            <label class="k-mono modal-label" style="margin-bottom:8px">use with opener</label>
+            <div style="display:flex;gap:16px">
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-family:var(--kimba-mono);font-size:11px;letter-spacing:0.05em;text-transform:uppercase;color:var(--kimba-ink)">
+                <input type="radio" name="attach-mode" value="add" id="attach-mode-add" checked style="accent-color:var(--kimba-red)">
+                add to opener
+              </label>
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-family:var(--kimba-mono);font-size:11px;letter-spacing:0.05em;text-transform:uppercase;color:var(--kimba-ink)">
+                <input type="radio" name="attach-mode" value="replace" id="attach-mode-replace" style="accent-color:var(--kimba-red)">
+                replace opener
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="modal-footer">
         <button class="k-btn k-btn-ghost" onclick="closeModal()">cancel</button>
         <button class="k-btn k-btn-red" id="modal-generate" onclick="generatePrompt()" disabled style="margin-left:auto;opacity:0.45">generate prompt →</button>
@@ -1842,6 +1872,7 @@ var modalGenerated       = null;
 var modalPhase1          = null;
 var modalClosingMessage  = '';
 var modalSaveAsTemplate  = false;
+var modalAttachmentUrl   = null;
 
 function openModal() {
   modalSubmitted       = false;
@@ -1849,6 +1880,7 @@ function openModal() {
   modalPhase1          = null;
   modalClosingMessage  = '';
   modalSaveAsTemplate  = false;
+  modalAttachmentUrl   = null;
   selectedMode         = '01';
 
   document.getElementById('modal-name').value          = '';
@@ -1856,6 +1888,10 @@ function openModal() {
   document.getElementById('modal-max-exchanges').value = '10';
   document.getElementById('modal-closing').value       = '';
   document.getElementById('modal-desc').value          = MODE_DETAILS['01'].description;
+  document.getElementById('modal-attachment-file').value  = '';
+  document.getElementById('modal-file-label').textContent = 'click to upload';
+  document.getElementById('modal-attachment-extras').style.display = 'none';
+  document.getElementById('attach-mode-add').checked = true;
 
   var btn = document.getElementById('modal-generate');
   btn.disabled      = true;
@@ -1926,6 +1962,36 @@ function onModalNameInput() {
   btn.disabled      = !name;
   btn.style.opacity = name ? '1' : '0.45';
   updatePreview();
+}
+
+function onFileSelected(input) {
+  var file = input.files[0];
+  if (!file) return;
+  if (file.size > 4 * 1024 * 1024) {
+    alert('File must be under 4MB. Try a compressed or reduced-quality export.');
+    input.value = '';
+    return;
+  }
+  document.getElementById('modal-file-label').textContent = file.name;
+  document.getElementById('modal-attachment-extras').style.display = 'flex';
+}
+
+function uploadAttachment(file) {
+  return new Promise(function(resolve, reject) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var base64 = e.target.result.split(',')[1];
+      apiFetch('/api/vh-attachment', {
+        method: 'POST',
+        body: JSON.stringify({ fileName: file.name, contentType: file.type || 'application/octet-stream', data: base64 })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(j) { j.error ? reject(j.error) : resolve(j.url); })
+      .catch(reject);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
 
 function backToPhase1(e) {
@@ -2036,27 +2102,35 @@ function generatePrompt() {
   modalClosingMessage = closing;
   showPhase2();
 
-  var baseGoal = MODE_DETAILS[selectedMode] ? MODE_DETAILS[selectedMode].key : null;
+  var baseGoal  = MODE_DETAILS[selectedMode] ? MODE_DETAILS[selectedMode].key : null;
+  var fileInput = document.getElementById('modal-attachment-file');
+  var file      = fileInput && fileInput.files[0];
 
-  apiFetch('/api/vh-admin', {
-    method: 'POST',
-    body: JSON.stringify({
-      action:      'generate_prompt',
-      description: desc || ('session for ' + name),
-      base_goal:   baseGoal
+  var uploadStep = file ? uploadAttachment(file) : Promise.resolve(null);
+
+  uploadStep
+    .then(function(url) {
+      modalAttachmentUrl = url;
+      return apiFetch('/api/vh-admin', {
+        method: 'POST',
+        body: JSON.stringify({
+          action:      'generate_prompt',
+          description: desc || ('session for ' + name),
+          base_goal:   baseGoal
+        })
+      });
     })
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(data) {
-    if (data.intake_system_prompt) {
-      showPhase3(data);
-    } else {
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.intake_system_prompt) {
+        showPhase3(data);
+      } else {
+        showPhase2Error();
+      }
+    })
+    .catch(function() {
       showPhase2Error();
-    }
-  })
-  .catch(function() {
-    showPhase2Error();
-  });
+    });
 }
 
 function generateGoalKey() {
@@ -2079,6 +2153,8 @@ function createSessionFromPrompt() {
   var templateNameEl = document.getElementById('template-name');
   var templateName = (modalSaveAsTemplate && templateNameEl) ? templateNameEl.value.trim() : '';
 
+  var attachPrompt = document.getElementById('modal-attachment-prompt');
+  var attachMode   = document.querySelector('input[name="attach-mode"]:checked');
   var goalConfig = {
     goal_key:               goalKey,
     name:                   (modalSaveAsTemplate && templateName) ? templateName : modalPhase1.name,
@@ -2087,7 +2163,10 @@ function createSessionFromPrompt() {
     analysis_system_prompt: modalGenerated.analysis_system_prompt,
     scoring_dimensions:     modalGenerated.scoring_dimensions,
     closing_message:        modalClosingMessage || null,
-    is_template:            modalSaveAsTemplate
+    is_template:            modalSaveAsTemplate,
+    attachment_url:         modalAttachmentUrl || null,
+    attachment_prompt:      (attachPrompt && attachPrompt.value.trim()) || null,
+    attachment_mode:        modalAttachmentUrl ? (attachMode ? attachMode.value : 'add') : null
   };
 
   apiFetch('/api/vh-goal-config', { method: 'PUT', body: JSON.stringify(goalConfig) })
