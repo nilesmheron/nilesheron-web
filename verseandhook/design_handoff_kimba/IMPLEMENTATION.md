@@ -93,58 +93,94 @@ Acceptance criteria:
 
 ## Analytics
 
-Two buckets. Both can post to a single `/api/track` Vercel edge function that writes to whatever store v&h is using (Vercel KV, Supabase, etc.).
+Events are instrumented as of Phase 6 (`vh_events` table, `POST /api/vh-track`). Four events fire from the respondent flow: `session.landed`, `session.started`, `session.completed` (with quality metrics in `meta`), `session.errored`.
 
-**Funnel events** — emit one of these per respondent session:
-- `session.landed` — token validated, landing rendered
-- `session.started` — clicked Begin, identity captured
-- `session.first_reply` — user sent their first message
-- `session.exchange_3`, `session.exchange_5`, `session.exchange_7` — depth checkpoints
-- `session.completed` — `[INTAKE_COMPLETE]` triggered
-- `session.exited` — user clicked "wrap up" early (vs. natural completion)
+**Next up — "is this working?" stats on the client overview** (not a full analytics view)
 
-**Quality metrics** — compute on `session.completed`, store on the session row:
-- `time_to_first_message_ms` — landing render → first user reply
-- `avg_user_reply_words`
-- `total_duration_ms`
-- `completion_mode` — `complete | wrap_up | timeout`
+Add a compact stats row at the bottom of each client detail page showing aggregate health for that session. Pull directly from `vh_events` filtered by the client's existing respondent tokens — no new endpoint needed, fold into the existing `GET /api/vh-admin?client_id=` response.
 
-**Admin view** — deferred to a future phase. Events are instrumented as of Phase 6 (`vh_events` table, `POST /api/vh-track`). Data is available now; build the surface once meaningful volume has accumulated (suggest 50+ sessions as a threshold).
+Stats to show:
+- Landed → started conversion (how many people who got the link actually began)
+- Started → completed conversion (how many who began finished)
+- Average conversation duration
+- Any `session.errored` count flagged as a warning if > 0
 
-**Phase 7A — Useful analytics** (est. 1–2 hours)
+**v2 — Full analytics dashboard** (delay until 50+ sessions)
 
-A new `/analytics` view in the admin sidebar. New `GET /api/vh-admin?analytics=true` endpoint that aggregates `vh_events` into summary stats. No new DB tables needed — reads from `vh_events.meta`.
+Deferred from the original Phase 7A/7B scope. Build when there's enough volume for the numbers to mean something.
 
-- Completion funnel: landed → started → completed, with drop-off % at each step
-- Per-mode breakdown: completion rate for Brand Discovery vs Project Intake vs Engagement Feedback
-- Average exchange depth at completion (`meta.exchange_count` average across `session.completed` rows)
-- Average conversation duration (`meta.total_duration_ms`)
-- Error rate: `session.errored` count by kind (invalid / used / network)
+- `/analytics` sidebar view with completion funnel across all sessions
+- Per-mode breakdown (Brand Discovery vs Project Intake vs Engagement Feedback)
+- Average exchange depth, duration, error rate
+- Drop-off heatmap by exchange number (Chart.js)
+- Time-range filter (7 days / 30 days / all time)
+- CSV export of raw `vh_events`
 
-Rendering: a stats grid at the top (same `.admin-stat` pattern as the detail view), followed by a per-mode table. No charts — numbers only.
+---
 
-**Phase 7B — Polished analytics** (est. half day, build after 7A)
+## Roadmap
 
-Adds to 7A with visual treatment and filtering. Requires a charting library (recommend Chart.js via CDN — lightweight, no build step).
+### Next up (priority order)
 
-- Drop-off heatmap by exchange number: bar chart of how many sessions ended at each exchange count, sourced from `session.completed` rows with `meta.exchange_count`
-- Time-range filter: last 7 days / 30 days / all time — filter applied server-side via `created_at` range on `vh_events`
-- Trend line: completion rate over time (weekly buckets) — only meaningful at 100+ sessions
-- Export: CSV download of raw `vh_events` rows for the selected range
+**1. Prompt builder + extraction goal control in new client modal**
 
-Note: hold Phase 7B until there's enough data for the trend line to mean something. 7A is useful at any volume; 7B needs scale.
+The new session modal currently lets admin pick from three hardcoded extraction goals. Replace with a full prompt control surface:
+- Admin writes a natural-language description of what they want to learn ("I want to understand how this client feels about their brand voice and whether the team is aligned on positioning")
+- Sonnet/Opus translates that into a structured Kimba system prompt (interviewer persona, question areas, depth cues, closing trigger logic)
+- Admin reviews the generated prompt in a preview pane
+- "Set prompt" button saves it to the session's `vh_goal_configs` row
+- Also expose: `max_exchanges`, `expected_respondent_count`, and closing message as editable fields in this surface
+
+DB implication: `vh_goal_configs` needs a `custom_prompt` field or the existing `intake_system_prompt` column is used directly. The generation step calls `POST /api/vh-admin` with `action: 'generate_prompt'`.
+
+**2. "Re-run all analysis" backdoor trigger**
+
+A single button (hidden or in a settings/dev section of admin) that fires `rerun_analysis` for every client in `vh_clients` that has ≥2 responses. Useful after prompt schema changes. Calls the existing `POST /api/vh-admin` analysis endpoint sequentially to avoid hammering Anthropic rate limits.
+
+**3. Microcopy pass**
+
+Polish all user-facing strings that are currently placeholder or generic:
+- Input placeholders on landing form (name, role, email fields)
+- Error states: network-fail overlay, token invalid/used screens
+- Empty states in admin (no sessions yet, no respondents yet, analysis locked)
+- Progress indicator label ("kimba's getting ready" copy)
+- Thanks view body copy (currently generic; should vary by extraction goal)
+
+**4. Email templates**
+
+Draft copy for the link-distribution email V&H sends to respondents manually (v1 — copy/paste, not automated sending). Three variants matching the three extraction modes. Should feel like it's from the V&H team, not from Kimba. Include: context-setting sentence, what the respondent should expect, estimated time, the link.
+
+**5. Closing message in session settings**
+
+Surface the closing message (what Kimba says as the conversation winds down) as an editable field in the admin session settings tab. Currently hardcoded in the system prompt. Extract it into its own `vh_goal_configs` column (`closing_message`) so it can be customized per session without touching the main prompt.
+
+**6. Fetchable extraction goal templates ("Kimba templates")**
+
+An admin panel section — separate from the new session modal — that maintains a library of reusable extraction goal templates. Each template has: a name, a short description, a full system prompt, a default closing message, and recommended `max_exchanges`. Admin can browse, preview, and apply a template when creating a new session, or build from scratch using the prompt builder (item 1). Templates are stored in `vh_goal_configs` with a `is_template: true` flag (or a separate `vh_templates` table). Written in Kimba's voice — lowercase, direct, persona-consistent.
+
+**7. Client-facing analysis deliverable**
+
+Export the session analysis as a shareable artifact V&H can send directly to clients. Minimum: a clean HTML/print view of the analysis tab content (narrative + dimension cards + quadrant) accessible via a signed URL (no admin login required). Stretch: PDF generation via browser print stylesheet. The signed URL lives on `vh_clients` as a `share_token` column; `GET /api/vh-share?token=` serves the read-only view.
+
+---
+
+### Delay (moved to v2)
+
+- **Full analytics dashboard** (Phase 7A/7B) — events are collected; build the surface at 50+ sessions
+- **Multi-user distribution** — admin enters email list, system sends tokenized links automatically
+- **Custom extraction modes without code deploy** — move system prompts fully server-side
+- **Client portal** — clients logging in to see their own analysis
+- **Session templates with saved distribution lists**
+- **Role-based access control** — multiple admin users with different permission levels
 
 ---
 
 ## Copy that's still TODO
 
-Per the user, copy is being addressed in Claude Code, not in design. Specifically:
-
-- Final opener prompts for each of the 3 extraction modes (currently only brand discovery has a polished opener; the other two have placeholders in `MODE_DETAILS` in `states.jsx`).
-- Closing-message variants per mode.
-- Microcopy: input placeholders, error toasts, empty states, network-fail copy.
-- Email templates for sending links to respondents (V2 per PRD; draft now while the rest is being built).
-- Admin-side analysis narrative copy (currently fabricated for the Altona example in `surfaces/admin.jsx` — replace with real LLM output).
+- Opener prompts for Project Intake and Engagement Feedback modes (brand discovery is polished; the other two have placeholders)
+- Closing-message variants per mode (to be surfaced in session settings — see roadmap item 5)
+- Microcopy across landing, error, and admin surfaces (see roadmap item 3)
+- Email templates for manual link distribution (see roadmap item 4)
 
 ---
 
@@ -155,7 +191,7 @@ Per the user, copy is being addressed in Claude Code, not in design. Specificall
 - File attachments in chat (PRD doesn't ask for it)
 - Multi-language (English only)
 - Email sending (link copying only)
-- Analytics dashboard (events spec'd above, surface not designed)
+- Analytics dashboard (events spec'd above, surface deferred to v2)
 
 ---
 
@@ -167,13 +203,13 @@ Open `kimba-tokens.css`. Copy the `:root { ... }` block into the production CSS.
 - `--kimba-paper: #F6F2EC` (warm cream — main background)
 - `--kimba-paper-2: #EFE9DE` (slightly deeper cream — section breaks, sidebars)
 
-The "kimba twist" (vs. parent brand V&H) is **typographic**: lowercase Archivo headlines + Fraunces serif for AI dialog. Don't capitalize Kimba's voice. Don't swap to a different serif.
+The "kimba twist" (vs. parent brand V&H) is **typographic**: lowercase Archivo headlines + DM Sans for chat messages, Archivo condensed for headings/wordmark. Don't capitalize Kimba's voice.
 
 ---
 
-## Open questions for the v&h team
+## Open questions — resolved
 
-1. Should "expected respondent count" be editable after session creation? Currently the modal sets it once; admin view shows it as a target.
-2. What happens at the 2-week expiry — auto-archive, manual archive, or sit forever in a "closed" tab? Affects the admin list view's status filtering.
-3. Does the analysis output need to be exportable (PDF/email to client)? Not designed for; ask before building.
-4. Is there a v0 client view (clients seeing their own analysis) or is this admin-only forever? Affects auth model.
+1. **Expected respondent count editable after creation?** Yes — now editable in session settings tab.
+2. **2-week expiry behavior?** Not yet decided; clients sit in list indefinitely for now.
+3. **Analysis exportable?** Yes — client-facing deliverable is on the roadmap (item 7).
+4. **Client view of analysis?** Admin-only for v1; client portal deferred to v2.
