@@ -53,7 +53,7 @@ export default async function handler(req, res) {
   if (req.method === 'PUT') {
     if (!validateAdminToken(req)) return res.status(401).json({ error: 'Unauthorized' });
 
-    const { goal_key, name, intake_system_prompt, opener_message, analysis_system_prompt, scoring_dimensions } = req.body || {};
+    const { goal_key, name, intake_system_prompt, opener_message, analysis_system_prompt, scoring_dimensions, closing_message, is_template } = req.body || {};
 
     if (!goal_key || !name || !intake_system_prompt || !opener_message || !analysis_system_prompt) {
       return res.status(400).json({ error: 'goal_key, name, intake_system_prompt, opener_message, analysis_system_prompt required' });
@@ -76,6 +76,8 @@ export default async function handler(req, res) {
           opener_message,
           analysis_system_prompt,
           scoring_dimensions,
+          closing_message: closing_message || null,
+          is_template: !!is_template,
           updated_at: new Date().toISOString()
         })
       });
