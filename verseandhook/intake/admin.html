@@ -961,19 +961,22 @@ var MODE_DETAILS = {
     key: 'discovery', name: 'brand discovery',
     coverage: 'company identity · audience · competitive position · voice',
     rec: '5–20 stakeholders',
-    opener: 'when someone outside the company asks what you actually do, what do you tell them?'
+    opener: 'when someone outside the company asks what you actually do, what do you tell them?',
+    description: 'understand how this client\'s stakeholders think about their brand — their identity, audience, competitive position, and voice'
   },
   '02': {
     key: 'intake', name: 'project intake',
     coverage: 'scope · constraints · success criteria · stakeholders',
     rec: '3–8 stakeholders',
-    opener: 'in plain language, what does this project need to do that nothing currently does?'
+    opener: 'in plain language, what does this project need to do that nothing currently does?',
+    description: 'scope this project by understanding what stakeholders expect, what success looks like, and what constraints exist'
   },
   '03': {
     key: 'feedback', name: 'engagement feedback',
     coverage: 'process · communication · deliverables · what to repeat',
     rec: '3–10 stakeholders',
-    opener: 'looking back at the engagement so far, what\'s the one thing you\'d change about how we worked together?'
+    opener: 'looking back at the engagement so far, what\'s the one thing you\'d change about how we worked together?',
+    description: 'gather honest feedback on this engagement — what\'s working, what isn\'t, and what to do differently'
   }
 };
 
@@ -1830,22 +1833,34 @@ function closeDrawer() {
 var modalSubmitted = false;
 var modalOpener    = null;
 var modalTrapClean = null;
+var modalGenerated       = null;
+var modalPhase1          = null;
+var modalClosingMessage  = '';
+var modalSaveAsTemplate  = false;
 
 function openModal() {
-  modalSubmitted = false;
-  selectedMode = '01';
-  document.getElementById('modal-name').value = '';
-  document.getElementById('modal-count').value = '8';
-  document.getElementById('modal-submit').disabled = true;
-  document.getElementById('modal-submit').style.opacity = '0.45';
+  modalSubmitted       = false;
+  modalGenerated       = null;
+  modalPhase1          = null;
+  modalClosingMessage  = '';
+  modalSaveAsTemplate  = false;
+  selectedMode         = '01';
 
-  // Restore form/preview columns if in created state
-  var formCol    = document.getElementById('modal-form-col');
-  var previewCol = document.getElementById('modal-preview-col');
-  formCol.style.display    = '';
-  previewCol.style.display = '';
-  var created = document.getElementById('modal-created');
-  if (created) created.remove();
+  document.getElementById('modal-name').value          = '';
+  document.getElementById('modal-count').value         = '8';
+  document.getElementById('modal-max-exchanges').value = '10';
+  document.getElementById('modal-closing').value       = '';
+  document.getElementById('modal-desc').value          = MODE_DETAILS['01'].description;
+
+  var btn = document.getElementById('modal-generate');
+  btn.disabled      = true;
+  btn.style.opacity = '0.45';
+
+  // Remove any injected phase content from a previous open
+  var phaseContent = document.getElementById('modal-phase-content');
+  if (phaseContent) phaseContent.remove();
+  document.getElementById('modal-form-col').style.display    = '';
+  document.getElementById('modal-preview-col').style.display = '';
 
   renderModeOptions();
   updatePreview();
@@ -1882,6 +1897,8 @@ function selectMode(key) {
   selectedMode = key;
   renderModeOptions();
   updatePreview();
+  var descEl = document.getElementById('modal-desc');
+  if (descEl) descEl.value = MODE_DETAILS[key].description;
 }
 
 function updatePreview() {
@@ -1897,8 +1914,8 @@ function updatePreview() {
 
 function onModalNameInput() {
   var name = document.getElementById('modal-name').value.trim();
-  var btn  = document.getElementById('modal-submit');
-  btn.disabled     = !name;
+  var btn  = document.getElementById('modal-generate');
+  btn.disabled      = !name;
   btn.style.opacity = name ? '1' : '0.45';
   updatePreview();
 }
