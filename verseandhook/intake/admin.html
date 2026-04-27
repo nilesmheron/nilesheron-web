@@ -868,22 +868,35 @@ input[type="number"].k-input { width: 90px; }
         <input class="k-input" type="text" id="modal-name" placeholder="e.g. altona coffee co." oninput="onModalNameInput()" autofocus>
       </div>
 
+      <div class="modal-count-row">
+        <div>
+          <label class="k-mono modal-label" for="modal-count">expected respondents</label>
+          <input class="k-input" type="number" id="modal-count" min="1" max="200" value="8">
+        </div>
+        <div>
+          <label class="k-mono modal-label" for="modal-max-exchanges">max exchanges</label>
+          <input class="k-input" type="number" id="modal-max-exchanges" min="4" max="20" value="10">
+        </div>
+      </div>
+
       <div>
-        <label class="k-mono modal-label">extraction goal</label>
+        <label class="k-mono modal-label" for="modal-closing">closing message</label>
+        <input class="k-input" type="text" id="modal-closing" placeholder="e.g. thanks for sharing your perspective">
+      </div>
+
+      <div>
+        <label class="k-mono modal-label">starting point</label>
         <div class="mode-options" id="mode-options"></div>
       </div>
 
       <div>
-        <label class="k-mono modal-label" for="modal-count">expected respondents</label>
-        <div class="modal-count-row">
-          <input class="k-input" type="number" id="modal-count" min="1" max="200" value="8">
-          <span class="k-mono modal-count-note">used to compute completion %</span>
-        </div>
+        <label class="k-mono modal-label" for="modal-desc">describe what you want to learn</label>
+        <textarea class="k-input" id="modal-desc" rows="3" placeholder="e.g. understand how this client's stakeholders think about their brand voice and whether the team is aligned on positioning" style="resize:vertical;font-family:inherit;font-size:inherit;line-height:1.5;width:100%"></textarea>
       </div>
 
       <div class="modal-footer">
         <button class="k-btn k-btn-ghost" onclick="closeModal()">cancel</button>
-        <button class="k-btn k-btn-red" id="modal-submit" onclick="submitNewSession()" disabled style="margin-left:auto;opacity:0.45">create &amp; generate link →</button>
+        <button class="k-btn k-btn-red" id="modal-generate" onclick="generatePrompt()" disabled style="margin-left:auto;opacity:0.45">generate prompt →</button>
       </div>
     </div>
 
