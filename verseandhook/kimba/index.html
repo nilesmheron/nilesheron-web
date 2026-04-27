@@ -1481,8 +1481,24 @@ function sendMessage(text) {
 }
 
 function postToChat(userText) {
+  // On first turn with attachment, pass the file to Claude as a content block
+  var userContent = userText;
+  if (convo.length === 0 && attachmentUrl) {
+    var fileExt = (attachmentUrl.split('?')[0]).split('.').pop().toLowerCase();
+    var isImg = ['jpg','jpeg','png','gif','webp'].includes(fileExt);
+    var isPdf = fileExt === 'pdf';
+    if (isImg || isPdf) {
+      userContent = [
+        isImg
+          ? { type: 'image',    source: { type: 'url', url: attachmentUrl } }
+          : { type: 'document', source: { type: 'url', url: attachmentUrl } },
+        { type: 'text', text: userText }
+      ];
+    }
+  }
+
   // Build the messages payload: committed convo + this user turn
-  var messages = convo.concat([{ role: 'user', content: userText }]);
+  var messages = convo.concat([{ role: 'user', content: userContent }]);
 
   fetch('/api/chat', {
     method: 'POST',
