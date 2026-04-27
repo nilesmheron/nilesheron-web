@@ -26,18 +26,22 @@ export default async function handler(req, res) {
   if (req.method === 'POST') {
     if (!validateAdminToken(req)) return res.status(401).json({ error: 'Unauthorized' });
 
-    const { client_name, extraction_goal, expected_respondent_count } = req.body || {};
+    const { client_name, extraction_goal, expected_respondent_count, max_exchanges } = req.body || {};
     if (!client_name || !client_name.trim()) {
       return res.status(400).json({ error: 'client_name required' });
     }
-    if (!['discovery', 'intake', 'feedback'].includes(extraction_goal)) {
-      return res.status(400).json({ error: 'extraction_goal must be discovery, intake, or feedback' });
+    if (!extraction_goal || !/^[a-z0-9][a-z0-9-]*$/.test(extraction_goal)) {
+      return res.status(400).json({ error: 'extraction_goal must be lowercase letters, numbers, and hyphens' });
     }
 
     const token = crypto.randomBytes(16).toString('hex');
     const insertRow = { client_name: client_name.trim(), extraction_goal, token };
     if (expected_respondent_count && Number.isInteger(Number(expected_respondent_count)) && Number(expected_respondent_count) > 0) {
       insertRow.expected_respondent_count = Number(expected_respondent_count);
+    }
+    if (max_exchanges != null) {
+      const n = Number(max_exchanges);
+      if (Number.isInteger(n) && n >= 4 && n <= 20) insertRow.max_exchanges = n;
     }
 
     try {
