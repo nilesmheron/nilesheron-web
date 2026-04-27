@@ -1271,7 +1271,7 @@ function initAttachmentPanel(config) {
   document.querySelector('.surface-chat').classList.add('has-attachment');
 
   var promptEl = document.getElementById('attachment-panel-prompt');
-  if (promptEl) promptEl.textContent = config.attachment_prompt || '';
+  if (promptEl) promptEl.textContent = '/ attached file';
 
   var viewer = document.getElementById('attachment-viewer');
   var ext     = (attachmentUrl.split('?')[0]).split('.').pop().toLowerCase();
