@@ -896,7 +896,7 @@ input[type="number"].k-input { width: 90px; }
 
       <div>
         <label class="k-mono modal-label" for="modal-desc">describe what you want to learn</label>
-        <textarea class="k-input" id="modal-desc" rows="3" placeholder="e.g. understand how this client's stakeholders think about their brand voice and whether the team is aligned on positioning" style="resize:vertical;font-family:inherit;font-size:inherit;line-height:1.5;width:100%"></textarea>
+        <textarea class="k-input" id="modal-desc" rows="6" placeholder="e.g. understand how this client's stakeholders think about their brand voice and whether the team is aligned on positioning" style="resize:vertical;font-family:inherit;font-size:inherit;line-height:1.5;width:100%"></textarea>
       </div>
 
       <div class="modal-footer">
@@ -1886,7 +1886,7 @@ function closeModal() {
 }
 
 function handleModalBackdropClick(e) {
-  if (e.target === document.getElementById('modal-new-session')) closeModal();
+  // Backdrop click intentionally disabled — must use X button to close
 }
 
 function renderModeOptions() {
