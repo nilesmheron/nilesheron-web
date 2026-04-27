@@ -468,16 +468,21 @@ input[type="number"].k-input { width: 90px; }
 }
 .modal-inner {
   background: var(--kimba-paper); border: 1px solid var(--kimba-ink);
-  width: min(900px, 100%); max-height: 90vh; overflow: auto;
+  width: min(1200px, 96vw); max-height: 92vh; overflow: hidden;
   display: grid; grid-template-columns: 1.1fr 1fr;
 }
 .modal-inner.phase3-view {
-  width: min(1200px, 96vw); height: 88vh; max-height: 88vh; overflow: hidden;
+  width: min(1400px, 96vw); height: 88vh; max-height: 88vh; overflow: hidden;
 }
 .modal-form-col {
   padding: 32px; display: flex; flex-direction: column; gap: 22px;
   border-right: 1px solid var(--kimba-rule);
+  overflow-y: auto;
 }
+.modal-form-col::-webkit-scrollbar { width: 5px; }
+.modal-form-col::-webkit-scrollbar-track { background: transparent; }
+.modal-form-col::-webkit-scrollbar-thumb { background: var(--kimba-rule); }
+.modal-preview-col { overflow-y: auto; }
 .modal-preview-col {
   padding: 32px 28px; background: var(--kimba-paper-2);
   display: flex; flex-direction: column; gap: 18px;
@@ -900,6 +905,11 @@ input[type="number"].k-input { width: 90px; }
       </div>
 
       <div>
+        <label class="k-mono modal-label" for="modal-opener">opening line <span style="color:var(--kimba-mute-2);text-transform:none;letter-spacing:0">(optional · leave blank to auto-generate)</span></label>
+        <textarea class="k-input" id="modal-opener" rows="2" placeholder="e.g. really glad you're here — let's start with something simple." style="resize:vertical;font-family:inherit;font-size:inherit;line-height:1.5;width:100%"></textarea>
+      </div>
+
+      <div>
         <label class="k-mono modal-label">attach a file <span style="color:var(--kimba-mute-2);text-transform:none;letter-spacing:0">(optional · pdf, jpg, png, doc · max 4mb)</span></label>
         <div id="modal-file-drop"
           onclick="document.getElementById('modal-attachment-file').click()"
@@ -992,6 +1002,13 @@ var GOAL_MAP = {
 };
 
 var MODE_DETAILS = {
+  '00': {
+    key: null, name: 'new',
+    coverage: 'your definition',
+    rec: '—',
+    opener: '',
+    description: ''
+  },
   '01': {
     key: 'discovery', name: 'brand discovery',
     coverage: 'company identity · audience · competitive position · voice',
@@ -1888,6 +1905,7 @@ function openModal() {
   document.getElementById('modal-max-exchanges').value = '10';
   document.getElementById('modal-closing').value       = '';
   document.getElementById('modal-desc').value          = MODE_DETAILS['01'].description;
+  document.getElementById('modal-opener').value           = '';
   document.getElementById('modal-attachment-file').value  = '';
   document.getElementById('modal-file-label').textContent = 'click to upload';
   document.getElementById('modal-attachment-extras').style.display = 'none';
@@ -2062,7 +2080,7 @@ function showPhase3(data) {
         '</div>' +
         '<div>' +
           '<label class="k-mono modal-label" for="phase3-opener">/ opener</label>' +
-          '<input class="k-input" type="text" id="phase3-opener" value="' + esc(data.opener_message) + '" style="width:100%">' +
+          '<input class="k-input" type="text" id="phase3-opener" value="' + esc((modalPhase1 && modalPhase1.opener) || data.opener_message) + '" style="width:100%">' +
         '</div>' +
       '</div>' +
       '<div class="modal-footer">' +
@@ -2098,7 +2116,8 @@ function generatePrompt() {
   var count   = parseInt(document.getElementById('modal-count').value, 10) || 8;
   if (!name) return;
 
-  modalPhase1         = { name: name, closing: closing, maxEx: maxEx, count: count };
+  var opener          = document.getElementById('modal-opener').value.trim();
+  modalPhase1         = { name: name, closing: closing, maxEx: maxEx, count: count, opener: opener };
   modalClosingMessage = closing;
   showPhase2();
 
