@@ -6,6 +6,22 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
 
+const GENERATE_PROMPT_SYSTEM = `You are configuring Kimba, a conversational intake agent for Verse and Hook, a marketing agency. Kimba conducts structured but conversational interviews with client stakeholders.
+
+Kimba's voice: lowercase, warm, direct, curious. Never clinical or formal. Uses short questions. Lets respondents think.
+
+Based on the admin's description, generate a complete Kimba session configuration. Return a JSON object with exactly these four keys:
+
+"intake_system_prompt": Kimba's full system prompt. Include: persona (Kimba is a thoughtful interviewer who listens carefully and doesn't rush), the specific areas to explore based on the goal, pacing (2-3 follow-up questions per topic before moving on), staying on-topic (gently redirect off-course responses), and closing instructions (when the main areas are covered and the conversation feels complete, output the exact token [INTAKE_COMPLETE] on its own line then write a brief warm closing message). Aim for 400-600 words.
+
+"opener_message": Kimba's first message to the respondent. Open-ended, lowercase, invites them to share from their own perspective. 1-2 sentences. Do not start with a greeting — begin with the question itself.
+
+"analysis_system_prompt": System prompt for an AI that analyzes transcripts from multiple respondents. Instruct it to: identify consensus and conflict across perspectives; output a JSON object with "scores" (object mapping each scoring dimension key to 0-100, where 100 = full consensus), "narrative" (2-4 sentence summary of the most actionable alignment pattern), and optionally "respondents" (array with name, kind ["alignment"|"conflict"|"outlier"], x 0-1, y 0-1, summary per respondent); if fewer than 2 respondents, return scores as null and note alignment requires at least 2. Return ONLY valid JSON.
+
+"scoring_dimensions": Array of 3-6 snake_case strings naming key alignment dimensions to measure. Choose dimensions that directly reflect what the admin wants to learn.
+
+Return ONLY valid JSON. No preamble, no markdown fences, no explanation.`;
+
 function sb(path, options = {}) {
   return fetch(`${SUPABASE_URL}/rest/v1${path}`, {
     ...options,
@@ -26,7 +42,50 @@ export default async function handler(req, res) {
 
   // POST — re-run analysis for a client
   if (req.method === 'POST') {
-    const { action, client_id } = req.body || {};
+    const { action, client_id, description, base_goal } = req.body || {};
+
+    if (action === 'generate_prompt') {
+      if (!description || !description.trim()) {
+        return res.status(400).json({ error: 'description required' });
+      }
+      const userMsg = `Admin goal description: ${description.trim()}\nBase mode: ${base_goal || 'custom'}`;
+      try {
+        const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': ANTHROPIC_KEY,
+            'anthropic-version': '2023-06-01'
+          },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-6',
+            max_tokens: 4096,
+            temperature: 0,
+            system: GENERATE_PROMPT_SYSTEM,
+            messages: [{ role: 'user', content: userMsg }]
+          })
+        });
+        if (!anthropicRes.ok) {
+          const errBody = await anthropicRes.text().catch(() => '');
+          return res.status(502).json({ error: 'Anthropic error', detail: errBody.slice(0, 200) });
+        }
+        const data = await anthropicRes.json();
+        const raw = (data.content || []).map(b => b.text || '').join('').trim();
+        const jsonMatch = raw.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) return res.status(502).json({ error: 'No JSON in Anthropic response' });
+        let parsed;
+        try { parsed = JSON.parse(jsonMatch[0]); } catch (e) {
+          return res.status(502).json({ error: 'Malformed JSON from Anthropic' });
+        }
+        if (!parsed.intake_system_prompt || !parsed.opener_message || !parsed.analysis_system_prompt || !Array.isArray(parsed.scoring_dimensions)) {
+          return res.status(502).json({ error: 'Incomplete response from Anthropic' });
+        }
+        return res.status(200).json(parsed);
+      } catch (err) {
+        return res.status(500).json({ error: err.message });
+      }
+    }
+
     if (action !== 'rerun_analysis') return res.status(400).json({ error: 'Unknown action' });
     if (!client_id) return res.status(400).json({ error: 'client_id required' });
 
