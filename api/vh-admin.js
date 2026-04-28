@@ -230,31 +230,38 @@ export default async function handler(req, res) {
     }
   }
 
-  // Single client detail: client record + all responses + latest analysis
+  // Single client detail: client record + all responses + latest analysis + goal config
   if (client_id) {
     try {
-      const [clientRes, responsesRes, analysisRes] = await Promise.all([
-        sb(`/vh_clients?id=eq.${encodeURIComponent(client_id)}&select=id,client_name,extraction_goal,token,created_at,expected_respondent_count,max_exchanges`),
+      const clientRes = await sb(
+        `/vh_clients?id=eq.${encodeURIComponent(client_id)}&select=id,client_name,extraction_goal,token,created_at,expected_respondent_count,max_exchanges`
+      );
+      if (!clientRes.ok) return res.status(500).json({ error: 'Upstream fetch failed' });
+      const clients = await clientRes.json();
+      if (!clients.length) return res.status(404).json({ error: 'Client not found' });
+      const client = clients[0];
+
+      const [responsesRes, analysisRes, goalConfigRes] = await Promise.all([
         sb(`/vh_responses?client_id=eq.${encodeURIComponent(client_id)}&select=id,respondent_name,respondent_title,respondent_email,transcript,completed_at&order=completed_at.asc`),
-        sb(`/vh_analysis?client_id=eq.${encodeURIComponent(client_id)}&select=scores,narrative,dimensions,created_at&order=created_at.desc&limit=1`)
+        sb(`/vh_analysis?client_id=eq.${encodeURIComponent(client_id)}&select=scores,narrative,dimensions,created_at&order=created_at.desc&limit=1`),
+        sb(`/vh_goal_configs?goal_key=eq.${encodeURIComponent(client.extraction_goal)}&select=goal_key,name,intake_system_prompt,opener_message,analysis_system_prompt,scoring_dimensions,attachment_url,attachment_prompt,attachment_mode,attachment_type,closing_message,is_template`)
       ]);
 
-      if (!clientRes.ok || !responsesRes.ok || !analysisRes.ok) {
+      if (!responsesRes.ok || !analysisRes.ok) {
         return res.status(500).json({ error: 'Upstream fetch failed' });
       }
 
-      const [clients, responses, analysis] = await Promise.all([
-        clientRes.json(),
+      const [responses, analysis, goalConfigs] = await Promise.all([
         responsesRes.json(),
-        analysisRes.json()
+        analysisRes.json(),
+        goalConfigRes.ok ? goalConfigRes.json() : Promise.resolve([])
       ]);
 
-      if (!clients.length) return res.status(404).json({ error: 'Client not found' });
-
       return res.status(200).json({
-        client: clients[0],
+        client,
         responses,
-        analysis: analysis[0] || null
+        analysis: analysis[0] || null,
+        goal_config: goalConfigs[0] || null
       });
     } catch (err) {
       return res.status(500).json({ error: err.message });

@@ -1637,6 +1637,7 @@ function renderRespondentsTab(data) {
 
 function renderSettingsTab(data) {
   var c    = data.client;
+  var gc   = data.goal_config || null;
   var goal = GOAL_MAP[c.extraction_goal] || { idx: '?', name: c.extraction_goal };
 
   function field(label, value) {
@@ -1680,6 +1681,58 @@ function renderSettingsTab(data) {
       '<button class="k-btn k-btn-red" onclick="saveSettings()">save changes</button>' +
       '<span class="k-mono" id="settings-save-status" style="color:var(--kimba-mute)"></span>' +
     '</div>' +
+
+    // ── Session prompt (collapsible) ─────────────────────────────
+    (gc ? (
+    '<div style="margin-top:32px;border-top:1px solid var(--kimba-rule);padding-top:24px">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:0" onclick="toggleSettingSection(\'section-prompt\',this)">' +
+        '<div class="admin-section-title" style="margin:0">session prompt</div>' +
+        '<span class="k-mono section-toggle" style="font-size:10px;color:var(--kimba-mute)">expand ↓</span>' +
+      '</div>' +
+      '<div id="section-prompt" style="display:none;flex-direction:column;gap:14px;margin-top:16px">' +
+        '<div>' +
+          '<label class="field-label k-mono k-slash" for="setting-opener">opener</label>' +
+          '<textarea class="k-input" id="setting-opener" style="width:100%;margin-top:6px;height:72px;font-size:12px;line-height:1.5;resize:vertical">' + esc(gc.opener_message || '') + '</textarea>' +
+        '</div>' +
+        '<div>' +
+          '<label class="field-label k-mono k-slash" for="setting-prompt">system prompt</label>' +
+          '<textarea class="k-input" id="setting-prompt" style="width:100%;margin-top:6px;height:220px;font-size:11px;font-family:var(--kimba-mono,monospace);line-height:1.5;resize:vertical">' + esc(gc.intake_system_prompt || '') + '</textarea>' +
+        '</div>' +
+        '<div style="display:flex;gap:10px;align-items:center">' +
+          '<button class="k-btn k-btn-red" onclick="savePromptSettings()">save prompt</button>' +
+          '<span class="k-mono" id="prompt-save-status" style="font-size:11px;color:var(--kimba-mute)"></span>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+
+    // ── Attachment ────────────────────────────────────────────────
+    '<div style="margin-top:24px;border-top:1px solid var(--kimba-rule);padding-top:24px">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="toggleSettingSection(\'section-attach\',this)">' +
+        '<div class="admin-section-title" style="margin:0">attachment</div>' +
+        '<span class="k-mono section-toggle" style="font-size:10px;color:var(--kimba-mute)">' + (gc.attachment_url ? 'expand ↓' : 'none · expand ↓') + '</span>' +
+      '</div>' +
+      '<div id="section-attach" style="display:none;flex-direction:column;gap:14px;margin-top:16px">' +
+        '<div>' +
+          '<label class="field-label k-mono k-slash" for="setting-attach-url">url</label>' +
+          '<input class="k-input" id="setting-attach-url" type="text" value="' + esc(gc.attachment_url || '') + '" style="width:100%;margin-top:6px" placeholder="youtube, vimeo, or drive url">' +
+        '</div>' +
+        '<div>' +
+          '<label class="field-label k-mono k-slash" for="setting-attach-prompt">intro message</label>' +
+          '<textarea class="k-input" id="setting-attach-prompt" style="width:100%;margin-top:6px;height:64px;resize:vertical" placeholder="what kimba tells the respondent about this attachment">' + esc(gc.attachment_prompt || '') + '</textarea>' +
+        '</div>' +
+        '<div style="display:flex;gap:20px;align-items:center">' +
+          '<span class="field-label k-mono k-slash" style="margin:0">mode</span>' +
+          '<label class="k-mono" style="font-size:11px;display:flex;gap:6px;align-items:center;cursor:pointer"><input type="radio" name="setting-attach-mode" value="add"' + (gc.attachment_mode !== 'replace' ? ' checked' : '') + ' style="accent-color:var(--kimba-red)"> add</label>' +
+          '<label class="k-mono" style="font-size:11px;display:flex;gap:6px;align-items:center;cursor:pointer"><input type="radio" name="setting-attach-mode" value="replace"' + (gc.attachment_mode === 'replace' ? ' checked' : '') + ' style="accent-color:var(--kimba-red)"> replace</label>' +
+        '</div>' +
+        '<div style="display:flex;gap:10px;align-items:center">' +
+          '<button class="k-btn k-btn-red" onclick="saveAttachmentSettings()">save attachment</button>' +
+          '<span class="k-mono" id="attach-save-status" style="font-size:11px;color:var(--kimba-mute)"></span>' +
+        '</div>' +
+      '</div>' +
+    '</div>'
+    ) : '') +
+
     '<div style="margin-top:40px;border-top:1px solid var(--kimba-rule);padding-top:24px">' +
       '<div class="admin-section-title" style="color:var(--kimba-red)">danger zone</div>' +
       '<div style="display:flex;gap:10px;align-items:center;margin-top:12px">' +
@@ -1718,6 +1771,83 @@ function saveSettings() {
       currentDetail.client.expected_respondent_count = payload.expected_respondent_count;
       currentDetail.client.max_exchanges = payload.max_exchanges;
       setTimeout(function() { statusEl.textContent = ''; }, 2500);
+    } else {
+      statusEl.textContent = 'error: ' + (result.error || 'unknown');
+    }
+  })
+  .catch(function() { statusEl.textContent = 'network error'; });
+}
+
+// =====================================================================
+// Settings — session prompt + attachment
+// =====================================================================
+function toggleSettingSection(sectionId, headerEl) {
+  var section = document.getElementById(sectionId);
+  if (!section) return;
+  var open = section.style.display === 'flex';
+  section.style.display = open ? 'none' : 'flex';
+  var toggle = headerEl.querySelector('.section-toggle');
+  if (toggle) toggle.textContent = open ? (sectionId === 'section-attach' && !(currentDetail && currentDetail.goal_config && currentDetail.goal_config.attachment_url) ? 'none · expand ↓' : 'expand ↓') : 'collapse ↑';
+}
+
+function savePromptSettings() {
+  if (!currentDetail || !currentDetail.goal_config) return;
+  var gc = currentDetail.goal_config;
+  var openerEl = document.getElementById('setting-opener');
+  var promptEl = document.getElementById('setting-prompt');
+  var statusEl = document.getElementById('prompt-save-status');
+  if (!openerEl || !promptEl || !statusEl) return;
+  statusEl.textContent = 'saving…';
+  apiFetch('/api/vh-goal-config', {
+    method: 'PUT',
+    body: JSON.stringify(Object.assign({}, gc, {
+      opener_message:       openerEl.value,
+      intake_system_prompt: promptEl.value
+    }))
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(result) {
+    if (result.goal_key || result.ok) {
+      gc.opener_message       = openerEl.value;
+      gc.intake_system_prompt = promptEl.value;
+      statusEl.textContent = 'saved ✓';
+      setTimeout(function() { if (statusEl) statusEl.textContent = ''; }, 2500);
+    } else {
+      statusEl.textContent = 'error: ' + (result.error || 'unknown');
+    }
+  })
+  .catch(function() { statusEl.textContent = 'network error'; });
+}
+
+function saveAttachmentSettings() {
+  if (!currentDetail || !currentDetail.goal_config) return;
+  var gc = currentDetail.goal_config;
+  var urlEl    = document.getElementById('setting-attach-url');
+  var promptEl = document.getElementById('setting-attach-prompt');
+  var modeEl   = document.querySelector('input[name="setting-attach-mode"]:checked');
+  var statusEl = document.getElementById('attach-save-status');
+  if (!urlEl || !promptEl || !statusEl) return;
+  var url  = urlEl.value.trim();
+  var mode = modeEl ? modeEl.value : 'add';
+  statusEl.textContent = 'saving…';
+  apiFetch('/api/vh-goal-config', {
+    method: 'PUT',
+    body: JSON.stringify(Object.assign({}, gc, {
+      attachment_url:    url    || null,
+      attachment_prompt: promptEl.value.trim() || null,
+      attachment_mode:   url    ? mode : null,
+      attachment_type:   url    ? (gc.attachment_type || 'link') : null
+    }))
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(result) {
+    if (result.goal_key || result.ok) {
+      gc.attachment_url    = url    || null;
+      gc.attachment_prompt = promptEl.value.trim() || null;
+      gc.attachment_mode   = url    ? mode : null;
+      gc.attachment_type   = url    ? (gc.attachment_type || 'link') : null;
+      statusEl.textContent = 'saved ✓';
+      setTimeout(function() { if (statusEl) statusEl.textContent = ''; }, 2500);
     } else {
       statusEl.textContent = 'error: ' + (result.error || 'unknown');
     }
