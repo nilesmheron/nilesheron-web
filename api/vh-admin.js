@@ -197,7 +197,10 @@ export default async function handler(req, res) {
           `/vh_responses?id=eq.${encodeURIComponent(response_id)}&client_id=eq.${encodeURIComponent(client_id)}`,
           { method: 'DELETE' }
         );
-        if (!r.ok) return res.status(500).json({ error: 'Failed to delete respondent' });
+        if (!r.ok) {
+          const errBody = await r.text().catch(() => '');
+          return res.status(500).json({ error: `Supabase ${r.status}: ${errBody.slice(0, 300)}` });
+        }
         return res.status(200).json({ ok: true });
       } catch (err) {
         return res.status(500).json({ error: err.message });
