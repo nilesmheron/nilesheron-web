@@ -468,7 +468,7 @@ input[type="number"].k-input { width: 90px; }
 }
 .modal-inner {
   background: var(--kimba-paper); border: 1px solid var(--kimba-ink);
-  width: min(1200px, 96vw); max-height: 92vh; overflow: hidden;
+  width: min(1200px, 96vw); min-height: min(500px, 82vh); max-height: 92vh; overflow: hidden;
   display: flex;
 }
 .modal-inner.phase3-view {
@@ -1922,6 +1922,7 @@ var modalAttachmentUrl   = null;
 var modalAttachmentType  = null;
 var linkDebounceTimer    = null;
 var dragSrcRow           = null;
+var isGenerating         = false;
 
 function openModal() {
   modalSubmitted       = false;
@@ -1931,6 +1932,7 @@ function openModal() {
   modalSaveAsTemplate  = false;
   modalAttachmentUrl   = null;
   selectedMode         = '01';
+  isGenerating         = false;
 
   modalGenerated    = null;
   modalSynthesized  = null;
@@ -2114,6 +2116,7 @@ function fetchLinkMeta(url) {
   apiFetch('/api/vh-link-meta?url=' + encodeURIComponent(url))
     .then(function(r) { return r.json(); })
     .then(function(data) {
+      if (isGenerating) return;
       var currentUrl = document.getElementById('modal-link-url').value.trim();
       if (currentUrl !== url) return; // stale response
       modalAttachmentUrl  = url;
@@ -2131,6 +2134,7 @@ function fetchLinkMeta(url) {
       }
     })
     .catch(function() {
+      if (isGenerating) return;
       // If fetch fails, still treat as valid link (unknown type)
       var currentUrl = document.getElementById('modal-link-url').value.trim();
       if (currentUrl !== url) return;
@@ -2184,14 +2188,16 @@ function showPhase2() {
   document.getElementById('modal-inner').appendChild(div);
 }
 
-function showPhase2Error() {
+function showPhase2Error(msg) {
   var existing = document.getElementById('modal-phase-content');
   if (existing) existing.remove();
   var div = document.createElement('div');
   div.id = 'modal-phase-content';
   div.style.cssText = 'flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px';
+  var detail = msg ? '<span class="k-mono" style="color:var(--kimba-red);font-size:11px;max-width:400px;text-align:center;word-break:break-word">' + esc(String(msg)) + '</span>' : '';
   div.innerHTML =
     '<span class="k-mono" style="color:var(--kimba-mute)">something went wrong generating the prompt</span>' +
+    detail +
     '<button class="k-btn k-btn-ghost" onclick="backToPhase1()">try again</button>';
   document.getElementById('modal-inner').appendChild(div);
 }
@@ -2283,6 +2289,9 @@ function generatePrompt() {
   var count   = parseInt(document.getElementById('modal-count').value, 10) || 8;
   if (!name) return;
 
+  isGenerating = true;
+  if (linkDebounceTimer) { clearTimeout(linkDebounceTimer); linkDebounceTimer = null; }
+
   modalPhase1         = { name: name, closing: closing, count: count };
   modalClosingMessage = closing;
   showPhase2();
@@ -2310,15 +2319,18 @@ function generatePrompt() {
     })
     .then(function(r) { return r.json(); })
     .then(function(data) {
+      isGenerating = false;
       if (data.base_prompt && data.questions) {
         modalGenerated = data;
         showPhase2Questions(data);
       } else {
-        showPhase2Error();
+        showPhase2Error(data.error || 'incomplete response from api');
       }
     })
-    .catch(function() {
-      showPhase2Error();
+    .catch(function(err) {
+      isGenerating = false;
+      console.error('generatePrompt error:', err);
+      showPhase2Error(err && err.message);
     });
 }
 
@@ -2451,7 +2463,7 @@ function showPhase2Questions(data) {
     '</div>';
 
   document.getElementById('modal-inner').appendChild(div);
-  document.getElementById('modal-inner').classList.remove('phase3-view');
+  document.getElementById('modal-inner').classList.add('phase3-view');
 
   // Populate base prompt
   var bpEl = document.getElementById('phase2-base-prompt');
