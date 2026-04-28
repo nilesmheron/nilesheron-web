@@ -2181,11 +2181,10 @@ function showPhase2() {
   if (existing) existing.remove();
   var div = document.createElement('div');
   div.id = 'modal-phase-content';
+  div.style.cssText = 'flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px';
   div.innerHTML =
-    '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:280px;gap:12px">' +
-      '<h2 class="k-display modal-headline">generating<span class="red generating-dot">.</span></h2>' +
-      '<span class="k-mono" style="color:var(--kimba-mute)">building your session prompt</span>' +
-    '</div>';
+    '<h2 class="k-display modal-headline">generating<span class="red generating-dot">.</span></h2>' +
+    '<span class="k-mono" style="color:var(--kimba-mute)">building your session prompt</span>';
   document.getElementById('modal-inner').appendChild(div);
 }
 
@@ -2194,11 +2193,10 @@ function showPhase2Error() {
   if (existing) existing.remove();
   var div = document.createElement('div');
   div.id = 'modal-phase-content';
+  div.style.cssText = 'flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px';
   div.innerHTML =
-    '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:280px;gap:12px">' +
-      '<span class="k-mono" style="color:var(--kimba-mute)">something went wrong generating the prompt</span>' +
-      '<button class="k-btn k-btn-ghost" onclick="backToPhase1()">try again</button>' +
-    '</div>';
+    '<span class="k-mono" style="color:var(--kimba-mute)">something went wrong generating the prompt</span>' +
+    '<button class="k-btn k-btn-ghost" onclick="backToPhase1()">try again</button>';
   document.getElementById('modal-inner').appendChild(div);
 }
 
