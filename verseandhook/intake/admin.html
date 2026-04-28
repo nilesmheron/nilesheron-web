@@ -2126,10 +2126,10 @@ function fetchLinkMeta(url) {
       // Pre-populate intro message if still empty
       var promptEl = document.getElementById('modal-attachment-prompt');
       if (promptEl && !promptEl.value.trim()) {
-        if ((data.type === ‘youtube’ || data.type === ‘vimeo’) && data.title) {
-          promptEl.value = "we shared a video — " + data.title + " — give it a watch and then let’s chat.";
-        } else if (data.type === ‘drive’) {
-          promptEl.value = "we’ve shared a document — take a look and let’s discuss.";
+        if ((data.type === 'youtube' || data.type === 'vimeo') && data.title) {
+          promptEl.value = "we shared a video — " + data.title + " — give it a watch and then let's chat.";
+        } else if (data.type === 'drive') {
+          promptEl.value = "we've shared a document — take a look and let's discuss.";
         }
       }
     })
