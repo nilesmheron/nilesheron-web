@@ -1265,16 +1265,66 @@ function initChat() {
 // Attachment panel
 // ==========================================================
 
-var attachmentUrl = null;
+var attachmentUrl  = null;
+var attachmentType = null; // 'file' | 'link' | null
+
+function getLinkEmbedType(url) {
+  try {
+    var host = new URL(url).hostname.replace(/^www\./, '');
+    if (host === 'youtube.com' || host === 'youtu.be') return 'youtube';
+    if (host === 'vimeo.com') return 'vimeo';
+    if (host === 'drive.google.com') return 'drive';
+  } catch {}
+  return 'unknown';
+}
+
+function getLinkEmbedUrl(url, type) {
+  try {
+    var u = new URL(url);
+    if (type === 'youtube') {
+      var vid = u.hostname === 'youtu.be' ? u.pathname.slice(1) : u.searchParams.get('v');
+      return vid ? 'https://www.youtube.com/embed/' + vid : null;
+    }
+    if (type === 'vimeo') {
+      var m = u.pathname.match(/\/(\d+)/);
+      return m ? 'https://player.vimeo.com/video/' + m[1] : null;
+    }
+    if (type === 'drive') {
+      var fm = u.pathname.match(/\/file\/d\/([^/]+)/);
+      var fid = fm ? fm[1] : u.searchParams.get('id');
+      return fid ? 'https://drive.google.com/file/d/' + fid + '/preview' : null;
+    }
+  } catch {}
+  return null;
+}
 
 function initAttachmentPanel(config) {
-  attachmentUrl = config.attachment_url;
+  attachmentUrl  = config.attachment_url;
+  attachmentType = config.attachment_type || 'file';
   document.querySelector('.surface-chat').classList.add('has-attachment');
 
+  var isLink = attachmentType === 'link';
   var promptEl = document.getElementById('attachment-panel-prompt');
-  if (promptEl) promptEl.textContent = '/ attached file';
+  if (promptEl) promptEl.textContent = isLink ? '/ linked resource' : '/ attached file';
 
   var viewer = document.getElementById('attachment-viewer');
+
+  if (isLink) {
+    var linkType = getLinkEmbedType(attachmentUrl);
+    var embedUrl = getLinkEmbedUrl(attachmentUrl, linkType);
+    if (embedUrl) {
+      viewer.innerHTML = '<iframe src="' + embedUrl + '" loading="lazy" title="linked resource" allowfullscreen></iframe>';
+    } else {
+      viewer.innerHTML =
+        '<div class="attachment-viewer-fallback">' +
+          '<span class="k-mono" style="color:var(--kimba-mute)">preview not available</span>' +
+          '<a href="' + attachmentUrl + '" target="_blank" rel="noopener" class="k-btn k-btn-ghost" style="font-size:11px">open link ↗</a>' +
+        '</div>';
+    }
+    return;
+  }
+
+  // File type — existing logic
   var ext     = (attachmentUrl.split('?')[0]).split('.').pop().toLowerCase();
   var isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext);
   var isPdf   = ext === 'pdf';
@@ -1298,8 +1348,8 @@ function toggleAttachmentPanel() {
   var label    = document.getElementById('attachment-toggle-label');
   var isHidden = panel.style.display === 'none';
   panel.style.display = isHidden ? '' : 'none';
-  if (label) label.textContent = isHidden ? 'hide file' : 'show file';
-  // When hiding, give chat-right-col full width via class
+  var word = attachmentType === 'link' ? 'link' : 'file';
+  if (label) label.textContent = isHidden ? ('hide ' + word) : ('show ' + word);
   surface.classList.toggle('attachment-hidden', !isHidden);
 }
 
@@ -1481,9 +1531,10 @@ function sendMessage(text) {
 }
 
 function postToChat(userText) {
-  // On first turn with attachment, pass the file to Claude as a content block
   var userContent = userText;
-  if (convo.length === 0 && attachmentUrl) {
+
+  if (convo.length === 0 && attachmentUrl && attachmentType === 'file') {
+    // First turn with a file attachment — send as content block
     var fileExt = (attachmentUrl.split('?')[0]).split('.').pop().toLowerCase();
     var isImg = ['jpg','jpeg','png','gif','webp'].includes(fileExt);
     var isPdf = fileExt === 'pdf';
@@ -1500,13 +1551,19 @@ function postToChat(userText) {
   // Build the messages payload: committed convo + this user turn
   var messages = convo.concat([{ role: 'user', content: userContent }]);
 
+  // For link attachments, append context note to system prompt so Claude knows about the resource
+  var systemPrompt = goalConfig.intake_system_prompt;
+  if (attachmentType === 'link' && goalConfig.attachment_prompt) {
+    systemPrompt += '\n\nContext: The respondent is viewing a linked resource. ' + goalConfig.attachment_prompt;
+  }
+
   fetch('/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 500,
-      system: goalConfig.intake_system_prompt,
+      system: systemPrompt,
       messages: messages
     })
   })

@@ -28,7 +28,7 @@ export default async function handler(req, res) {
       // Public: intake page fetches this to get interview prompt and opener
       try {
         const r = await sb(
-          `/vh_goal_configs?goal_key=eq.${encodeURIComponent(goal)}&select=goal_key,name,intake_system_prompt,opener_message,attachment_url,attachment_prompt,attachment_mode`
+          `/vh_goal_configs?goal_key=eq.${encodeURIComponent(goal)}&select=goal_key,name,intake_system_prompt,opener_message,attachment_url,attachment_prompt,attachment_mode,attachment_type`
         );
         if (!r.ok) return res.status(500).json({ error: 'Failed to fetch goal config' });
         const rows = await r.json();
@@ -53,7 +53,7 @@ export default async function handler(req, res) {
   if (req.method === 'PUT') {
     if (!validateAdminToken(req)) return res.status(401).json({ error: 'Unauthorized' });
 
-    const { goal_key, name, intake_system_prompt, opener_message, analysis_system_prompt, scoring_dimensions, closing_message, is_template, attachment_url, attachment_prompt, attachment_mode } = req.body || {};
+    const { goal_key, name, intake_system_prompt, opener_message, analysis_system_prompt, scoring_dimensions, closing_message, is_template, attachment_url, attachment_prompt, attachment_mode, attachment_type } = req.body || {};
 
     if (!goal_key || !name || !intake_system_prompt || !opener_message || !analysis_system_prompt) {
       return res.status(400).json({ error: 'goal_key, name, intake_system_prompt, opener_message, analysis_system_prompt required' });
@@ -81,6 +81,7 @@ export default async function handler(req, res) {
           attachment_url:    attachment_url    || null,
           attachment_prompt: attachment_prompt || null,
           attachment_mode:   attachment_mode   || null,
+          attachment_type:   attachment_type   || null,
           updated_at: new Date().toISOString()
         })
       });

@@ -477,15 +477,32 @@ input[type="number"].k-input { width: 90px; }
 .modal-form-col {
   padding: 32px; display: flex; flex-direction: column; gap: 22px;
   border-right: 1px solid var(--kimba-rule);
-  overflow-y: auto;
+  overflow-y: auto; min-height: 0;
 }
 .modal-form-col::-webkit-scrollbar { width: 5px; }
 .modal-form-col::-webkit-scrollbar-track { background: transparent; }
 .modal-form-col::-webkit-scrollbar-thumb { background: var(--kimba-rule); }
-.modal-preview-col { overflow-y: auto; }
+.modal-preview-col { overflow-y: auto; min-height: 0; }
 .modal-preview-col {
   padding: 32px 28px; background: var(--kimba-paper-2);
   display: flex; flex-direction: column; gap: 18px;
+}
+.attach-mode-link {
+  background: none; border: none; cursor: pointer; padding: 0;
+  font-family: var(--kimba-mono); font-size: 10px; letter-spacing: 0.05em;
+  text-transform: uppercase; color: var(--kimba-mute); text-decoration: underline;
+  text-underline-offset: 2px; margin-top: 8px; display: block; text-align: left;
+}
+.attach-mode-link:hover { color: var(--kimba-ink); }
+.attach-callout {
+  display: flex; gap: 8px; align-items: flex-start;
+  background: var(--kimba-paper-2); border: 1px solid var(--kimba-rule);
+  padding: 10px 12px; margin-top: 10px;
+  font-size: 12px; line-height: 1.5; color: var(--kimba-ink-2);
+}
+.attach-callout-label {
+  font-family: var(--kimba-mono); font-size: 10px; color: var(--kimba-mute);
+  white-space: nowrap; padding-top: 1px; flex-shrink: 0;
 }
 .modal-top { display: flex; justify-content: space-between; align-items: center; }
 .modal-close {
@@ -910,17 +927,36 @@ input[type="number"].k-input { width: 90px; }
       </div>
 
       <div>
-        <label class="k-mono modal-label">attach a file <span style="color:var(--kimba-mute-2);text-transform:none;letter-spacing:0">(optional · pdf, jpg, png, doc · max 4mb)</span></label>
-        <div id="modal-file-drop"
-          onclick="document.getElementById('modal-attachment-file').click()"
-          style="border:1px dashed var(--kimba-mute-2);padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;margin-top:4px;transition:border-color 0.15s">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true" style="flex-shrink:0;color:var(--kimba-mute)"><path d="M8 1v10M3 6l5-5 5 5M2 14h12" stroke="currentColor" stroke-width="1.4" stroke-linecap="square"/></svg>
-          <span id="modal-file-label" class="k-mono" style="color:var(--kimba-mute);text-transform:none;letter-spacing:0;font-size:12px">click to upload</span>
-          <input type="file" id="modal-attachment-file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.ppt,.pptx" style="display:none" onchange="onFileSelected(this)">
+        <label class="k-mono modal-label">attach <span style="color:var(--kimba-mute-2);text-transform:none;letter-spacing:0">(optional)</span></label>
+
+        <!-- File upload state -->
+        <div id="attach-file-state">
+          <div id="modal-file-drop"
+            onclick="document.getElementById('modal-attachment-file').click()"
+            style="border:1px dashed var(--kimba-mute-2);padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;margin-top:4px;transition:border-color 0.15s">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true" style="flex-shrink:0;color:var(--kimba-mute)"><path d="M8 1v10M3 6l5-5 5 5M2 14h12" stroke="currentColor" stroke-width="1.4" stroke-linecap="square"/></svg>
+            <span id="modal-file-label" class="k-mono" style="color:var(--kimba-mute);text-transform:none;letter-spacing:0;font-size:12px">click to upload</span>
+            <input type="file" id="modal-attachment-file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.ppt,.pptx" style="display:none" onchange="onFileSelected(this)">
+          </div>
+          <button class="attach-mode-link" onclick="switchToLinkMode()">or paste a link instead →</button>
         </div>
+
+        <!-- Link paste state -->
+        <div id="attach-link-state" style="display:none">
+          <input class="k-input" type="text" id="modal-link-url" placeholder="paste a YouTube, Vimeo, or Drive link" oninput="onLinkUrlInput()" style="width:100%;margin-top:4px">
+          <button class="attach-mode-link" onclick="switchToFileMode()">or upload a file instead →</button>
+        </div>
+
+        <!-- Kimba limitation callout -->
+        <div id="modal-attach-callout" class="attach-callout" style="display:none" aria-live="polite">
+          <span class="attach-callout-label">kimba /</span>
+          <span id="modal-attach-callout-text"></span>
+        </div>
+
+        <!-- Secondary controls -->
         <div id="modal-attachment-extras" style="display:none;flex-direction:column;gap:14px;margin-top:12px">
           <div>
-            <label class="k-mono modal-label" for="modal-attachment-prompt">file intro message</label>
+            <label class="k-mono modal-label" for="modal-attachment-prompt">intro message</label>
             <input class="k-input" type="text" id="modal-attachment-prompt" placeholder="e.g. we sent you our brand deck for review — can we talk through it?" style="width:100%">
           </div>
           <div>
@@ -1890,6 +1926,8 @@ var modalPhase1          = null;
 var modalClosingMessage  = '';
 var modalSaveAsTemplate  = false;
 var modalAttachmentUrl   = null;
+var modalAttachmentType  = null;
+var linkDebounceTimer    = null;
 
 function openModal() {
   modalSubmitted       = false;
@@ -1910,6 +1948,12 @@ function openModal() {
   document.getElementById('modal-file-label').textContent = 'click to upload';
   document.getElementById('modal-attachment-extras').style.display = 'none';
   document.getElementById('attach-mode-add').checked = true;
+  document.getElementById('attach-file-state').style.display = '';
+  document.getElementById('attach-link-state').style.display  = 'none';
+  document.getElementById('modal-link-url').value             = '';
+  document.getElementById('modal-attach-callout').style.display = 'none';
+  if (linkDebounceTimer) { clearTimeout(linkDebounceTimer); linkDebounceTimer = null; }
+  modalAttachmentType = null;
 
   var btn = document.getElementById('modal-generate');
   btn.disabled      = true;
@@ -1982,6 +2026,34 @@ function onModalNameInput() {
   updatePreview();
 }
 
+var CALLOUT_MESSAGES = {
+  file: {
+    pdf:     "i'll be able to read this directly if the respondent has questions.",
+    image:   "i'll be able to see this directly if the respondent has questions.",
+    office:  "i can read the text, but i won't see formatting or embedded images.",
+  },
+  link: {
+    youtube: "i can't watch the video, but i'll know the title and what it's about — i'll reference it in conversation.",
+    vimeo:   "i can't watch the video, but i'll know the title and what it's about — i'll reference it in conversation.",
+    drive:   "i can't access the content of this link — i'll only know what you write in the intro message.",
+    unknown: "i can't access this link — i'll only know what you write in the intro message.",
+  }
+};
+
+function showAttachCallout(msg) {
+  var el = document.getElementById('modal-attach-callout');
+  document.getElementById('modal-attach-callout-text').textContent = msg;
+  el.style.display = 'flex';
+}
+
+function hideAttachCallout() {
+  document.getElementById('modal-attach-callout').style.display = 'none';
+}
+
+function showAttachExtras(show) {
+  document.getElementById('modal-attachment-extras').style.display = show ? 'flex' : 'none';
+}
+
 function onFileSelected(input) {
   var file = input.files[0];
   if (!file) return;
@@ -1990,8 +2062,86 @@ function onFileSelected(input) {
     input.value = '';
     return;
   }
+  modalAttachmentType = 'file';
   document.getElementById('modal-file-label').textContent = file.name;
-  document.getElementById('modal-attachment-extras').style.display = 'flex';
+  showAttachExtras(true);
+
+  var ext = (file.name.split('.').pop() || '').toLowerCase();
+  var imgExts = ['jpg','jpeg','png','gif','webp'];
+  var officeExts = ['doc','docx','ppt','pptx'];
+  var msg = imgExts.includes(ext)
+    ? CALLOUT_MESSAGES.file.image
+    : officeExts.includes(ext)
+      ? CALLOUT_MESSAGES.file.office
+      : CALLOUT_MESSAGES.file.pdf;
+  showAttachCallout(msg);
+}
+
+function switchToLinkMode() {
+  document.getElementById('attach-file-state').style.display = 'none';
+  document.getElementById('attach-link-state').style.display = '';
+  document.getElementById('modal-attachment-file').value     = '';
+  document.getElementById('modal-file-label').textContent    = 'click to upload';
+  hideAttachCallout();
+  showAttachExtras(false);
+  modalAttachmentUrl  = null;
+  modalAttachmentType = null;
+  setTimeout(function() { document.getElementById('modal-link-url').focus(); }, 50);
+}
+
+function switchToFileMode() {
+  document.getElementById('attach-link-state').style.display  = 'none';
+  document.getElementById('attach-file-state').style.display  = '';
+  document.getElementById('modal-link-url').value              = '';
+  if (linkDebounceTimer) { clearTimeout(linkDebounceTimer); linkDebounceTimer = null; }
+  hideAttachCallout();
+  showAttachExtras(false);
+  modalAttachmentUrl  = null;
+  modalAttachmentType = null;
+}
+
+function onLinkUrlInput() {
+  var url = document.getElementById('modal-link-url').value.trim();
+  if (linkDebounceTimer) clearTimeout(linkDebounceTimer);
+  if (!url) {
+    hideAttachCallout();
+    showAttachExtras(false);
+    modalAttachmentUrl  = null;
+    modalAttachmentType = null;
+    return;
+  }
+  linkDebounceTimer = setTimeout(function() { fetchLinkMeta(url); }, 600);
+}
+
+function fetchLinkMeta(url) {
+  apiFetch('/api/vh-link-meta?url=' + encodeURIComponent(url))
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var currentUrl = document.getElementById('modal-link-url').value.trim();
+      if (currentUrl !== url) return; // stale response
+      modalAttachmentUrl  = url;
+      modalAttachmentType = 'link';
+      showAttachCallout(CALLOUT_MESSAGES.link[data.type] || CALLOUT_MESSAGES.link.unknown);
+      showAttachExtras(true);
+      // Pre-populate intro message if still empty
+      var promptEl = document.getElementById('modal-attachment-prompt');
+      if (promptEl && !promptEl.value.trim()) {
+        if ((data.type === ‘youtube’ || data.type === ‘vimeo’) && data.title) {
+          promptEl.value = "we shared a video — " + data.title + " — give it a watch and then let’s chat.";
+        } else if (data.type === ‘drive’) {
+          promptEl.value = "we’ve shared a document — take a look and let’s discuss.";
+        }
+      }
+    })
+    .catch(function() {
+      // If fetch fails, still treat as valid link (unknown type)
+      var currentUrl = document.getElementById('modal-link-url').value.trim();
+      if (currentUrl !== url) return;
+      modalAttachmentUrl  = url;
+      modalAttachmentType = 'link';
+      showAttachCallout(CALLOUT_MESSAGES.link.unknown);
+      showAttachExtras(true);
+    });
 }
 
 function uploadAttachment(file) {
@@ -2150,7 +2300,10 @@ function generatePrompt() {
   var fileInput = document.getElementById('modal-attachment-file');
   var file      = fileInput && fileInput.files[0];
 
-  var uploadStep = file ? uploadAttachment(file) : Promise.resolve(null);
+  // Link mode: skip upload, URL already captured in modalAttachmentUrl
+  var uploadStep = (modalAttachmentType === 'link')
+    ? Promise.resolve(modalAttachmentUrl)
+    : file ? uploadAttachment(file) : Promise.resolve(null);
 
   uploadStep
     .then(function(url) {
@@ -2218,7 +2371,8 @@ function createSessionFromPrompt() {
     is_template:            modalSaveAsTemplate,
     attachment_url:         modalAttachmentUrl || null,
     attachment_prompt:      (attachPrompt && attachPrompt.value.trim()) || null,
-    attachment_mode:        modalAttachmentUrl ? (attachMode ? attachMode.value : 'add') : null
+    attachment_mode:        modalAttachmentUrl ? (attachMode ? attachMode.value : 'add') : null,
+    attachment_type:        modalAttachmentType || null
   };
 
   apiFetch('/api/vh-goal-config', { method: 'PUT', body: JSON.stringify(goalConfig) })
