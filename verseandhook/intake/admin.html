@@ -1820,13 +1820,17 @@ function deleteRespondent(e, btn, responseId) {
       renderDetail(currentDetail);
       switchTab(activeTab);
     } else {
+      console.error('delete respondent failed:', result);
       btn.disabled    = false;
-      btn.textContent = 'delete';
+      btn.textContent = result.error ? 'error: ' + result.error : 'failed';
+      setTimeout(function() { if (btn) btn.textContent = 'delete'; }, 4000);
     }
   })
-  .catch(function() {
+  .catch(function(err) {
+    console.error('delete respondent error:', err);
     btn.disabled    = false;
-    btn.textContent = 'delete';
+    btn.textContent = 'error';
+    setTimeout(function() { if (btn) btn.textContent = 'delete'; }, 4000);
   });
 }
 
