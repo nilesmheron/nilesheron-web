@@ -193,6 +193,8 @@ export default async function handler(req, res) {
     if (type === 'respondent') {
       if (!response_id || !client_id) return res.status(400).json({ error: 'response_id and client_id required' });
       try {
+        // vh_analysis has a FK referencing vh_responses(id) — clear it first
+        await sb(`/vh_analysis?client_id=eq.${encodeURIComponent(client_id)}`, { method: 'DELETE' });
         const r = await sb(
           `/vh_responses?id=eq.${encodeURIComponent(response_id)}&client_id=eq.${encodeURIComponent(client_id)}`,
           { method: 'DELETE' }
