@@ -469,20 +469,21 @@ input[type="number"].k-input { width: 90px; }
 .modal-inner {
   background: var(--kimba-paper); border: 1px solid var(--kimba-ink);
   width: min(1200px, 96vw); max-height: 92vh; overflow: hidden;
-  display: grid; grid-template-columns: 1.1fr 1fr;
+  display: flex;
 }
 .modal-inner.phase3-view {
   width: min(1400px, 96vw); height: 88vh; max-height: 88vh; overflow: hidden;
 }
 .modal-form-col {
+  flex: 1.1; min-width: 0;
   padding: 32px; display: flex; flex-direction: column; gap: 22px;
   border-right: 1px solid var(--kimba-rule);
-  overflow-y: auto; min-height: 0;
+  overflow-y: auto;
 }
 .modal-form-col::-webkit-scrollbar { width: 5px; }
 .modal-form-col::-webkit-scrollbar-track { background: transparent; }
 .modal-form-col::-webkit-scrollbar-thumb { background: var(--kimba-rule); }
-.modal-preview-col { overflow-y: auto; min-height: 0; }
+.modal-preview-col { flex: 1; min-width: 0; overflow-y: auto; }
 .modal-preview-col {
   padding: 32px 28px; background: var(--kimba-paper-2);
   display: flex; flex-direction: column; gap: 18px;
@@ -547,7 +548,7 @@ input[type="number"].k-input { width: 90px; }
 
 /* Created state */
 .modal-created {
-  grid-column: 1 / -1;
+  flex: 1;
   padding: 40px; display: flex; flex-direction: column; gap: 22px;
 }
 .created-link-box {
@@ -2216,8 +2217,7 @@ function showPhase3(data) {
 
   var div = document.createElement('div');
   div.id = 'modal-phase-content';
-  // grid-column: 1 / -1 spans both modal grid columns so phase 3 uses full width
-  div.style.cssText = 'display:flex;width:100%;height:100%;min-height:0;grid-column:1/-1';
+  div.style.cssText = 'display:flex;width:100%;height:100%;min-height:0;flex:1';
 
   div.innerHTML =
     // LEFT — opener, save as template, footer
