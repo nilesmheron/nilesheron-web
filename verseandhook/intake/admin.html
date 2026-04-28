@@ -1337,6 +1337,7 @@ function renderListError(msg) {
 // Detail view
 // =====================================================================
 function openDetail(clientId) {
+  deleteSessionPending = false;
   document.getElementById('view-list').style.display = 'none';
   document.getElementById('view-detail').style.display = '';
   document.getElementById('view-placeholder').style.display = 'none';
@@ -1625,6 +1626,9 @@ function renderRespondentsTab(data) {
       '</div>' +
       '<span class="k-mono" style="font-size:11px;color:var(--kimba-mute)">' + esc(r.respondent_email) + '</span>' +
       '<span class="rdate">' + relativeTime(r.completed_at) + '</span>' +
+      '<button class="k-btn" style="font-size:11px;padding:3px 10px;color:var(--kimba-mute);border-color:var(--kimba-rule);flex-shrink:0"' +
+        ' onclick="deleteRespondent(event,this,\'' + r.id + '\')"' +
+        ' aria-label="delete ' + esc(r.respondent_name) + '">delete</button>' +
     '</div>';
   });
 
@@ -1675,6 +1679,13 @@ function renderSettingsTab(data) {
     '<div style="margin-top:24px;display:flex;gap:8px;align-items:center">' +
       '<button class="k-btn k-btn-red" onclick="saveSettings()">save changes</button>' +
       '<span class="k-mono" id="settings-save-status" style="color:var(--kimba-mute)"></span>' +
+    '</div>' +
+    '<div style="margin-top:40px;border-top:1px solid var(--kimba-rule);padding-top:24px">' +
+      '<div class="admin-section-title" style="color:var(--kimba-red)">danger zone</div>' +
+      '<div style="display:flex;gap:10px;align-items:center;margin-top:12px">' +
+        '<button class="k-btn" id="btn-delete-session" style="border-color:var(--kimba-red);color:var(--kimba-red)" onclick="deleteSession()">delete session</button>' +
+        '<span class="k-mono" id="delete-session-status" style="font-size:11px;color:var(--kimba-mute)">removes all responses, analysis, and the session — cannot be undone</span>' +
+      '</div>' +
     '</div>';
 
   document.getElementById('tab-settings').innerHTML = html;
@@ -1712,6 +1723,111 @@ function saveSettings() {
     }
   })
   .catch(function() { statusEl.textContent = 'network error'; });
+}
+
+// =====================================================================
+// Delete session
+// =====================================================================
+var deleteSessionPending = false;
+function deleteSession() {
+  var btn      = document.getElementById('btn-delete-session');
+  var statusEl = document.getElementById('delete-session-status');
+  if (!btn || !currentDetail) return;
+
+  if (!deleteSessionPending) {
+    deleteSessionPending = true;
+    btn.textContent    = 'confirm delete ✕';
+    statusEl.textContent = 'this cannot be undone — click again to confirm';
+    statusEl.style.color = 'var(--kimba-red)';
+    setTimeout(function() {
+      if (deleteSessionPending) {
+        deleteSessionPending   = false;
+        if (btn) { btn.disabled = false; btn.textContent = 'delete session'; }
+        if (statusEl) { statusEl.textContent = 'removes all responses, analysis, and the session — cannot be undone'; statusEl.style.color = ''; }
+      }
+    }, 5000);
+    return;
+  }
+
+  deleteSessionPending = false;
+  btn.disabled      = true;
+  btn.textContent   = 'deleting…';
+  statusEl.textContent = '';
+  statusEl.style.color = '';
+
+  var clientId = currentDetail.client.id;
+  apiFetch('/api/vh-admin', {
+    method: 'DELETE',
+    body: JSON.stringify({ type: 'session', client_id: clientId })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(result) {
+    if (result.ok) {
+      allClients = [];  // force list reload
+      showList();
+    } else {
+      btn.disabled     = false;
+      btn.textContent  = 'delete session';
+      statusEl.textContent = 'error: ' + (result.error || 'unknown');
+      statusEl.style.color = 'var(--kimba-red)';
+    }
+  })
+  .catch(function() {
+    btn.disabled     = false;
+    btn.textContent  = 'delete session';
+    statusEl.textContent = 'network error';
+    statusEl.style.color = 'var(--kimba-red)';
+  });
+}
+
+// =====================================================================
+// Delete respondent
+// =====================================================================
+function deleteRespondent(e, btn, responseId) {
+  e.stopPropagation();
+  if (!currentDetail) return;
+
+  if (!btn.dataset.confirming) {
+    btn.dataset.confirming = '1';
+    btn.textContent       = 'confirm?';
+    btn.style.color       = 'var(--kimba-red)';
+    btn.style.borderColor = 'var(--kimba-red)';
+    setTimeout(function() {
+      if (btn.dataset.confirming) {
+        delete btn.dataset.confirming;
+        btn.textContent       = 'delete';
+        btn.style.color       = '';
+        btn.style.borderColor = '';
+      }
+    }, 4000);
+    return;
+  }
+
+  delete btn.dataset.confirming;
+  btn.disabled    = true;
+  btn.textContent = '…';
+
+  apiFetch('/api/vh-admin', {
+    method: 'DELETE',
+    body: JSON.stringify({ type: 'respondent', response_id: responseId, client_id: currentDetail.client.id })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(result) {
+    if (result.ok) {
+      currentDetail.responses = currentDetail.responses.filter(function(r) { return r.id !== responseId; });
+      var activeBtn = document.querySelector('.tab-btn.active');
+      var activeTab = activeBtn ? activeBtn.dataset.tab : 'respondents';
+      renderDetail(currentDetail);
+      switchTab(activeTab);
+    } else {
+      btn.disabled    = false;
+      btn.textContent = 'delete';
+    }
+  })
+  .catch(function() {
+    btn.disabled    = false;
+    btn.textContent = 'delete';
+  });
 }
 
 function renderAside(data) {

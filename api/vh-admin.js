@@ -173,6 +173,40 @@ export default async function handler(req, res) {
     }
   }
 
+  // DELETE — remove a session or a single respondent
+  if (req.method === 'DELETE') {
+    const { type, client_id, response_id } = req.body || {};
+
+    if (type === 'session') {
+      if (!client_id) return res.status(400).json({ error: 'client_id required' });
+      try {
+        await sb(`/vh_analysis?client_id=eq.${encodeURIComponent(client_id)}`, { method: 'DELETE' });
+        await sb(`/vh_responses?client_id=eq.${encodeURIComponent(client_id)}`, { method: 'DELETE' });
+        const r = await sb(`/vh_clients?id=eq.${encodeURIComponent(client_id)}`, { method: 'DELETE' });
+        if (!r.ok) return res.status(500).json({ error: 'Failed to delete session' });
+        return res.status(200).json({ ok: true });
+      } catch (err) {
+        return res.status(500).json({ error: err.message });
+      }
+    }
+
+    if (type === 'respondent') {
+      if (!response_id || !client_id) return res.status(400).json({ error: 'response_id and client_id required' });
+      try {
+        const r = await sb(
+          `/vh_responses?id=eq.${encodeURIComponent(response_id)}&client_id=eq.${encodeURIComponent(client_id)}`,
+          { method: 'DELETE' }
+        );
+        if (!r.ok) return res.status(500).json({ error: 'Failed to delete respondent' });
+        return res.status(200).json({ ok: true });
+      } catch (err) {
+        return res.status(500).json({ error: err.message });
+      }
+    }
+
+    return res.status(400).json({ error: 'type must be session or respondent' });
+  }
+
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
   const { client_id, all_responses } = req.query;
