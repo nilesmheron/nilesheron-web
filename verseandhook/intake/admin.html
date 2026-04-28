@@ -896,15 +896,9 @@ input[type="number"].k-input { width: 90px; }
         <input class="k-input" type="text" id="modal-name" placeholder="e.g. altona coffee co." oninput="onModalNameInput()" autofocus>
       </div>
 
-      <div class="modal-count-row">
-        <div>
-          <label class="k-mono modal-label" for="modal-count">expected respondents</label>
-          <input class="k-input" type="number" id="modal-count" min="1" max="200" value="8">
-        </div>
-        <div>
-          <label class="k-mono modal-label" for="modal-max-exchanges">max exchanges</label>
-          <input class="k-input" type="number" id="modal-max-exchanges" min="4" max="20" value="10">
-        </div>
+      <div>
+        <label class="k-mono modal-label" for="modal-count">expected respondents</label>
+        <input class="k-input" type="number" id="modal-count" min="1" max="200" value="8">
       </div>
 
       <div>
@@ -920,11 +914,6 @@ input[type="number"].k-input { width: 90px; }
       <div>
         <label class="k-mono modal-label" for="modal-desc">describe what you want to learn</label>
         <textarea class="k-input" id="modal-desc" rows="6" placeholder="e.g. understand how this client's stakeholders think about their brand voice and whether the team is aligned on positioning" style="resize:vertical;font-family:inherit;font-size:inherit;line-height:1.5;width:100%"></textarea>
-      </div>
-
-      <div>
-        <label class="k-mono modal-label" for="modal-opener">opening line <span style="color:var(--kimba-mute-2);text-transform:none;letter-spacing:0">(optional · leave blank to auto-generate)</span></label>
-        <textarea class="k-input" id="modal-opener" rows="2" placeholder="e.g. really glad you're here — let's start with something simple." style="resize:vertical;font-family:inherit;font-size:inherit;line-height:1.5;width:100%"></textarea>
       </div>
 
       <div>
@@ -1922,13 +1911,17 @@ function closeDrawer() {
 var modalSubmitted = false;
 var modalOpener    = null;
 var modalTrapClean = null;
-var modalGenerated       = null;
-var modalPhase1          = null;
+var modalGenerated       = null;  // { base_prompt, questions, analysis_system_prompt, scoring_dimensions }
+var modalSynthesized     = null;  // { intake_system_prompt, opener_message }
+var modalBasePrompt      = null;  // phase 2: editable base prompt string
+var modalQuestions       = null;  // phase 2: [{text, tag}] after save
+var modalPhase1          = null;  // { name, closing, count, maxEx }
 var modalClosingMessage  = '';
 var modalSaveAsTemplate  = false;
 var modalAttachmentUrl   = null;
 var modalAttachmentType  = null;
 var linkDebounceTimer    = null;
+var dragSrcRow           = null;
 
 function openModal() {
   modalSubmitted       = false;
@@ -1939,12 +1932,15 @@ function openModal() {
   modalAttachmentUrl   = null;
   selectedMode         = '01';
 
+  modalGenerated    = null;
+  modalSynthesized  = null;
+  modalBasePrompt   = null;
+  modalQuestions    = null;
+  modalSaveAsTemplate = false;
   document.getElementById('modal-name').value          = '';
   document.getElementById('modal-count').value         = '8';
-  document.getElementById('modal-max-exchanges').value = '10';
   document.getElementById('modal-closing').value       = '';
   document.getElementById('modal-desc').value          = MODE_DETAILS['01'].description;
-  document.getElementById('modal-opener').value           = '';
   document.getElementById('modal-attachment-file').value  = '';
   document.getElementById('modal-file-label').textContent = 'click to upload';
   document.getElementById('modal-attachment-extras').style.display = 'none';
@@ -2184,7 +2180,7 @@ function showPhase2() {
   div.style.cssText = 'flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px';
   div.innerHTML =
     '<h2 class="k-display modal-headline">generating<span class="red generating-dot">.</span></h2>' +
-    '<span class="k-mono" style="color:var(--kimba-mute)">building your session prompt</span>';
+    '<span class="k-mono" style="color:var(--kimba-mute)">building your prompt and questions</span>';
   document.getElementById('modal-inner').appendChild(div);
 }
 
@@ -2201,15 +2197,14 @@ function showPhase2Error() {
 }
 
 function showPhase3(data) {
-  modalGenerated = data;
   var existing = document.getElementById('modal-phase-content');
   if (existing) existing.remove();
   var closingForJson = modalPhase1 ? modalPhase1.closing : '';
   var jsonPreview = JSON.stringify({
     intake_system_prompt:   data.intake_system_prompt,
-    opener_message:         (modalPhase1 && modalPhase1.opener) || data.opener_message,
-    analysis_system_prompt: data.analysis_system_prompt,
-    scoring_dimensions:     data.scoring_dimensions,
+    opener_message:         data.opener_message,
+    analysis_system_prompt: modalGenerated ? modalGenerated.analysis_system_prompt : '',
+    scoring_dimensions:     modalGenerated ? modalGenerated.scoring_dimensions : [],
     closing_message:        closingForJson || null
   }, null, 2);
 
@@ -2227,7 +2222,7 @@ function showPhase3(data) {
       '<h2 class="k-display modal-headline" id="modal-heading" style="flex-shrink:0">review<span class="red">.</span></h2>' +
       '<div style="flex:1;display:flex;flex-direction:column;gap:8px;min-height:0">' +
         '<label class="k-mono modal-label" for="phase3-opener">/ opener</label>' +
-        '<textarea class="k-input" id="phase3-opener" style="flex:1;font-size:15px;line-height:1.65;resize:none;font-family:var(--kimba-body);min-height:120px">' + esc((modalPhase1 && modalPhase1.opener) || data.opener_message) + '</textarea>' +
+        '<textarea class="k-input" id="phase3-opener" style="flex:1;font-size:15px;line-height:1.65;resize:none;font-family:var(--kimba-body);min-height:120px">' + esc(data.opener_message) + '</textarea>' +
       '</div>' +
       '<div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0">' +
         '<button class="k-btn k-btn-ghost" id="save-template-btn" onclick="showSaveAsTemplate()">save as template</button>' +
@@ -2237,7 +2232,7 @@ function showPhase3(data) {
         '</div>' +
       '</div>' +
       '<div class="modal-footer" style="padding:0;border-top:1px solid var(--kimba-rule);padding-top:20px;flex-shrink:0">' +
-        '<a href="#" class="k-mono" style="color:var(--kimba-mute);font-size:11px;text-decoration:none;align-self:center" onclick="backToPhase1(event)">← back</a>' +
+        '<a href="#" class="k-mono" style="color:var(--kimba-mute);font-size:11px;text-decoration:none;align-self:center" onclick="backToPhase2(event)">← back</a>' +
         '<button class="k-btn k-btn-red" id="phase3-submit" onclick="createSessionFromPrompt()" style="margin-left:auto">create &amp; generate link →</button>' +
       '</div>' +
     '</div>' +
@@ -2251,11 +2246,11 @@ function showPhase3(data) {
       '<div id="advanced-edit-panel" style="display:none;flex-direction:column;gap:14px;border-top:1px solid var(--kimba-rule);padding-top:14px;overflow-y:auto;max-height:44%;flex-shrink:0">' +
         '<div>' +
           '<label class="k-mono modal-label" for="phase3-analysis">/ analysis prompt</label>' +
-          '<textarea class="k-input" id="phase3-analysis" rows="4" style="font-size:11px;line-height:1.5;resize:vertical;font-family:var(--kimba-mono,monospace);width:100%;margin-top:6px">' + esc(data.analysis_system_prompt) + '</textarea>' +
+          '<textarea class="k-input" id="phase3-analysis" rows="4" style="font-size:11px;line-height:1.5;resize:vertical;font-family:var(--kimba-mono,monospace);width:100%;margin-top:6px">' + esc(modalGenerated ? modalGenerated.analysis_system_prompt : '') + '</textarea>' +
         '</div>' +
         '<div>' +
           '<label class="k-mono modal-label" for="phase3-dimensions">/ scoring dimensions <span style="text-transform:none;letter-spacing:0">(comma-separated)</span></label>' +
-          '<input class="k-input" type="text" id="phase3-dimensions" value="' + esc(data.scoring_dimensions.join(', ')) + '" style="font-family:var(--kimba-mono);font-size:12px;width:100%;margin-top:6px">' +
+          '<input class="k-input" type="text" id="phase3-dimensions" value="' + esc(modalGenerated && modalGenerated.scoring_dimensions ? modalGenerated.scoring_dimensions.join(', ') : '') + '" style="font-family:var(--kimba-mono);font-size:12px;width:100%;margin-top:6px">' +
         '</div>' +
         '<div>' +
           '<label class="k-mono modal-label">/ full config json <span style="text-transform:none;letter-spacing:0">(read-only)</span></label>' +
@@ -2285,12 +2280,10 @@ function generatePrompt() {
   var name    = document.getElementById('modal-name').value.trim();
   var desc    = document.getElementById('modal-desc').value.trim();
   var closing = document.getElementById('modal-closing').value.trim();
-  var maxEx   = parseInt(document.getElementById('modal-max-exchanges').value, 10) || 10;
   var count   = parseInt(document.getElementById('modal-count').value, 10) || 8;
   if (!name) return;
 
-  var opener          = document.getElementById('modal-opener').value.trim();
-  modalPhase1         = { name: name, closing: closing, maxEx: maxEx, count: count, opener: opener };
+  modalPhase1         = { name: name, closing: closing, count: count };
   modalClosingMessage = closing;
   showPhase2();
 
@@ -2317,8 +2310,9 @@ function generatePrompt() {
     })
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      if (data.intake_system_prompt) {
-        showPhase3(data);
+      if (data.base_prompt && data.questions) {
+        modalGenerated = data;
+        showPhase2Questions(data);
       } else {
         showPhase2Error();
       }
@@ -2326,6 +2320,226 @@ function generatePrompt() {
     .catch(function() {
       showPhase2Error();
     });
+}
+
+// ==========================================================
+// Phase 2 — Questions builder
+// ==========================================================
+
+function calcMaxExchanges(questions) {
+  var EXCHANGE_MAP = { 'no-follow-up': 1, 'simple': 2, 'number': 2, 'complex': 4 };
+  var sum = (questions || []).reduce(function(acc, q) {
+    return acc + (EXCHANGE_MAP[q.tag] || 2);
+  }, 0);
+  return sum + 4;
+}
+
+function updateExchangeCalc() {
+  var questions = readQuestionsFromDOM();
+  var total = calcMaxExchanges(questions);
+  var el = document.getElementById('phase2-exchange-calc');
+  if (el) el.textContent = '/ ' + total + ' max exchanges';
+}
+
+function readQuestionsFromDOM() {
+  var rows = document.querySelectorAll('#phase2-question-list [draggable="true"]');
+  return Array.prototype.map.call(rows, function(row) {
+    var textInput = row.querySelector('input[type="text"]');
+    var tagSelect = row.querySelector('select');
+    return {
+      text: textInput ? textInput.value.trim() : '',
+      tag:  tagSelect ? tagSelect.value : 'simple'
+    };
+  }).filter(function(q) { return q.text.length > 0; });
+}
+
+function createQuestionRow(q) {
+  var row = document.createElement('div');
+  row.draggable = true;
+  row.style.cssText = 'display:flex;align-items:center;gap:8px;background:var(--kimba-white);border:1px solid var(--kimba-rule);padding:10px 12px';
+
+  var tags = ['simple', 'complex', 'number', 'no-follow-up'];
+  var tagOpts = tags.map(function(t) {
+    return '<option value="' + t + '"' + (q.tag === t ? ' selected' : '') + '>' + t + '</option>';
+  }).join('');
+
+  row.innerHTML =
+    '<span style="cursor:grab;color:var(--kimba-mute-2);flex-shrink:0;font-size:16px;line-height:1;user-select:none">⠿</span>' +
+    '<input type="text" value="' + esc(q.text) + '" style="flex:1;border:0;background:transparent;font-family:var(--kimba-body);font-size:14px;outline:none;padding:2px 0;color:var(--kimba-ink)" placeholder="question text…" oninput="updateExchangeCalc()">' +
+    '<select style="border:1px solid var(--kimba-rule);background:var(--kimba-paper);font-family:var(--kimba-mono);font-size:10px;letter-spacing:0.05em;color:var(--kimba-mute);cursor:pointer;padding:4px 6px;text-transform:uppercase;outline:none;flex-shrink:0" onchange="updateExchangeCalc()">' + tagOpts + '</select>' +
+    '<button onclick="removeQuestion(this)" style="background:none;border:none;cursor:pointer;color:var(--kimba-mute-2);padding:2px 4px;font-size:14px;flex-shrink:0;line-height:1" title="remove">✕</button>';
+
+  return row;
+}
+
+function addQuestion(q) {
+  var list = document.getElementById('phase2-question-list');
+  if (!list) return;
+  var row = createQuestionRow(q || { text: '', tag: 'simple' });
+  list.appendChild(row);
+  updateExchangeCalc();
+  if (!q) {
+    var input = row.querySelector('input[type="text"]');
+    if (input) input.focus();
+  }
+}
+
+function removeQuestion(btn) {
+  var row = btn.closest('[draggable="true"]');
+  if (row) { row.remove(); updateExchangeCalc(); }
+}
+
+function initQuestionDnd() {
+  var list = document.getElementById('phase2-question-list');
+  if (!list) return;
+  list.addEventListener('dragstart', function(e) {
+    var row = e.target.closest('[draggable="true"]');
+    if (!row) return;
+    dragSrcRow = row;
+    e.dataTransfer.effectAllowed = 'move';
+    setTimeout(function() { if (dragSrcRow) dragSrcRow.style.opacity = '0.4'; }, 0);
+  });
+  list.addEventListener('dragend', function() {
+    if (dragSrcRow) { dragSrcRow.style.opacity = ''; dragSrcRow = null; }
+    updateExchangeCalc();
+  });
+  list.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    var row = e.target.closest('[draggable="true"]');
+    if (!row || row === dragSrcRow || !dragSrcRow) return;
+    var rect   = row.getBoundingClientRect();
+    var isAfter = e.clientY > rect.top + rect.height / 2;
+    list.insertBefore(dragSrcRow, isAfter ? row.nextSibling : row);
+  });
+}
+
+function showPhase2Questions(data) {
+  document.getElementById('modal-form-col').style.display    = 'none';
+  document.getElementById('modal-preview-col').style.display = 'none';
+  var existing = document.getElementById('modal-phase-content');
+  if (existing) existing.remove();
+
+  var div = document.createElement('div');
+  div.id = 'modal-phase-content';
+  div.style.cssText = 'display:flex;width:100%;height:100%;min-height:0;flex:1';
+
+  div.innerHTML =
+    // LEFT — base prompt
+    '<div style="flex:0 0 40%;display:flex;flex-direction:column;border-right:1px solid var(--kimba-rule);padding:32px;gap:16px;overflow:hidden">' +
+      '<div class="modal-top">' +
+        '<span class="k-mono k-slash">questions</span>' +
+        '<button class="modal-close" onclick="closeModal()">close ✕</button>' +
+      '</div>' +
+      '<h2 class="k-display modal-headline" style="flex-shrink:0">questions<span class="red">.</span></h2>' +
+      '<div style="flex:1;display:flex;flex-direction:column;gap:8px;min-height:0">' +
+        '<label class="k-mono modal-label" for="phase2-base-prompt" style="flex-shrink:0">/ base prompt</label>' +
+        '<textarea class="k-input" id="phase2-base-prompt" style="flex:1;font-size:12px;line-height:1.55;resize:none;font-family:var(--kimba-mono,monospace);min-height:0;overflow-y:auto"></textarea>' +
+      '</div>' +
+      '<div class="modal-footer" style="padding:0;border-top:1px solid var(--kimba-rule);padding-top:20px;flex-shrink:0">' +
+        '<a href="#" class="k-mono" style="color:var(--kimba-mute);font-size:11px;text-decoration:none;align-self:center" onclick="backToPhase1(event)">← back</a>' +
+        '<button class="k-btn k-btn-red" id="phase2-synthesize" onclick="synthesizePrompt()" style="margin-left:auto">synthesize →</button>' +
+      '</div>' +
+    '</div>' +
+    // RIGHT — question list
+    '<div style="flex:1;display:flex;flex-direction:column;padding:32px;gap:12px;overflow:hidden;background:var(--kimba-paper-2)">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;flex-shrink:0">' +
+        '<label class="k-mono modal-label" style="margin-bottom:0">/ questions</label>' +
+        '<span class="k-mono" id="phase2-exchange-calc" style="font-size:10px;color:var(--kimba-mute)"></span>' +
+      '</div>' +
+      '<div id="phase2-question-list" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px"></div>' +
+      '<button class="k-btn k-btn-ghost" id="phase2-add-btn" onclick="addQuestion()" style="width:100%;justify-content:center;flex-shrink:0">+ add question</button>' +
+    '</div>';
+
+  document.getElementById('modal-inner').appendChild(div);
+  document.getElementById('modal-inner').classList.remove('phase3-view');
+
+  // Populate base prompt
+  var bpEl = document.getElementById('phase2-base-prompt');
+  if (bpEl) bpEl.value = data.base_prompt || '';
+
+  // Populate questions
+  (data.questions || []).forEach(function(q) { addQuestion(q); });
+  updateExchangeCalc();
+  initQuestionDnd();
+
+  if (modalTrapClean) { modalTrapClean(); modalTrapClean = null; }
+  modalTrapClean = trapFocus(document.getElementById('modal-new-session'));
+}
+
+function showLoadingB() {
+  var existing = document.getElementById('modal-phase-content');
+  if (existing) existing.remove();
+  var div = document.createElement('div');
+  div.id = 'modal-phase-content';
+  div.style.cssText = 'flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px';
+  div.innerHTML =
+    '<h2 class="k-display modal-headline">merging<span class="red generating-dot">.</span></h2>' +
+    '<span class="k-mono" style="color:var(--kimba-mute)">merging questions into your prompt</span>';
+  document.getElementById('modal-inner').appendChild(div);
+}
+
+function showLoadingBError() {
+  var existing = document.getElementById('modal-phase-content');
+  if (existing) existing.remove();
+  var div = document.createElement('div');
+  div.id = 'modal-phase-content';
+  div.style.cssText = 'flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px';
+  div.innerHTML =
+    '<span class="k-mono" style="color:var(--kimba-mute)">something went wrong synthesizing the prompt</span>' +
+    '<button class="k-btn k-btn-ghost" onclick="backToPhase2()">try again</button>';
+  document.getElementById('modal-inner').appendChild(div);
+}
+
+function synthesizePrompt() {
+  var btn = document.getElementById('phase2-synthesize');
+  if (!btn || btn.disabled) return;
+
+  modalBasePrompt = document.getElementById('phase2-base-prompt').value;
+  modalQuestions  = readQuestionsFromDOM();
+  if (!modalQuestions.length) return;
+
+  // Auto-calculate max exchanges from question tags
+  modalPhase1.maxEx = calcMaxExchanges(modalQuestions);
+
+  showLoadingB();
+
+  var attachContext = null;
+  if (modalAttachmentType === 'link' && modalAttachmentUrl) {
+    attachContext = 'The respondent will be viewing a linked resource.';
+  } else if (modalAttachmentType === 'file' && modalAttachmentUrl) {
+    attachContext = 'The respondent will have an attached file to reference.';
+  }
+
+  apiFetch('/api/vh-admin', {
+    method: 'POST',
+    body: JSON.stringify({
+      action:             'synthesize_prompt',
+      base_prompt:        modalBasePrompt,
+      questions:          modalQuestions,
+      attachment_context: attachContext
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.intake_system_prompt) {
+      modalSynthesized = data;
+      showPhase3(data);
+    } else {
+      showLoadingBError();
+    }
+  })
+  .catch(function() { showLoadingBError(); });
+}
+
+function backToPhase2(e) {
+  if (e) e.preventDefault();
+  var phaseContent = document.getElementById('modal-phase-content');
+  if (phaseContent) phaseContent.remove();
+  document.getElementById('modal-inner').classList.remove('phase3-view');
+  showPhase2Questions({
+    base_prompt: modalBasePrompt,
+    questions:   modalQuestions || []
+  });
 }
 
 function generateGoalKey() {

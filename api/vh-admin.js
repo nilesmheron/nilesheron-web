@@ -6,31 +6,40 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
 
-const GENERATE_PROMPT_SYSTEM = `You are configuring Kimba, a conversational intake agent for Verse and Hook, a marketing agency. Kimba conducts structured but conversational interviews with client stakeholders.
+const GENERATE_PROMPT_SYSTEM = `You are configuring Kimba, a conversational intake agent for Verse and Hook, a marketing agency. Kimba conducts structured but natural interviews with client stakeholders.
 
-Kimba's voice: lowercase, warm, direct, curious. Never clinical or formal. Uses short questions. Lets respondents think.
+Kimba's voice: lowercase, warm, direct, genuinely curious. Short questions. Never clinical or formal.
 
-Based on the admin's description, generate a complete Kimba session configuration. Return a JSON object with exactly these four keys:
+Based on the admin's goal description, return a JSON object with exactly these four keys:
 
-"intake_system_prompt": Kimba's full system prompt. Aim for 450-650 words. Include:
+"base_prompt": Kimba's base configuration prompt. 300-450 words. Include:
+  - Persona: Kimba is a thoughtful interviewer - warm, unhurried, genuinely curious. Listens before asking. Never rushes.
+  - Context: what this session is for and who Kimba is talking to (derived from the admin's goal).
+  - Coverage areas: list the key areas to explore by name. Do NOT write the specific questions here - they will be added separately.
+  - Behavior guidelines: get meaningful responses in each area before moving on; if a respondent gives a short or vague answer, try a simpler reframe or different angle first; use natural curiosity-led transitions ("there's something else I want to ask about") - NEVER use "let me shift gears", "let's pivot", "let me change direction".
+  - Closing: only when ALL areas have been substantively covered, output [INTAKE_COMPLETE] on its own line, then a brief warm 2-3 sentence closing (lowercase, genuine). Do not use "That's fair" as a dismissal.
 
-  Persona: Kimba is a thoughtful interviewer — warm, unhurried, genuinely curious. Listens before asking. Never rushes.
+"questions": Array of exactly 5 suggested questions that cover the goal's key areas. Each element is an object with:
+  - "text": the question text (lowercase, conversational, open-ended, concise)
+  - "tag": one of "simple" (straightforward, short answer likely - 2 exchanges), "complex" (needs follow-up - 4 exchanges), "number" (quantitative or specific - 2 exchanges), "no-follow-up" (logistical or closed - 1 exchange)
 
-  Structure: List the specific areas to cover (derived from the admin's goal). Kimba works through them in order. Each area gets real engagement — at least 2 exchanges — before moving on. Kimba does NOT move on because of one short or vague answer; instead try a simpler reframe or different angle on the same area first.
+"analysis_system_prompt": System prompt for an AI that analyzes transcripts from multiple respondents. Instruct it to: identify consensus and conflict across perspectives; output a JSON object with "scores" (object mapping each scoring dimension key to 0-100, where 100 = full consensus), "narrative" (2-4 sentence summary of the most actionable alignment pattern), and optionally "respondents" (array with name, kind ["alignment"|"conflict"|"outlier"], x 0-1, y 0-1, summary per respondent); if fewer than 2 respondents, return scores as null. Return ONLY valid JSON.
 
-  Transitions: When moving between areas, use natural curiosity ("there's something else I want to ask about", "one more thing I'm curious about") — never mechanical pivots. NEVER use "let me shift gears", "let's pivot", "let me change direction", or similar. Transitions should feel like a conversation, not a survey.
-
-  Coverage requirement: MUST get meaningful responses across ALL listed areas before wrapping up. A short or dismissive answer does not count as covered. If a respondent is stuck, simplify or reframe — do not skip ahead.
-
-  Closing: Only when ALL areas have been substantively explored, output the exact token [INTAKE_COMPLETE] on its own line, then write a brief warm closing message (2-3 sentences, lowercase, genuine). Do not use "That's fair" as a dismissal — acknowledge and probe instead.
-
-"opener_message": Kimba's first message to the respondent. 2-3 sentences, lowercase. Start with a warm, human line that eases the person in — acknowledge their time, the context, or something that makes them feel welcome. Then pose one open-ended question that invites them to share freely. Do NOT jump straight into a question. The opener should feel like a thoughtful colleague opening a real conversation, not a survey prompt.
-
-"analysis_system_prompt": System prompt for an AI that analyzes transcripts from multiple respondents. Instruct it to: identify consensus and conflict across perspectives; output a JSON object with "scores" (object mapping each scoring dimension key to 0-100, where 100 = full consensus), "narrative" (2-4 sentence summary of the most actionable alignment pattern), and optionally "respondents" (array with name, kind ["alignment"|"conflict"|"outlier"], x 0-1, y 0-1, summary per respondent); if fewer than 2 respondents, return scores as null and note alignment requires at least 2. Return ONLY valid JSON.
-
-"scoring_dimensions": Array of 3-6 snake_case strings naming key alignment dimensions to measure. Choose dimensions that directly reflect what the admin wants to learn.
+"scoring_dimensions": Array of 3-6 snake_case strings naming key alignment dimensions to measure.
 
 Return ONLY valid JSON. No preamble, no markdown fences, no explanation.`;
+
+const SYNTHESIZE_SYSTEM = `You are finalizing a Kimba session prompt for Verse and Hook.
+
+You will receive a base prompt (context, persona, coverage areas, behavioral guidelines) and an ordered list of questions with pacing tags.
+
+Your job:
+1. Write a complete "intake_system_prompt" by weaving the questions into the base prompt naturally. The questions should be integrated into the coverage structure so they flow from genuine curiosity, not like a numbered survey. Keep the base prompt's behavioral guidelines intact.
+
+2. Write an "opener_message": Kimba's first message to the respondent. 2-3 sentences, lowercase. Start warm - acknowledge their time or the context. Then pose one open-ended question that invites them to share freely. Do NOT jump straight into a question.
+
+Return a JSON object with exactly two keys: "intake_system_prompt" and "opener_message".
+Return ONLY valid JSON. No preamble, no markdown fences.`;
 
 function sb(path, options = {}) {
   return fetch(`${SUPABASE_URL}/rest/v1${path}`, {
@@ -44,6 +53,33 @@ function sb(path, options = {}) {
   });
 }
 
+async function callAnthropic(systemPrompt, userMsg) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': ANTHROPIC_KEY,
+      'anthropic-version': '2023-06-01'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 4096,
+      temperature: 0,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userMsg }]
+    })
+  });
+  if (!res.ok) {
+    const errBody = await res.text().catch(() => '');
+    throw new Error(`Anthropic error ${res.status}: ${errBody.slice(0, 200)}`);
+  }
+  const data = await res.json();
+  const raw = (data.content || []).map(b => b.text || '').join('').trim();
+  const jsonMatch = raw.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) throw new Error('No JSON in Anthropic response');
+  return JSON.parse(jsonMatch[0]);
+}
+
 export default async function handler(req, res) {
   if (!SUPABASE_URL || !SUPABASE_KEY) {
     return res.status(500).json({ error: 'Supabase not configured' });
@@ -52,7 +88,7 @@ export default async function handler(req, res) {
 
   // POST — re-run analysis for a client
   if (req.method === 'POST') {
-    const { action, client_id, description, base_goal } = req.body || {};
+    const { action, client_id, description, base_goal, base_prompt, questions, attachment_context } = req.body || {};
 
     if (action === 'generate_prompt') {
       if (!description || !description.trim()) {
@@ -60,34 +96,26 @@ export default async function handler(req, res) {
       }
       const userMsg = `Admin goal description: ${description.trim()}\nBase mode: ${base_goal || 'custom'}`;
       try {
-        const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': ANTHROPIC_KEY,
-            'anthropic-version': '2023-06-01'
-          },
-          body: JSON.stringify({
-            model: 'claude-sonnet-4-6',
-            max_tokens: 4096,
-            temperature: 0,
-            system: GENERATE_PROMPT_SYSTEM,
-            messages: [{ role: 'user', content: userMsg }]
-          })
-        });
-        if (!anthropicRes.ok) {
-          const errBody = await anthropicRes.text().catch(() => '');
-          return res.status(502).json({ error: 'Anthropic error', detail: errBody.slice(0, 200) });
+        const parsed = await callAnthropic(GENERATE_PROMPT_SYSTEM, userMsg);
+        if (!parsed.base_prompt || !Array.isArray(parsed.questions) || !parsed.analysis_system_prompt || !Array.isArray(parsed.scoring_dimensions)) {
+          return res.status(502).json({ error: 'Incomplete response from Anthropic' });
         }
-        const data = await anthropicRes.json();
-        const raw = (data.content || []).map(b => b.text || '').join('').trim();
-        const jsonMatch = raw.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) return res.status(502).json({ error: 'No JSON in Anthropic response' });
-        let parsed;
-        try { parsed = JSON.parse(jsonMatch[0]); } catch (e) {
-          return res.status(502).json({ error: 'Malformed JSON from Anthropic' });
-        }
-        if (!parsed.intake_system_prompt || !parsed.opener_message || !parsed.analysis_system_prompt || !Array.isArray(parsed.scoring_dimensions)) {
+        return res.status(200).json(parsed);
+      } catch (err) {
+        return res.status(500).json({ error: err.message });
+      }
+    }
+
+    if (action === 'synthesize_prompt') {
+      if (!base_prompt || !Array.isArray(questions) || !questions.length) {
+        return res.status(400).json({ error: 'base_prompt and questions required' });
+      }
+      const questionsList = questions.map((q, i) => `${i + 1}. "${q.text}" [${q.tag}]`).join('\n');
+      let userMsg = `Base prompt:\n${base_prompt}\n\nQuestions (in order):\n${questionsList}`;
+      if (attachment_context) userMsg += `\n\nAttachment context: ${attachment_context}`;
+      try {
+        const parsed = await callAnthropic(SYNTHESIZE_SYSTEM, userMsg);
+        if (!parsed.intake_system_prompt || !parsed.opener_message) {
           return res.status(502).json({ error: 'Incomplete response from Anthropic' });
         }
         return res.status(200).json(parsed);

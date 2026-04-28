@@ -591,6 +591,32 @@ hr.k-rule { border: 0; border-top: 1px solid var(--kimba-rule); }
 }
 .network-error-card .slash { color: var(--kimba-red); }
 
+/* Complete overlay — respondent-controlled exit */
+.complete-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(246, 242, 236, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.complete-card {
+  background: var(--kimba-white);
+  border: 1px solid var(--kimba-ink);
+  max-width: 420px;
+  width: 100%;
+  padding: 36px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+
 /* =================================================
    VIEW: Thanks (phase 2 stub with design intent)
    ================================================= */
@@ -1007,6 +1033,22 @@ hr.k-rule { border: 0; border-top: 1px solid var(--kimba-rule); }
           <div style="display: flex; gap: 8px; margin-top: 4px;">
             <button class="k-btn k-btn-red" id="btn-retry">retry</button>
           </div>
+        </div>
+      </div>
+
+      <!-- Complete overlay — respondent clicks to exit to thanks view -->
+      <div class="complete-overlay" id="complete-overlay" role="dialog" aria-modal="true" aria-label="session complete" style="display: none;">
+        <div class="complete-card">
+          <span class="k-mono"><span style="color: var(--kimba-red);">/</span>session complete</span>
+          <h2 class="k-display" style="font-size: 44px; line-height: 0.95;">
+            that's everything<span style="color: var(--kimba-red);">.</span>
+          </h2>
+          <p class="k-serif" style="font-size: 17px; color: var(--kimba-ink-2); max-width: 30ch; line-height: 1.5;">
+            this conversation is complete — whenever you're ready.
+          </p>
+          <button class="k-btn k-btn-red" id="btn-complete" onclick="onCompleteOverlayClick()">
+            continue →
+          </button>
         </div>
       </div>
 
@@ -1556,6 +1598,13 @@ function postToChat(userText) {
   if (attachmentType === 'link' && goalConfig.attachment_prompt) {
     systemPrompt += '\n\nContext: The respondent is viewing a linked resource. ' + goalConfig.attachment_prompt;
   }
+  // For video links, instruct Kimba to wait for the respondent before asking the first question
+  if (attachmentType === 'link' && attachmentUrl) {
+    var linkKind = getLinkEmbedType(attachmentUrl);
+    if (linkKind === 'youtube' || linkKind === 'vimeo') {
+      systemPrompt += '\n\nThe respondent has a video to watch. Begin by letting them know they can tell you when they\'ve finished watching, or if they\'d prefer to chat while it plays. Wait for their signal before asking your first question.';
+    }
+  }
 
   fetch('/api/chat', {
     method: 'POST',
@@ -1587,8 +1636,8 @@ function postToChat(userText) {
 
     if (hasComplete) {
       track('session.completed', completionMeta('complete'));
-      show('thanks');
       submitIntake();
+      showCompleteOverlay();
     } else if (hasClosing || exchanges >= TOTAL_EXCHANGES) {
       isClosing = true;
       showSkipButton();
@@ -1615,6 +1664,22 @@ function showNetworkError() {
 
 function hideNetworkError() {
   document.getElementById('network-error').style.display = 'none';
+}
+
+// ==========================================================
+// Chat — complete overlay (respondent-controlled exit)
+// ==========================================================
+function showCompleteOverlay() {
+  var el = document.getElementById('complete-overlay');
+  if (el) {
+    el.style.display = 'flex';
+    var btn = document.getElementById('btn-complete');
+    if (btn) setTimeout(function() { btn.focus(); }, 50);
+  }
+}
+
+function onCompleteOverlayClick() {
+  show('thanks');
 }
 
 document.getElementById('btn-retry').addEventListener('click', function() {
