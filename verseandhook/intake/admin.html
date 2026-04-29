@@ -699,6 +699,27 @@ input[type="number"].k-input { width: 90px; }
 .analysis-overlay-fill.running { animation: analysis-progress 30s cubic-bezier(0.3,0.8,0.4,1) forwards; }
 @keyframes kimba-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.15; } }
 .generating-dot { animation: kimba-pulse 1.2s ease-in-out infinite; }
+
+/* =============================================================
+   SESSION TYPE TOGGLE
+   ============================================================= */
+.session-type-toggle {
+  display: flex; border: 1px solid var(--kimba-ink);
+}
+.session-type-btn {
+  flex: 1; padding: 10px;
+  font-family: var(--kimba-mono); font-size: 11px;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  background: transparent; border: 0; cursor: pointer;
+  color: var(--kimba-mute); transition: background 0.12s, color 0.12s;
+}
+.session-type-btn:first-child { border-right: 1px solid var(--kimba-ink); }
+.session-type-btn.active { background: var(--kimba-ink); color: var(--kimba-paper); }
+.session-type-btn:hover:not(.active) { background: var(--kimba-rule-soft); color: var(--kimba-ink); }
+
+/* Form builder */
+.fb-question-row { background: var(--kimba-white); border: 1px solid var(--kimba-rule); padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+.fb-question-config { padding-left: 24px; }
 </style>
 </head>
 <body>
@@ -907,13 +928,23 @@ input[type="number"].k-input { width: 90px; }
       </div>
 
       <div>
-        <label class="k-mono modal-label">starting point</label>
-        <div class="mode-options" id="mode-options"></div>
+        <label class="k-mono modal-label">session type</label>
+        <div class="session-type-toggle" style="margin-top:6px">
+          <button class="session-type-btn active" id="stype-interview" onclick="setSessionType('interview')">/ interview</button>
+          <button class="session-type-btn" id="stype-form" onclick="setSessionType('form')">/ form</button>
+        </div>
       </div>
 
-      <div>
-        <label class="k-mono modal-label" for="modal-desc">describe what you want to learn</label>
-        <textarea class="k-input" id="modal-desc" rows="6" placeholder="e.g. understand how this client's stakeholders think about their brand voice and whether the team is aligned on positioning" style="resize:vertical;font-family:inherit;font-size:inherit;line-height:1.5;width:100%"></textarea>
+      <div id="modal-interview-fields">
+        <div style="margin-bottom:22px">
+          <label class="k-mono modal-label">starting point</label>
+          <div class="mode-options" id="mode-options"></div>
+        </div>
+
+        <div>
+          <label class="k-mono modal-label" for="modal-desc">describe what you want to learn</label>
+          <textarea class="k-input" id="modal-desc" rows="6" placeholder="e.g. understand how this client's stakeholders think about their brand voice and whether the team is aligned on positioning" style="resize:vertical;font-family:inherit;font-size:inherit;line-height:1.5;width:100%"></textarea>
+        </div>
       </div>
 
       <div>
@@ -967,7 +998,7 @@ input[type="number"].k-input { width: 90px; }
 
       <div class="modal-footer">
         <button class="k-btn k-btn-ghost" onclick="closeModal()">cancel</button>
-        <button class="k-btn k-btn-red" id="modal-generate" onclick="generatePrompt()" disabled style="margin-left:auto;opacity:0.45">generate prompt →</button>
+        <button class="k-btn k-btn-red" id="modal-generate" onclick="onModalGenerateClick()" disabled style="margin-left:auto;opacity:0.45">generate prompt →</button>
       </div>
     </div>
 
@@ -2173,6 +2204,7 @@ var modalAttachmentType  = null;
 var linkDebounceTimer    = null;
 var dragSrcRow           = null;
 var isGenerating         = false;
+var sessionType          = 'interview'; // 'interview' | 'form'
 
 function openModal() {
   modalSubmitted       = false;
@@ -2183,6 +2215,12 @@ function openModal() {
   modalAttachmentUrl   = null;
   selectedMode         = '01';
   isGenerating         = false;
+  sessionType          = 'interview';
+  document.getElementById('stype-interview').classList.add('active');
+  document.getElementById('stype-form').classList.remove('active');
+  document.getElementById('modal-interview-fields').style.display = '';
+  var genBtn = document.getElementById('modal-generate');
+  if (genBtn) genBtn.textContent = 'generate prompt →';
 
   modalGenerated    = null;
   modalSynthesized  = null;
@@ -2802,6 +2840,311 @@ function backToPhase2(e) {
     base_prompt: modalBasePrompt,
     questions:   modalQuestions || []
   });
+}
+
+// =====================================================================
+// Session type toggle
+// =====================================================================
+function setSessionType(type) {
+  sessionType = type;
+  document.getElementById('stype-interview').classList.toggle('active', type === 'interview');
+  document.getElementById('stype-form').classList.toggle('active', type === 'form');
+  document.getElementById('modal-interview-fields').style.display = type === 'interview' ? '' : 'none';
+  var btn = document.getElementById('modal-generate');
+  if (btn) btn.textContent = type === 'form' ? 'build form →' : 'generate prompt →';
+}
+
+function onModalGenerateClick() {
+  if (sessionType === 'form') buildForm();
+  else generatePrompt();
+}
+
+// =====================================================================
+// Form builder
+// =====================================================================
+var FB_TYPES = ['text', 'textarea', 'number', 'select', 'radio', 'checkbox', 'date', 'scale'];
+var fbDragSrcRow = null;
+
+function buildForm() {
+  var name    = document.getElementById('modal-name').value.trim();
+  var closing = document.getElementById('modal-closing').value.trim();
+  var count   = parseInt(document.getElementById('modal-count').value, 10) || 8;
+  if (!name) return;
+
+  modalPhase1         = { name: name, closing: closing, count: count };
+  modalClosingMessage = closing;
+
+  showFormBuilder();
+}
+
+function showFormBuilder() {
+  document.getElementById('modal-form-col').style.display    = 'none';
+  document.getElementById('modal-preview-col').style.display = 'none';
+  var existing = document.getElementById('modal-phase-content');
+  if (existing) existing.remove();
+
+  var div = document.createElement('div');
+  div.id = 'modal-phase-content';
+  div.style.cssText = 'display:flex;width:100%;height:100%;min-height:0;flex:1';
+
+  div.innerHTML =
+    // LEFT — form metadata
+    '<div style="flex:0 0 36%;display:flex;flex-direction:column;border-right:1px solid var(--kimba-rule);padding:32px;gap:20px;overflow:hidden">' +
+      '<div class="modal-top">' +
+        '<span class="k-mono k-slash">form builder</span>' +
+        '<button class="modal-close" onclick="closeModal()">close ✕</button>' +
+      '</div>' +
+      '<h2 class="k-display modal-headline" style="flex-shrink:0">build form<span class="red">.</span></h2>' +
+      '<div style="flex:1;display:flex;flex-direction:column;gap:16px;overflow-y:auto">' +
+        '<div>' +
+          '<label class="k-mono modal-label" for="fb-title">form title</label>' +
+          '<input class="k-input" type="text" id="fb-title" value="' + esc(modalPhase1.name) + '" placeholder="e.g. brand alignment survey" style="width:100%;margin-top:6px">' +
+        '</div>' +
+        '<div>' +
+          '<label class="k-mono modal-label" for="fb-intro">intro message <span style="text-transform:none;letter-spacing:0">(optional)</span></label>' +
+          '<textarea class="k-input" id="fb-intro" rows="3" placeholder="what this form is for, or a welcome note" style="width:100%;margin-top:6px;resize:vertical;font-family:inherit;font-size:inherit;line-height:1.5"></textarea>' +
+        '</div>' +
+        '<div>' +
+          '<label class="k-mono modal-label" for="fb-dimensions">scoring dimensions <span style="text-transform:none;letter-spacing:0">(comma-separated)</span></label>' +
+          '<input class="k-input" type="text" id="fb-dimensions" placeholder="e.g. brand_clarity, team_alignment" style="width:100%;margin-top:6px;font-family:var(--kimba-mono);font-size:12px">' +
+        '</div>' +
+      '</div>' +
+      '<div class="modal-footer" style="padding:0;border-top:1px solid var(--kimba-rule);padding-top:20px;flex-shrink:0">' +
+        '<a href="#" class="k-mono" style="color:var(--kimba-mute);font-size:11px;text-decoration:none;align-self:center" onclick="backToPhase1(event)">← back</a>' +
+        '<button class="k-btn k-btn-red" id="fb-submit" onclick="createFormSession()" style="margin-left:auto">create form & generate link →</button>' +
+      '</div>' +
+    '</div>' +
+    // RIGHT — question list
+    '<div style="flex:1;display:flex;flex-direction:column;padding:32px;gap:12px;overflow:hidden;background:var(--kimba-paper-2)">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;flex-shrink:0">' +
+        '<label class="k-mono modal-label" style="margin-bottom:0">/ questions</label>' +
+        '<span class="k-mono" id="fb-question-count" style="font-size:10px;color:var(--kimba-mute)">0 questions</span>' +
+      '</div>' +
+      '<div id="fb-question-list" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px"></div>' +
+      '<button class="k-btn k-btn-ghost" onclick="addFormQuestion()" style="width:100%;justify-content:center;flex-shrink:0">+ add question</button>' +
+    '</div>';
+
+  document.getElementById('modal-inner').appendChild(div);
+  document.getElementById('modal-inner').classList.add('phase3-view');
+
+  addFormQuestion({ label: '', type: 'text', required: false });
+  initFormQuestionDnd();
+
+  if (modalTrapClean) { modalTrapClean(); modalTrapClean = null; }
+  modalTrapClean = trapFocus(document.getElementById('modal-new-session'));
+}
+
+function getFormQuestionConfigHtml(type, q) {
+  q = q || {};
+  if (type === 'text' || type === 'textarea' || type === 'number') {
+    return '<input type="text" value="' + esc(q.placeholder || '') + '" placeholder="placeholder (optional)" ' +
+      'style="width:100%;border:0;border-bottom:1px solid var(--kimba-rule);background:transparent;font-family:var(--kimba-mono);font-size:11px;outline:none;padding:4px 0;color:var(--kimba-mute)">';
+  }
+  if (type === 'select' || type === 'radio' || type === 'checkbox') {
+    var opts = Array.isArray(q.options) ? q.options.join('\n') : (q.options || '');
+    return '<textarea placeholder="one option per line…" rows="3" ' +
+      'style="width:100%;border:1px solid var(--kimba-rule);background:transparent;font-family:var(--kimba-mono);font-size:11px;outline:none;padding:6px;color:var(--kimba-ink);resize:vertical">' +
+      esc(opts) + '</textarea>';
+  }
+  if (type === 'scale') {
+    var steps = q.scale_steps || 5;
+    return '<div style="display:flex;align-items:center;gap:8px">' +
+      '<span class="k-mono" style="font-size:10px;color:var(--kimba-mute)">steps</span>' +
+      '<select style="border:1px solid var(--kimba-rule);background:var(--kimba-paper);font-family:var(--kimba-mono);font-size:10px;cursor:pointer;padding:3px 5px;outline:none">' +
+        [3,4,5,7,10].map(function(n) {
+          return '<option value="' + n + '"' + (steps === n ? ' selected' : '') + '>' + n + '</option>';
+        }).join('') +
+      '</select>' +
+      '<span class="k-mono" style="font-size:10px;color:var(--kimba-mute)">(1–' + steps + ')</span>' +
+    '</div>';
+  }
+  return '<span class="k-mono" style="font-size:10px;color:var(--kimba-mute-2)">no additional config</span>';
+}
+
+function createFormQuestionRow(q) {
+  q = q || { label: '', type: 'text', required: false };
+  var row = document.createElement('div');
+  row.className = 'fb-question-row';
+  row.draggable = true;
+
+  var typeOpts = FB_TYPES.map(function(t) {
+    return '<option value="' + t + '"' + (q.type === t ? ' selected' : '') + '>' + t + '</option>';
+  }).join('');
+
+  row.innerHTML =
+    '<div style="display:flex;align-items:center;gap:8px">' +
+      '<span style="cursor:grab;color:var(--kimba-mute-2);flex-shrink:0;font-size:16px;line-height:1;user-select:none">⠿</span>' +
+      '<input type="text" value="' + esc(q.label || '') + '" placeholder="question label…" ' +
+        'style="flex:1;border:0;background:transparent;font-family:var(--kimba-body);font-size:14px;outline:none;padding:2px 0;color:var(--kimba-ink)">' +
+      '<select onchange="onFormQuestionTypeChange(this)" ' +
+        'style="border:1px solid var(--kimba-rule);background:var(--kimba-paper);font-family:var(--kimba-mono);font-size:10px;letter-spacing:0.05em;color:var(--kimba-mute);cursor:pointer;padding:4px 6px;text-transform:uppercase;outline:none;flex-shrink:0">' +
+        typeOpts +
+      '</select>' +
+      '<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-family:var(--kimba-mono);font-size:10px;color:var(--kimba-mute);flex-shrink:0;text-transform:uppercase;letter-spacing:0.05em">' +
+        '<input type="checkbox"' + (q.required ? ' checked' : '') + ' style="accent-color:var(--kimba-red)"> req' +
+      '</label>' +
+      '<button onclick="removeFormQuestion(this)" style="background:none;border:none;cursor:pointer;color:var(--kimba-mute-2);padding:2px 4px;font-size:14px;flex-shrink:0;line-height:1" title="remove">✕</button>' +
+    '</div>' +
+    '<div class="fb-question-config">' + getFormQuestionConfigHtml(q.type || 'text', q) + '</div>';
+
+  return row;
+}
+
+function addFormQuestion(q) {
+  var list = document.getElementById('fb-question-list');
+  if (!list) return;
+  var row = createFormQuestionRow(q);
+  list.appendChild(row);
+  updateFormQuestionCount();
+  if (!q || !q.label) {
+    var input = row.querySelector('input[type="text"]');
+    if (input) input.focus();
+  }
+}
+
+function removeFormQuestion(btn) {
+  var row = btn.closest('.fb-question-row');
+  if (row) { row.remove(); updateFormQuestionCount(); }
+}
+
+function onFormQuestionTypeChange(select) {
+  var row = select.closest('.fb-question-row');
+  if (!row) return;
+  var configDiv = row.querySelector('.fb-question-config');
+  if (!configDiv) return;
+  configDiv.innerHTML = getFormQuestionConfigHtml(select.value);
+}
+
+function updateFormQuestionCount() {
+  var list = document.getElementById('fb-question-list');
+  var el   = document.getElementById('fb-question-count');
+  if (!list || !el) return;
+  var n = list.querySelectorAll('.fb-question-row').length;
+  el.textContent = n + ' question' + (n !== 1 ? 's' : '');
+}
+
+function initFormQuestionDnd() {
+  var list = document.getElementById('fb-question-list');
+  if (!list) return;
+  list.addEventListener('dragstart', function(e) {
+    var row = e.target.closest('.fb-question-row');
+    if (!row) return;
+    fbDragSrcRow = row;
+    e.dataTransfer.effectAllowed = 'move';
+    setTimeout(function() { if (fbDragSrcRow) fbDragSrcRow.style.opacity = '0.4'; }, 0);
+  });
+  list.addEventListener('dragend', function() {
+    if (fbDragSrcRow) { fbDragSrcRow.style.opacity = ''; fbDragSrcRow = null; }
+  });
+  list.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    var row = e.target.closest('.fb-question-row');
+    if (!row || row === fbDragSrcRow || !fbDragSrcRow) return;
+    var rect    = row.getBoundingClientRect();
+    var isAfter = e.clientY > rect.top + rect.height / 2;
+    list.insertBefore(fbDragSrcRow, isAfter ? row.nextSibling : row);
+  });
+}
+
+function readFormQuestionsFromDOM() {
+  var rows = document.querySelectorAll('#fb-question-list .fb-question-row');
+  return Array.prototype.map.call(rows, function(row) {
+    var labelEl   = row.querySelector('input[type="text"]');
+    var typeEl    = row.querySelector('select');
+    var reqEl     = row.querySelector('input[type="checkbox"]');
+    var configDiv = row.querySelector('.fb-question-config');
+    var type      = typeEl ? typeEl.value : 'text';
+    var q = {
+      id:       'q' + (Math.random() * 1e9 | 0).toString(36),
+      type:     type,
+      label:    labelEl ? labelEl.value.trim() : '',
+      required: !!(reqEl && reqEl.checked)
+    };
+    if (configDiv) {
+      if (type === 'text' || type === 'textarea' || type === 'number') {
+        var ph = configDiv.querySelector('input[type="text"]');
+        if (ph && ph.value.trim()) q.placeholder = ph.value.trim();
+      } else if (type === 'select' || type === 'radio' || type === 'checkbox') {
+        var ta = configDiv.querySelector('textarea');
+        if (ta) q.options = ta.value.split('\n').map(function(s) { return s.trim(); }).filter(Boolean);
+      } else if (type === 'scale') {
+        var ss = configDiv.querySelector('select');
+        if (ss) q.scale_steps = parseInt(ss.value, 10) || 5;
+      }
+    }
+    return q;
+  }).filter(function(q) { return q.label.length > 0; });
+}
+
+var FORM_ANALYSIS_PROMPT = 'You are analyzing structured form responses from multiple respondents for Verse and Hook. Each transcript contains question-answer pairs where the "assistant" role is the question and the "user" role is the respondent\'s answer.\n\nIdentify consensus and conflict across perspectives. Output a JSON object with:\n- "scores": object mapping each scoring dimension key to 0-100 (100 = full consensus)\n- "narrative": 2-4 sentence summary of the most actionable alignment pattern\n- "respondents" (optional): array with name, kind ("alignment"|"conflict"|"outlier"), x 0-1, y 0-1, summary per respondent\n\nIf fewer than 2 respondents, return scores as null. Return ONLY valid JSON.';
+
+function createFormSession() {
+  var btn = document.getElementById('fb-submit');
+  if (!btn || btn.disabled) return;
+
+  var questions = readFormQuestionsFromDOM();
+  if (!questions.length) {
+    btn.textContent = 'add at least one question';
+    setTimeout(function() { btn.textContent = 'create form & generate link →'; }, 2000);
+    return;
+  }
+
+  btn.disabled    = true;
+  btn.textContent = 'creating…';
+
+  var titleEl = document.getElementById('fb-title');
+  var introEl = document.getElementById('fb-intro');
+  var dimsEl  = document.getElementById('fb-dimensions');
+
+  var formTitle = (titleEl ? titleEl.value.trim() : '') || modalPhase1.name;
+  var formIntro = introEl ? introEl.value.trim() : '';
+  var dims = dimsEl
+    ? dimsEl.value.split(',').map(function(s) { return s.trim().replace(/[\s-]+/g,'_').toLowerCase(); }).filter(Boolean)
+    : [];
+  if (!dims.length) dims = ['response_quality', 'alignment'];
+
+  var goalKey = generateGoalKey();
+  var goalConfig = {
+    goal_key:               goalKey,
+    name:                   formTitle,
+    mode:                   'form',
+    form_schema:            { questions: questions },
+    intake_system_prompt:   '',
+    opener_message:         formIntro || 'thanks for taking a few minutes.',
+    analysis_system_prompt: FORM_ANALYSIS_PROMPT,
+    scoring_dimensions:     dims,
+    closing_message:        modalClosingMessage || null,
+    is_template:            false
+  };
+
+  apiFetch('/api/vh-goal-config', { method: 'PUT', body: JSON.stringify(goalConfig) })
+    .then(function(r) {
+      if (!r.ok) throw new Error('goal config save failed');
+      return apiFetch('/api/vh-session', {
+        method: 'POST',
+        body: JSON.stringify({
+          client_name:               modalPhase1.name,
+          extraction_goal:           goalKey,
+          expected_respondent_count: modalPhase1.count,
+          max_exchanges:             0
+        })
+      });
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.token) {
+        var phaseContent = document.getElementById('modal-phase-content');
+        if (phaseContent) phaseContent.remove();
+        showSessionCreated(data);
+      } else {
+        btn.disabled    = false;
+        btn.textContent = 'create form & generate link →';
+      }
+    })
+    .catch(function() {
+      btn.disabled    = false;
+      btn.textContent = 'create form & generate link →';
+    });
 }
 
 function generateGoalKey() {

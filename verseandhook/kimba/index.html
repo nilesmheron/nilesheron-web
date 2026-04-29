@@ -812,6 +812,57 @@ hr.k-rule { border: 0; border-top: 1px solid var(--kimba-rule); }
 .surface-chat.has-attachment #btn-toggle-attachment { display: inline-flex; align-items: center; gap: 5px; }
 .surface-chat.has-attachment.attachment-hidden { grid-template-columns: 1fr; }
 .surface-chat.has-attachment.attachment-hidden #attachment-panel { display: none; }
+
+/* =================================================
+   FORM SURFACE
+   ================================================= */
+.surface-form {
+  display: flex; flex-direction: column; min-height: 100vh;
+  max-width: 680px; margin: 0 auto;
+  border-left: 1px solid var(--kimba-rule); border-right: 1px solid var(--kimba-rule);
+}
+.form-header {
+  flex-shrink: 0; border-bottom: 1px solid var(--kimba-rule);
+  padding: 14px 24px; display: flex; align-items: center;
+  justify-content: space-between; background: var(--kimba-paper-2);
+  position: sticky; top: 0; z-index: 1;
+}
+.form-header-brand { display: flex; align-items: center; gap: 10px; }
+.form-body {
+  padding: 32px 40px; display: flex;
+  flex-direction: column; gap: 28px; flex: 1;
+}
+.form-intro {
+  font-family: var(--kimba-serif); font-size: 18px;
+  line-height: 1.5; color: var(--kimba-ink-2);
+}
+.form-question-label {
+  display: block; font-size: 15px; font-weight: 500;
+  color: var(--kimba-ink); margin-bottom: 10px; line-height: 1.4;
+}
+.form-option-label {
+  display: flex; align-items: center; gap: 8px; font-size: 15px;
+  color: var(--kimba-ink-2); cursor: pointer; padding: 6px 0;
+  border-bottom: 1px solid var(--kimba-rule-soft);
+}
+.form-option-label:last-child { border-bottom: 0; }
+.scale-group { display: flex; gap: 8px; flex-wrap: wrap; }
+.scale-btn {
+  width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--kimba-rule); background: var(--kimba-white);
+  font-family: var(--kimba-mono); font-size: 14px; font-weight: 500;
+  cursor: pointer; transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.scale-btn:hover { border-color: var(--kimba-ink); }
+.scale-btn.active { background: var(--kimba-ink); color: var(--kimba-paper); border-color: var(--kimba-ink); }
+.form-footer {
+  padding: 20px 40px 48px; border-top: 1px solid var(--kimba-rule);
+  display: flex; justify-content: flex-end; flex-shrink: 0;
+}
+@media (max-width: 600px) {
+  .form-body { padding: 24px 20px; gap: 24px; }
+  .form-footer { padding: 16px 20px 36px; }
+}
 </style>
 </head>
 <body>
@@ -954,6 +1005,27 @@ hr.k-rule { border: 0; border-top: 1px solid var(--kimba-rule); }
     </div>
     <div class="kimba-typing" aria-hidden="true">
       <span></span><span></span><span></span>
+    </div>
+  </div>
+
+  <!-- =====================================================
+       VIEW: Form
+       ===================================================== -->
+  <div class="view" id="view-form">
+    <div class="surface-form">
+      <div class="form-header">
+        <div class="form-header-brand">
+          <div class="kimba-mark-circle" style="width:20px;height:20px;">
+            <img src="/verseandhook/kimba/assets/kimba-portrait.jpg" alt="">
+          </div>
+          <span class="k-mono" id="form-header-meta"></span>
+        </div>
+        <span class="k-mono" style="color:var(--kimba-mute-2)">/form</span>
+      </div>
+      <div class="form-body" id="form-body"></div>
+      <div class="form-footer">
+        <button class="k-btn" id="btn-form-submit" disabled onclick="submitForm()" style="opacity:0.45">submit →</button>
+      </div>
     </div>
   </div>
 
@@ -1278,9 +1350,14 @@ document.getElementById('btn-begin').addEventListener('click', function() {
       var config = results[0];
       if (!config || config.error) { show('error'); return; }
       goalConfig = config;
-      if (config.attachment_url) initAttachmentPanel(config);
-      initChat();
-      show('chat');
+      if (config.mode === 'form') {
+        initForm(config);
+        show('form');
+      } else {
+        if (config.attachment_url) initAttachmentPanel(config);
+        initChat();
+        show('chat');
+      }
     })
     .catch(function() { show('error'); });
 });
@@ -1301,6 +1378,160 @@ function initChat() {
   renderOpener(openerText);
   initComposer();
   initKeyboard();
+}
+
+// ==========================================================
+// Form mode
+// ==========================================================
+function initForm(config) {
+  var schema    = (config.form_schema) || {};
+  var questions = schema.questions || [];
+  var body      = document.getElementById('form-body');
+
+  // Header meta
+  var goal = GOAL_MAP[sessionData.extraction_goal] || { index: '01', name: sessionData.extraction_goal };
+  var metaEl = document.getElementById('form-header-meta');
+  if (metaEl) metaEl.innerHTML = '<span class="slash">/' + esc(goal.index) + '</span> ' + esc(goal.name) + ' &middot; ' + esc(sessionData.client_name);
+
+  // Intro message
+  if (config.opener_message && config.opener_message.trim()) {
+    var intro = document.createElement('p');
+    intro.className = 'form-intro';
+    intro.textContent = config.opener_message;
+    body.appendChild(intro);
+  }
+
+  questions.forEach(function(q, i) {
+    var wrap = document.createElement('div');
+    wrap.className = 'form-question';
+    var labelHtml = '<label class="form-question-label" for="fq-' + i + '">' +
+      esc(q.label) + (q.required ? ' <span style="color:var(--kimba-red)">*</span>' : '') +
+      '</label>';
+    var inputHtml = renderFormInput(q, i);
+    wrap.innerHTML = labelHtml + inputHtml;
+    body.appendChild(wrap);
+  });
+
+  updateFormSubmitBtn();
+}
+
+function renderFormInput(q, idx) {
+  var id   = 'fq-' + idx;
+  var type = q.type || 'text';
+  var ph   = q.placeholder ? ' placeholder="' + esc(q.placeholder) + '"' : '';
+  var req  = q.required ? ' required' : '';
+  var inputStyle = 'width:100%;padding:10px 0;border:0;border-bottom:1px solid var(--kimba-ink);background:transparent;font-family:var(--kimba-body);font-size:16px;color:var(--kimba-ink);outline:none';
+
+  if (type === 'text') {
+    return '<input type="text" id="' + id + '"' + ph + req + ' oninput="updateFormSubmitBtn()" style="' + inputStyle + '">';
+  }
+  if (type === 'textarea') {
+    return '<textarea id="' + id + '" rows="4"' + ph + req + ' oninput="updateFormSubmitBtn()" style="' + inputStyle + ';resize:vertical;line-height:1.5"></textarea>';
+  }
+  if (type === 'number') {
+    return '<input type="number" id="' + id + '"' + ph + req + ' oninput="updateFormSubmitBtn()" style="width:200px;padding:10px 0;border:0;border-bottom:1px solid var(--kimba-ink);background:transparent;font-family:var(--kimba-body);font-size:16px;color:var(--kimba-ink);outline:none">';
+  }
+  if (type === 'select') {
+    var opts = (q.options || []).map(function(o) { return '<option value="' + esc(o) + '">' + esc(o) + '</option>'; }).join('');
+    return '<select id="' + id + '"' + req + ' onchange="updateFormSubmitBtn()" style="' + inputStyle + '">' +
+      '<option value="">— select —</option>' + opts + '</select>';
+  }
+  if (type === 'radio') {
+    return (q.options || []).map(function(o) {
+      return '<label class="form-option-label"><input type="radio" name="' + id + '" value="' + esc(o) + '" onchange="updateFormSubmitBtn()" style="accent-color:var(--kimba-red)"> ' + esc(o) + '</label>';
+    }).join('');
+  }
+  if (type === 'checkbox') {
+    return (q.options || []).map(function(o) {
+      return '<label class="form-option-label"><input type="checkbox" name="' + id + '" value="' + esc(o) + '" onchange="updateFormSubmitBtn()" style="accent-color:var(--kimba-red)"> ' + esc(o) + '</label>';
+    }).join('');
+  }
+  if (type === 'date') {
+    return '<input type="date" id="' + id + '"' + req + ' onchange="updateFormSubmitBtn()" style="width:200px;padding:10px 0;border:0;border-bottom:1px solid var(--kimba-ink);background:transparent;font-family:var(--kimba-body);font-size:16px;color:var(--kimba-ink);outline:none">';
+  }
+  if (type === 'scale') {
+    var steps = q.scale_steps || 5;
+    var btns  = '';
+    for (var n = 1; n <= steps; n++) {
+      btns += '<button type="button" class="scale-btn" data-scale-value="' + n + '" data-scale-group="' + id + '" onclick="selectScale(this)">' + n + '</button>';
+    }
+    return '<div class="scale-group" id="' + id + '">' + btns + '</div>' +
+      '<input type="hidden" id="' + id + '-val" value="">';
+  }
+  return '<input type="text" id="' + id + '"' + ph + req + ' oninput="updateFormSubmitBtn()" style="' + inputStyle + '">';
+}
+
+function selectScale(btn) {
+  var group = btn.dataset.scaleGroup;
+  document.querySelectorAll('[data-scale-group="' + group + '"]').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  var hidden = document.getElementById(group + '-val');
+  if (hidden) hidden.value = btn.dataset.scaleValue;
+  updateFormSubmitBtn();
+}
+
+function updateFormSubmitBtn() {
+  var btn = document.getElementById('btn-form-submit');
+  if (!btn || !goalConfig || !goalConfig.form_schema) return;
+  var questions = goalConfig.form_schema.questions || [];
+  var allFilled = true;
+  questions.forEach(function(q, i) {
+    if (!q.required) return;
+    var id   = 'fq-' + i;
+    var type = q.type || 'text';
+    if (type === 'radio') {
+      if (!document.querySelector('input[name="' + id + '"]:checked')) allFilled = false;
+    } else if (type === 'checkbox') {
+      if (!document.querySelector('input[name="' + id + '"]:checked')) allFilled = false;
+    } else if (type === 'scale') {
+      var v = document.getElementById(id + '-val');
+      if (!v || !v.value) allFilled = false;
+    } else {
+      var el = document.getElementById(id);
+      if (!el || !el.value.trim()) allFilled = false;
+    }
+  });
+  btn.disabled      = !allFilled;
+  btn.style.opacity = allFilled ? '1' : '0.45';
+  if (allFilled) btn.classList.add('k-btn-red');
+  else           btn.classList.remove('k-btn-red');
+}
+
+function submitForm() {
+  var btn = document.getElementById('btn-form-submit');
+  if (!btn || btn.disabled) return;
+  btn.disabled      = true;
+  btn.textContent   = 'submitting…';
+  btn.style.opacity = '0.6';
+
+  var questions = (goalConfig && goalConfig.form_schema && goalConfig.form_schema.questions) || [];
+  var transcript = [];
+  questions.forEach(function(q, i) {
+    var id   = 'fq-' + i;
+    var type = q.type || 'text';
+    var answer = '';
+    if (type === 'radio') {
+      var checked = document.querySelector('input[name="' + id + '"]:checked');
+      answer = checked ? checked.value : '';
+    } else if (type === 'checkbox') {
+      var checkeds = document.querySelectorAll('input[name="' + id + '"]:checked');
+      answer = Array.prototype.map.call(checkeds, function(c) { return c.value; }).join(', ');
+    } else if (type === 'scale') {
+      var v = document.getElementById(id + '-val');
+      answer = v ? v.value : '';
+    } else {
+      var el = document.getElementById(id);
+      answer = el ? el.value.trim() : '';
+    }
+    if (answer) {
+      transcript.push({ role: 'assistant', content: q.label });
+      transcript.push({ role: 'user', content: answer });
+    }
+  });
+
+  convo = transcript;
+  submitIntake();
+  show('thanks');
 }
 
 // ==========================================================
