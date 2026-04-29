@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mothership / Cover Letter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy: #0b1524;
+    --gold: #c9a347;
+    --gold-dim: #9a7a32;
+    --cream: #f0e6d0;
+    --cream-dim: #c8b89a;
+    --rule: rgba(201, 163, 71, 0.3);
+  }
+  html, body { background: var(--navy); color: var(--cream); font-family: 'Cormorant Garamond', Georgia, serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .page { width: 1280px; min-height: 720px; margin: 0 auto; background: var(--navy); position: relative; padding: 52px 72px 56px; display: flex; flex-direction: column; overflow: hidden; }
+  .bg-ring { position: absolute; top: 50%; right: -140px; transform: translateY(-50%); width: 520px; height: 520px; border-radius: 50%; border: 0.5px solid rgba(201,163,71,0.07); pointer-events: none; }
+  .bg-ring-2 { position: absolute; top: 50%; right: -60px; transform: translateY(-50%); width: 340px; height: 340px; border-radius: 50%; border: 0.5px solid rgba(201,163,71,0.05); pointer-events: none; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; position: relative; }
+  .header-left { display: flex; align-items: center; gap: 10px; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); flex-shrink: 0; }
+  .label { font-family: 'Cormorant Garamond', serif; font-size: 12.5px; font-weight: 400; letter-spacing: 0.22em; text-transform: uppercase; color: var(--cream-dim); }
+  .label-gold { color: var(--gold); }
+  .rule { width: 100%; height: 0.5px; background: var(--rule); margin-bottom: 48px; position: relative; }
+  .body { flex: 1; max-width: 820px; position: relative; }
+  .body p { font-size: 19.5px; font-weight: 400; line-height: 1.78; color: var(--cream); margin-bottom: 1.5em; letter-spacing: 0.01em; }
+  .body p:last-child { margin-bottom: 0; }
+  .cta { font-size: 22px; font-weight: 600; font-style: italic; color: var(--cream); letter-spacing: 0.01em; }
+  .footer { margin-top: 44px; padding-top: 24px; border-top: 0.5px solid var(--rule); display: flex; justify-content: space-between; align-items: flex-end; position: relative; }
+  .footer-sig { font-size: 15px; font-weight: 400; color: var(--cream-dim); letter-spacing: 0.04em; line-height: 1.6; }
+  .footer-sig strong { display: block; font-size: 18px; font-weight: 600; color: var(--cream); letter-spacing: 0.02em; margin-bottom: 3px; }
+  .footer-right { display: flex; align-items: flex-end; gap: 24px; }
+  .footer-meta { font-size: 11.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--cream-dim); text-align: right; line-height: 1.9; align-self: flex-end; padding-bottom: 4px; }
+  .footer-meta span { display: block; color: var(--gold); }
+  .qr-block { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .qr-wrap { background: #fff; padding: 10px; border: 1.5px solid var(--gold); border-radius: 3px; }
+  .qr-sublabel { font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold-dim); text-align: center; }
+  .next-bar { width: 1280px; margin: 0 auto; padding: 28px 72px; display: flex; justify-content: flex-end; }
+  .next-btn { font-family: 'Cormorant Garamond', serif; font-size: 13px; font-weight: 400; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold); border: 0.5px solid var(--rule); padding: 12px 28px; text-decoration: none; display: inline-flex; align-items: center; gap: 10px; transition: border-color 0.2s, color 0.2s; }
+  .next-btn:hover { border-color: var(--gold); color: var(--cream); }
+  .next-btn::after { content: '→'; font-style: normal; }
+  @media print { html, body { background: var(--navy); } .page { width: 100%; padding: 44px 60px 52px; } .next-bar { display: none; } }
+  @media screen and (max-width: 1300px) { .page { width: 100%; padding: 36px 44px 48px; } .next-bar { width: 100%; padding: 24px 44px; } }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="bg-ring"></div>
+  <div class="bg-ring-2"></div>
+  <header class="header">
+    <div class="header-left">
+      <div class="dot"></div>
+      <span class="label">Mothership <span class="label-gold">/</span> Cover Letter</span>
+    </div>
+    <span class="label">1420 Washington &middot; Detroit &middot; 2026</span>
+  </header>
+  <div class="rule"></div>
+  <div class="body">
+    <p>I've spent the last several days thinking about The Arkestra, and The Mothership. Why they were necessary. What galaxy they came from.</p>
+    <p>I've been building something &mdash; or trying to &mdash; at the intersection of innovation, equity, and Detroit. And somewhere in the middle of that work, I found myself needing to understand what tradition we were actually building inside of. Not the institutional version. Not the academic version. The real one.</p>
+    <p>As far as I can tell, Sun Ra's Arkestra and George Clinton's Mothership are for their creators what Wu-Tang's Shaolin Temple was: an explanation of how joy and hope and creativity can come from the same people who had their names and cultures stripped from them. All of these origin stories are trying to answer the same question. I had just never noticed that before.</p>
+    <p>What surprised me most was the gospel. I had never considered that Wu-Tang and Fred Hammond and Beyonc&eacute; and &mdash; personal feelings about the artist notwithstanding &mdash; Kanye West are all fundamentally Black liberationists. Standing in the same lineage. Descended from George Clinton and Octavia Butler and the choir directors at hush harbor churches whose names we will never know.</p>
+    <p>In a lot of ways I still have more questions than answers. What I wrote is an attempt to name what I think we are building, and why. It's for the people making decisions about a building and a committee and a brief for architects. And it's for the founders we haven't met yet &mdash; who will walk through those doors in a few years not knowing why the space feels like it was made for them, but feeling it anyway.</p>
+    <p>It's a playlist, and a manifesto, and a plea.</p>
+    <p class="cta">Put the playlist on before you read.</p>
+  </div>
+  <footer class="footer">
+    <div class="footer-sig">
+      <strong>Niles Heron</strong>
+      Center for Tech Equity &nbsp;&middot;&nbsp; 1420 Washington
+    </div>
+    <div class="footer-right">
+      <div class="footer-meta">
+        <span>Past Isn&rsquo;t Prologue &nbsp;&#10033;&nbsp; Side A</span>
+        A Playlist &nbsp;&middot;&nbsp; A Manifesto &nbsp;&middot;&nbsp; A Plea
+      </div>
+      <div class="qr-block">
+        <div class="qr-wrap" id="qrcode"></div>
+        <div class="qr-sublabel">Scan for playlist</div>
+      </div>
+    </div>
+  </footer>
+</div>
+<div class="next-bar">
+  <a class="next-btn" href="/mothership/joy/standalone">Read the manifesto</a>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+  new QRCode(document.getElementById("qrcode"), {
+    text: "https://open.spotify.com/playlist/0gGtc6EbWF9XMOjkicS89b?si=f63a04b3a4834506",
+    width: 96,
+    height: 96,
+    colorDark: "#0b1524",
+    colorLight: "#ffffff",
+    correctLevel: QRCode.CorrectLevel.H
+  });
+</script>
+</body>
+</html>

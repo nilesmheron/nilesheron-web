@@ -10,7 +10,8 @@
     { "source": "/templates/task-management", "destination": "/templates/task-management.html" },
     { "source": "/templates/profile-versioning", "destination": "/templates/profile-versioning.html" },
     { "source": "/templates/cross-platform-packager", "destination": "/templates/cross-platform-packager.html" },
-    { "source": "/mothership/charter-roadmap-gannt", "destination": "/mothership/charter-roadmap-gannt.html" }
+    { "source": "/mothership/charter-roadmap-gannt", "destination": "/mothership/charter-roadmap-gannt.html" },
+    { "source": "/mothership/joy/standalone", "destination": "/mothership/Mothership - Standalone.html" }
   ],
   "headers": [
     {
