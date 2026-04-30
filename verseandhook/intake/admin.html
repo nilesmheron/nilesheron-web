@@ -1729,6 +1729,10 @@ function renderSettingsTab(data) {
           '<label class="field-label k-mono k-slash" for="setting-prompt">system prompt</label>' +
           '<textarea class="k-input" id="setting-prompt" style="width:100%;margin-top:6px;height:220px;font-size:11px;font-family:var(--kimba-mono,monospace);line-height:1.5;resize:vertical">' + esc(gc.intake_system_prompt || '') + '</textarea>' +
         '</div>' +
+        '<div>' +
+          '<label class="field-label k-mono k-slash" for="setting-analysis-prompt">analysis prompt</label>' +
+          '<textarea class="k-input" id="setting-analysis-prompt" style="width:100%;margin-top:6px;height:140px;font-size:11px;font-family:var(--kimba-mono,monospace);line-height:1.5;resize:vertical">' + esc(gc.analysis_system_prompt || '') + '</textarea>' +
+        '</div>' +
         '<div style="display:flex;gap:10px;align-items:center">' +
           '<button class="k-btn k-btn-red" onclick="savePromptSettings()">save prompt</button>' +
           '<span class="k-mono" id="prompt-save-status" style="font-size:11px;color:var(--kimba-mute)"></span>' +
@@ -1824,23 +1828,26 @@ function toggleSettingSection(sectionId, headerEl) {
 function savePromptSettings() {
   if (!currentDetail || !currentDetail.goal_config) return;
   var gc = currentDetail.goal_config;
-  var openerEl = document.getElementById('setting-opener');
-  var promptEl = document.getElementById('setting-prompt');
-  var statusEl = document.getElementById('prompt-save-status');
+  var openerEl   = document.getElementById('setting-opener');
+  var promptEl   = document.getElementById('setting-prompt');
+  var analysisEl = document.getElementById('setting-analysis-prompt');
+  var statusEl   = document.getElementById('prompt-save-status');
   if (!openerEl || !promptEl || !statusEl) return;
   statusEl.textContent = 'saving…';
   apiFetch('/api/vh-goal-config', {
     method: 'PUT',
     body: JSON.stringify(Object.assign({}, gc, {
-      opener_message:       openerEl.value,
-      intake_system_prompt: promptEl.value
+      opener_message:        openerEl.value,
+      intake_system_prompt:  promptEl.value,
+      analysis_system_prompt: analysisEl ? analysisEl.value : gc.analysis_system_prompt
     }))
   })
   .then(function(r) { return r.json(); })
   .then(function(result) {
     if (result.goal_key || result.ok) {
-      gc.opener_message       = openerEl.value;
-      gc.intake_system_prompt = promptEl.value;
+      gc.opener_message        = openerEl.value;
+      gc.intake_system_prompt  = promptEl.value;
+      if (analysisEl) gc.analysis_system_prompt = analysisEl.value;
       statusEl.textContent = 'saved ✓';
       setTimeout(function() { if (statusEl) statusEl.textContent = ''; }, 2500);
     } else {
@@ -3076,7 +3083,7 @@ function readFormQuestionsFromDOM() {
   }).filter(function(q) { return q.label.length > 0; });
 }
 
-var FORM_ANALYSIS_PROMPT = 'You are analyzing structured form responses from multiple respondents for Verse and Hook. Each transcript contains question-answer pairs where the "assistant" role is the question and the "user" role is the respondent\'s answer.\n\nIdentify consensus and conflict across perspectives. Output a JSON object with:\n- "scores": object mapping each scoring dimension key to 0-100 (100 = full consensus)\n- "narrative": 2-4 sentence summary of the most actionable alignment pattern\n- "respondents" (optional): array with name, kind ("alignment"|"conflict"|"outlier"), x 0-1, y 0-1, summary per respondent\n\nIf fewer than 2 respondents, return scores as null. Return ONLY valid JSON.';
+var FORM_ANALYSIS_PROMPT = 'You are analyzing structured form responses from multiple respondents for Verse and Hook. Each transcript contains question-answer pairs where the "assistant" role is the question and the "user" role is the respondent\'s answer.\n\nIdentify consensus and conflict across perspectives. Output a JSON object with:\n- "dimensions": object mapping each scoring dimension key to { "score": 0-100, "narrative": "1-2 sentence insight on where respondents converge or diverge on this dimension" } (100 = full consensus)\n- "narrative": 2-4 sentence summary of the most actionable alignment pattern\n- "respondents" (optional): array with name, kind ("alignment"|"conflict"|"outlier"), x 0-1, y 0-1, summary per respondent\n\nIf fewer than 2 respondents, return dimensions scores as null. Return ONLY valid JSON.';
 
 function createFormSession() {
   var btn = document.getElementById('fb-submit');
