@@ -59,6 +59,7 @@ export async function runAnalysis(client_id, extraction_goal, response_id, { sup
     '',
     transcriptBlocks.join('\n\n'),
     '',
+    'Score each dimension and return a "dimensions" object where each key is a scoring dimension name and each value is an object with "score" (0-100, where 100 = full consensus) and "narrative" (1-2 sentences describing where respondents converge or diverge on this specific dimension).',
     'After scoring the dimensions, also classify each respondent individually.',
     'Add a "respondents" array to your JSON: [{"name":"respondent name","kind":"alignment|conflict|outlier","x":0.0,"y":0.0,"summary":"1-2 sentences"}]',
     'where x = brand_clarity (0=very unclear, 1=very clear) and y = alignment_depth (0=split from group consensus, 1=deeply aligned).',
