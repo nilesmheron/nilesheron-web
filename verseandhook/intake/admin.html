@@ -1625,7 +1625,7 @@ function renderAnalysisTab(data) {
           '<div class="track"><div class="fill" style="width:' + (dim.score||0) + '%"></div></div>' +
           '<span class="num">' + (dim.score||0) + '</span>' +
         '</div>' +
-        (dim.narrative ? '<p class="narrative">' + esc(dim.narrative) + '</p>' : '') +
+        '<p class="narrative">' + (dim.narrative ? esc(dim.narrative) : '<span style="color:var(--kimba-mute);font-style:italic">no narrative — re-run analysis to generate insights</span>') + '</p>' +
       '</div>';
     });
   }
