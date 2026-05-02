@@ -2959,14 +2959,14 @@ function getFormQuestionConfigHtml(type, q) {
   }
   if (type === 'scale') {
     var steps = q.scale_steps || 5;
-    return '<div style="display:flex;align-items:center;gap:8px">' +
-      '<span class="k-mono" style="font-size:10px;color:var(--kimba-mute)">steps</span>' +
-      '<select style="border:1px solid var(--kimba-rule);background:var(--kimba-paper);font-family:var(--kimba-mono);font-size:10px;cursor:pointer;padding:3px 5px;outline:none">' +
+    return '<div style="display:flex;align-items:center;gap:6px">' +
+      '<span class="k-mono" style="font-size:10px;color:var(--kimba-mute)">1 to</span>' +
+      '<select onchange="this.nextElementSibling.textContent=this.value" style="border:1px solid var(--kimba-rule);background:var(--kimba-paper);font-family:var(--kimba-mono);font-size:10px;cursor:pointer;padding:3px 5px;outline:none">' +
         [3,4,5,7,10].map(function(n) {
           return '<option value="' + n + '"' + (steps === n ? ' selected' : '') + '>' + n + '</option>';
         }).join('') +
       '</select>' +
-      '<span class="k-mono" style="font-size:10px;color:var(--kimba-mute)">(1–' + steps + ')</span>' +
+      '<span class="k-mono" style="font-size:10px;color:var(--kimba-mute)">' + steps + '</span>' +
     '</div>';
   }
   return '<span class="k-mono" style="font-size:10px;color:var(--kimba-mute-2)">no additional config</span>';
