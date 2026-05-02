@@ -27,7 +27,11 @@ export async function runAnalysis(client_id, extraction_goal, response_id, { sup
     console.warn(`runAnalysis: no goal config found for "${extraction_goal}"`);
     return;
   }
-  const { analysis_system_prompt, scoring_dimensions } = configs[0];
+  const { scoring_dimensions } = configs[0];
+  // Override output format — append to whatever the stored prompt says so dimensions+narratives are always returned
+  const analysis_system_prompt =
+    configs[0].analysis_system_prompt +
+    '\n\nOVERRIDE: Your JSON response MUST use "dimensions" (not "scores"). Each dimension key maps to {"score": 0-100, "narrative": "1-2 sentence insight on convergence or conflict for this specific dimension"}. Include "narrative" (overall 2-4 sentence summary) and optionally "respondents". Return ONLY valid JSON.';
 
   // Fetch all transcripts for this client
   const r = await sb(
