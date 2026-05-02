@@ -1184,7 +1184,7 @@ var ERROR_COPY = {
   used: {
     tag: '/already submitted',
     h:   "you've already done this one",
-    body: "this link was already used to submit a response. each respondent gets one conversation. if you'd like to add something, reach out to v&h directly."
+    body: "a response from your email was already submitted for this session. each person gets one conversation. if you'd like to add something, reach out to v&h directly."
   }
 };
 
@@ -1334,21 +1334,27 @@ document.getElementById('btn-begin').addEventListener('click', function() {
   identity.email = email;
 
   sessionStartedAt = Date.now();
-  track('session.started', { exchange_count: 0 });
 
   show('begin');
 
-  // Race goal config fetch against 650ms pacing beat — use whichever is slower
+  var dupCheck = fetch(
+    '/api/vh-response?client_id=' + encodeURIComponent(sessionData.id) +
+    '&email=' + encodeURIComponent(email)
+  ).then(function(r) { return r.json(); });
+
   var configFetch = fetch(
     '/api/vh-goal-config?goal=' + encodeURIComponent(sessionData.extraction_goal)
   ).then(function(r) { return r.json(); });
 
   var pacing = new Promise(function(resolve) { setTimeout(resolve, 650); });
 
-  Promise.all([configFetch, pacing])
+  Promise.all([dupCheck, configFetch, pacing])
     .then(function(results) {
-      var config = results[0];
+      var dup    = results[0];
+      var config = results[1];
+      if (dup && dup.exists) { showError('used'); return; }
       if (!config || config.error) { show('error'); return; }
+      track('session.started', { exchange_count: 0 });
       goalConfig = config;
       if (config.mode === 'form') {
         initForm(config);

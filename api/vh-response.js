@@ -18,8 +18,21 @@ function sb(path, options = {}) {
 }
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   if (!SUPABASE_URL || !SUPABASE_KEY) return res.status(500).json({ error: 'Supabase not configured' });
+
+  // GET — check if an email has already responded for a client session
+  if (req.method === 'GET') {
+    const { client_id, email } = req.query;
+    if (!client_id || !email) return res.status(400).json({ error: 'client_id and email required' });
+    const r = await sb(
+      `/vh_responses?client_id=eq.${encodeURIComponent(client_id)}&respondent_email=eq.${encodeURIComponent(email)}&select=id&limit=1`
+    );
+    if (!r.ok) return res.status(500).json({ error: 'lookup failed' });
+    const rows = await r.json();
+    return res.status(200).json({ exists: rows.length > 0 });
+  }
+
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   if (!ANTHROPIC_KEY) return res.status(500).json({ error: 'Anthropic not configured' });
 
   const { client_id, respondent_name, respondent_title, respondent_email, transcript } = req.body || {};

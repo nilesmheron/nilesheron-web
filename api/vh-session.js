@@ -81,9 +81,7 @@ export default async function handler(req, res) {
       const rows = await r.json();
       if (!rows.length) return res.status(404).json({ error: 'invalid' });
 
-      const { used_at, ...clientData } = rows[0];
-      if (used_at) return res.status(410).json({ error: 'used', used_at });
-      return res.status(200).json(clientData);
+      return res.status(200).json(rows[0]);
     } catch (err) {
       return res.status(500).json({ error: err.message });
     }
