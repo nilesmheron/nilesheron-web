@@ -1615,10 +1615,10 @@ function renderAnalysisTab(data) {
 
   // ── Dimension cards ───────────────────────────────────────────────
   if (dims.length) {
-    html += '<div class="admin-section-title" style="margin-top:24px">narrative breakdown <span style="font-size:10px;color:var(--kimba-mute-2)">click to collapse</span></div>';
+    html += '<div class="admin-section-title" style="margin-top:24px">narrative breakdown <span style="font-size:10px;color:var(--kimba-mute-2)">click to expand</span></div>';
     dims.forEach(function(dim, i) {
       var tag  = dim.kind === 'alignment' ? '● convergence' : dim.kind === 'conflict' ? '● conflict' : '○ outlier';
-      html += '<details class="analysis-card ' + dim.kind + '" open>' +
+      html += '<details class="analysis-card ' + dim.kind + '">' +
         '<summary>' +
           '<div class="head">' +
             '<div class="dimension">/' + String(i+1).padStart(2,'0') + ' · ' + esc(dim.name.replace(/_/g,' ')) + '</div>' +
