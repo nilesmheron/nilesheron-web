@@ -28,10 +28,13 @@ export async function runAnalysis(client_id, extraction_goal, response_id, { sup
     return;
   }
   const { scoring_dimensions } = configs[0];
-  // Override output format — append to whatever the stored prompt says so dimensions+narratives are always returned
   const analysis_system_prompt =
-    configs[0].analysis_system_prompt +
-    '\n\nOVERRIDE: Your JSON response MUST use "dimensions" (not "scores"). Each dimension key maps to {"score": 0-100, "narrative": "1-2 sentence insight on convergence or conflict for this specific dimension"}. Include "narrative" (overall 2-4 sentence summary) and optionally "respondents". Return ONLY valid JSON.';
+    'You are a brand alignment analyst for Verse and Hook. ' +
+    'Analyze the transcript data and return a JSON object with exactly these keys:\n' +
+    '- "dimensions": object mapping each scoring dimension key to {"score": 0-100, "narrative": "1-2 sentence insight on where respondents converge or diverge on this dimension"}\n' +
+    '- "narrative": 2-4 sentence overall summary of the most actionable alignment pattern\n' +
+    '- "respondents": array of {name, kind ("alignment"|"conflict"|"outlier"), x (0-1 brand clarity), y (0-1 alignment depth), summary}\n' +
+    'If fewer than 2 respondents, set dimension scores to null. Return ONLY valid JSON, no markdown.';
 
   // Fetch all transcripts for this client
   const r = await sb(
