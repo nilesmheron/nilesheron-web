@@ -1738,10 +1738,6 @@ function renderSettingsTab(data) {
           '<label class="field-label k-mono k-slash" for="setting-prompt">system prompt</label>' +
           '<textarea class="k-input" id="setting-prompt" style="width:100%;margin-top:6px;height:220px;font-size:11px;font-family:var(--kimba-mono,monospace);line-height:1.5;resize:vertical">' + esc(gc.intake_system_prompt || '') + '</textarea>' +
         '</div>' +
-        '<div>' +
-          '<label class="field-label k-mono k-slash" for="setting-analysis-prompt">analysis prompt</label>' +
-          '<textarea class="k-input" id="setting-analysis-prompt" style="width:100%;margin-top:6px;height:140px;font-size:11px;font-family:var(--kimba-mono,monospace);line-height:1.5;resize:vertical">' + esc(gc.analysis_system_prompt || '') + '</textarea>' +
-        '</div>' +
         '<div style="display:flex;gap:10px;align-items:center">' +
           '<button class="k-btn k-btn-red" onclick="savePromptSettings()">save prompt</button>' +
           '<span class="k-mono" id="prompt-save-status" style="font-size:11px;color:var(--kimba-mute)"></span>' +
@@ -1839,7 +1835,6 @@ function savePromptSettings() {
   var gc = currentDetail.goal_config;
   var openerEl   = document.getElementById('setting-opener');
   var promptEl   = document.getElementById('setting-prompt');
-  var analysisEl = document.getElementById('setting-analysis-prompt');
   var statusEl   = document.getElementById('prompt-save-status');
   if (!openerEl || !promptEl || !statusEl) return;
   statusEl.textContent = 'saving…';
@@ -1847,8 +1842,7 @@ function savePromptSettings() {
     method: 'PUT',
     body: JSON.stringify(Object.assign({}, gc, {
       opener_message:        openerEl.value,
-      intake_system_prompt:  promptEl.value,
-      analysis_system_prompt: analysisEl ? analysisEl.value : gc.analysis_system_prompt
+      intake_system_prompt:  promptEl.value
     }))
   })
   .then(function(r) { return r.json(); })
@@ -1856,7 +1850,6 @@ function savePromptSettings() {
     if (result.goal_key || result.ok) {
       gc.opener_message        = openerEl.value;
       gc.intake_system_prompt  = promptEl.value;
-      if (analysisEl) gc.analysis_system_prompt = analysisEl.value;
       statusEl.textContent = 'saved ✓';
       setTimeout(function() { if (statusEl) statusEl.textContent = ''; }, 2500);
     } else {
