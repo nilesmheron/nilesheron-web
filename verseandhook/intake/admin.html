@@ -1661,12 +1661,14 @@ function renderRespondentsTab(data) {
       '</div>' +
       '<span class="k-mono" style="font-size:11px;color:var(--kimba-mute)">' + esc(r.respondent_email) + '</span>' +
       '<span class="rdate">' + relativeTime(r.completed_at) + '</span>' +
-      '<button class="k-btn" style="font-size:11px;padding:3px 10px;color:var(--kimba-mute);border-color:var(--kimba-rule);flex-shrink:0"' +
-        ' onclick="exportTranscript(event,' + i + ')"' +
-        ' aria-label="export transcript for ' + esc(r.respondent_name) + '">export</button>' +
-      '<button class="k-btn" style="font-size:11px;padding:3px 10px;color:var(--kimba-mute);border-color:var(--kimba-rule);flex-shrink:0"' +
-        ' onclick="deleteRespondent(event,this,\'' + r.id + '\')"' +
-        ' aria-label="delete ' + esc(r.respondent_name) + '">delete</button>' +
+      '<div style="display:flex;gap:6px;flex-shrink:0">' +
+        '<button class="k-btn" style="font-size:11px;padding:3px 10px;color:var(--kimba-mute);border-color:var(--kimba-rule)"' +
+          ' onclick="exportTranscript(event,' + i + ')"' +
+          ' aria-label="export transcript for ' + esc(r.respondent_name) + '">export</button>' +
+        '<button class="k-btn" style="font-size:11px;padding:3px 10px;color:var(--kimba-mute);border-color:var(--kimba-rule)"' +
+          ' onclick="deleteRespondent(event,this,\'' + r.id + '\')"' +
+          ' aria-label="delete ' + esc(r.respondent_name) + '">delete</button>' +
+      '</div>' +
     '</div>';
   });
 
