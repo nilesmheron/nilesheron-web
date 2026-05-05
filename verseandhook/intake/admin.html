@@ -1705,7 +1705,7 @@ function renderSettingsTab(data) {
       '<div>' +
         '<div class="admin-section-title">session details</div>' +
         field('client name', c.client_name) +
-        field('extraction goal', goal.name) +
+        field('extraction goal', (gc && gc.name) ? gc.name : goal.name) +
         field('created', fmtDate(c.created_at)) +
         editField('expected respondents', 'setting-respondents', c.expected_respondent_count || 8, 'number', 1, 200, 'used for completion %') +
       '</div>' +
@@ -1737,6 +1737,15 @@ function renderSettingsTab(data) {
         '<div>' +
           '<label class="field-label k-mono k-slash" for="setting-prompt">system prompt</label>' +
           '<textarea class="k-input" id="setting-prompt" style="width:100%;margin-top:6px;height:220px;font-size:11px;font-family:var(--kimba-mono,monospace);line-height:1.5;resize:vertical">' + esc(gc.intake_system_prompt || '') + '</textarea>' +
+          '<div style="margin-top:12px;padding:12px 14px;background:var(--kimba-rule-soft);border-left:2px solid var(--kimba-rule)">' +
+            '<div class="k-mono" style="font-size:10px;color:var(--kimba-mute-2);margin-bottom:8px">/ editing guide</div>' +
+            '<div class="k-mono" style="font-size:10px;color:var(--kimba-mute);line-height:1.8">' +
+              '<b>[INTAKE_COMPLETE]</b> — kimba outputs this when all areas are covered. keep it on its own line inside the closing instructions; do not move or rename it.<br>' +
+              '<b>pacing annotations</b> — lines like <i>(simple: accept first answer, move on)</i> after each question control exploration depth. edit the question text around them; keep the annotation intact.<br>' +
+              '<b>response length rule</b> — the line starting "response length:" controls density. you can adjust the sentence limit here.<br>' +
+              '<b>safe to edit</b> — coverage area descriptions, question text, behavior notes, tone, and closing copy.' +
+            '</div>' +
+          '</div>' +
         '</div>' +
         '<div style="display:flex;gap:10px;align-items:center">' +
           '<button class="k-btn k-btn-red" onclick="savePromptSettings()">save prompt</button>' +
