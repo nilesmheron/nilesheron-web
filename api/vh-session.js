@@ -1,6 +1,6 @@
 // api/vh-session.js
 import crypto from 'crypto';
-import { validateAdminToken } from './vh-auth.js';
+import { getAuth } from './vh-auth.js';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -24,7 +24,9 @@ export default async function handler(req, res) {
 
   // POST — create a new client session (admin only)
   if (req.method === 'POST') {
-    if (!validateAdminToken(req)) return res.status(401).json({ error: 'Unauthorized' });
+    const auth = await getAuth(req);
+    if (!auth.ok) return res.status(401).json({ error: 'Unauthorized' });
+    if (auth.role === 'viewer') return res.status(403).json({ error: 'Viewers cannot create sessions' });
 
     const { client_name, extraction_goal, expected_respondent_count, max_exchanges } = req.body || {};
     if (!client_name || !client_name.trim()) {

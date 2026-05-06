@@ -92,7 +92,7 @@ export default async function handler(req, res) {
   if (!SUPABASE_URL || !SUPABASE_KEY) {
     return res.status(500).json({ error: 'Supabase not configured' });
   }
-  if (!validateAdminToken(req)) return res.status(401).json({ error: 'Unauthorized' });
+  if (!await validateAdminToken(req)) return res.status(401).json({ error: 'Unauthorized' });
 
   // POST — re-run analysis for a client
   if (req.method === 'POST') {

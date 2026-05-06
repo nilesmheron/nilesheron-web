@@ -1,5 +1,5 @@
 // api/vh-attachment.js
-import { validateAdminToken } from './vh-auth.js';
+import { getAuth } from './vh-auth.js';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -8,7 +8,8 @@ const MAX_BYTES = 4 * 1024 * 1024; // 4MB decoded limit
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-  if (!validateAdminToken(req)) return res.status(401).json({ error: 'Unauthorized' });
+  const auth = await getAuth(req);
+  if (!auth.ok || auth.role === 'viewer') return res.status(401).json({ error: 'Unauthorized' });
   if (!SUPABASE_URL || !SUPABASE_KEY) return res.status(500).json({ error: 'Supabase not configured' });
 
   const { fileName, contentType, data } = req.body || {};

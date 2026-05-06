@@ -1,5 +1,5 @@
 // api/vh-link-meta.js — proxies oEmbed for YouTube/Vimeo; detects link type
-import { validateAdminToken } from './vh-auth.js';
+import { getAuth } from './vh-auth.js';
 
 function detectType(url) {
   try {
@@ -16,7 +16,8 @@ function detectType(url) {
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
-  if (!validateAdminToken(req)) return res.status(401).json({ error: 'Unauthorized' });
+  const auth = await getAuth(req);
+  if (!auth.ok) return res.status(401).json({ error: 'Unauthorized' });
 
   const { url } = req.query;
   if (!url) return res.status(400).json({ error: 'url required' });

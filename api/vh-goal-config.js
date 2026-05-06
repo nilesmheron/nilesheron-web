@@ -1,5 +1,5 @@
 // api/vh-goal-config.js
-import { validateAdminToken } from './vh-auth.js';
+import { getAuth } from './vh-auth.js';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -40,7 +40,8 @@ export default async function handler(req, res) {
     }
 
     // Admin: full list for editor
-    if (!validateAdminToken(req)) return res.status(401).json({ error: 'Unauthorized' });
+    const auth = await getAuth(req);
+    if (!auth.ok) return res.status(401).json({ error: 'Unauthorized' });
     try {
       const r = await sb('/vh_goal_configs?select=*&order=goal_key.asc');
       if (!r.ok) return res.status(500).json({ error: 'Failed to fetch goal configs' });
@@ -51,7 +52,9 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'PUT') {
-    if (!validateAdminToken(req)) return res.status(401).json({ error: 'Unauthorized' });
+    const auth = await getAuth(req);
+    if (!auth.ok) return res.status(401).json({ error: 'Unauthorized' });
+    if (auth.role === 'viewer') return res.status(403).json({ error: 'Unauthorized' });
 
     const { goal_key, name, intake_system_prompt, opener_message, analysis_system_prompt, scoring_dimensions, closing_message, is_template, attachment_url, attachment_prompt, attachment_mode, attachment_type, mode, form_schema } = req.body || {};
 
