@@ -95,7 +95,11 @@ body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--color
   .payment-flow{grid-template-columns:1fr;gap:6px}
   .pf-arrow{transform:rotate(90deg)}
 }
-@media print{body{background:#fff!important;padding:0!important}}
+@media print{
+  body{background:#fff!important;padding:0!important}
+  .phase,.open-items,.fuse,.payment-flow,.tracks,.decision-forks,.sat-forks,.fork,.complete,.track,.deny-note{break-inside:avoid;page-break-inside:avoid}
+  .connector{break-after:avoid;page-break-after:avoid}
+}
 </style>
 </head>
 <body>
@@ -108,7 +112,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--color
     <div style="font-size:14px;color:var(--color-text-secondary)">Business Accelerator Fund &#183; Facilitated via SBDC / MEDC SmartZone</div>
   </div>
 
-  <div style="background:var(--color-background-primary);border-radius:var(--border-radius-lg);border:0.5px solid var(--color-border-tertiary);padding:20px 16px;margin-bottom:28px">
+  <div style="background:var(--color-background-primary);border-radius:var(--border-radius-lg);border:0.5px solid var(--color-border-tertiary);padding:20px 16px;margin-bottom:28px;break-inside:avoid;page-break-inside:avoid">
     <svg width="100%" viewBox="0 0 680 706" role="img" xmlns="http://www.w3.org/2000/svg" style="display:block">
       <title>BAF process flowchart</title>
       <desc>Flowchart showing the 8-phase BAF process from lead intake through engagement closure, with eligibility and satisfaction decision points.</desc>
@@ -126,7 +130,6 @@ body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--color
 
       <rect x="270" y="16" width="140" height="30" rx="15" fill="#BA7517"/>
       <text x="340" y="31" font-family="system-ui,-apple-system,sans-serif" font-size="12" font-weight="500" fill="#FFFFFF" text-anchor="middle" dominant-baseline="central">Lead inquiry</text>
-
       <line x1="340" y1="46" x2="340" y2="66" stroke="#AAAAAA" stroke-width="1.5" marker-end="url(#ah)"/>
 
       <g class="cn" onclick="scrollTo('phase-01')">
@@ -142,7 +145,6 @@ body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--color
 
       <line x1="340" y1="202" x2="340" y2="222" stroke="#4E8C2A" stroke-width="1.5" marker-end="url(#ah-g)"/>
       <text x="328" y="213" font-family="system-ui,-apple-system,sans-serif" font-size="10" font-weight="500" fill="#3B6D11" text-anchor="end" dominant-baseline="central">Yes</text>
-
       <line x1="424" y1="172" x2="450" y2="172" stroke="#C47878" stroke-width="1.5" marker-end="url(#ah-r)"/>
       <text x="434" y="164" font-family="system-ui,-apple-system,sans-serif" font-size="10" font-weight="500" fill="#A32D2D" text-anchor="middle">No</text>
 
@@ -207,7 +209,6 @@ body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--color
 
       <line x1="340" y1="628" x2="340" y2="648" stroke="#4E8C2A" stroke-width="1.5" marker-end="url(#ah-g)"/>
       <text x="328" y="639" font-family="system-ui,-apple-system,sans-serif" font-size="10" font-weight="500" fill="#3B6D11" text-anchor="end" dominant-baseline="central">Yes</text>
-
       <line x1="416" y1="600" x2="450" y2="600" stroke="#C47878" stroke-width="1.5" marker-end="url(#ah-r)"/>
       <text x="430" y="592" font-family="system-ui,-apple-system,sans-serif" font-size="10" font-weight="500" fill="#A32D2D" text-anchor="middle">No</text>
 
@@ -218,7 +219,6 @@ body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--color
 
       <rect x="270" y="650" width="140" height="30" rx="15" fill="#3B6D11"/>
       <text x="340" y="665" font-family="system-ui,-apple-system,sans-serif" font-size="12" font-weight="500" fill="#FFFFFF" text-anchor="middle" dominant-baseline="central">Engagement closed</text>
-
     </svg>
   </div>
 
@@ -426,7 +426,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--color
 
   <div class="page-footer">
     <div class="footer-left">TechTown Detroit &#183; Tech-Based Programs &#183; BAF</div>
-    <div class="footer-right">v1.1 DRAFT &#183; 2026-05-07</div>
+    <div class="footer-right">v1.2 DRAFT &#183; 2026-05-07</div>
   </div>
 
 </div>
