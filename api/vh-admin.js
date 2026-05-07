@@ -328,7 +328,7 @@ export default async function handler(req, res) {
       if (!clientsRes.ok) return res.status(500).json({ error: 'Failed to fetch clients' });
       clients = (await clientsRes.json()).map(c => {
         const { vh_users: vhUser, ...rest } = c;
-        return { ...rest, created_by_username: vhUser?.username || null, is_owner: c.created_by === auth.userId, share_level: null };
+        return { ...rest, created_by_username: vhUser?.username || null, is_owner: c.created_by !== null && c.created_by === auth.userId, share_level: null };
       });
     } else {
       // Non-admin: owned sessions + shared sessions
