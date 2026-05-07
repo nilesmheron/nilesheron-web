@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>BAF Process Map &#8212; TechTown Detroit</title>
+<style>
+:root{
+  --color-text-primary:#1C1C1C;
+  --color-text-secondary:#555;
+  --color-text-tertiary:#888;
+  --color-text-warning:#BA7517;
+  --color-text-info:#185FA5;
+  --color-text-success:#3B6D11;
+  --color-text-danger:#A32D2D;
+  --color-background-primary:#fff;
+  --color-background-secondary:#F5F3EE;
+  --color-border-tertiary:rgba(0,0,0,0.12);
+  --color-border-secondary:rgba(0,0,0,0.25);
+  --color-border-warning:rgba(186,117,23,0.55);
+  --color-border-info:rgba(24,95,165,0.55);
+  --color-border-success:rgba(59,109,17,0.55);
+  --color-border-danger:rgba(163,45,45,0.55);
+  --border-radius-md:8px;
+  --border-radius-lg:12px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--color-text-primary);background:var(--color-background-secondary);padding:2rem 1rem;min-height:100vh}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.page{max-width:760px;margin:0 auto;padding:0 4px}
+
+/* ── Summary strip ── */
+.summary-strip{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:28px;align-items:center}
+.summary-chip{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--color-text-secondary);white-space:nowrap}
+.chip-num{font-size:11px;font-weight:600;color:var(--color-text-warning);background:rgba(186,117,23,0.1);border-radius:4px;padding:2px 6px;letter-spacing:.02em}
+.chip-arrow{color:var(--color-border-secondary);font-size:11px}
+
+/* ── Connector ── */
+.connector{display:flex;flex-direction:column;align-items:center;padding:6px 0;color:var(--color-text-tertiary);font-size:18px;line-height:1;user-select:none}
+.connector-label{font-size:11px;color:var(--color-text-success);font-weight:500;text-align:center;margin-bottom:2px}
+
+/* ── Phase card ── */
+.phase{background:var(--color-background-primary);border-radius:var(--border-radius-lg);padding:18px 20px;border:0.5px solid var(--color-border-tertiary)}
+.phase-header{display:flex;align-items:flex-start;gap:14px;margin-bottom:12px}
+.phase-num{font-size:22px;font-weight:500;color:var(--color-text-warning);line-height:1;min-width:32px}
+.phase-title{font-size:16px;font-weight:500;color:var(--color-text-primary);line-height:1.25;padding-top:3px}
+.phase-subtitle{font-size:12px;color:var(--color-text-tertiary);margin-top:2px}
+.phase-body{padding-left:46px}
+.step{font-size:13px;color:var(--color-text-secondary);line-height:1.55;padding:3px 0 3px 14px;border-left:1.5px solid var(--color-border-tertiary);margin-bottom:4px}
+.step:last-child{margin-bottom:0}
+.step strong{color:var(--color-text-primary);font-weight:500}
+
+/* ── TBD badge ── */
+.tbd{display:inline-block;font-size:10px;font-weight:600;letter-spacing:.04em;color:var(--color-text-info);background:rgba(24,95,165,0.08);border-radius:3px;padding:1px 5px;margin-left:5px;vertical-align:middle;text-transform:uppercase}
+
+/* ── Decision point ── */
+.decision{margin:10px 0 0}
+.decision-label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:8px;padding-left:46px}
+.decision-forks{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+.fork{border-radius:var(--border-radius-md);padding:12px 14px;border:0.5px solid}
+.fork-label{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px}
+.fork-yes{border-color:var(--color-border-success);background:rgba(59,109,17,0.04)}
+.fork-yes .fork-label{color:var(--color-text-success)}
+.fork-no{border-color:var(--color-border-danger);background:rgba(163,45,45,0.04)}
+.fork-no .fork-label{color:var(--color-text-danger)}
+.fork-item{font-size:12px;color:var(--color-text-secondary);line-height:1.5;padding:2px 0}
+.fork-note{font-size:11px;color:var(--color-text-tertiary);font-style:italic;margin-top:4px}
+
+/* ── Tracks ── */
+.tracks-label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-tertiary);text-align:center;margin:8px 0 6px}
+.tracks{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.track{border-radius:var(--border-radius-md);padding:14px 16px;border:0.5px solid}
+.track-discre{border-color:var(--color-border-info);background:rgba(24,95,165,0.04)}
+.track-committee{border-color:rgba(90,60,140,0.4);background:rgba(90,60,140,0.04)}
+.track-name{font-size:13px;font-weight:500;margin-bottom:8px}
+.track-discre .track-name{color:var(--color-text-info)}
+.track-committee .track-name{color:#5a3c8c}
+.track-item{font-size:12px;color:var(--color-text-secondary);line-height:1.5;padding:2px 0;padding-left:10px;border-left:1.5px solid var(--color-border-tertiary);margin-bottom:3px}
+.track-merge{font-size:11px;color:var(--color-text-tertiary);font-style:italic;text-align:center;margin-top:8px;padding:6px;background:rgba(0,0,0,0.03);border-radius:4px}
+
+/* ── FUSE callout ── */
+.fuse{border-left:3px solid var(--color-border-warning);background:rgba(186,117,23,0.06);border-radius:0 var(--border-radius-md) var(--border-radius-md) 0;padding:12px 14px;margin:10px 0}
+.fuse-header{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-warning);margin-bottom:5px}
+.fuse-body{font-size:12px;color:var(--color-text-secondary);line-height:1.6}
+
+/* ── Deny note ── */
+.deny-note{display:flex;align-items:flex-start;gap:8px;background:rgba(0,0,0,0.03);border-radius:var(--border-radius-md);padding:10px 12px;margin-top:8px}
+.deny-icon{font-size:13px;margin-top:1px}
+.deny-text{font-size:12px;color:var(--color-text-secondary);line-height:1.5}
+
+/* ── Payment flow ── */
+.payment-flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:center;gap:0;margin:12px 0;background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px 16px}
+.pf-entity{text-align:center;padding:8px 10px;border-radius:var(--border-radius-md);background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary)}
+.pf-name{font-size:12px;font-weight:500;color:var(--color-text-primary);margin-bottom:2px}
+.pf-role{font-size:10px;color:var(--color-text-tertiary)}
+.pf-arrow{text-align:center;padding:0 4px}
+.pf-pct{display:block;font-size:11px;font-weight:600;color:var(--color-text-info);margin-bottom:2px}
+.pf-arr{display:block;font-size:16px;color:var(--color-text-tertiary)}
+.pf-note{font-size:11px;color:var(--color-text-tertiary);font-style:italic;margin-top:8px;grid-column:1/-1;border-top:0.5px solid var(--color-border-tertiary);padding-top:8px;line-height:1.5}
+
+/* ── Satisfaction forks ── */
+.sat-forks{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+
+/* ── Complete ── */
+.complete{display:flex;align-items:center;justify-content:center;gap:10px;background:rgba(59,109,17,0.07);border:0.5px solid var(--color-border-success);border-radius:var(--border-radius-md);padding:14px;margin-top:4px}
+.complete-mark{font-size:18px;color:var(--color-text-success)}
+.complete-text{font-size:14px;font-weight:500;color:var(--color-text-success)}
+
+/* ── Open items ── */
+.open-items{margin-top:24px;padding:16px 20px;background:var(--color-background-primary);border-radius:var(--border-radius-lg);border:0.5px solid var(--color-border-tertiary)}
+.open-items-title{font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-info);margin-bottom:10px}
+.open-item{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--color-text-secondary);line-height:1.55;padding:4px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.open-item:last-child{border-bottom:none}
+.oi-badge{flex-shrink:0;font-size:10px;font-weight:600;color:var(--color-text-info);background:rgba(24,95,165,0.08);border-radius:3px;padding:1px 5px;margin-top:2px;text-transform:uppercase;letter-spacing:.03em}
+
+/* ── Footer ── */
+.page-footer{margin-top:24px;border-top:0.5px solid var(--color-border-tertiary);padding-top:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.footer-left{font-size:12px;font-weight:500;color:var(--color-text-primary)}
+.footer-right{font-size:12px;color:var(--color-text-tertiary)}
+
+@media(max-width:560px){
+  .decision-forks,.tracks,.sat-forks{grid-template-columns:1fr}
+  .payment-flow{grid-template-columns:1fr;gap:6px}
+  .pf-arrow{transform:rotate(90deg)}
+  .summary-strip{gap:4px}
+}
+@media print{body{background:#fff!important;padding:0!important}}
+</style>
+</head>
+<body>
+<h2 class="sr-only">BAF Process Map &#8212; Business Accelerator Fund, TechTown Detroit</h2>
+<div class="page">
+
+  <div style="border-left:3px solid var(--color-border-warning);padding-left:16px;margin-bottom:24px">
+    <div style="font-size:12px;color:var(--color-text-warning);margin-bottom:6px">TechTown Detroit &#8212; Tech-Based Programs</div>
+    <div style="font-size:24px;font-weight:500;color:var(--color-text-primary);line-height:1.2;margin-bottom:4px">BAF Process Map</div>
+    <div style="font-size:14px;color:var(--color-text-secondary)">Business Accelerator Fund &#183; Facilitated via SBDC / MEDC SmartZone</div>
+  </div>
+
+  <div class="summary-strip">
+    <div class="summary-chip"><span class="chip-num">01</span> Lead intake</div>
+    <span class="chip-arrow">&#8594;</span>
+    <div class="summary-chip"><span class="chip-num">02</span> Eligibility</div>
+    <span class="chip-arrow">&#8594;</span>
+    <div class="summary-chip"><span class="chip-num">03</span> Scope + intake <span style="color:var(--color-text-warning);font-size:11px">&#9888;</span></div>
+    <span class="chip-arrow">&#8594;</span>
+    <div class="summary-chip"><span class="chip-num">04</span> Onboarding</div>
+    <span class="chip-arrow">&#8594;</span>
+    <div class="summary-chip"><span class="chip-num">05</span> Coach + docs</div>
+    <span class="chip-arrow">&#8594;</span>
+    <div class="summary-chip"><span class="chip-num">06</span> Gatekeeper</div>
+    <span class="chip-arrow">&#8594;</span>
+    <div class="summary-chip"><span class="chip-num">07</span> Payment init.</div>
+    <span class="chip-arrow">&#8594;</span>
+    <div class="summary-chip"><span class="chip-num">08</span> Completion</div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num">01</div>
+      <div><div class="phase-title">Lead Intake</div><div class="phase-subtitle">First contact and self-screening</div></div>
+    </div>
+    <div class="phase-body">
+      <div class="step">Leads and inquiries arrive from prospective clients</div>
+      <div class="step">TechTown communicates BAF criteria and eligibility requirements<span class="tbd">TBD: surface + language</span></div>
+      <div class="step">Client self-assesses eligibility before proceeding</div>
+    </div>
+  </div>
+
+  <div class="connector">&#8595;</div>
+
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num">02</div>
+      <div><div class="phase-title">Eligibility Assessment</div><div class="phase-subtitle">Intake call &#183; TT Fit + State Fit</div></div>
+    </div>
+    <div class="phase-body">
+      <div class="step">Intake call / intro meeting with prospective client</div>
+      <div class="step">TechTown assesses: <strong>TT Fit</strong> and <strong>State Fit</strong></div>
+    </div>
+    <div class="decision">
+      <div class="decision-label">Decision &#8212; eligible?</div>
+      <div class="decision-forks">
+        <div class="fork fork-yes">
+          <div class="fork-label">&#8595; Yes &#8212; continue</div>
+          <div class="fork-item">Route to Discretionary or Committee track</div>
+          <div class="fork-item">Both tracks follow the same process from Phase 3 forward</div>
+        </div>
+        <div class="fork fork-no">
+          <div class="fork-label">&#10005; No &#8212; exit</div>
+          <div class="fork-item">Refer to other programs and development pathways</div>
+          <div class="fork-item">Notify SBDC <em style="font-size:11px">(substantive denials only)</em></div>
+          <div class="fork-item">Update records</div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:14px">
+      <div class="tracks-label">Track assignment (yes path)</div>
+      <div class="tracks">
+        <div class="track track-discre">
+          <div class="track-name">Discretionary</div>
+          <div class="track-item">TechTown authority only</div>
+          <div class="track-item">Up to $15K per project</div>
+          <div class="track-item">2&#215;$15K + 6&#215;$5K annual allocation</div>
+          <div class="track-item">~$60K pool (base + carryover)</div>
+          <div class="track-item">5&#8211;10 business day compliance review</div>
+        </div>
+        <div class="track track-committee">
+          <div class="track-name">Committee</div>
+          <div class="track-item">State SmartZone committee approval required</div>
+          <div class="track-item">3 SmartZones vote</div>
+          <div class="track-item">Up to $75K aggregate</div>
+          <div class="track-item">Tranches: $15K &#8594; $30K &#8594; $30K</div>
+          <div class="track-item">~1 month review timeline</div>
+        </div>
+      </div>
+      <div class="track-merge">Both tracks converge at Phase 3. Committee requires additional documentation and interfaces throughout.</div>
+    </div>
+  </div>
+
+  <div class="connector">&#8595;</div>
+
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num">03</div>
+      <div><div class="phase-title">Scope of Work &amp; Intake Form</div><div class="phase-subtitle">Document collection &#183; FUSE control</div></div>
+    </div>
+    <div class="phase-body">
+      <div class="step">Request Scope of Work from client and send Intake Form</div>
+      <div class="fuse">
+        <div class="fuse-header">&#9888; FUSE &#8212; 30-day deadline</div>
+        <div class="fuse-body">A 30-day response deadline applies from scope request. Missed deadline = process restart. This control prevents extended founder delays followed by last-minute rush submissions. <strong>Enforcement mechanism TBD.</strong></div>
+      </div>
+      <div class="step" style="margin-top:8px"><em style="color:var(--color-text-tertiary);font-size:12px">Note: Some founder attrition is expected at this stage.</em></div>
+      <div class="step">Review Scope of Work + Intake Form</div>
+      <div class="deny-note">
+        <span class="deny-icon">&#8635;</span>
+        <div class="deny-text"><strong>If denied:</strong> Founder typically resubmits. Return to top of Phase 3.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="connector-label">Approved</div>&#8595;</div>
+
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num">04</div>
+      <div><div class="phase-title">Onboarding</div><div class="phase-subtitle">Participation Agreement &#183; Welcome</div></div>
+    </div>
+    <div class="phase-body">
+      <div class="step">Approve Intake Form</div>
+      <div class="step">Execute <strong>Participation Agreement (PA)</strong></div>
+      <div class="step">Welcome communication to client</div>
+    </div>
+  </div>
+
+  <div class="connector">&#8595;</div>
+
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num">05</div>
+      <div><div class="phase-title">Coach Assignment &amp; Documentation</div><div class="phase-subtitle">Airtable Form &#183; Vendor docs</div></div>
+    </div>
+    <div class="phase-body">
+      <div class="step">Assign Coach: <strong>Margarita</strong> for most projects &#183; <strong>Shalonda</strong> for Venture 313 capital raises</div>
+      <div class="step">Initiate Airtable Form</div>
+      <div class="step">Work with client to complete Airtable Form and upload supporting documents (vendor quote required)</div>
+      <div class="step">Submit Airtable Form</div>
+    </div>
+  </div>
+
+  <div class="connector">&#8595;</div>
+
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num">06</div>
+      <div><div class="phase-title">Gatekeeper Review</div><div class="phase-subtitle">Internal approval gate</div></div>
+    </div>
+    <div class="phase-body">
+      <div class="step">TechTown Gatekeeper reviews completed Airtable submission</div>
+      <div class="deny-note" style="margin-top:8px">
+        <span class="deny-icon">&#8635;</span>
+        <div class="deny-text"><strong>If not approved:</strong> Return to Phase 5 for corrections.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="connector-label">Approved</div>&#8595;</div>
+
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num">07</div>
+      <div><div class="phase-title">Payment Initiation &#8212; Tranche 1</div><div class="phase-subtitle">BAF formally approved &#183; Fiduciary flow</div></div>
+    </div>
+    <div class="phase-body">
+      <div class="step" style="margin-bottom:10px">BAF is formally approved and the payment sequence is triggered</div>
+      <div class="payment-flow">
+        <div class="pf-entity"><div class="pf-name">SBDC</div><div class="pf-role">Funder</div></div>
+        <div class="pf-arrow"><span class="pf-pct">90%</span><span class="pf-arr">&#8594;</span></div>
+        <div class="pf-entity" style="border-color:var(--color-border-warning)"><div class="pf-name" style="color:var(--color-text-warning)">TechTown</div><div class="pf-role">Fiduciary</div></div>
+        <div class="pf-arrow"><span class="pf-pct">50%</span><span class="pf-arr">&#8594;</span></div>
+        <div class="pf-entity"><div class="pf-name">Vendor</div><div class="pf-role">Service provider</div></div>
+        <div class="pf-note">TechTown serves as fiduciary intermediary. Funds are not held at the outset &#8212; payment sequencing enforces that all required documentation is completed before capital moves.</div>
+      </div>
+      <div class="step">Send <strong>BAF Contract</strong> for execution (tri-party: TechTown / Client / Vendor)</div>
+    </div>
+  </div>
+
+  <div class="connector">&#8595;</div>
+
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num">08</div>
+      <div><div class="phase-title">Project Completion &amp; Final Payment</div><div class="phase-subtitle">Statement of completion &#183; Final release</div></div>
+    </div>
+    <div class="phase-body">
+      <div class="step">Request Statement of Completion from client/founder<span class="tbd">TBD: Zoho form vs. email</span></div>
+      <div class="decision" style="margin-top:10px">
+        <div class="decision-label">Decision &#8212; client satisfied with vendor work?</div>
+        <div class="sat-forks">
+          <div class="fork fork-yes">
+            <div class="fork-label">&#10003; Satisfied</div>
+            <div style="margin-top:6px">
+              <div class="payment-flow" style="padding:10px 12px">
+                <div class="pf-entity"><div class="pf-name">SBDC</div><div class="pf-role">Funder</div></div>
+                <div class="pf-arrow"><span class="pf-pct">10%</span><span class="pf-arr">&#8594;</span></div>
+                <div class="pf-entity" style="border-color:var(--color-border-warning)"><div class="pf-name" style="color:var(--color-text-warning)">TechTown</div><div class="pf-role">Fiduciary</div></div>
+                <div class="pf-arrow"><span class="pf-pct">50%</span><span class="pf-arr">&#8594;</span></div>
+                <div class="pf-entity"><div class="pf-name">Vendor</div><div class="pf-role">Service provider</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="fork fork-no">
+            <div class="fork-label">&#8635; Unsatisfied</div>
+            <div class="fork-item" style="margin-top:6px">Mediation initiated</div>
+            <div class="fork-item">Continued coaching support</div>
+            <div class="fork-item">Return to completion review once resolved</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="connector-label">Complete</div>&#8595;</div>
+
+  <div class="complete">
+    <span class="complete-mark">&#10003;</span>
+    <span class="complete-text">BAF engagement closed</span>
+  </div>
+
+  <div class="open-items" style="margin-top:28px">
+    <div class="open-items-title">Open items</div>
+    <div class="open-item"><span class="oi-badge">TBD</span><span>Self-eligibility assessment surface and language (Phase 1) &#8212; best channel and format for delivering criteria to prospective clients not yet determined.</span></div>
+    <div class="open-item"><span class="oi-badge">TBD</span><span>FUSE enforcement mechanism (Phase 3) &#8212; the 30-day deadline is confirmed; the system or communication trigger that initiates a restart is not yet designed.</span></div>
+    <div class="open-item"><span class="oi-badge">TBD</span><span>Statement of Completion delivery method (Phase 8) &#8212; Zoho form vs. email still under consideration.</span></div>
+  </div>
+
+  <div class="page-footer">
+    <div class="footer-left">TechTown Detroit &#183; Tech-Based Programs &#183; BAF</div>
+    <div class="footer-right">v1.0 DRAFT &#183; 2026-05-07</div>
+  </div>
+
+</div>
+</body>
+</html>
