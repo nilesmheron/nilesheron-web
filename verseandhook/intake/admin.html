@@ -742,8 +742,12 @@ input[type="number"].k-input { width: 90px; }
     </div>
     <form id="login-form" onsubmit="doLogin(event)">
       <div class="login-field">
+        <label class="k-mono login-label" for="login-user">username</label>
+        <input class="k-input" type="text" id="login-user" placeholder="leave blank for legacy admin" autocomplete="username" autofocus style="margin-bottom:8px">
+      </div>
+      <div class="login-field">
         <label class="k-mono login-label" for="login-pw">password</label>
-        <input class="k-input" type="password" id="login-pw" placeholder="••••••••" autocomplete="current-password" autofocus>
+        <input class="k-input" type="password" id="login-pw" placeholder="••••••••" autocomplete="current-password">
         <div class="login-err k-mono" id="login-err"></div>
       </div>
       <button type="submit" class="k-btn k-btn-red" id="login-btn" style="margin-top:4px">enter →</button>
@@ -826,9 +830,10 @@ input[type="number"].k-input { width: 90px; }
           </div>
           <div class="actions" id="list-page-actions">
             <button class="k-btn k-btn-ghost">export csv</button>
-            <button class="k-btn k-btn-red" onclick="openModal()">+ new session</button>
+            <button class="k-btn k-btn-red" id="btn-new-session" onclick="openModal()">+ new session</button>
           </div>
         </div>
+        <div id="list-ownership-filter" style="margin-bottom:16px;display:flex;gap:4px"></div>
         <div id="list-content"></div>
       </div>
 
@@ -863,6 +868,7 @@ input[type="number"].k-input { width: 90px; }
             <button class="k-btn k-btn-ghost" style="width:100%;justify-content:center;margin-bottom:28px" onclick="copyDetailLink()">copy link</button>
             <h3 class="admin-section-title" style="margin-bottom:14px">recent activity</h3>
             <div id="detail-activity"></div>
+            <div id="detail-sharing"></div>
           </aside>
         </div>
       </div>
@@ -1095,6 +1101,8 @@ var MODE_DETAILS = {
 // State
 // =====================================================================
 var authToken    = sessionStorage.getItem('vh-admin-token') || null;
+var currentUser  = JSON.parse(sessionStorage.getItem('vh-admin-user') || 'null');
+var ownershipFilter = (currentUser && currentUser.role === 'admin') ? 'all' : 'mine';
 var allClients   = [];
 var currentDetail = null;  // { client, responses, analysis }
 var selectedMode  = '01';
@@ -1105,6 +1113,7 @@ var runningAnalysis = false;
 // =====================================================================
 function doLogin(e) {
   e.preventDefault();
+  var userVal = (document.getElementById('login-user') || {}).value || '';
   var pw   = document.getElementById('login-pw').value;
   var btn  = document.getElementById('login-btn');
   var err  = document.getElementById('login-err');
@@ -1112,16 +1121,21 @@ function doLogin(e) {
   err.textContent = '';
   btn.disabled = true;
   btn.textContent = 'checking…';
+  var body = { password: pw };
+  if (userVal.trim()) body.username = userVal.trim();
   fetch('/api/vh-auth', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ password: pw })
+    body: JSON.stringify(body)
   })
   .then(function(r) { return r.json(); })
   .then(function(data) {
     if (data.token) {
       authToken = data.token;
+      currentUser = data.user || null;
+      ownershipFilter = (currentUser && currentUser.role === 'admin') ? 'all' : 'mine';
       sessionStorage.setItem('vh-admin-token', authToken);
+      sessionStorage.setItem('vh-admin-user', JSON.stringify(currentUser));
       enterAdmin();
     } else {
       err.textContent = '/error · ' + (data.error || 'password not recognized');
@@ -1138,9 +1152,13 @@ function doLogin(e) {
 
 function signOut() {
   authToken = null;
+  currentUser = null;
   sessionStorage.removeItem('vh-admin-token');
+  sessionStorage.removeItem('vh-admin-user');
   document.getElementById('admin-shell').style.display = 'none';
   document.getElementById('view-login').style.display = '';
+  var userEl = document.getElementById('login-user');
+  if (userEl) userEl.value = '';
   document.getElementById('login-pw').value = '';
   document.getElementById('login-err').textContent = '';
   document.getElementById('login-btn').disabled = false;
@@ -1150,6 +1168,12 @@ function signOut() {
 function enterAdmin() {
   document.getElementById('view-login').style.display = 'none';
   document.getElementById('admin-shell').style.display = 'flex';
+  // Hide create CTA for viewers (sidebar button + list header button)
+  var isViewer = currentUser && currentUser.role === 'viewer';
+  var sidebarFoot = document.querySelector('.sidebar-foot');
+  if (sidebarFoot) sidebarFoot.style.display = isViewer ? 'none' : '';
+  var newBtn = document.getElementById('btn-new-session');
+  if (newBtn) newBtn.style.display = isViewer ? 'none' : '';
   showList();
 }
 
@@ -1212,7 +1236,7 @@ function showList(filter) {
   document.getElementById('topbar-crumbs').innerHTML = '<a onclick="showList(\'all\')">all clients</a>';
 
   if (allClients.length) {
-    renderList(filterClients(allClients, currentFilter));
+    renderList(applyOwnershipFilter(filterClients(allClients, currentFilter)));
   } else {
     loadClients();
   }
@@ -1301,7 +1325,7 @@ function loadClients() {
   .then(function(data) {
     if (data.error) { renderListError(data.error); return; }
     allClients = data;
-    renderList(filterClients(data, currentFilter));
+    renderList(applyOwnershipFilter(filterClients(data, currentFilter)));
     updateSidebarCounts(data);
   })
   .catch(function(e) { renderListError(e.message); });
@@ -1317,7 +1341,41 @@ function updateSidebarCounts(clients) {
   document.getElementById('sidebar-respondents').textContent = totalResp;
 }
 
+function applyOwnershipFilter(clients) {
+  if (ownershipFilter === 'mine') return clients.filter(function(c) { return c.is_owner; });
+  if (ownershipFilter === 'shared') return clients.filter(function(c) { return !c.is_owner && c.share_level; });
+  return clients; // 'all'
+}
+
+function renderOwnershipFilterStrip() {
+  var wrap = document.getElementById('list-ownership-filter');
+  if (!wrap) return;
+  var isAdmin = currentUser && currentUser.role === 'admin';
+  // Only show filter strip when viewing the clients list (not respondents view)
+  if (currentFilter === 'respondents') { wrap.innerHTML = ''; return; }
+  var filters = [
+    { key: 'mine', label: 'mine' },
+    { key: 'shared', label: 'shared' },
+    { key: 'all', label: 'all' }
+  ];
+  wrap.innerHTML = filters.map(function(f) {
+    var active = ownershipFilter === f.key;
+    return '<button class="k-btn" style="font-size:10px;padding:3px 10px;' +
+      (active ? 'background:var(--kimba-ink);color:var(--kimba-paper);border-color:var(--kimba-ink)' : 'color:var(--kimba-mute);border-color:var(--kimba-rule)') +
+      '" onclick="setOwnershipFilter(\'' + f.key + '\')">' + f.label + '</button>';
+  }).join('');
+}
+
+function setOwnershipFilter(f) {
+  ownershipFilter = f;
+  renderOwnershipFilterStrip();
+  renderList(applyOwnershipFilter(filterClients(allClients, currentFilter)));
+}
+
 function renderList(clients) {
+  renderOwnershipFilterStrip();
+  var isViewer = currentUser && currentUser.role === 'viewer';
+
   if (!clients.length) {
     document.getElementById('list-content').innerHTML =
       '<div class="empty-state">' +
@@ -1325,7 +1383,7 @@ function renderList(clients) {
         '<span class="k-mono k-slash">no sessions yet</span>' +
         '<h1 class="k-display" style="font-size:54px">kimba is sitting<span class="red">.</span></h1>' +
         '<p class="k-serif" style="font-size:18px;color:var(--kimba-ink-2);max-width:44ch">create a session to generate a tokenized link, send it to client stakeholders, and watch responses roll in.</p>' +
-        '<button class="k-btn k-btn-red" onclick="openModal()" style="margin-top:8px">+ new session</button>' +
+        (isViewer ? '' : '<button class="k-btn k-btn-red" onclick="openModal()" style="margin-top:8px">+ new session</button>') +
       '</div>';
     return;
   }
@@ -1342,8 +1400,17 @@ function renderList(clients) {
       ? '<div class="completion-cell"><div class="completion-track"><div class="' + fillCls + '" style="width:' + pct + '%"></div></div><span>' + count + '/' + exp + '</span></div>'
       : '<span class="k-mono" style="font-size:12px;color:var(--kimba-ink-2)">' + count + ' received</span>';
 
+    var ownerBadge = c.is_owner
+      ? ''
+      : (c.share_level
+          ? '<span class="k-mono" style="font-size:10px;color:var(--kimba-mute);margin-left:6px">shared · ' + esc(c.share_level) + '</span>'
+          : '<span class="k-mono" style="font-size:10px;color:var(--kimba-mute);margin-left:6px">legacy</span>');
+    var ownerLabel = c.created_by_username
+      ? '<span class="k-mono" style="font-size:10px;color:var(--kimba-mute-2)">' + esc(c.created_by_username) + '</span>'
+      : '';
+
     return '<tr onclick="openDetail(\'' + c.id + '\')">' +
-      '<td class="name">' + esc(c.client_name) + '</td>' +
+      '<td class="name">' + esc(c.client_name) + ownerBadge + '</td>' +
       '<td><span class="k-mono"><span style="color:var(--kimba-red)">/' + goal.idx + '</span> ' + esc(goal.name) + '</span></td>' +
       '<td>' + completionHtml + '</td>' +
       '<td><span class="k-mono" style="font-size:12px;color:var(--kimba-ink-2)">' + (exp ? exp + ' expected' : '—') + '</span></td>' +
@@ -1351,12 +1418,13 @@ function renderList(clients) {
       '<td>' + (analysisReady
         ? '<span class="k-badge">ready</span>'
         : '<span class="k-badge k-badge-mute">pending</span>') + '</td>' +
+      '<td>' + ownerLabel + '</td>' +
     '</tr>';
   }).join('');
 
   document.getElementById('list-content').innerHTML =
     '<table class="admin-table">' +
-      '<thead><tr><th>client</th><th>goal</th><th>completion</th><th>respondents</th><th>last response</th><th>analysis</th></tr></thead>' +
+      '<thead><tr><th>client</th><th>goal</th><th>completion</th><th>respondents</th><th>last response</th><th>analysis</th><th>owner</th></tr></thead>' +
       '<tbody>' + rows + '</tbody>' +
     '</table>';
 }
@@ -1385,6 +1453,10 @@ function openDetail(clientId) {
   .then(function(r) { return r.json(); })
   .then(function(data) {
     if (data.error) { return; }
+    var isAdmin = currentUser && currentUser.role === 'admin';
+    data.canEdit   = !!(data.is_owner || data.share_level === 'edit' || isAdmin);
+    data.canDelete = !!(data.is_owner || isAdmin);
+    data.canShare  = !!(data.is_owner || isAdmin);
     currentDetail = data;
     renderDetail(data);
   })
@@ -1455,6 +1527,10 @@ function renderDetail(data) {
       '<div class="sub">' + (alignIdx !== '—' ? 'across dimensions' : 'run analysis first') + '</div>' +
     '</div>';
 
+  // Show/hide run-analysis button in header based on canEdit
+  var runBtn = document.getElementById('btn-run-analysis');
+  if (runBtn) runBtn.style.display = data.canEdit ? '' : 'none';
+
   // Tabs — render all three
   renderAnalysisTab(data);
   renderRespondentsTab(data);
@@ -1504,7 +1580,7 @@ function renderAnalysisTab(data) {
         '<span class="k-mono k-slash">no analysis yet</span>' +
         '<h2 class="k-display" style="font-size:36px;margin:0">' + res.length + ' responses ready<span class="red">.</span></h2>' +
         '<p class="k-serif" style="font-size:17px;color:var(--kimba-ink-2);margin:0;max-width:44ch">click "run analysis" to generate alignment scores and narrative across all transcripts.</p>' +
-        '<button class="k-btn k-btn-red" onclick="runAnalysis()" style="margin-top:8px">run analysis →</button>' +
+        (currentDetail && currentDetail.canEdit ? '<button class="k-btn k-btn-red" onclick="runAnalysis()" style="margin-top:8px">run analysis →</button>' : '') +
       '</div>';
     return;
   }
@@ -1665,9 +1741,11 @@ function renderRespondentsTab(data) {
         '<button class="k-btn" style="font-size:11px;padding:3px 10px;color:var(--kimba-mute);border-color:var(--kimba-rule)"' +
           ' onclick="exportTranscript(event,' + i + ')"' +
           ' aria-label="export transcript for ' + esc(r.respondent_name) + '">export</button>' +
-        '<button class="k-btn" style="font-size:11px;padding:3px 10px;color:var(--kimba-mute);border-color:var(--kimba-rule)"' +
-          ' onclick="deleteRespondent(event,this,\'' + r.id + '\')"' +
-          ' aria-label="delete ' + esc(r.respondent_name) + '">delete</button>' +
+        (currentDetail && currentDetail.canDelete
+          ? '<button class="k-btn" style="font-size:11px;padding:3px 10px;color:var(--kimba-mute);border-color:var(--kimba-rule)"' +
+              ' onclick="deleteRespondent(event,this,\'' + r.id + '\')"' +
+              ' aria-label="delete ' + esc(r.respondent_name) + '">delete</button>'
+          : '') +
       '</div>' +
     '</div>';
   });
@@ -1676,9 +1754,10 @@ function renderRespondentsTab(data) {
 }
 
 function renderSettingsTab(data) {
-  var c    = data.client;
-  var gc   = data.goal_config || null;
-  var goal = GOAL_MAP[c.extraction_goal] || { idx: '?', name: c.extraction_goal };
+  var c      = data.client;
+  var gc     = data.goal_config || null;
+  var goal   = GOAL_MAP[c.extraction_goal] || { idx: '?', name: c.extraction_goal };
+  var canEdit = data.canEdit;
 
   function field(label, value) {
     return '<div class="field-row">' +
@@ -1694,6 +1773,7 @@ function renderSettingsTab(data) {
         '<input class="k-input" id="' + inputId + '" type="' + type + '" value="' + esc(String(value || '')) + '"' +
           (min != null ? ' min="' + min + '"' : '') +
           (max != null ? ' max="' + max + '"' : '') +
+          (!canEdit ? ' disabled aria-disabled="true"' : '') +
           ' style="width:' + (type === 'number' ? '90px' : '100%') + '">' +
         (helpText ? '<span class="k-mono" style="color:var(--kimba-mute);white-space:nowrap">' + esc(helpText) + '</span>' : '') +
       '</div>' +
@@ -1701,6 +1781,7 @@ function renderSettingsTab(data) {
   }
 
   var html =
+    (!canEdit ? '<div class="k-mono" style="color:var(--kimba-mute);font-size:11px;margin-bottom:16px;padding:8px 12px;background:var(--kimba-rule-soft);border-left:2px solid var(--kimba-rule)">read-only — you have view access only</div>' : '') +
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:40px">' +
       '<div>' +
         '<div class="admin-section-title">session details</div>' +
@@ -1717,10 +1798,12 @@ function renderSettingsTab(data) {
         field('auto-run analysis', 'on completion') +
       '</div>' +
     '</div>' +
-    '<div style="margin-top:24px;display:flex;gap:8px;align-items:center">' +
-      '<button class="k-btn k-btn-red" onclick="saveSettings()">save changes</button>' +
-      '<span class="k-mono" id="settings-save-status" style="color:var(--kimba-mute)"></span>' +
-    '</div>' +
+    (canEdit
+      ? '<div style="margin-top:24px;display:flex;gap:8px;align-items:center">' +
+          '<button class="k-btn k-btn-red" onclick="saveSettings()">save changes</button>' +
+          '<span class="k-mono" id="settings-save-status" style="color:var(--kimba-mute)"></span>' +
+        '</div>'
+      : '') +
 
     // ── Session prompt (collapsible) ─────────────────────────────
     (gc ? (
@@ -1784,10 +1867,12 @@ function renderSettingsTab(data) {
 
     '<div style="margin-top:40px;border-top:1px solid var(--kimba-rule);padding-top:24px">' +
       '<div class="admin-section-title" style="color:var(--kimba-red)">danger zone</div>' +
-      '<div style="display:flex;gap:10px;align-items:center;margin-top:12px">' +
-        '<button class="k-btn" id="btn-delete-session" style="border-color:var(--kimba-red);color:var(--kimba-red)" onclick="deleteSession()">delete session</button>' +
-        '<span class="k-mono" id="delete-session-status" style="font-size:11px;color:var(--kimba-mute)">removes all responses, analysis, and the session — cannot be undone</span>' +
-      '</div>' +
+      (data.canDelete
+        ? '<div style="display:flex;gap:10px;align-items:center;margin-top:12px">' +
+            '<button class="k-btn" id="btn-delete-session" style="border-color:var(--kimba-red);color:var(--kimba-red)" onclick="deleteSession()">delete session</button>' +
+            '<span class="k-mono" id="delete-session-status" style="font-size:11px;color:var(--kimba-mute)">removes all responses, analysis, and the session — cannot be undone</span>' +
+          '</div>'
+        : '<div class="k-mono" style="font-size:11px;color:var(--kimba-mute);margin-top:12px">only the session owner or an admin can delete this session</div>') +
     '</div>';
 
   document.getElementById('tab-settings').innerHTML = html;
@@ -2063,6 +2148,81 @@ function renderAside(data) {
     actHtml = '<div class="k-mono" style="font-size:10px;color:var(--kimba-mute);padding:8px 0">/no activity yet</div>';
   }
   document.getElementById('detail-activity').innerHTML = actHtml;
+
+  // Sharing panel (owner and admin only)
+  var sharingEl = document.getElementById('detail-sharing');
+  if (!sharingEl) return;
+  if (!data.canShare) { sharingEl.innerHTML = ''; return; }
+  sharingEl.innerHTML = '<div style="margin-top:28px"><h3 class="admin-section-title" style="margin-bottom:10px">sharing</h3><div id="sharing-list" class="k-mono" style="font-size:11px;color:var(--kimba-mute)">loading…</div>' +
+    '<div style="display:flex;gap:6px;margin-top:10px;align-items:center">' +
+      '<input class="k-input" id="share-username-input" type="text" placeholder="username" style="flex:1;font-size:11px;padding:4px 8px">' +
+      '<select class="k-input" id="share-level-select" style="width:72px;font-size:11px;padding:4px 6px">' +
+        '<option value="view">view</option>' +
+        '<option value="edit">edit</option>' +
+      '</select>' +
+      '<button class="k-btn" style="font-size:11px;padding:4px 10px;white-space:nowrap" onclick="addShare()">+ add</button>' +
+    '</div>' +
+    '<div id="share-status" class="k-mono" style="font-size:10px;color:var(--kimba-mute);margin-top:4px"></div>' +
+  '</div>';
+  loadShares(c.id);
+}
+
+function loadShares(clientId) {
+  var listEl = document.getElementById('sharing-list');
+  if (!listEl) return;
+  apiFetch('/api/vh-shares?client_id=' + encodeURIComponent(clientId))
+  .then(function(r) { return r.json(); })
+  .then(function(shares) {
+    if (!shares || shares.error) { listEl.textContent = 'error loading shares'; return; }
+    if (!shares.length) { listEl.textContent = '/no shares yet'; return; }
+    listEl.innerHTML = shares.map(function(s) {
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--kimba-rule)">' +
+        '<span>' + esc(s.username || s.user_id) + ' <span style="color:var(--kimba-mute-2)">· ' + esc(s.level) + '</span></span>' +
+        '<button class="k-btn" style="font-size:10px;padding:2px 8px;color:var(--kimba-red);border-color:var(--kimba-red)"' +
+          ' onclick="revokeShare(\'' + esc(s.user_id) + '\')">revoke</button>' +
+      '</div>';
+    }).join('');
+  })
+  .catch(function() { if (listEl) listEl.textContent = 'error loading shares'; });
+}
+
+function addShare() {
+  if (!currentDetail) return;
+  var usernameEl = document.getElementById('share-username-input');
+  var levelEl    = document.getElementById('share-level-select');
+  var statusEl   = document.getElementById('share-status');
+  var username   = usernameEl ? usernameEl.value.trim() : '';
+  var level      = levelEl ? levelEl.value : 'view';
+  if (!username) { if (statusEl) statusEl.textContent = 'enter a username'; return; }
+  if (statusEl) statusEl.textContent = 'adding…';
+  apiFetch('/api/vh-shares', {
+    method: 'POST',
+    body: JSON.stringify({ client_id: currentDetail.client.id, username: username, level: level })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(result) {
+    if (result.error) {
+      if (statusEl) statusEl.textContent = 'error: ' + result.error;
+      return;
+    }
+    if (usernameEl) usernameEl.value = '';
+    if (statusEl) statusEl.textContent = '';
+    loadShares(currentDetail.client.id);
+  })
+  .catch(function() { if (statusEl) statusEl.textContent = 'network error'; });
+}
+
+function revokeShare(userId) {
+  if (!currentDetail) return;
+  apiFetch('/api/vh-shares', {
+    method: 'DELETE',
+    body: JSON.stringify({ client_id: currentDetail.client.id, user_id: userId })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(result) {
+    if (!result.error) loadShares(currentDetail.client.id);
+  })
+  .catch(function() {});
 }
 
 // =====================================================================
