@@ -28,7 +28,7 @@
 body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--color-text-primary);background:var(--color-background-secondary);padding:2rem 1rem;min-height:100vh}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .page{max-width:760px;margin:0 auto;padding:0 4px}
-.cn{cursor:default}
+.cn{cursor:pointer}
 .cn:hover .cn-rect{fill:#FAF7F1}
 .cn:hover .cn-diamond{fill:#DCE8FA}
 .connector{display:flex;flex-direction:column;align-items:center;padding:6px 0;color:var(--color-text-tertiary);font-size:18px;line-height:1;user-select:none}
@@ -132,7 +132,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--color
       <text x="340" y="31" font-family="system-ui,-apple-system,sans-serif" font-size="12" font-weight="500" fill="#FFFFFF" text-anchor="middle" dominant-baseline="central">Lead inquiry</text>
       <line x1="340" y1="46" x2="340" y2="66" stroke="#AAAAAA" stroke-width="1.5" marker-end="url(#ah)"/>
 
-      <g class="cn" onclick="scrollTo('phase-01')">
+      <g class="cn" onclick="jumpToPhase('phase-01')">
         <rect class="cn-rect" x="230" y="68" width="220" height="52" rx="8" fill="#FFFFFF" stroke="#D9D7D0" stroke-width="0.5"/>
         <text x="340" y="84" font-family="system-ui,-apple-system,sans-serif" font-size="10" font-weight="600" fill="#BA7517" text-anchor="middle" dominant-baseline="central" letter-spacing="0.06em">01 &#8212; 02</text>
         <text x="340" y="101" font-family="system-ui,-apple-system,sans-serif" font-size="13" font-weight="500" fill="#1C1C1C" text-anchor="middle" dominant-baseline="central">Intake &amp; Eligibility</text>
@@ -168,7 +168,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--color
       <line x1="278" y1="282" x2="401" y2="282" stroke="#AAAAAA" stroke-width="1"/>
       <line x1="340" y1="282" x2="340" y2="296" stroke="#AAAAAA" stroke-width="1.5" marker-end="url(#ah)"/>
 
-      <g class="cn" onclick="scrollTo('phase-03')">
+      <g class="cn" onclick="jumpToPhase('phase-03')">
         <rect class="cn-rect" x="230" y="298" width="220" height="54" rx="8" fill="#FFFFFF" stroke="#D9D7D0" stroke-width="0.5"/>
         <rect x="230" y="298" width="4" height="54" rx="2" fill="#BA7517"/>
         <text x="342" y="314" font-family="system-ui,-apple-system,sans-serif" font-size="10" font-weight="600" fill="#BA7517" text-anchor="middle" dominant-baseline="central" letter-spacing="0.06em">03</text>
@@ -179,7 +179,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--color
       <line x1="340" y1="352" x2="340" y2="370" stroke="#4E8C2A" stroke-width="1.5" marker-end="url(#ah-g)"/>
       <text x="350" y="362" font-family="system-ui,-apple-system,sans-serif" font-size="10" fill="#3B6D11" dominant-baseline="central">Approved</text>
 
-      <g class="cn" onclick="scrollTo('phase-04')">
+      <g class="cn" onclick="jumpToPhase('phase-04')">
         <rect class="cn-rect" x="230" y="372" width="220" height="52" rx="8" fill="#FFFFFF" stroke="#D9D7D0" stroke-width="0.5"/>
         <text x="340" y="388" font-family="system-ui,-apple-system,sans-serif" font-size="10" font-weight="600" fill="#BA7517" text-anchor="middle" dominant-baseline="central" letter-spacing="0.06em">04 &#8212; 06</text>
         <text x="340" y="404" font-family="system-ui,-apple-system,sans-serif" font-size="13" font-weight="500" fill="#1C1C1C" text-anchor="middle" dominant-baseline="central">Onboarding &#8594; Docs &#8594; Review</text>
@@ -188,7 +188,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--color
       <line x1="340" y1="424" x2="340" y2="442" stroke="#4E8C2A" stroke-width="1.5" marker-end="url(#ah-g)"/>
       <text x="350" y="434" font-family="system-ui,-apple-system,sans-serif" font-size="10" fill="#3B6D11" dominant-baseline="central">Approved</text>
 
-      <g class="cn" onclick="scrollTo('phase-07')">
+      <g class="cn" onclick="jumpToPhase('phase-07')">
         <rect class="cn-rect" x="230" y="444" width="220" height="44" rx="8" fill="#FFFFFF" stroke="#D9D7D0" stroke-width="0.5"/>
         <text x="340" y="460" font-family="system-ui,-apple-system,sans-serif" font-size="10" font-weight="600" fill="#BA7517" text-anchor="middle" dominant-baseline="central" letter-spacing="0.06em">07</text>
         <text x="340" y="475" font-family="system-ui,-apple-system,sans-serif" font-size="13" font-weight="500" fill="#1C1C1C" text-anchor="middle" dominant-baseline="central">Payment Initiation</text>
@@ -196,7 +196,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--color
 
       <line x1="340" y1="488" x2="340" y2="506" stroke="#AAAAAA" stroke-width="1.5" marker-end="url(#ah)"/>
 
-      <g class="cn" onclick="scrollTo('phase-08')">
+      <g class="cn" onclick="jumpToPhase('phase-08')">
         <rect class="cn-rect" x="230" y="508" width="220" height="44" rx="8" fill="#FFFFFF" stroke="#D9D7D0" stroke-width="0.5"/>
         <text x="340" y="524" font-family="system-ui,-apple-system,sans-serif" font-size="10" font-weight="600" fill="#BA7517" text-anchor="middle" dominant-baseline="central" letter-spacing="0.06em">08</text>
         <text x="340" y="539" font-family="system-ui,-apple-system,sans-serif" font-size="13" font-weight="500" fill="#1C1C1C" text-anchor="middle" dominant-baseline="central">Project Completion</text>
@@ -426,12 +426,12 @@ body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--color
 
   <div class="page-footer">
     <div class="footer-left">TechTown Detroit &#183; Tech-Based Programs &#183; BAF</div>
-    <div class="footer-right">v1.2 DRAFT &#183; 2026-05-07</div>
+    <div class="footer-right">v1.3 DRAFT &#183; 2026-05-07</div>
   </div>
 
 </div>
 <script>
-function scrollTo(id){
+function jumpToPhase(id){
   var el=document.getElementById(id);
   if(el)el.scrollIntoView({behavior:'smooth',block:'center'});
 }
