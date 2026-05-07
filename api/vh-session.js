@@ -37,7 +37,12 @@ export default async function handler(req, res) {
     }
 
     const token = crypto.randomBytes(16).toString('hex');
-    const insertRow = { client_name: client_name.trim(), extraction_goal, token };
+    const insertRow = {
+      client_name: client_name.trim(),
+      extraction_goal,
+      token,
+      created_by: auth.isSuperadmin ? null : auth.userId,
+    };
     if (expected_respondent_count && Number.isInteger(Number(expected_respondent_count)) && Number(expected_respondent_count) > 0) {
       insertRow.expected_respondent_count = Number(expected_respondent_count);
     }

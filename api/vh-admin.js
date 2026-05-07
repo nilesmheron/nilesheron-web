@@ -1,5 +1,5 @@
 // api/vh-admin.js
-import { validateAdminToken } from './vh-auth.js';
+import { getAuth, getAccess } from './vh-auth.js';
 import { runAnalysis } from './vh-analysis-utils.js';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -92,13 +92,15 @@ export default async function handler(req, res) {
   if (!SUPABASE_URL || !SUPABASE_KEY) {
     return res.status(500).json({ error: 'Supabase not configured' });
   }
-  if (!await validateAdminToken(req)) return res.status(401).json({ error: 'Unauthorized' });
+  const auth = await getAuth(req);
+  if (!auth.ok) return res.status(401).json({ error: 'Unauthorized' });
 
   // POST — re-run analysis for a client
   if (req.method === 'POST') {
     const { action, client_id, description, base_goal, base_prompt, questions, attachment_context } = req.body || {};
 
     if (action === 'generate_prompt') {
+      if (auth.role === 'viewer') return res.status(403).json({ error: 'Forbidden' });
       if (!description || !description.trim()) {
         return res.status(400).json({ error: 'description required' });
       }
@@ -115,6 +117,7 @@ export default async function handler(req, res) {
     }
 
     if (action === 'synthesize_prompt') {
+      if (auth.role === 'viewer') return res.status(403).json({ error: 'Forbidden' });
       if (!base_prompt || !Array.isArray(questions) || !questions.length) {
         return res.status(400).json({ error: 'base_prompt and questions required' });
       }
@@ -134,6 +137,9 @@ export default async function handler(req, res) {
 
     if (action !== 'rerun_analysis') return res.status(400).json({ error: 'Unknown action' });
     if (!client_id) return res.status(400).json({ error: 'client_id required' });
+
+    const accessRerun = await getAccess(auth, client_id);
+    if (!accessRerun.canEdit) return res.status(403).json({ error: 'Forbidden' });
 
     try {
       const clientRes = await sb(`/vh_clients?id=eq.${encodeURIComponent(client_id)}&select=id,extraction_goal`);
@@ -156,6 +162,9 @@ export default async function handler(req, res) {
   if (req.method === 'PATCH') {
     const { client_id, expected_respondent_count, max_exchanges } = req.body || {};
     if (!client_id) return res.status(400).json({ error: 'client_id required' });
+
+    const accessPatch = await getAccess(auth, client_id);
+    if (!accessPatch.canEdit) return res.status(403).json({ error: 'Forbidden' });
 
     const updates = {};
     if (expected_respondent_count != null) {
@@ -187,6 +196,8 @@ export default async function handler(req, res) {
 
     if (type === 'session') {
       if (!client_id) return res.status(400).json({ error: 'client_id required' });
+      const accessDel = await getAccess(auth, client_id);
+      if (!accessDel.canDelete) return res.status(403).json({ error: 'Forbidden' });
       try {
         await sb(`/vh_analysis?client_id=eq.${encodeURIComponent(client_id)}`, { method: 'DELETE' });
         await sb(`/vh_responses?client_id=eq.${encodeURIComponent(client_id)}`, { method: 'DELETE' });
@@ -200,6 +211,8 @@ export default async function handler(req, res) {
 
     if (type === 'respondent') {
       if (!response_id || !client_id) return res.status(400).json({ error: 'response_id and client_id required' });
+      const accessDelR = await getAccess(auth, client_id);
+      if (!accessDelR.canDelete) return res.status(403).json({ error: 'Forbidden' });
       try {
         // vh_analysis has a FK referencing vh_responses(id) — clear it first
         await sb(`/vh_analysis?client_id=eq.${encodeURIComponent(client_id)}`, { method: 'DELETE' });
@@ -223,16 +236,33 @@ export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
   const { client_id, all_responses } = req.query;
+  const isAdmin = auth.isSuperadmin || auth.role === 'admin';
 
   // All respondents across all clients (for the respondents sidebar view)
   if (all_responses === 'true') {
     try {
+      if (isAdmin) {
+        const r = await sb(
+          '/vh_responses?select=id,respondent_name,respondent_title,respondent_email,completed_at,client_id,vh_clients(id,client_name)&order=completed_at.desc'
+        );
+        if (!r.ok) return res.status(500).json({ error: 'Failed to fetch respondents' });
+        return res.status(200).json(await r.json());
+      }
+      // Non-admin: filter to accessible sessions
+      const [ownedRes, sharesRes] = await Promise.all([
+        sb(`/vh_clients?created_by=eq.${encodeURIComponent(auth.userId)}&select=id`),
+        sb(`/vh_session_shares?user_id=eq.${encodeURIComponent(auth.userId)}&select=client_id`)
+      ]);
+      if (!ownedRes.ok || !sharesRes.ok) return res.status(500).json({ error: 'Failed to fetch respondents' });
+      const ownedIds = (await ownedRes.json()).map(c => c.id);
+      const sharedIds = (await sharesRes.json()).map(s => s.client_id);
+      const accessibleIds = [...new Set([...ownedIds, ...sharedIds])];
+      if (!accessibleIds.length) return res.status(200).json([]);
       const r = await sb(
-        '/vh_responses?select=id,respondent_name,respondent_title,respondent_email,completed_at,client_id,vh_clients(id,client_name)&order=completed_at.desc'
+        `/vh_responses?client_id=in.(${accessibleIds.join(',')})&select=id,respondent_name,respondent_title,respondent_email,completed_at,client_id,vh_clients(id,client_name)&order=completed_at.desc`
       );
       if (!r.ok) return res.status(500).json({ error: 'Failed to fetch respondents' });
-      const rows = await r.json();
-      return res.status(200).json(rows);
+      return res.status(200).json(await r.json());
     } catch (err) {
       return res.status(500).json({ error: err.message });
     }
@@ -240,14 +270,24 @@ export default async function handler(req, res) {
 
   // Single client detail: client record + all responses + latest analysis + goal config
   if (client_id) {
+    const accessGet = await getAccess(auth, client_id);
+    if (!accessGet.visible) return res.status(403).json({ error: 'Forbidden' });
+
+    const is_owner = !isAdmin && accessGet.canShare;
+    let share_level = null;
+    if (!is_owner && !isAdmin) {
+      share_level = accessGet.canEdit ? 'edit' : 'view';
+    }
+
     try {
       const clientRes = await sb(
-        `/vh_clients?id=eq.${encodeURIComponent(client_id)}&select=id,client_name,extraction_goal,token,created_at,expected_respondent_count,max_exchanges`
+        `/vh_clients?id=eq.${encodeURIComponent(client_id)}&select=id,client_name,extraction_goal,token,created_at,expected_respondent_count,max_exchanges,created_by,vh_users(username)`
       );
       if (!clientRes.ok) return res.status(500).json({ error: 'Upstream fetch failed' });
-      const clients = await clientRes.json();
-      if (!clients.length) return res.status(404).json({ error: 'Client not found' });
-      const client = clients[0];
+      const clientRows = await clientRes.json();
+      if (!clientRows.length) return res.status(404).json({ error: 'Client not found' });
+      const { vh_users: vhUser, ...client } = clientRows[0];
+      const created_by_username = vhUser?.username || null;
 
       const [responsesRes, analysisRes, goalConfigRes] = await Promise.all([
         sb(`/vh_responses?client_id=eq.${encodeURIComponent(client_id)}&select=id,respondent_name,respondent_title,respondent_email,transcript,completed_at&order=completed_at.asc`),
@@ -269,7 +309,10 @@ export default async function handler(req, res) {
         client,
         responses,
         analysis: analysis[0] || null,
-        goal_config: goalConfigs[0] || null
+        goal_config: goalConfigs[0] || null,
+        is_owner,
+        share_level,
+        created_by_username,
       });
     } catch (err) {
       return res.status(500).json({ error: err.message });
@@ -278,10 +321,48 @@ export default async function handler(req, res) {
 
   // All clients list with per-client response count and last response date
   try {
-    const clientsRes = await sb('/vh_clients?select=id,client_name,extraction_goal,created_at,expected_respondent_count&order=created_at.desc');
-    if (!clientsRes.ok) return res.status(500).json({ error: 'Failed to fetch clients' });
+    let clients;
 
-    const clients = await clientsRes.json();
+    if (isAdmin) {
+      const clientsRes = await sb('/vh_clients?select=id,client_name,extraction_goal,created_at,expected_respondent_count,created_by,vh_users(username)&order=created_at.desc');
+      if (!clientsRes.ok) return res.status(500).json({ error: 'Failed to fetch clients' });
+      clients = (await clientsRes.json()).map(c => {
+        const { vh_users: vhUser, ...rest } = c;
+        return { ...rest, created_by_username: vhUser?.username || null, is_owner: c.created_by === auth.userId, share_level: null };
+      });
+    } else {
+      // Non-admin: owned sessions + shared sessions
+      const [ownedRes, sharesRes] = await Promise.all([
+        sb(`/vh_clients?created_by=eq.${encodeURIComponent(auth.userId)}&select=id,client_name,extraction_goal,created_at,expected_respondent_count,created_by,vh_users(username)&order=created_at.desc`),
+        sb(`/vh_session_shares?user_id=eq.${encodeURIComponent(auth.userId)}&select=client_id,level`)
+      ]);
+      if (!ownedRes.ok || !sharesRes.ok) return res.status(500).json({ error: 'Failed to fetch clients' });
+      const [ownedRows, sharesList] = await Promise.all([ownedRes.json(), sharesRes.json()]);
+
+      const shareMap = Object.fromEntries(sharesList.map(s => [s.client_id, s.level]));
+      const sharedIds = Object.keys(shareMap);
+
+      let sharedRows = [];
+      if (sharedIds.length) {
+        const sharedRes = await sb(
+          `/vh_clients?id=in.(${sharedIds.join(',')})&select=id,client_name,extraction_goal,created_at,expected_respondent_count,created_by,vh_users(username)&order=created_at.desc`
+        );
+        if (sharedRes.ok) sharedRows = await sharedRes.json();
+      }
+
+      const mapRow = (c, is_owner, share_level) => {
+        const { vh_users: vhUser, ...rest } = c;
+        return { ...rest, created_by_username: vhUser?.username || null, is_owner, share_level };
+      };
+      const seen = new Set();
+      clients = [
+        ...ownedRows.map(c => mapRow(c, true, null)),
+        ...sharedRows.map(c => mapRow(c, false, shareMap[c.id] || null))
+      ]
+        .filter(c => { if (seen.has(c.id)) return false; seen.add(c.id); return true; })
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    }
+
     if (!clients.length) return res.status(200).json([]);
 
     const counts = await Promise.all(
