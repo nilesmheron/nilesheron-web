@@ -2155,7 +2155,8 @@ function renderAside(data) {
   if (!data.canShare) { sharingEl.innerHTML = ''; return; }
   sharingEl.innerHTML = '<div style="margin-top:28px"><h3 class="admin-section-title" style="margin-bottom:10px">sharing</h3><div id="sharing-list" class="k-mono" style="font-size:11px;color:var(--kimba-mute)">loading…</div>' +
     '<div style="display:flex;gap:6px;margin-top:10px;align-items:center">' +
-      '<input class="k-input" id="share-username-input" type="text" placeholder="username" style="flex:1;font-size:11px;padding:4px 8px">' +
+      '<input class="k-input" id="share-username-input" type="text" placeholder="username" list="share-user-options" autocomplete="off" style="flex:1;font-size:11px;padding:4px 8px">' +
+      '<datalist id="share-user-options"></datalist>' +
       '<select class="k-input" id="share-level-select" style="width:72px;font-size:11px;padding:4px 6px">' +
         '<option value="view">view</option>' +
         '<option value="edit">edit</option>' +
@@ -2165,6 +2166,22 @@ function renderAside(data) {
     '<div id="share-status" class="k-mono" style="font-size:10px;color:var(--kimba-mute);margin-top:4px"></div>' +
   '</div>';
   loadShares(c.id);
+  loadShareableUsers();
+}
+
+function loadShareableUsers() {
+  apiFetch('/api/vh-shares?action=users')
+  .then(function(r) { return r.json(); })
+  .then(function(users) {
+    var dl = document.getElementById('share-user-options');
+    if (!dl || !Array.isArray(users)) return;
+    var myId = currentUser && currentUser.id;
+    dl.innerHTML = users
+      .filter(function(u) { return u.id !== myId; })
+      .map(function(u) { return '<option value="' + esc(u.username) + '">'; })
+      .join('');
+  })
+  .catch(function() {});
 }
 
 function loadShares(clientId) {

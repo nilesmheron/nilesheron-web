@@ -24,6 +24,17 @@ export default async function handler(req, res) {
   const auth = await getAuth(req);
   if (!auth.ok) return res.status(401).json({ error: 'Unauthorized' });
 
+  // User list for autocomplete — no client_id needed
+  if (req.method === 'GET' && req.query.action === 'users') {
+    try {
+      const r = await sb('/vh_users?select=id,username,role&disabled_at=is.null&order=username.asc');
+      if (!r.ok) return res.status(500).json({ error: 'Failed to fetch users' });
+      return res.status(200).json(await r.json());
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
   const client_id = req.method === 'GET' ? req.query.client_id : req.body?.client_id;
   if (!client_id) return res.status(400).json({ error: 'client_id required' });
 
