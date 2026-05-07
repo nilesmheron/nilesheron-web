@@ -33,7 +33,7 @@ export default async function handler(req, res) {
   if (req.method === 'GET') {
     try {
       const r = await sb(
-        `/vh_session_shares?client_id=eq.${encodeURIComponent(client_id)}&select=id,user_id,level,granted_at,vh_users(username)&order=granted_at.asc`
+        `/vh_session_shares?client_id=eq.${encodeURIComponent(client_id)}&select=id,user_id,level,granted_at,vh_users!vh_session_shares_user_id_fkey(username)&order=granted_at.asc`
       );
       if (!r.ok) return res.status(500).json({ error: 'Failed to fetch shares' });
       const rows = await r.json();
@@ -69,7 +69,7 @@ export default async function handler(req, res) {
     if (!user_id) return res.status(400).json({ error: 'user_id or username required' });
 
     try {
-      const r = await sb('/vh_session_shares', {
+      const r = await sb('/vh_session_shares?on_conflict=client_id,user_id', {
         method: 'POST',
         headers: { Prefer: 'resolution=merge-duplicates,return=representation' },
         body: JSON.stringify({
