@@ -1153,6 +1153,7 @@ function doLogin(e) {
 function signOut() {
   authToken = null;
   currentUser = null;
+  allClients = [];
   sessionStorage.removeItem('vh-admin-token');
   sessionStorage.removeItem('vh-admin-user');
   document.getElementById('admin-shell').style.display = 'none';
