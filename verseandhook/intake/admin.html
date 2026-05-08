@@ -1462,6 +1462,8 @@ function openDetail(clientId) {
     data.canDelete = !!(data.is_owner || isAdmin);
     data.canShare  = !!(data.is_owner || isAdmin);
     currentDetail = data;
+    var settingsTab = document.querySelector('.tab-btn[data-tab="settings"]');
+    if (settingsTab) settingsTab.style.display = data.canEdit ? '' : 'none';
     renderDetail(data);
   })
   .catch(function() {});
