@@ -38,7 +38,7 @@ export async function runAnalysis(client_id, extraction_goal, response_id, { sup
 
   // Fetch all transcripts for this client
   const r = await sb(
-    `/vh_responses?client_id=eq.${client_id}&select=respondent_name,respondent_title,transcript&order=completed_at.asc`
+    `/vh_responses?client_id=eq.${encodeURIComponent(client_id)}&select=respondent_name,respondent_title,transcript&order=completed_at.asc`
   );
   if (!r.ok) {
     console.warn(`runAnalysis: failed to fetch responses for client "${client_id}" — status ${r.status}`);

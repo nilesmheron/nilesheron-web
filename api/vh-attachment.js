@@ -1,5 +1,11 @@
 // api/vh-attachment.js
+import crypto from 'crypto';
 import { getAuth } from './vh-auth.js';
+
+const ALLOWED_MIME = new Set([
+  'image/jpeg', 'image/png', 'image/webp', 'image/gif',
+  'application/pdf'
+]);
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -17,6 +23,10 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'fileName, contentType, and data required' });
   }
 
+  if (!ALLOWED_MIME.has(contentType)) {
+    return res.status(415).json({ error: 'unsupported content-type' });
+  }
+
   let buffer;
   try {
     buffer = Buffer.from(data, 'base64');
@@ -29,8 +39,7 @@ export default async function handler(req, res) {
   }
 
   const ext  = fileName.includes('.') ? fileName.slice(fileName.lastIndexOf('.')) : '';
-  const rand = Math.random().toString(36).slice(2, 10);
-  const path = `${Date.now()}-${rand}${ext}`;
+  const path = `${Date.now()}-${crypto.randomUUID()}${ext}`;
 
   try {
     const r = await fetch(`${SUPABASE_URL}/storage/v1/object/vh-attachments/${path}`, {
