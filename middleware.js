@@ -24,22 +24,25 @@ export const config = {
     '/grav/:path*',
     '/mothership/budget',
     '/mothership/budget/:path*',
-    '/motif/:path+',
+    '/motif/:path*',
   ],
 };
 
-export default function middleware(request) {
+export default async function middleware(request) {
   const url = new URL(request.url);
 
-  // Rewrite /motif/:slug to /motif/entry.html — must happen before cleanUrls
-  // processes the request, which is why this lives in middleware rather than
-  // vercel.json rewrites (cleanUrls returns 404 before afterFiles rewrites run).
+  // Serve /motif/:slug by fetching entry.html and proxying the response.
+  // Lives in middleware (not vercel.json rewrites) because cleanUrls intercepts
+  // the request and returns 404 before afterFiles rewrites get a chance to run.
+  // Subrequests made inside middleware bypass middleware, so no loop risk.
   const segments = url.pathname.split('/').filter(Boolean);
   if (segments[0] === 'motif' && segments.length === 2 && !segments[1].includes('.')) {
-    return new Response(null, {
-      headers: {
-        'x-middleware-rewrite': new URL('/motif/entry.html', request.url).toString(),
-      },
+    const entryUrl = new URL('/motif/entry', request.url);
+    const res = await fetch(entryUrl);
+    const html = await res.text();
+    return new Response(html, {
+      status: 200,
+      headers: { 'content-type': 'text/html; charset=utf-8' },
     });
   }
 
