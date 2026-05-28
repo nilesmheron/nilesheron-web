@@ -5,15 +5,19 @@
     { "source": "/sandbox/personal-ai-os", "destination": "/onebite", "permanent": true },
     { "source": "/sandbox/personal-ai-os/report", "destination": "/onebite/report", "permanent": true }
   ],
-  "rewrites": [
-    { "source": "/motif/:slug", "destination": "/motif/entry.html" },
-    { "source": "/motif",       "destination": "/motif/index.html" },
-    { "source": "/templates/onboarding", "destination": "/templates/onboarding.html" },
-    { "source": "/templates/task-management", "destination": "/templates/task-management.html" },
-    { "source": "/templates/profile-versioning", "destination": "/templates/profile-versioning.html" },
-    { "source": "/templates/cross-platform-packager", "destination": "/templates/cross-platform-packager.html" },
-    { "source": "/mothership/charter-roadmap-gannt", "destination": "/mothership/charter-roadmap-gannt.html" }
-  ],
+  "rewrites": {
+    "beforeFiles": [
+      { "source": "/motif/:slug", "destination": "/motif/entry.html" },
+      { "source": "/motif",       "destination": "/motif/index.html" }
+    ],
+    "afterFiles": [
+      { "source": "/templates/onboarding", "destination": "/templates/onboarding.html" },
+      { "source": "/templates/task-management", "destination": "/templates/task-management.html" },
+      { "source": "/templates/profile-versioning", "destination": "/templates/profile-versioning.html" },
+      { "source": "/templates/cross-platform-packager", "destination": "/templates/cross-platform-packager.html" },
+      { "source": "/mothership/charter-roadmap-gannt", "destination": "/mothership/charter-roadmap-gannt.html" }
+    ]
+  },
   "headers": [
     {
       "source": "/(.*)",
