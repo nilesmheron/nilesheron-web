@@ -1,0 +1,427 @@
+/* ============================================================
+   MOTIF — stripped-down variant of nilesheron.com
+   Warm paper, lots of air, amber used sparingly.
+   ============================================================ */
+
+:root {
+  --page-bg: #e9e6df;
+  --card-bg: #fcfbf8;
+  --ink: #3a3a37;
+  --muted: #9a958c;
+  --hair: #d8d3c8;
+  --amber: #b5793e;
+  --amber-on: 0.42;
+
+  --serif: "Lora", Georgia, "Times New Roman", serif;
+  --hand: "Caveat", "Segoe Script", cursive;
+  --mono: "Menlo", "SF Mono", ui-monospace, "Cascadia Mono", monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--page-bg);
+  color: var(--ink);
+  font-family: var(--serif);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.motif-root {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  color: var(--ink);
+}
+
+/* shared logo mark */
+.logo-mark {
+  height: 18px;
+  width: auto;
+  display: block;
+}
+
+/* ====================================================================
+   ENTRY PAGE
+   ==================================================================== */
+
+/* ---- top zone: audio player iframe ---- */
+.audio-zone {
+  flex: 0 0 auto;
+  height: 152px;
+  padding: 26px 22px 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+.audio-zone iframe {
+  width: 100%;
+  border: none;
+  border-radius: 12px;
+  display: block;
+}
+
+/* service toggle — shown when both spotify_url and apple_music_url are present */
+.audio-service-toggle {
+  display: flex;
+  gap: 14px;
+  padding: 0 0 8px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.audio-service-toggle button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: var(--muted);
+  transition: color 0.2s ease;
+}
+.audio-service-toggle button.active {
+  color: var(--ink);
+}
+
+/* ---- bottom zone: card deck ---- */
+.deck-zone {
+  flex: 1 1 auto;
+  position: relative;
+  overflow: hidden;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+/* dim veil shown when a card is focused */
+.veil {
+  position: absolute;
+  inset: 0;
+  background: var(--page-bg);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+  z-index: 40;
+}
+.deck-zone.is-focused .veil {
+  opacity: 0.62;
+  pointer-events: auto;
+}
+
+.deck {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+}
+
+/* a single poem card */
+.card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 240px;
+  height: 322px;
+  margin-left: -120px;
+  margin-top: -161px;
+  perspective: 1400px;
+  cursor: pointer;
+  transition: transform 0.55s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.4s ease;
+  will-change: transform;
+}
+.card.focused {
+  z-index: 60 !important;
+  transition: transform 0.5s cubic-bezier(0.34, 1.2, 0.4, 1);
+}
+.card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.4, 0.1, 0.2, 1);
+  border-radius: 6px;
+}
+.card.flipped .card-inner { transform: rotateY(180deg); }
+
+.face {
+  position: absolute;
+  inset: 0;
+  border-radius: 6px;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  background: var(--card-bg);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.8) inset,
+    0 14px 30px -16px rgba(60,52,40,0.5),
+    0 3px 8px -5px rgba(60,52,40,0.35);
+  border: 1px solid rgba(120,110,95,0.12);
+  overflow: hidden;
+}
+
+/* front: handwritten poem image */
+.face-front {
+  position: relative;
+}
+.card-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 6px;
+  display: block;
+}
+/* amber seal dot, lower-left of front */
+.seal-dot {
+  position: absolute;
+  left: 22px;
+  bottom: 22px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--amber);
+  opacity: calc(var(--amber-on) * 0.85);
+  z-index: 1;
+}
+
+/* back: typed poem — postcard */
+.face-back {
+  transform: rotateY(180deg);
+  padding: 28px 26px 24px;
+  display: flex;
+  flex-direction: column;
+}
+.back-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--hair);
+}
+.back-title {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+}
+.back-no {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.back-body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.typed {
+  font-family: var(--serif);
+  font-size: var(--back-size, 15px);
+  line-height: 1.62;
+  color: #4a463f;
+}
+.typed .ln { display: block; }
+.back-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid var(--hair);
+}
+.back-date {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+}
+.back-stamp {
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--amber);
+  border-radius: 3px;
+  opacity: calc(var(--amber-on) * 0.6);
+  position: relative;
+}
+.back-stamp::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  background: var(--amber);
+  opacity: 0.5;
+}
+
+/* focused card gets an amber hairline frame */
+.card.focused .face-front {
+  box-shadow:
+    0 0 0 calc(var(--amber-on) * 1px) var(--amber) inset,
+    0 1px 0 rgba(255,255,255,0.8) inset;
+}
+
+/* resting hint */
+.deck-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 22px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  z-index: 30;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+.deck-zone.touched .deck-hint { opacity: 0; }
+
+/* faint entry identity — lower-left corner */
+.entry-mark {
+  position: absolute;
+  left: 22px;
+  bottom: 22px;
+  z-index: 30;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+.deck-zone.is-focused ~ .entry-mark,
+.entry-mark.hidden { opacity: 0; }
+
+/* ====================================================================
+   ARCHIVE PAGE
+   ==================================================================== */
+.archive-root {
+  overflow-y: auto;
+  padding: 0;
+}
+.arch-mast {
+  padding: 40px 26px 24px;
+}
+.arch-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.arch-h {
+  margin: 34px 0 8px;
+  font-size: 34px;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+.arch-lede {
+  font-size: 14px;
+  line-height: 1.55;
+  color: #6f6a61;
+  margin: 0;
+  max-width: 32ch;
+}
+.arch-count {
+  margin-top: 22px;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.arch-count::after {
+  content: "";
+  flex: 1 1 auto;
+  height: 1px;
+  background: var(--hair);
+}
+
+.arch-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--hair);
+  border-top: 1px solid var(--hair);
+  border-bottom: 1px solid var(--hair);
+}
+.tile {
+  background: var(--page-bg);
+  padding: 22px 20px 24px;
+  min-height: 148px;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.25s ease;
+  text-decoration: none;
+  color: inherit;
+}
+.tile:hover { background: var(--card-bg); }
+.tile-no {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.tile-no .live {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--amber);
+  opacity: calc(var(--amber-on) * 1);
+}
+.tile-title {
+  font-size: 19px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.22;
+  margin-top: auto;
+  color: var(--ink);
+  text-wrap: balance;
+}
+.tile-meta {
+  margin-top: 10px;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.tile-meta .sep { opacity: 0.5; }
+.arch-foot {
+  padding: 26px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* scrollbar quieting for archive */
+.archive-root::-webkit-scrollbar { width: 0; }
