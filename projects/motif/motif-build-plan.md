@@ -323,7 +323,7 @@ The prototype shows a faint `motif · [slug]` mark at bottom-left of the entry p
 
 ## Step 7 — Supabase storage bucket
 
-[ ] Create the `motif-images` bucket in Supabase as a **public** bucket (no auth required to read).
+[COMPLETE] Create the `motif-images` bucket in Supabase as a **public** bucket (no auth required to read).
 
 **Project:** use the Supabase project already connected to `nilesheron-web` (credentials already in Vercel env vars as `SUPABASE_URL` and `SUPABASE_ANON_KEY`).
 
