@@ -74,6 +74,8 @@
   .step:last-child { margin-bottom: 0; }
   .step-num { width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; font-size: 11px; color: var(--text-dim); flex-shrink: 0; margin-top: 3px; }
   .step-text { font-family: 'Inter', sans-serif; font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+  .step-meta { font-family: 'Inter', sans-serif; font-size: 12px; color: var(--text-dim); line-height: 1.5; margin-top: 4px; }
+  .step-meta strong { color: var(--text-muted); font-weight: 500; }
 
   /* Disclaimer + footer */
   .disclaimer { margin-top: 2rem; font-size: 12px; color: var(--text-dim); line-height: 1.6; }
@@ -196,7 +198,11 @@ function parseGuideOptions(guideText) {
       if (line.trim() && line.indexOf('[SETUP_GUIDE') === -1) intro += (intro ? ' ' : '') + line.trim();
     } else {
       var stepMatch = line.match(/^Step\s+(\d+):\s*(.+)$/i);
-      if (stepMatch) { cur.steps.push({ num: stepMatch[1], text: stepMatch[2] }); }
+      var needsMatch = line.match(/^Needs:\s*(.+)$/i);
+      var doneMatch = line.match(/^Done:\s*(.+)$/i);
+      if (stepMatch) { cur.steps.push({ num: stepMatch[1], text: stepMatch[2], needs: '', done: '' }); }
+      else if (needsMatch && cur.steps.length) { cur.steps[cur.steps.length - 1].needs = needsMatch[1]; }
+      else if (doneMatch && cur.steps.length) { cur.steps[cur.steps.length - 1].done = doneMatch[1]; }
       else if (line.trim() && line.indexOf('[SETUP_GUIDE') === -1) cur.desc += (cur.desc ? ' ' : '') + line.trim();
     }
   }
@@ -264,7 +270,10 @@ function renderReport(data) {
       opt.steps.forEach(function(step) {
         var stepEl = document.createElement('div');
         stepEl.className = 'step';
-        stepEl.innerHTML = '<div class="step-num">' + escHtml(step.num) + '</div><div class="step-text">' + escHtml(step.text) + '</div>';
+        var metaHtml = '';
+        if (step.needs) metaHtml += '<div class="step-meta"><strong>Needs:</strong> ' + escHtml(step.needs) + '</div>';
+        if (step.done) metaHtml += '<div class="step-meta"><strong>Done:</strong> ' + escHtml(step.done) + '</div>';
+        stepEl.innerHTML = '<div class="step-num">' + escHtml(step.num) + '</div><div class="step-text">' + escHtml(step.text) + metaHtml + '</div>';
         body.appendChild(stepEl);
       });
       card.appendChild(header);
@@ -289,42 +298,83 @@ function copyLink() {
 
 function buildMd() {
   if (!reportData) return '';
-  var sid = shortId(reportData.id);
   var date = new Date(reportData.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   var assessment = reportData.assessment || '';
   var guide = extractGuide(assessment);
-  var lines = [];
-  lines.push('# OneBite — Your Setup Guide');
-  lines.push('**Session:** #' + sid);
-  lines.push('**Generated:** ' + date);
-  lines.push('**Source:** ' + window.location.href);
-  lines.push(''); lines.push('---'); lines.push('');
-  lines.push('## How to use this file'); lines.push('');
-  lines.push('This setup guide was written for Claude but any LLM should be able to parse it.'); lines.push('');
-  lines.push('**To use with Claude:** Upload this file to a Claude Project, or paste it into a conversation and say: *"I want to implement this system. Walk me through Level 1 first."*'); lines.push('');
-  lines.push('**To use with any other LLM:** Paste the contents into a new conversation and ask the same thing. Works with ChatGPT, Gemini, or any other assistant.'); lines.push('');
-  lines.push('---'); lines.push('');
-  if (guide) {
-    guide.split('\n').forEach(function(line) {
-      var m = line.match(/^\*\*([^*]+)\*\*\s*$/);
-      if (m) { lines.push(''); lines.push('## ' + m[1]); lines.push(''); }
-      else if (line.trim() && line.indexOf('[SETUP_GUIDE') === -1) lines.push(line);
-    });
-    lines.push(''); lines.push('---'); lines.push('');
-    lines.push('## Your Assessment'); lines.push('');
-    parseAssessmentSections(assessment).forEach(function(s) {
-      lines.push('### ' + s.h); lines.push('');
-      s.b.forEach(function(l) { if (l.trim()) lines.push(l); }); lines.push('');
-    });
-  } else {
-    assessment.split('\n').forEach(function(line) {
-      var m = line.match(/^\*\*([^*]+)\*\*\s*$/);
-      if (m) { lines.push('## ' + m[1]); lines.push(''); }
-      else if (line.trim()) { lines.push(line); lines.push(''); }
-    });
+  var sections = parseAssessmentSections(assessment);
+  var name = reportData.name || '';
+
+  function findSection(keyword) {
+    for (var i = 0; i < sections.length; i++) {
+      if (sections[i].h.toUpperCase().indexOf(keyword) !== -1) return sections[i].b.join('\n');
+    }
+    return '';
   }
+  var heard = findSection('WHAT WE HEARD');
+  var stack = findSection('YOUR STACK TODAY');
+
+  var lines = [];
+
+  // Header
+  lines.push('# OneBite Implementation Guide' + (name ? ' -- ' + name : ''));
+  lines.push('**Generated:** ' + date);
+  lines.push('**Report:** ' + window.location.href);
+  lines.push(''); lines.push('---'); lines.push('');
+
+  // Context block -- goes first so the AI has full picture before instructions
+  lines.push('## Context');
+  lines.push('');
+  if (heard) { lines.push(heard); lines.push(''); }
+  if (stack) { lines.push('**Stack:** ' + stack); lines.push(''); }
   lines.push('---'); lines.push('');
-  lines.push('*Generated by OneBite — dev.nilesheron.com/onebite*');
+
+  // AI role and instructions
+  lines.push('## Your role');
+  lines.push('');
+  var partnerLine = name ? 'You are ' + name + '\'s implementation partner for this plan.' : 'You are this person\'s implementation partner for this plan.';
+  lines.push(partnerLine + ' The context above describes who they are, how they work, and what they are trying to build. Use it to make every step of the walkthrough specific to their actual tools and situation -- not generic.');
+  lines.push('');
+  lines.push('When they tell you which level they want to start with:');
+  lines.push('- Walk through each step with enough detail to actually execute it -- what to open, what to click, what to type, what to expect');
+  lines.push('- Where a step involves writing something (a prompt, a brief, a template), draft a working version using the context above');
+  lines.push('- After each step, check that it worked before moving to the next');
+  lines.push('- If they get stuck, troubleshoot before moving on');
+  lines.push('- Level 3 is a vision -- treat it as a scoping and prioritization conversation, not an execution checklist');
+  lines.push('');
+  lines.push('Start by asking which level they want to tackle first.');
+  lines.push(''); lines.push('---'); lines.push('');
+
+  // Setup guide
+  if (guide) {
+    lines.push('## Setup guide');
+    lines.push('');
+    var parsed = parseGuideOptions(guide);
+    parsed.options.forEach(function(opt) {
+      lines.push('### ' + opt.title + (opt.meta ? ' (' + opt.meta + ')' : ''));
+      lines.push('');
+      if (opt.desc) { lines.push(opt.desc); lines.push(''); }
+      opt.steps.forEach(function(step) {
+        lines.push('**Step ' + step.num + ':** ' + step.text);
+        if (step.needs) lines.push('- Needs: ' + step.needs);
+        if (step.done) lines.push('- Done: ' + step.done);
+        lines.push('');
+      });
+    });
+    lines.push('---'); lines.push('');
+  }
+
+  // Full assessment appended for reference
+  lines.push('## Full assessment');
+  lines.push('');
+  sections.forEach(function(s) {
+    lines.push('### ' + s.h);
+    lines.push('');
+    s.b.forEach(function(l) { if (l.trim()) lines.push(l); });
+    lines.push('');
+  });
+
+  lines.push('---'); lines.push('');
+  lines.push('*Generated by OneBite -- dev.nilesheron.com/onebite*');
   return lines.join('\n');
 }
 
