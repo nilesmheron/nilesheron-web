@@ -82,7 +82,7 @@ Ordered newest first. `current: true` on the latest entry only — drives the am
 
 ## Step 1 — vercel.json rewrites
 
-[ ] Add the following two entries to the `rewrites` array in `vercel.json`. Place them before the existing rewrite entries.
+[COMPLETE] Add the following two entries to the `rewrites` array in `vercel.json`. Place them before the existing rewrite entries.
 
 ```json
 { "source": "/motif/:slug", "destination": "/motif/entry.html" },
@@ -100,7 +100,7 @@ Ordered newest first. `current: true` on the latest entry only — drives the am
 
 ## Step 2 — CSS
 
-[ ] Create `motif/motif.css`.
+[COMPLETE] Create `motif/motif.css`.
 
 **Source:** copy `projects/motif/design_handoff_motif/styles.css` as the starting point.
 
@@ -169,7 +169,7 @@ Ordered newest first. `current: true` on the latest entry only — drives the am
 
 ## Step 3 — Logo asset
 
-[ ] Copy `projects/motif/design_handoff_motif/mrh-logo.png` to `motif/mrh-logo.png`.
+[COMPLETE] Copy `projects/motif/design_handoff_motif/mrh-logo.png` to `motif/mrh-logo.png`.
 
 No edits to the file. The archive page masthead references it as `<img src="/motif/mrh-logo.png">`.
 
@@ -177,9 +177,9 @@ No edits to the file. The archive page masthead references it as `<img src="/mot
 
 ## Step 4 — Sample data files
 
-[ ] Create `motif/data/entries.json` with one real entry using the production schema above. Use the prototype's sample entry ("The In-Between", no. XI) as the content. Set `current: true`.
+[COMPLETE] Create `motif/data/entries.json` with one real entry using the production schema above. Use the prototype's sample entry ("The In-Between", no. XI) as the content. Set `current: true`.
 
-[ ] Create `motif/data/the-in-between.json` using the production schema above. Use the five poems from the prototype's `data.js` (`lines` arrays → join with `\n` to produce the `text` field). For `image_url` on each poem, use a placeholder string: `"PLACEHOLDER — upload to Supabase before going live"`. For `spotify_url` and `apple_music_url`, use empty strings `""` — the entry page handles absent URLs gracefully (see Step 6).
+[COMPLETE] Create `motif/data/the-in-between.json` using the production schema above. Use the five poems from the prototype's `data.js` (`lines` arrays → join with `\n` to produce the `text` field). For `image_url` on each poem, use a placeholder string: `"PLACEHOLDER — upload to Supabase before going live"`. For `spotify_url` and `apple_music_url`, use empty strings `""` — the entry page handles absent URLs gracefully (see Step 6).
 
 **Do not create a Supabase bucket in this step.** That happens separately before the first real entry goes live.
 
@@ -187,7 +187,7 @@ No edits to the file. The archive page masthead references it as `<img src="/mot
 
 ## Step 5 — Archive page
 
-[ ] Create `motif/index.html`.
+[COMPLETE] Create `motif/index.html`.
 
 ```html
 <!DOCTYPE html>
@@ -208,7 +208,7 @@ No edits to the file. The archive page masthead references it as `<img src="/mot
 </html>
 ```
 
-[ ] Create `motif/archive.js` — vanilla JS translation of `archive.jsx`.
+[COMPLETE] Create `motif/archive.js` — vanilla JS translation of `archive.jsx`.
 
 **Logic:**
 1. Fetch `/motif/data/entries.json`
@@ -227,7 +227,7 @@ No edits to the file. The archive page masthead references it as `<img src="/mot
 
 ## Step 6 — Entry page
 
-[ ] Create `motif/entry.html`.
+[COMPLETE] Create `motif/entry.html`.
 
 ```html
 <!DOCTYPE html>
@@ -248,7 +248,7 @@ No edits to the file. The archive page masthead references it as `<img src="/mot
 </html>
 ```
 
-[ ] Create `motif/entry.js` — vanilla JS translation of `entry.jsx`.
+[COMPLETE] Create `motif/entry.js` — vanilla JS translation of `entry.jsx`.
 
 ### Audio zone
 
