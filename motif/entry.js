@@ -224,6 +224,15 @@
     stamp.className = 'back-stamp';
 
     backFoot.appendChild(backDate);
+    if (poem.source_url) {
+      var srcLink = document.createElement('a');
+      srcLink.className = 'back-source';
+      srcLink.href = poem.source_url;
+      srcLink.target = '_blank';
+      srcLink.rel = 'noopener noreferrer';
+      srcLink.textContent = 'source';
+      backFoot.appendChild(srcLink);
+    }
     backFoot.appendChild(stamp);
 
     back.appendChild(backTop);
@@ -318,6 +327,7 @@
 
       /* tap — resolve the element under the release point */
       var hit = document.elementFromPoint(ev.clientX, ev.clientY);
+      if (hit && hit.closest && hit.closest('a[href]')) { renderCards(); return; }
       var cardEl = hit && hit.closest && hit.closest('.card');
 
       if (cardEl) {

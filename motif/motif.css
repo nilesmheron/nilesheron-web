@@ -248,6 +248,19 @@ html, body {
   letter-spacing: 0.14em;
   color: var(--muted);
 }
+.back-source {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  text-decoration: none;
+  border-bottom: 1px solid var(--hair);
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+.back-source:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
 .back-stamp {
   width: 16px;
   height: 16px;
