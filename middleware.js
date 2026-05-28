@@ -24,11 +24,25 @@ export const config = {
     '/grav/:path*',
     '/mothership/budget',
     '/mothership/budget/:path*',
+    '/motif/:path+',
   ],
 };
 
 export default function middleware(request) {
   const url = new URL(request.url);
+
+  // Rewrite /motif/:slug to /motif/entry.html — must happen before cleanUrls
+  // processes the request, which is why this lives in middleware rather than
+  // vercel.json rewrites (cleanUrls returns 404 before afterFiles rewrites run).
+  const segments = url.pathname.split('/').filter(Boolean);
+  if (segments[0] === 'motif' && segments.length === 2 && !segments[1].includes('.')) {
+    return new Response(null, {
+      headers: {
+        'x-middleware-rewrite': new URL('/motif/entry.html', request.url).toString(),
+      },
+    });
+  }
+
   const gate = GATES.find(
     (g) => url.pathname === g.prefix || url.pathname.startsWith(g.prefix + '/')
   );
