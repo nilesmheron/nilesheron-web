@@ -310,6 +310,10 @@ html, body {
 }
 .arch-mast {
   padding: 40px 26px 24px;
+  max-width: 560px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
 }
 .arch-top {
   display: flex;
@@ -360,6 +364,10 @@ html, body {
   background: var(--hair);
   border-top: 1px solid var(--hair);
   border-bottom: 1px solid var(--hair);
+  max-width: 560px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
 }
 .tile {
   background: var(--page-bg);
@@ -421,6 +429,10 @@ html, body {
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--muted);
+  max-width: 560px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
 }
 
 /* scrollbar quieting for archive */
