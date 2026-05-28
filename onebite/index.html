@@ -460,11 +460,12 @@ function showAssessment(text) {
   html += '</div>';
   html += '<div class="share-panel">';
   html += '<p class="share-panel-label">Send this back</p>';
-  html += '<p class="share-panel-body">If this was useful — or if it missed the mark — send it back.</p>';
+  html += '<p class="share-panel-body">If this was useful — or if it missed the mark — let us know.</p>';
+  html += '<div class="opt-in-block" style="margin-bottom:14px;padding:12px 14px;background:var(--bg);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:8px;">';
+  html += '<p class="opt-in-nudge" style="margin-bottom:8px;"><strong>Your report and conversation are shared by default</strong> — it helps us make this better. Uncheck to opt out.</p>';
+  html += '<label class="opt-in-row"><input type="checkbox" id="chk-report" checked> <span>Share my assessment report</span></label>';
+  html += '<label class="opt-in-row"><input type="checkbox" id="chk-transcript" checked> <span>Share my conversation</span></label></div>';
   html += '<textarea id="feedback-ta" class="feedback-ta" placeholder="Was this helpful? Did it get your situation right? Anything you\'d add or push back on? (optional)"></textarea>';
-  html += '<div class="opt-in-block"><p class="opt-in-nudge"><strong>Including your report and conversation helps us make this more useful</strong> — if you don\'t mind, please check the boxes!</p>';
-  html += '<label class="opt-in-row"><input type="checkbox" id="chk-report"> <span>Share my assessment report</span></label>';
-  html += '<label class="opt-in-row"><input type="checkbox" id="chk-transcript"> <span>Share my conversation</span></label></div>';
   html += '<div class="share-row"><button id="share-submit-btn" class="share-btn" onclick="submitFeedback()">Send →</button><span id="share-status" class="share-confirm"></span></div>';
   html += '</div>';
   html += '<div class="restart-row"><button class="copy-guide-btn" id="copy-guide-btn" onclick="copyGuide()">Copy setup guide</button><button class="restart-btn" onclick="location.reload()">Start over</button></div>';
