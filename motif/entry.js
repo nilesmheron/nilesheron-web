@@ -90,6 +90,8 @@
     } else if (activeService) {
       var url = activeService === 'spotify' ? spotifyUrl : appleUrl;
       zone.appendChild(buildIframe(url));
+    } else {
+      return; // no URLs — skip the audio zone entirely
     }
 
     root.appendChild(zone);
@@ -149,17 +151,33 @@
 
     /* front */
     var front = document.createElement('div');
-    front.className = 'face face-front';
+    var isPlaceholder = !poem.image_url || poem.image_url.startsWith('PLACEHOLDER');
+    front.className = 'face face-front' + (isPlaceholder ? ' face-front--text' : '');
 
-    var img = document.createElement('img');
-    img.className = 'card-img';
-    img.src = poem.image_url;
-    img.alt = poem.title || '';
+    if (isPlaceholder) {
+      var hand = document.createElement('div');
+      hand.className = 'hand';
+      (poem.text || '').split('\n').forEach(function (line) {
+        var ln = document.createElement('span');
+        ln.className = 'ln';
+        ln.textContent = line;
+        hand.appendChild(ln);
+      });
+      var sig = document.createElement('span');
+      sig.className = 'sig';
+      sig.textContent = '— mrh';
+      front.appendChild(hand);
+      front.appendChild(sig);
+    } else {
+      var img = document.createElement('img');
+      img.className = 'card-img';
+      img.src = poem.image_url;
+      img.alt = poem.title || '';
+      front.appendChild(img);
+    }
 
     var sealDot = document.createElement('span');
     sealDot.className = 'seal-dot';
-
-    front.appendChild(img);
     front.appendChild(sealDot);
 
     /* back */

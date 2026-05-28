@@ -166,6 +166,12 @@ html, body {
 .face-front {
   position: relative;
 }
+.face-front--text {
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
 .card-img {
   position: absolute;
   inset: 0;
