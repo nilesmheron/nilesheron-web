@@ -11,7 +11,7 @@
     { r: 9,   x: 30,  y: 16  },
     { r: -10, x: -7,  y: 2   },
   ];
-  var SPREAD = 1.0;
+  var SPREAD = 1.5;
 
   /* ── state ── */
   var poems = [];
@@ -57,6 +57,13 @@
     logo.src = '/motif/nm-h-logo.png';
     logo.alt = 'nm.h';
     wrap.appendChild(logo);
+    /* tap the mark to drop any focused card and return to the full stack */
+    wrap.addEventListener('click', function () {
+      focused = null;
+      flipped = false;
+      dragDx = 0;
+      renderCards();
+    });
     root.appendChild(wrap);
   }
 
@@ -161,9 +168,12 @@
     var inner = document.createElement('div');
     inner.className = 'card-inner';
 
-    /* front */
+    /* front — full-width page column, anchored to the top; scrolls when focused.
+       Accepts poem.images (array, for multi-page poems) or a single image_url. */
+    var images = (poem.images && poem.images.length) ? poem.images
+      : (poem.image_url && poem.image_url.indexOf('PLACEHOLDER') !== 0 ? [poem.image_url] : []);
     var front = document.createElement('div');
-    var isPlaceholder = !poem.image_url || poem.image_url.startsWith('PLACEHOLDER');
+    var isPlaceholder = images.length === 0;
     front.className = 'face face-front' + (isPlaceholder ? ' face-front--text' : '');
 
     if (isPlaceholder) {
@@ -177,15 +187,20 @@
       });
       var sig = document.createElement('span');
       sig.className = 'sig';
-      sig.textContent = '— mrh';
+      sig.textContent = '— nm.h';
       front.appendChild(hand);
       front.appendChild(sig);
     } else {
-      var img = document.createElement('img');
-      img.className = 'card-img';
-      img.src = poem.image_url;
-      img.alt = poem.title || '';
-      front.appendChild(img);
+      var pages = document.createElement('div');
+      pages.className = 'card-pages';
+      images.forEach(function (url, pi) {
+        var img = document.createElement('img');
+        img.className = 'card-page';
+        img.src = url;
+        img.alt = (poem.title || '') + (images.length > 1 ? ' — page ' + (pi + 1) : '');
+        pages.appendChild(img);
+      });
+      front.appendChild(pages);
     }
 
     var sealDot = document.createElement('span');
@@ -271,7 +286,7 @@
       var t;
 
       if (isFocused) {
-        t = 'translate(' + dx + 'px, -10px) rotate(0deg) scale(1.5)';
+        t = 'translate(' + dx + 'px, -10px) rotate(0deg) scale(1.35)';
       } else if (isActive) {
         t = 'translate(' + (s.x * SPREAD + dx) + 'px, ' + (s.y * SPREAD - 30) + 'px) rotate(' + (s.r * SPREAD * 0.45) + 'deg) scale(1.05)';
       } else {

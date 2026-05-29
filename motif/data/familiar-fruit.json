@@ -63,7 +63,10 @@
       "id": "sun-rises",
       "title": "Sun-Rises",
       "date": "07.27.2015",
-      "image_url": "https://gdellbtfpcmdsfogxqwf.supabase.co/storage/v1/object/public/motif-images/familiar-fruit/Motif1-sun-rises1.png",
+      "images": [
+        "https://gdellbtfpcmdsfogxqwf.supabase.co/storage/v1/object/public/motif-images/familiar-fruit/Motif1-sun-rises1.png",
+        "https://gdellbtfpcmdsfogxqwf.supabase.co/storage/v1/object/public/motif-images/familiar-fruit/Motif1-sun-rises2.png"
+      ],
       "text": "i am tired of seeing,\nof crying, of writing\nour names out as eulogies,\nas memories, as\nmournings,\n\ni'm tired of learning names\nat sun set —\nwe are so often turned into\nhomegoings and\ntear-torn celebrations\ninstead of\nlove letters, or hope\npoems, or birthday songs\n\ni am tired of saying\ngoodbye to people i should be\nsending off with\na see-you-soon instead, i am tired\nof saying goodbyes to people knowing\nthat in 28 hours another\nof our bodies\nwill say hello to a God\nthey weren't expecting to meet,\nand join a choir dotted with faces and names\nthey already know from the\nlast time their faces ran wet with\npraise, and they danced through\neulogies,\n\ni'm tired of knowing\nthat in twenty-eight hours\ni will be back here\nwriting another poem\nlike this"
     },
     {
