@@ -50,8 +50,8 @@ html, body {
 /* ---- top zone: audio player iframe ---- */
 .audio-zone {
   flex: 0 0 auto;
-  height: 232px;
-  padding: 22px 22px 0;
+  height: 348px;
+  padding: 10px 22px 18px;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -89,7 +89,7 @@ html, body {
   color: var(--ink);
 }
 
-/* ---- floating brand mark: above the deck, beneath the iframe ---- */
+/* ---- brand mark: page header, above the deck ---- */
 .entry-logo {
   flex: 0 0 auto;
   display: flex;
@@ -205,6 +205,8 @@ html, body {
 .card.focused .card-pages {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;          /* let vertical drags scroll the page column */
+  overscroll-behavior: contain;
 }
 /* fit:"cover" — crop-fill the card, no scroll (for scans with baked-in borders) */
 .card-pages--fill,
@@ -278,8 +280,8 @@ html, body {
 }
 .typed {
   font-family: var(--serif);
-  font-size: var(--back-size, 15px);
-  line-height: 1.62;
+  font-size: var(--back-size, 12px);
+  line-height: 1.6;
   color: #4a463f;
 }
 .typed .ln { display: block; }

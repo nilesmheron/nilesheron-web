@@ -11,7 +11,7 @@
     { r: 9,   x: 30,  y: 16  },
     { r: -10, x: -7,  y: 2   },
   ];
-  var SPREAD = 2.0;
+  var SPREAD = 2.5;
 
   /* ── state ── */
   var poems = [];
@@ -43,13 +43,14 @@
     active = poems.length - 1;
     document.title = entry.title + ' — Motif';
 
-    renderAudioZone(entry);
+    /* vertical order: logo → deck → music player */
     renderBrandMark();
     renderDeckZone(entry);
+    renderAudioZone(entry);
     renderCards();
   }
 
-  /* ── brand mark: floats above the deck, beneath the audio iframe ── */
+  /* ── brand mark: page header above the deck (player sits at the bottom) ── */
   function renderBrandMark() {
     var wrap = document.createElement('div');
     wrap.className = 'entry-logo';
@@ -120,7 +121,7 @@
     var iframe = document.createElement('iframe');
     iframe.src = src;
     iframe.width = '100%';
-    iframe.height = '175';
+    iframe.height = '300';
     iframe.setAttribute('frameborder', '0');
     iframe.setAttribute('allow', 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture');
     return iframe;
