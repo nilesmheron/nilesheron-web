@@ -162,10 +162,10 @@ html, body {
   overflow: hidden;
 }
 
-/* front: handwritten poem image */
-.face-front {
-  position: relative;
-}
+/* front: handwritten poem image — inherits position:absolute + inset:0 from
+   .face, which fills the card and is the positioning context for .card-img.
+   Do NOT set position:relative here: it collapses the face to 0 height and
+   the absolutely-positioned img (height:100%) disappears. */
 .face-front--text {
   padding: 32px 24px;
   display: flex;
