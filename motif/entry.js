@@ -24,6 +24,7 @@
   /* ── DOM refs ── */
   var root = document.getElementById('entry-root');
   var deckZone, cardEls, veil, hint, entryMark;
+  var audioZone, listenDrawer, audioUrls = {}, audioBuilt = false, audioOpen = false;
 
   /* ── routing ── */
   var slug = window.location.pathname.replace(/^\/motif\//, '').replace(/\/$/, '');
@@ -43,15 +44,21 @@
     active = poems.length - 1;
     document.title = entry.title + ' — Motif';
 
-    /* vertical order: logo → deck → music player */
-    renderBrandMark();
-    renderDeckZone(entry);
-    renderAudioZone(entry);
+    /* hero (one screen): logo + deck. The player lives below, opened from the
+       "listen here" drawer, so the embed never squeezes the deck frame. */
+    var hero = document.createElement('div');
+    hero.className = 'entry-hero';
+    renderBrandMark(hero);
+    renderDeckZone(entry, hero);
+    renderListenDrawer(entry, hero);
+    root.appendChild(hero);
+
+    renderAudioZone(entry); // collapsed; embed builds lazily on first open
     renderCards();
   }
 
-  /* ── brand mark: page header above the deck (player sits at the bottom) ── */
-  function renderBrandMark() {
+  /* ── brand mark: page header above the deck ── */
+  function renderBrandMark(parent) {
     var wrap = document.createElement('div');
     wrap.className = 'entry-logo';
     var logo = document.createElement('img');
@@ -65,18 +72,59 @@
       dragDx = 0;
       renderCards();
     });
-    root.appendChild(wrap);
+    parent.appendChild(wrap);
   }
 
-  /* ── audio zone ── */
-  function renderAudioZone(entry) {
-    var zone = document.createElement('div');
-    zone.className = 'audio-zone';
+  /* ── "listen here" drawer: the teaser at the bottom of the hero ── */
+  function renderListenDrawer(entry, parent) {
+    if (!entry.apple_music_url && !entry.spotify_url) return;
 
-    var spotifyUrl = entry.spotify_url || '';
+    listenDrawer = document.createElement('div');
+    listenDrawer.className = 'listen-drawer';
+
+    var label = document.createElement('span');
+    label.className = 'listen-label';
+    label.textContent = 'listen here';
+
+    var services = document.createElement('span');
+    services.className = 'listen-services';
+    var parts = [];
+    if (entry.apple_music_url) parts.push('Apple Music');
+    if (entry.spotify_url) parts.push('Spotify');
+    services.textContent = parts.join(' · ');
+
+    listenDrawer.appendChild(label);
+    listenDrawer.appendChild(services);
+    listenDrawer.addEventListener('click', toggleAudio);
+    parent.appendChild(listenDrawer);
+  }
+
+  /* ── audio zone: collapsed below the hero; embed builds on first open ── */
+  function renderAudioZone(entry) {
     var appleUrl = entry.apple_music_url || '';
-    var hasBoth = spotifyUrl && appleUrl;
-    var activeService = appleUrl ? 'apple' : (spotifyUrl ? 'spotify' : '');
+    var spotifyUrl = entry.spotify_url || '';
+    if (!appleUrl && !spotifyUrl) return;
+
+    audioUrls = { apple: appleUrl, spotify: spotifyUrl };
+    audioZone = document.createElement('div');
+    audioZone.className = 'audio-zone';
+    root.appendChild(audioZone);
+  }
+
+  function buildAudioEmbed() {
+    if (audioBuilt) return;
+    audioBuilt = true;
+
+    var appleUrl = audioUrls.apple, spotifyUrl = audioUrls.spotify;
+    var hasBoth = appleUrl && spotifyUrl;
+
+    var back = document.createElement('button');
+    back.className = 'audio-back';
+    back.textContent = '↑ back to the poems';
+    back.addEventListener('click', function () {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    audioZone.appendChild(back);
 
     if (hasBoth) {
       var toggle = document.createElement('div');
@@ -84,18 +132,17 @@
 
       var appleBtn = document.createElement('button');
       appleBtn.textContent = 'Apple Music';
-      appleBtn.className = activeService === 'apple' ? 'active' : '';
+      appleBtn.className = 'active';
 
       var spotBtn = document.createElement('button');
       spotBtn.textContent = 'Spotify';
-      spotBtn.className = activeService === 'spotify' ? 'active' : '';
 
       toggle.appendChild(appleBtn);
       toggle.appendChild(spotBtn);
-      zone.appendChild(toggle);
+      audioZone.appendChild(toggle);
 
-      var iframe = buildIframe(activeService === 'apple' ? appleUrl : spotifyUrl);
-      zone.appendChild(iframe);
+      var iframe = buildIframe(appleUrl); // Apple is the full-playback default
+      audioZone.appendChild(iframe);
 
       spotBtn.addEventListener('click', function () {
         iframe.src = spotifyUrl;
@@ -107,14 +154,25 @@
         appleBtn.className = 'active';
         spotBtn.className = '';
       });
-    } else if (activeService) {
-      var url = activeService === 'spotify' ? spotifyUrl : appleUrl;
-      zone.appendChild(buildIframe(url));
     } else {
-      return; // no URLs — skip the audio zone entirely
+      audioZone.appendChild(buildIframe(appleUrl || spotifyUrl));
     }
+  }
 
-    root.appendChild(zone);
+  function toggleAudio() {
+    audioOpen = !audioOpen;
+    if (audioOpen) {
+      buildAudioEmbed();
+      audioZone.classList.add('audio-zone--open');
+      listenDrawer.classList.add('open');
+      requestAnimationFrame(function () {
+        audioZone.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    } else {
+      audioZone.classList.remove('audio-zone--open');
+      listenDrawer.classList.remove('open');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }
 
   function buildIframe(src) {
@@ -128,7 +186,7 @@
   }
 
   /* ── deck zone ── */
-  function renderDeckZone(entry) {
+  function renderDeckZone(entry, parent) {
     deckZone = document.createElement('div');
     deckZone.className = 'deck-zone';
 
@@ -150,12 +208,12 @@
 
     deckZone.appendChild(deck);
     deckZone.appendChild(hint);
-    root.appendChild(deckZone);
+    parent.appendChild(deckZone);
 
     entryMark = document.createElement('div');
     entryMark.className = 'entry-mark';
     entryMark.textContent = 'motif · ' + entry.slug;
-    root.appendChild(entryMark);
+    parent.appendChild(entryMark);
 
     deckZone.addEventListener('pointerdown', onDown);
   }
