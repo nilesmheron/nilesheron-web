@@ -1,6 +1,24 @@
 # Motif — Audio Player Spec
 
-_Status: draft for review · 2026-05-29 · supersedes the audio handling in `motif-build-plan.md`_
+_Status: **decided** · 2026-05-29 · supersedes the audio handling in `motif-build-plan.md`_
+
+## Decision (2026-05-29)
+
+**Stay on polished embeds (Option A). No SDK.** Niles' answers to the open
+questions below:
+
+1. Login is acceptable — "the free embeds force you to login to listen anyway."
+2. Play/pause/next/back is enough — no custom unified transport, no card-sync.
+3. No owned/licensed audio anticipated.
+
+Since the only requirement is standard transport (which the native embed
+controls provide once given room), an SDK would add an OAuth flow + token
+backend + player UI for no benefit. Embeds are the finished architecture for
+this use case. Revisit only if the goal later shifts to a custom synced player
+or an owned-audio Motif.
+
+---
+
 
 ## Why this exists
 
