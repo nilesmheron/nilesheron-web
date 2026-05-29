@@ -202,9 +202,6 @@
     backBody.className = 'back-body';
     var lineCount = (poem.text || '').split('\n').length;
     if (lineCount > 9) backBody.classList.add('back-body--long');
-    if (lineCount > 18) card.style.setProperty('--back-size', '10px');
-    else if (lineCount > 13) card.style.setProperty('--back-size', '12px');
-    else if (lineCount > 9) card.style.setProperty('--back-size', '13px');
 
     var typed = document.createElement('div');
     typed.className = 'typed';

@@ -225,13 +225,14 @@ html, body {
 .back-body {
   flex: 1 1 auto;
   min-height: 0;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
   justify-content: center;
 }
 .back-body--long {
   justify-content: flex-start;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .typed {
   font-family: var(--serif);
