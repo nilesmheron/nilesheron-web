@@ -13,7 +13,7 @@
     mast.className = 'arch-mast';
     mast.innerHTML =
       '<div class="arch-top">' +
-        '<img class="logo-mark" src="/motif/mrh-logo.png" alt="mrh">' +
+        '<img class="logo-mark" src="/motif/nm-h-logo.png" alt="nm.h">' +
         '<span>index · motif</span>' +
       '</div>' +
       '<h1 class="arch-h">Motif.</h1>' +

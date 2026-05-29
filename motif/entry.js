@@ -44,8 +44,20 @@
     document.title = entry.title + ' — Motif';
 
     renderAudioZone(entry);
+    renderBrandMark();
     renderDeckZone(entry);
     renderCards();
+  }
+
+  /* ── brand mark: floats above the deck, beneath the audio iframe ── */
+  function renderBrandMark() {
+    var wrap = document.createElement('div');
+    wrap.className = 'entry-logo';
+    var logo = document.createElement('img');
+    logo.src = '/motif/nm-h-logo.png';
+    logo.alt = 'nm.h';
+    wrap.appendChild(logo);
+    root.appendChild(wrap);
   }
 
   /* ── audio zone ── */
@@ -187,16 +199,21 @@
     var backTop = document.createElement('div');
     backTop.className = 'back-top';
 
-    var backTitle = document.createElement('span');
-    backTitle.className = 'back-title';
-    backTitle.textContent = poem.title || '';
+    var backLogo = document.createElement('img');
+    backLogo.className = 'back-logo';
+    backLogo.src = '/motif/nm-h-logo.png';
+    backLogo.alt = 'nm.h';
 
     var backNo = document.createElement('span');
     backNo.className = 'back-no';
     backNo.textContent = 'Motif · ' + entryNo;
 
-    backTop.appendChild(backTitle);
+    backTop.appendChild(backLogo);
     backTop.appendChild(backNo);
+
+    var backTitle = document.createElement('div');
+    backTitle.className = 'back-title';
+    backTitle.textContent = poem.title || '';
 
     var backBody = document.createElement('div');
     backBody.className = 'back-body';
@@ -222,9 +239,6 @@
     backDate.className = 'back-date';
     backDate.textContent = poem.date || '';
 
-    var stamp = document.createElement('span');
-    stamp.className = 'back-stamp';
-
     backFoot.appendChild(backDate);
     if (poem.source_url) {
       var srcLink = document.createElement('a');
@@ -235,9 +249,9 @@
       srcLink.textContent = 'source';
       backFoot.appendChild(srcLink);
     }
-    backFoot.appendChild(stamp);
 
     back.appendChild(backTop);
+    back.appendChild(backTitle);
     back.appendChild(backBody);
     back.appendChild(backFoot);
 
@@ -257,7 +271,7 @@
       var t;
 
       if (isFocused) {
-        t = 'translate(' + dx + 'px, -10px) rotate(0deg) scale(1.16)';
+        t = 'translate(' + dx + 'px, -10px) rotate(0deg) scale(1.5)';
       } else if (isActive) {
         t = 'translate(' + (s.x * SPREAD + dx) + 'px, ' + (s.y * SPREAD - 30) + 'px) rotate(' + (s.r * SPREAD * 0.45) + 'deg) scale(1.05)';
       } else {
