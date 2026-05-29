@@ -41,7 +41,7 @@
 
   /* ── init ── */
   function init(entry) {
-    poems = entry.poems;
+    poems = shuffle(entry.poems.slice()); // re-shuffle the deck on every load
     active = poems.length - 1;
     document.title = entry.title + ' — Motif';
 
@@ -164,7 +164,9 @@
       audioZone.classList.add('audio-zone--open');
       listenDrawer.classList.add('open');
       requestAnimationFrame(function () {
-        audioZone.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        /* center the player so its control bar (bottom of the embed) is in view */
+        var frame = audioZone.querySelector('iframe');
+        (frame || audioZone).scrollIntoView({ behavior: 'smooth', block: 'center' });
       });
     } else {
       audioZone.classList.remove('audio-zone--open');
@@ -366,6 +368,15 @@
     deckZone.classList.toggle('touched', touched);
   }
 
+  /* ── deck shuffle (Fisher–Yates) ── */
+  function shuffle(a) {
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
   /* ── gesture handling ── */
   /* Window-level pointermove/pointerup for the life of a drag so the release
      is always caught even if the pointer travels off the card or screen. */
@@ -380,11 +391,27 @@
     var focusedAtDown = focused;
     var activeAtDown = active;
 
+    /* if a card is focused, vertical drags scroll its page column directly —
+       native touch-scroll fails inside the transform:scaled focused card */
+    var scrollPages = (focusedAtDown !== null && cardEls[focusedAtDown])
+      ? cardEls[focusedAtDown].querySelector('.card-pages') : null;
+    var startScroll = scrollPages ? scrollPages.scrollTop : 0;
+    var axis = null;      // lock to 'x' (swipe) or 'y' (scroll) on first move
+    var scrolling = false;
+
     function onMove(ev) {
       var dx = ev.clientX - startX;
       var dy = ev.clientY - startY;
-      if (Math.abs(dx) > 6 || Math.abs(dy) > 6) moved = true;
-      if (Math.abs(dx) > Math.abs(dy)) {
+      if (!axis && (Math.abs(dx) > 6 || Math.abs(dy) > 6)) {
+        axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+        moved = true;
+      }
+      if (axis === 'y') {
+        /* focused → drive the card scroll; otherwise let the page scroll natively */
+        if (scrollPages) { scrolling = true; scrollPages.scrollTop = startScroll - dy; }
+        return;
+      }
+      if (axis === 'x') {
         dragDx = dx * 0.34;
         renderCards();
       }
@@ -400,6 +427,8 @@
 
       dragDx = 0;
       touched = true;
+
+      if (scrolling) { renderCards(); return; } // was scrolling the focused card
 
       /* swipe */
       if (moved && Math.abs(dx) > 34 && Math.abs(dx) > Math.abs(dy)) {

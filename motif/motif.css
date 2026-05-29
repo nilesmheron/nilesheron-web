@@ -250,7 +250,7 @@ html, body {
 .card.focused .card-pages {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;          /* let vertical drags scroll the page column */
+  touch-action: none;           /* JS drives the scroll (native fails inside the scaled card) */
   overscroll-behavior: contain;
 }
 /* fit:"cover" — crop-fill the card, no scroll (for scans with baked-in borders) */
@@ -325,7 +325,7 @@ html, body {
 }
 .typed {
   font-family: var(--serif);
-  font-size: var(--back-size, 11px);
+  font-size: var(--back-size, 10.5px);
   line-height: 1.58;
   color: #4a463f;
 }
