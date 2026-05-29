@@ -50,8 +50,8 @@ html, body {
 /* ---- top zone: audio player iframe ---- */
 .audio-zone {
   flex: 0 0 auto;
-  height: 152px;
-  padding: 26px 22px 0;
+  height: 232px;
+  padding: 22px 22px 0;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;

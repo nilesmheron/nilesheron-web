@@ -75,25 +75,25 @@
     var spotifyUrl = entry.spotify_url || '';
     var appleUrl = entry.apple_music_url || '';
     var hasBoth = spotifyUrl && appleUrl;
-    var activeService = spotifyUrl ? 'spotify' : (appleUrl ? 'apple' : '');
+    var activeService = appleUrl ? 'apple' : (spotifyUrl ? 'spotify' : '');
 
     if (hasBoth) {
       var toggle = document.createElement('div');
       toggle.className = 'audio-service-toggle';
 
-      var spotBtn = document.createElement('button');
-      spotBtn.textContent = 'Spotify';
-      spotBtn.className = activeService === 'spotify' ? 'active' : '';
-
       var appleBtn = document.createElement('button');
       appleBtn.textContent = 'Apple Music';
       appleBtn.className = activeService === 'apple' ? 'active' : '';
 
-      toggle.appendChild(spotBtn);
+      var spotBtn = document.createElement('button');
+      spotBtn.textContent = 'Spotify';
+      spotBtn.className = activeService === 'spotify' ? 'active' : '';
+
       toggle.appendChild(appleBtn);
+      toggle.appendChild(spotBtn);
       zone.appendChild(toggle);
 
-      var iframe = buildIframe(spotifyUrl);
+      var iframe = buildIframe(activeService === 'apple' ? appleUrl : spotifyUrl);
       zone.appendChild(iframe);
 
       spotBtn.addEventListener('click', function () {
@@ -120,7 +120,7 @@
     var iframe = document.createElement('iframe');
     iframe.src = src;
     iframe.width = '100%';
-    iframe.height = '100';
+    iframe.height = '175';
     iframe.setAttribute('frameborder', '0');
     iframe.setAttribute('allow', 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture');
     return iframe;
