@@ -151,7 +151,9 @@ html, body {
 /* ---- bottom zone: card deck ---- */
 .deck-zone {
   flex: 1 1 auto;
-  min-height: 62vh;  /* keep the deck tall even when the player expands below */
+  /* hold ~the closed height so opening the player below doesn't shrink the
+     deck and slide the cards up under the header */
+  min-height: calc(100dvh - 150px);
   position: relative;
   overflow: hidden;
   touch-action: pan-y;
@@ -247,7 +249,8 @@ html, body {
   height: auto;
   display: block;
 }
-.card.focused .card-pages {
+.card.focused .card-pages,
+.card.focused .card-page {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   touch-action: none;           /* JS drives the scroll (native fails inside the scaled card) */

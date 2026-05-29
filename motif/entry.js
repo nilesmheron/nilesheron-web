@@ -12,7 +12,7 @@
     { r: -10, x: -7,  y: 2   },
   ];
   var SPREAD = 2.5;
-  var DECK_Y = -40; /* lift the whole cluster up to tighten the logo→deck gap */
+  var DECK_Y = -28; /* lift the cluster up to tighten the logo→deck gap (with header buffer) */
 
   /* ── state ── */
   var poems = [];
@@ -179,7 +179,7 @@
     var iframe = document.createElement('iframe');
     iframe.src = src;
     iframe.width = '100%';
-    iframe.height = '352'; /* Spotify only shows its full player (art + tracklist) at >=352px */
+    iframe.height = '460'; /* tall enough for Apple Music's bottom control bar */
     iframe.setAttribute('frameborder', '0');
     iframe.setAttribute('allow', 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture');
     return iframe;
