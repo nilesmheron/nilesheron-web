@@ -114,6 +114,27 @@ experience."
    the path to full control with no login — worth designing the data model to
    allow a self-hosted `audio_url` alongside the embed URLs.
 
+## Follow-up finding (2026-05-29) — embeds are not equal
+
+Tested signed-in on Niles' browser:
+
+- **Apple Music embed → plays full tracks** for the signed-in subscriber.
+  MusicKit handles auth in a way that survives the third-party context.
+- **Spotify embed → preview only** (30s + "save to / open in Spotify"), even
+  signed into Premium. Cause is browser **third-party-cookie blocking**: the
+  `open.spotify.com` iframe can't read the visitor's Spotify session, so it
+  falls back to logged-out behavior. Our markup is correct (we pass
+  `allow="…encrypted-media…"`; no Permissions-Policy strips it) — this is a
+  browser-privacy constraint, not a code bug.
+
+**Implication:** keeping **Apple Music as the default** is the right call — it's
+the service that actually plays full tracks in-page. Spotify works only as a
+preview + deep-link to the Spotify app. The only way to guarantee full Spotify
+playback in-page is the Web Playback SDK (first-party OAuth token, Premium-only,
+big build) — still not worth it given Apple covers the need.
+
+_Open: keep the Spotify toggle as a preview/open-in-app fallback, or drop it?_
+
 ## Shipped this session (in the current build)
 
 - Apple Music is the default service (listed first, loaded first); Spotify is
