@@ -248,6 +248,7 @@ html, body {
   width: 100%;
   height: auto;
   display: block;
+  flex-shrink: 0; /* keep natural height; stack & scroll, don't squash to fit */
 }
 .card.focused .card-pages,
 .card.focused .card-page {
