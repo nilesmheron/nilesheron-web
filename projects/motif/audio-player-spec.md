@@ -133,7 +133,9 @@ preview + deep-link to the Spotify app. The only way to guarantee full Spotify
 playback in-page is the Web Playback SDK (first-party OAuth token, Premium-only,
 big build) — still not worth it given Apple covers the need.
 
-_Open: keep the Spotify toggle as a preview/open-in-app fallback, or drop it?_
+**Decided (2026-05-29):** keep the Spotify toggle as-is — a preview +
+"open in Spotify" deep-link fallback. Apple Music stays the full-playback
+default. No code change.
 
 ## Shipped this session (in the current build)
 
