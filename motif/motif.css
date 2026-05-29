@@ -57,10 +57,9 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   gap: 14px;
-  min-height: 100dvh;
-  padding: 32px 22px 48px;
+  padding: 28px 22px 32px;
+  border-top: 1px solid var(--hair);
 }
 .audio-zone iframe {
   width: 100%;
@@ -83,15 +82,7 @@ html, body {
 }
 .audio-back:hover { color: var(--ink); }
 
-/* the deck fills the first screen; the player is below the fold */
-.entry-hero {
-  flex: 0 0 auto;
-  height: 100dvh;
-  display: flex;
-  flex-direction: column;
-}
-
-/* "listen here" drawer — teaser bar at the bottom of the hero */
+/* "listen here" drawer — teaser band above the footer */
 .listen-drawer {
   flex: 0 0 auto;
   display: flex;
@@ -160,6 +151,7 @@ html, body {
 /* ---- bottom zone: card deck ---- */
 .deck-zone {
   flex: 1 1 auto;
+  min-height: 62vh;  /* keep the deck tall even when the player expands below */
   position: relative;
   overflow: hidden;
   touch-action: pan-y;
@@ -389,22 +381,18 @@ html, body {
 }
 .deck-zone.touched .deck-hint { opacity: 0; }
 
-/* faint entry identity — lower-left corner */
-.entry-mark {
-  position: absolute;
-  left: 22px;
-  bottom: 22px;
-  z-index: 30;
+/* footer band — entry identity, always the last line */
+.entry-footer {
+  flex: 0 0 auto;
+  text-align: center;
+  padding: 14px 22px calc(16px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--hair);
   font-family: var(--mono);
   font-size: 9px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--muted);
-  pointer-events: none;
-  transition: opacity 0.4s ease;
 }
-.deck-zone.is-focused ~ .entry-mark,
-.entry-mark.hidden { opacity: 0; }
 
 /* ====================================================================
    ARCHIVE PAGE

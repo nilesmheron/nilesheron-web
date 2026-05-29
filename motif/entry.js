@@ -44,16 +44,13 @@
     active = poems.length - 1;
     document.title = entry.title + ' — Motif';
 
-    /* hero (one screen): logo + deck. The player lives below, opened from the
-       "listen here" drawer, so the embed never squeezes the deck frame. */
-    var hero = document.createElement('div');
-    hero.className = 'entry-hero';
-    renderBrandMark(hero);
-    renderDeckZone(entry, hero);
-    renderListenDrawer(entry, hero);
-    root.appendChild(hero);
-
-    renderAudioZone(entry); // collapsed; embed builds lazily on first open
+    /* bottom stacks as bands: deck → listen drawer → (music when open) → footer,
+       so the footer is always the last line and the music expands above it. */
+    renderBrandMark(root);
+    renderDeckZone(entry, root);
+    renderListenDrawer(entry, root);
+    renderAudioZone(entry); // collapsed; embed builds lazily, above the footer
+    renderFooter(entry);    // caption band — always the last line
     renderCards();
   }
 
@@ -210,12 +207,15 @@
     deckZone.appendChild(hint);
     parent.appendChild(deckZone);
 
-    entryMark = document.createElement('div');
-    entryMark.className = 'entry-mark';
-    entryMark.textContent = 'motif · ' + entry.slug;
-    parent.appendChild(entryMark);
-
     deckZone.addEventListener('pointerdown', onDown);
+  }
+
+  /* ── footer band: always the last line, below the music ── */
+  function renderFooter(entry) {
+    entryMark = document.createElement('div');
+    entryMark.className = 'entry-footer';
+    entryMark.textContent = 'motif · ' + entry.slug;
+    root.appendChild(entryMark);
   }
 
   /* ── card builder ── */
