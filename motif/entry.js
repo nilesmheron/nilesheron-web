@@ -121,7 +121,7 @@
     var iframe = document.createElement('iframe');
     iframe.src = src;
     iframe.width = '100%';
-    iframe.height = '300';
+    iframe.height = '352'; /* Spotify only shows its full player (art + tracklist) at >=352px */
     iframe.setAttribute('frameborder', '0');
     iframe.setAttribute('allow', 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture');
     return iframe;
