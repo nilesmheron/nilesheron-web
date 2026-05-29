@@ -11,7 +11,7 @@
     { r: 9,   x: 30,  y: 16  },
     { r: -10, x: -7,  y: 2   },
   ];
-  var SPREAD = 1.5;
+  var SPREAD = 2.0;
 
   /* ── state ── */
   var poems = [];
@@ -192,7 +192,9 @@
       front.appendChild(sig);
     } else {
       var pages = document.createElement('div');
-      pages.className = 'card-pages';
+      /* fit:"cover" crop-fills the card (for scans with baked-in borders);
+         default is fit-to-width with scroll-on-focus */
+      pages.className = 'card-pages' + (poem.fit === 'cover' ? ' card-pages--fill' : '');
       images.forEach(function (url, pi) {
         var img = document.createElement('img');
         img.className = 'card-page';

@@ -56,6 +56,7 @@
       "id": "stars",
       "title": "Stars",
       "date": "02.01.2018",
+      "fit": "cover",
       "image_url": "https://gdellbtfpcmdsfogxqwf.supabase.co/storage/v1/object/public/motif-images/familiar-fruit/Motif1-stars.jpg",
       "text": "they cut us down from\nthe sky; we left the lights on\nso we could find home"
     },
