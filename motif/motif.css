@@ -250,12 +250,23 @@ html, body {
   display: block;
   flex-shrink: 0; /* keep natural height; stack & scroll, don't squash to fit */
 }
-.card.focused .card-pages,
-.card.focused .card-page {
+/* focused card: JS owns every gesture — native scroll fails inside the
+   transform:scaled card, so touch-action:none on the whole subtree */
+.card.focused,
+.card.focused * {
+  touch-action: none;
+}
+.card.focused .card-pages {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  touch-action: none;           /* JS drives the scroll (native fails inside the scaled card) */
   overscroll-behavior: contain;
+}
+/* lock the page while a card is focused (set on <html> from JS) */
+html.focus-lock,
+html.focus-lock body {
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
 }
 /* fit:"cover" — crop-fill the card, no scroll (for scans with baked-in borders) */
 .card-pages--fill,
@@ -267,11 +278,11 @@ html, body {
   height: 100%;
   object-fit: cover;
 }
-/* amber seal dot, lower-left of front */
+/* amber seal dot, lower-right of front (left is usually where the text/date sits) */
 .seal-dot {
   position: absolute;
-  left: 22px;
-  bottom: 22px;
+  right: 16px;
+  bottom: 16px;
   width: 9px;
   height: 9px;
   border-radius: 50%;

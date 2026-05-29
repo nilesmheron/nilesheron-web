@@ -366,6 +366,8 @@
 
     deckZone.classList.toggle('is-focused', focused !== null);
     deckZone.classList.toggle('touched', touched);
+    /* lock the page while a card is focused so its scroll can't fight the page */
+    document.documentElement.classList.toggle('focus-lock', focused !== null);
   }
 
   /* ── deck shuffle (Fisher–Yates) ── */
