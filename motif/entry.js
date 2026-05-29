@@ -12,6 +12,7 @@
     { r: -10, x: -7,  y: 2   },
   ];
   var SPREAD = 2.5;
+  var DECK_Y = -40; /* lift the whole cluster up to tighten the logo→deck gap */
 
   /* ── state ── */
   var poems = [];
@@ -347,11 +348,11 @@
       var t;
 
       if (isFocused) {
-        t = 'translate(' + dx + 'px, -10px) rotate(0deg) scale(1.35)';
+        t = 'translate(' + dx + 'px, ' + (DECK_Y - 10) + 'px) rotate(0deg) scale(1.35)';
       } else if (isActive) {
-        t = 'translate(' + (s.x * SPREAD + dx) + 'px, ' + (s.y * SPREAD - 30) + 'px) rotate(' + (s.r * SPREAD * 0.45) + 'deg) scale(1.05)';
+        t = 'translate(' + (s.x * SPREAD + dx) + 'px, ' + (s.y * SPREAD - 30 + DECK_Y) + 'px) rotate(' + (s.r * SPREAD * 0.45) + 'deg) scale(1.05)';
       } else {
-        t = 'translate(' + (s.x * SPREAD) + 'px, ' + (s.y * SPREAD) + 'px) rotate(' + (s.r * SPREAD) + 'deg)';
+        t = 'translate(' + (s.x * SPREAD) + 'px, ' + (s.y * SPREAD + DECK_Y) + 'px) rotate(' + (s.r * SPREAD) + 'deg)';
       }
 
       card.style.transform = t;
