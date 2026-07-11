@@ -13,10 +13,7 @@
     mast.className = 'arch-mast';
     mast.innerHTML =
       '<div class="arch-top">' +
-        '<div class="logo-slots">' +
-          '<img class="logo-mark" src="/motif/nm-h-logo.png" alt="nm.h">' +
-          '<img class="logo-mark" src="/motif/nm-h-logo.png" alt="nm.h">' +
-        '</div>' +
+        '<img class="logo-mark" src="/motif/nm-h-logo.png" alt="nm.h">' +
         '<span>index · motif</span>' +
       '</div>' +
       '<h1 class="arch-h">Motif.</h1>' +
@@ -56,6 +53,12 @@
       tile.appendChild(meta);
       grid.appendChild(tile);
     });
+
+    // end-of-list bookend: nm.h mark holds the trailing empty slot
+    const cap = document.createElement('div');
+    cap.className = 'tile tile-cap';
+    cap.innerHTML = '<img class="cap-mark" src="/motif/nm-h-logo.png" alt="nm.h">';
+    grid.appendChild(cap);
 
     const foot = document.createElement('div');
     foot.className = 'arch-foot';

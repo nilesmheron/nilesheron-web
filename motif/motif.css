@@ -42,11 +42,6 @@ html, body {
   width: auto;
   display: block;
 }
-.logo-slots {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
 
 /* ====================================================================
    ENTRY PAGE
@@ -495,6 +490,17 @@ html.focus-lock body {
   color: inherit;
 }
 .tile:hover { background: var(--card-bg); }
+.tile-cap {
+  cursor: default;
+  align-items: center;
+  justify-content: center;
+}
+.tile-cap:hover { background: var(--page-bg); }
+.cap-mark {
+  height: 22px;
+  width: auto;
+  opacity: 0.35;
+}
 .tile-no {
   font-family: var(--mono);
   font-size: 9px;
