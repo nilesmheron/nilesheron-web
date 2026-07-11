@@ -54,6 +54,12 @@
       grid.appendChild(tile);
     });
 
+    // end-of-list bookend: nm.h mark holds the trailing empty slot
+    const cap = document.createElement('div');
+    cap.className = 'tile tile-cap';
+    cap.innerHTML = '<img class="cap-mark" src="/motif/nm-h-logo.png" alt="nm.h">';
+    grid.appendChild(cap);
+
     const foot = document.createElement('div');
     foot.className = 'arch-foot';
     foot.innerHTML = '<span>nilesheron.com</span><span>/motif</span>';
