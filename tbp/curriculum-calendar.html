@@ -136,7 +136,7 @@ function toggleDetail(id){
   if(!d||!t)return;
   var open=d.style.display!=='none';
   d.style.display=open?'none':'block';
-  t.textContent=open?'+':'\u2212';
+  t.textContent=open?'+':'−';
 }
 
 function makeTimeline(h){var t=document.createElement('div');t.style.cssText='flex:1;position:relative;height:'+h+'px';return t;}
@@ -422,7 +422,7 @@ root.appendChild(note);
 
 var footer=document.createElement('div');
 footer.style.cssText='display:flex;justify-content:space-between;padding-top:14px;margin-top:14px;border-top:0.5px solid var(--color-border-tertiary)';
-footer.innerHTML='<div style="font-size:12px;font-weight:500;color:var(--color-text-primary)">TechTown Detroit &middot; Start Studio: ID</div><div style="font-size:12px;color:var(--color-text-secondary)">techtown.org &middot; Detroit, MI</div>';
+footer.innerHTML='<div style="font-size:12px;font-weight:500;color:var(--color-text-primary)">TechTown Detroit &middot; Start Studio: ID</div><div style="font-size:12px;color:var(--color-text-secondary)">techtowndetroit.org &middot; Detroit, MI</div>';
 root.appendChild(footer);
 
 </script>
