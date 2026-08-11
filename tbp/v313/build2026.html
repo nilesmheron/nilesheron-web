@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Venture 313 Buildathon 2026 — City of Detroit Partner Overview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --black:#000000;
+    --mint:#56EB91;
+    --teal:#11A78A;
+    --lime:#CCFF33;
+    --white:#FFFFFF;
+    --gray-d:#666666;
+    --gray-l:#EEEEEE;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    font-family:'Open Sans',Arial,sans-serif;
+    font-weight:400;
+    color:var(--black);
+    background:var(--gray-l);
+    line-height:1.55;
+    font-size:15px;
+  }
+  .page{
+    max-width:860px;
+    margin:24px auto;
+    background:var(--white);
+    box-shadow:0 2px 24px rgba(0,0,0,.12);
+  }
+
+  /* ---------- Hero band ---------- */
+  .hero{
+    background:var(--black);
+    color:var(--white);
+    padding:44px 56px 40px;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero::after{
+    content:"";
+    position:absolute;
+    right:-40px;top:-40px;
+    width:220px;height:220px;
+    border:2px solid var(--teal);
+    transform:rotate(45deg);
+    opacity:.35;
+  }
+  .eyebrow{
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:var(--mint);
+    margin-bottom:14px;
+  }
+  .wordmark{
+    font-weight:800;
+    font-size:15px;
+    letter-spacing:.08em;
+    color:var(--white);
+    margin-bottom:22px;
+  }
+  .wordmark span{color:var(--mint);}
+  h1{
+    font-weight:800;
+    font-size:44px;
+    line-height:1.05;
+    letter-spacing:-.01em;
+    margin-bottom:14px;
+  }
+  h1 em{font-style:normal;color:var(--lime);}
+  .dek{
+    font-size:15.5px;
+    max-width:620px;
+    color:#dcdcdc;
+  }
+
+  /* ---------- Shared section chrome ---------- */
+  section{padding:34px 56px;}
+  section + section{border-top:1px solid var(--gray-l);}
+  .label{
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:var(--teal);
+    margin-bottom:16px;
+  }
+  p + p{margin-top:12px;}
+
+  /* ---------- Timeline rail ---------- */
+  .rail{
+    display:flex;
+    gap:0;
+    margin-top:8px;
+  }
+  .stop{
+    flex:1;
+    padding:0 18px 0 0;
+    position:relative;
+  }
+  .stop + .stop{padding-left:18px;border-left:2px solid var(--mint);}
+  .stop .num{
+    font-weight:800;
+    font-size:12px;
+    letter-spacing:.14em;
+    color:var(--teal);
+    margin-bottom:6px;
+  }
+  .stop .when{
+    font-weight:800;
+    font-size:16px;
+    margin-bottom:4px;
+  }
+  .stop .what{
+    font-size:13px;
+    color:var(--gray-d);
+  }
+  .how-copy{margin-top:20px;max-width:720px;}
+
+  /* ---------- Categories ---------- */
+  .cats{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-top:6px;
+  }
+  .cat{
+    background:var(--black);
+    color:var(--white);
+    padding:14px 16px;
+    font-weight:700;
+    font-size:14px;
+    line-height:1.35;
+    border-left:5px solid var(--mint);
+  }
+  .cat small{
+    display:block;
+    font-weight:400;
+    font-size:12px;
+    color:#bdbdbd;
+    margin-top:4px;
+  }
+
+  /* ---------- Prizes ---------- */
+  .prize-lead{
+    font-weight:800;
+    font-size:26px;
+    margin-bottom:4px;
+  }
+  .prize-lead em{font-style:normal;color:var(--teal);}
+  .prizes{
+    display:flex;
+    gap:10px;
+    margin-top:16px;
+    flex-wrap:wrap;
+  }
+  .prize{
+    flex:1;
+    min-width:150px;
+    border:2px solid var(--black);
+    padding:14px 16px;
+  }
+  .prize .amt{
+    font-weight:800;
+    font-size:24px;
+    line-height:1.1;
+  }
+  .prize .tier{
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--gray-d);
+    margin-top:4px;
+  }
+  .prize.first{background:var(--black);color:var(--white);border-color:var(--black);}
+  .prize.first .amt{color:var(--lime);}
+  .prize.first .tier{color:#bdbdbd;}
+  .prize-note{
+    margin-top:14px;
+    font-size:13px;
+    color:var(--gray-d);
+    max-width:720px;
+  }
+
+  /* ---------- City role ---------- */
+  .asks{margin-top:4px;}
+  .ask{
+    display:flex;
+    gap:18px;
+    padding:16px 0;
+  }
+  .ask + .ask{border-top:1px solid var(--gray-l);}
+  .ask .n{
+    font-weight:800;
+    font-size:15px;
+    color:var(--teal);
+    white-space:nowrap;
+    padding-top:1px;
+  }
+  .ask h3{
+    font-weight:800;
+    font-size:15.5px;
+    margin-bottom:3px;
+  }
+  .ask p{font-size:14px;color:#333;}
+
+  /* ---------- Footer band ---------- */
+  .foot{
+    background:var(--black);
+    color:#bdbdbd;
+    padding:26px 56px;
+    font-size:12.5px;
+    display:flex;
+    justify-content:space-between;
+    gap:24px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+  .foot strong{color:var(--white);font-weight:700;}
+  .foot .mark{color:var(--mint);font-weight:800;letter-spacing:.08em;font-size:13px;white-space:nowrap;}
+
+  /* ---------- Responsive ---------- */
+  @media (max-width:640px){
+    .hero,section,.foot{padding-left:24px;padding-right:24px;}
+    h1{font-size:32px;}
+    .rail{flex-direction:column;}
+    .stop + .stop{border-left:none;border-top:2px solid var(--mint);padding-left:0;padding-top:14px;margin-top:14px;}
+    .cats{grid-template-columns:1fr;}
+  }
+
+  /* ---------- Print ---------- */
+  @media print{
+    body{background:var(--white);font-size:12.5px;}
+    .page{margin:0;max-width:none;box-shadow:none;}
+    .hero{padding:32px 44px 28px;}
+    section{padding:22px 44px;}
+    .foot{padding:18px 44px;}
+    h1{font-size:34px;}
+    .hero,.cat,.prize.first,.foot{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="hero">
+    <div class="eyebrow">Detroit Homecoming Week &middot; September 2026</div>
+    <div class="wordmark">VENTURE <span>313</span> BUILDATHON</div>
+    <h1>Detroit builds its<br>own solutions<em>.</em></h1>
+    <p class="dek">This September, builders, dreamers, and product developers from across Detroit come together for five days to design and ship digital tools that address real municipal challenges. Hosted by Venture 313 — the Gilbert Family Foundation&#8209;backed initiative supporting Detroit tech founders — in partnership with the City of Detroit, the Buildathon anchors Detroit Homecoming week as its opening act.</p>
+  </header>
+
+  <section>
+    <div class="label">How It Works</div>
+    <div class="rail">
+      <div class="stop">
+        <div class="num">01 &middot; AUG 20</div>
+        <div class="when">Applications open</div>
+        <div class="what">Citywide call for builders, with coordinated announcement and comms push</div>
+      </div>
+      <div class="stop">
+        <div class="num">02 &middot; SEP 17&ndash;18</div>
+        <div class="when">Orient &amp; train</div>
+        <div class="what">Registration, team formation, and hands-on AI&#8209;assisted development education</div>
+      </div>
+      <div class="stop">
+        <div class="num">03 &middot; SEP 19&ndash;21</div>
+        <div class="when">Build weekend</div>
+        <div class="what">Teams build working digital solutions to their chosen challenge</div>
+      </div>
+      <div class="stop">
+        <div class="num">04 &middot; SEP 22</div>
+        <div class="when">Showcase</div>
+        <div class="what">Public presentations, winners announced, awards presented</div>
+      </div>
+    </div>
+    <p class="how-copy">Participants receive training in the latest AI-assisted development techniques — working with tools like Claude Code, Lovable, ChatGPT, GitHub, and Vercel. No prior software experience is required; the education is built in. Teams then build through the weekend and present finished products at the September 22 Showcase.</p>
+  </section>
+
+  <section>
+    <div class="label">The Challenge Categories</div>
+    <div class="cats">
+      <div class="cat">Safe, Just &amp; Thriving Neighborhoods</div>
+      <div class="cat">Community &amp; Public Health</div>
+      <div class="cat">Reliable Transportation, Infrastructure &amp; Sustainability</div>
+      <div class="cat">Open, Accessible &amp; Responsible Government</div>
+      <div class="cat">Future of Education &amp; Youth Opportunities</div>
+      <div class="cat">Future of Detroit<small>Physical AI &middot; international cross&#8209;border opportunity &middot; proximity to water &middot; sport, entertainment &amp; media</small></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="label">The Prizes</div>
+    <div class="prize-lead">Up to <em>$75,000</em> in total awards.</div>
+    <div class="prizes">
+      <div class="prize first">
+        <div class="amt">$40,000</div>
+        <div class="tier">First Place</div>
+      </div>
+      <div class="prize">
+        <div class="amt">$22,500</div>
+        <div class="tier">Second Place</div>
+      </div>
+      <div class="prize">
+        <div class="amt">$10,000</div>
+        <div class="tier">Third Place</div>
+      </div>
+      <div class="prize">
+        <div class="amt">$2,500</div>
+        <div class="tier">People&rsquo;s Choice</div>
+      </div>
+    </div>
+    <p class="prize-note">Awards are delivered as a combination of business-building grants and cash through Venture 313 and its partners.</p>
+  </section>
+
+  <section>
+    <div class="label">The City&rsquo;s Role</div>
+    <div class="asks">
+      <div class="ask">
+        <div class="n">01</div>
+        <div>
+          <h3>Mayor Sheffield presents the awards</h3>
+          <p>Mayor Sheffield presenting the winning awards at the September 22 Showcase — putting the City&rsquo;s leadership at the center of Homecoming week&rsquo;s most forward-looking moment.</p>
+        </div>
+      </div>
+      <div class="ask">
+        <div class="n">02</div>
+        <div>
+          <h3>Communications collaboration</h3>
+          <p>Coordinated announcement and shared amplification beginning the week of August 20, with collaborative posts through the application window.</p>
+        </div>
+      </div>
+      <div class="ask">
+        <div class="n">03</div>
+        <div>
+          <h3>Partner introductions by pillar</h3>
+          <p>Introductions to City-connected partners positioned to support specific challenge categories — departments, agencies, and institutions whose participation deepens the work in each pillar.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <div><strong>Venture 313</strong> is a partnership of the Gilbert Family Foundation, TechTown Detroit, Invest Detroit Ventures, and the Detroit Development Fund.</div>
+    <div class="mark">VENTURE 313 &middot; 2026</div>
+  </footer>
+
+</div>
+</body>
+</html>
