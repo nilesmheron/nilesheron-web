@@ -180,8 +180,8 @@
     color:var(--gray-d);
     margin-top:4px;
   }
-  .prize.first{background:var(--black);color:var(--white);border-color:var(--black);}
-  .prize.first .amt{color:var(--lime);}
+  .prize.first{flex:1 1 100%;background:var(--black);color:var(--white);border-color:var(--black);display:flex;align-items:baseline;justify-content:center;gap:16px;}
+  .prize.first .amt{color:var(--lime);font-size:34px;}
   .prize.first .tier{color:#bdbdbd;}
   .prize-note{
     margin-top:14px;
@@ -190,7 +190,16 @@
     max-width:720px;
   }
 
-  /* ---------- City role ---------- */
+  /* ---------- Track record ---------- */
+  .track-intro{max-width:720px;margin-bottom:8px;}
+  .indirect{
+    margin-top:20px;
+    background:var(--gray-l);
+    border-left:5px solid var(--teal);
+    padding:16px 20px;
+  }
+  .indirect h3{font-weight:800;font-size:15.5px;margin-bottom:5px;}
+  .indirect p{font-size:14px;color:#333;}
   .asks{margin-top:4px;}
   .ask{
     display:flex;
@@ -322,29 +331,34 @@
   </section>
 
   <section>
-    <div class="label">The City&rsquo;s Role</div>
+    <div class="label">The Track Record</div>
+    <p class="track-intro">This is the third Buildathon. The first two produced companies, careers, and builders who stayed in the ecosystem.</p>
     <div class="asks">
       <div class="ask">
-        <div class="n">01</div>
+        <div class="n">Y2</div>
         <div>
-          <h3>Mayor Sheffield presents the awards</h3>
-          <p>Mayor Sheffield presenting the winning awards at the September 22 Showcase — putting the City&rsquo;s leadership at the center of Homecoming week&rsquo;s most forward-looking moment.</p>
+          <h3>313SafeBeds goes live</h3>
+          <p>ShaTera launched 313SafeBeds — a product born at the Buildathon and carried forward beyond it.</p>
         </div>
       </div>
       <div class="ask">
-        <div class="n">02</div>
+        <div class="n">Y2</div>
         <div>
-          <h3>Communications collaboration</h3>
-          <p>Coordinated announcement and shared amplification beginning the week of August 20, with collaborative posts through the application window.</p>
+          <h3>Drone companies, live first-responder showcases</h3>
+          <p>Rajesh and Everette each built drone companies and staged live first-responder technology demonstrations. Rajesh is still building at TechTown today — developing his software and competing for public and private contracts.</p>
         </div>
       </div>
       <div class="ask">
-        <div class="n">03</div>
+        <div class="n">Y2</div>
         <div>
-          <h3>Partner introductions by pillar</h3>
-          <p>Introductions to City-connected partners positioned to support specific challenge categories — departments, agencies, and institutions whose participation deepens the work in each pillar.</p>
+          <h3>Non-technical students learn to build</h3>
+          <p>A team of non-technical Wayne State students learned to code during the event and built a community app addressing food scarcity — neighbors taking care of neighbors — narrowly missing third place.</p>
         </div>
       </div>
+    </div>
+    <div class="indirect">
+      <h3>The path is non-linear — and the wins compound.</h3>
+      <p>Pouring into people gives them the context to stay in the ecosystem, and the indirect winners keep surfacing: Tricee Clark (Buildathon Y1) went on to win Hatch. Aaron is now a full-time engineer. ADA graduates who competed in Y2 are now build engineers at TechTown&rsquo;s Build 313 nights today.</p>
     </div>
   </section>
 
