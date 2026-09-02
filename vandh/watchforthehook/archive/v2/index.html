@@ -3,12 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Watch For The Hook — Internal Alignment</title>
+<title>Watch For The Hook — Internal Alignment (Archived v2)</title>
 <style>
   :root{--black:#000;--white:#fff;--red:#E8362D;--grey:#8a8a8a;}
   *{margin:0;padding:0;box-sizing:border-box;}
   html{scroll-snap-type:y mandatory;scroll-behavior:smooth;}
   body{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;background:var(--black);color:var(--white);}
+  .archive-banner{position:fixed;bottom:0;left:0;right:0;z-index:10;background:var(--red);color:var(--white);font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;text-align:center;padding:8px 16px;}
+  .archive-banner a{color:var(--white);}
   .slide{min-height:100vh;min-height:100svh;scroll-snap-align:start;display:flex;flex-direction:column;justify-content:center;padding:clamp(24px,6vw,96px);position:relative;}
   .slide.light{background:var(--white);color:var(--black);}
   .slide.dark{background:var(--black);color:var(--white);}
@@ -26,17 +28,11 @@
   .redline{color:var(--red);font-weight:700;}
   .title-sub{margin-top:clamp(24px,4vw,48px);font-size:clamp(17px,2.1vw,24px);line-height:1.5;max-width:30em;}
   .title-tag{margin-top:clamp(20px,3vw,36px);font-size:13px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--grey);}
-  @media (prefers-reduced-motion:no-preference){
-    .reveal{opacity:0;transform:translateY(14px);animation:rise .7s ease forwards;}
-    .reveal.d1{animation-delay:.15s;}
-    .reveal.d2{animation-delay:.3s;}
-    @keyframes rise{to{opacity:1;transform:none;}}
-  }
   .cascade{font-weight:900;text-transform:uppercase;line-height:1.08;font-size:clamp(30px,5.5vw,72px);letter-spacing:-.01em;}
   .cascade div:last-child{color:var(--red);font-style:italic;}
   .cascade + p.body{margin-top:clamp(20px,3vw,36px);}
   .seq{list-style:none;max-width:38em;}
-  .seq li{display:flex;gap:18px;align-items:baseline;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.18);font-size:clamp(17px,2.1vw,23px);line-height:1.45;}
+  .seq li{display:flex;gap:18px;align-items:baseline;padding:14px 0;border-bottom:1px solid rgba(0,0,0,.15);font-size:clamp(17px,2.1vw,23px);line-height:1.45;}
   .seq li:last-child{border-bottom:none;}
   .seq .n{font-weight:700;font-size:13px;letter-spacing:.12em;color:var(--red);flex:0 0 auto;min-width:38px;}
   .seq .step-name{font-weight:700;text-transform:uppercase;letter-spacing:.02em;}
@@ -45,14 +41,12 @@
   .no-list li:last-child{border-bottom:none;}
   .no-list .no{color:var(--red);text-transform:uppercase;font-style:italic;margin-right:10px;}
   .radar{list-style:none;max-width:38em;margin-top:6px;}
-  .radar li{font-size:clamp(19px,2.6vw,30px);font-weight:700;text-transform:uppercase;letter-spacing:-.01em;line-height:1.3;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.18);}
+  .radar li{font-size:clamp(19px,2.6vw,30px);font-weight:700;text-transform:uppercase;letter-spacing:-.01em;line-height:1.3;padding:12px 0;border-bottom:1px solid rgba(0,0,0,.15);}
   .radar li:last-child{border-bottom:none;}
   .radar.tight li{padding:8px 0;font-size:clamp(17px,2.2vw,26px);}
   .radar.tight .sub{font-size:13px;}
   .radar .lane{font-size:11px;letter-spacing:.16em;font-weight:700;color:var(--red);margin-left:12px;vertical-align:middle;}
   .radar .sub{display:block;font-size:14px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--grey);margin-top:2px;}
-  .slide.light .radar li,.slide.light .seq li,.slide.light .no-list li{border-color:rgba(0,0,0,.15);}
-  .slide.dark .radar li,.slide.dark .seq li,.slide.dark .no-list li{border-color:rgba(255,255,255,.18);}
   .footnote{margin-top:clamp(20px,3vw,36px);font-size:14px;font-style:italic;color:var(--grey);max-width:34em;line-height:1.5;}
   .qa{max-width:34em;}
   .qa p{font-size:clamp(24px,4vw,48px);font-weight:900;text-transform:uppercase;line-height:1.15;letter-spacing:-.01em;}
@@ -69,13 +63,14 @@
 </style>
 </head>
 <body>
+<div class="archive-banner">Archived v2 — <a href="/vandh/watchforthehook">current version here</a></div>
 
 <section class="slide dark">
   <div class="marker"><span class="num">/01</span></div>
   <div class="wordmark">VERSE <span>+</span> HOOK</div>
-  <h1 class="reveal">Watch for<br>the <span class="turn">hook.</span></h1>
-  <p class="title-sub reveal d1">Everybody watches the jab. The hook is what lands.</p>
-  <p class="title-tag reveal d2">A drop-in activation series &nbsp;/&nbsp; Internal alignment draft</p>
+  <h1>Watch for<br>the <span class="turn">hook.</span></h1>
+  <p class="title-sub">Everybody watches the jab. The hook is what lands.</p>
+  <p class="title-tag">A drop-in activation series &nbsp;/&nbsp; Internal alignment draft (archived v2)</p>
 </section>
 
 <section class="slide light">
@@ -133,26 +128,7 @@
 </section>
 
 <section class="slide light">
-  <div class="marker"><span class="num">/06</span> THE NEW DETROITERS</div>
-  <div class="wordmark">VERSE <span>+</span> HOOK</div>
-  <h2 style="margin-bottom:clamp(14px,2vw,28px);">Two types.<br>Two <span class="turn">doors.</span></h2>
-  <p class="body">There are two types of New Detroiters — both often white, almost always not of our culture. Both become clients through different doors.</p>
-  <div class="play">
-    <h3><span>/</span>Type One: Doesn't Care What Was Here</h3>
-    <p>Looking for cheap space to build whatever they want, no respect to the lives that preceded them in that space. We counter-program their events so our people have safe spaces while handling the necessary. Our people leave feeling seen — and people who feel seen hire us.</p>
-  </div>
-  <div class="play">
-    <h3><span>/</span>Type Two: Just Unaware</h3>
-    <p>They know about US but not about the coolest shit happening in the city. We are their ticket INTO culture — and people pay for their ticket. They hire us because we're their way in.</p>
-  </div>
-  <div class="qa" style="margin-top:clamp(14px,2vw,28px);">
-    <p class="q">We are king makers.</p>
-  </div>
-  <p class="footnote" style="margin-top:clamp(10px,1.2vw,16px);">One side is strategic counter-programming. The other is lifting up the people doing the coolest shit in the city before anyone knows their names. Hard rule: this deck does not leave the team.</p>
-</section>
-
-<section class="slide dark">
-  <div class="marker"><span class="num">/07</span> THE MOMENTS</div>
+  <div class="marker"><span class="num">/06</span> THE MOMENTS</div>
   <div class="wordmark">VERSE <span>+</span> HOOK</div>
   <h2 style="margin-bottom:clamp(14px,2vw,28px);">Real Detroiters<br>already <span class="turn">know.</span></h2>
   <p class="body">A moment qualifies when the city is already emotionally invested, recognition needs no explanation, and V+H can add context nobody else in the room can.</p>
@@ -166,8 +142,8 @@
   <p class="footnote" style="margin-top:clamp(12px,1.5vw,20px);">Target map, not commitments. Each moment gets qualified before it gets built.</p>
 </section>
 
-<section class="slide light">
-  <div class="marker"><span class="num">/08</span> CADENCE</div>
+<section class="slide dark">
+  <div class="marker"><span class="num">/07</span> CADENCE</div>
   <div class="wordmark">VERSE <span>+</span> HOOK</div>
   <h2>Four unforgettable<br>beats twelve<br><span class="turn">forgettable.</span></h2>
   <p class="body">Once per quarter is not a capacity limit. It's the strategy. Scarcity is what protects "did you go to this?" — the moment this becomes a monthly series, it becomes a calendar item, and calendar items don't get remembered for 10 years.</p>
@@ -175,12 +151,12 @@
   <p class="footnote">Open decision: does a standing annual embassy (Auto Show, Roc Nation-style fixture) count against the quarterly cap, or run as its own rhythm alongside the bespoke one-offs?</p>
 </section>
 
-<section class="slide dark">
-  <div class="marker"><span class="num">/09</span> ANATOMY OF AN ACTIVATION</div>
+<section class="slide light">
+  <div class="marker"><span class="num">/08</span> ANATOMY OF AN ACTIVATION</div>
   <div class="wordmark">VERSE <span>+</span> HOOK</div>
   <h2>Built from scratch,<br>every <span class="turn">time.</span></h2>
   <ul class="seq">
-    <li><span class="n">/A</span><span><span class="step-name">Identify the moment</span> — qualify it against the test on /07, and pick the play.</span></li>
+    <li><span class="n">/A</span><span><span class="step-name">Identify the moment</span> — qualify it against the test on /06, and pick the play.</span></li>
     <li><span class="n">/B</span><span><span class="step-name">Secure the drop-in</span> — partner venue or event, no inventory taken on.</span></li>
     <li><span class="n">/C</span><span><span class="step-name">Design the love letter</span> — the context layer only V+H can write.</span></li>
     <li><span class="n">/D</span><span><span class="step-name">Execute live</span> — inside the moment, as it happens.</span></li>
@@ -188,8 +164,8 @@
   </ul>
 </section>
 
-<section class="slide light">
-  <div class="marker"><span class="num">/10</span> WHAT WE SAY NO TO</div>
+<section class="slide dark">
+  <div class="marker"><span class="num">/09</span> WHAT WE SAY NO TO</div>
   <div class="wordmark">VERSE <span>+</span> HOOK</div>
   <h2>The no's protect<br>the <span class="turn">yes.</span></h2>
   <ul class="no-list">
@@ -200,15 +176,15 @@
   </ul>
 </section>
 
-<section class="slide dark">
-  <div class="marker"><span class="num">/11</span> NEXT 90 DAYS</div>
+<section class="slide light">
+  <div class="marker"><span class="num">/10</span> NEXT 90 DAYS</div>
   <div class="wordmark">VERSE <span>+</span> HOOK</div>
   <h2>First swing.</h2>
   <p class="body"><span class="redline">First activation target:</span> [TBD — Tigers Opening Day carries a hard date, which makes it either the perfect forcing function or too soon. Decision needed.]</p>
   <p class="body"><span class="redline">Embassy cap decision:</span> [TBD — standing annual fixture vs. counts against quarterly cap.]</p>
   <p class="body"><span class="redline">Moment owner:</span> [TBD]</p>
   <p class="body"><span class="redline">Drop-in partner conversations:</span> [TBD]</p>
-  <p class="footnote">Internal draft for team alignment. Nothing here is external-facing yet. Previous versions archived at /vandh/watchforthehook/archive/v1 and /vandh/watchforthehook/archive/v2.</p>
+  <p class="footnote">Internal draft for team alignment. Nothing here is external-facing yet.</p>
 </section>
 
 </body>
