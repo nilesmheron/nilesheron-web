@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Motif spike — Path A / Spotify</title>
+<!--
+  THROWAWAY instrument panel for the Motif blind-playlist spike (PRD §9.2).
+  Not a product surface. Delete this directory, api/motif-spike-auth.js and
+  api/motif-spike-callback.js once the platform decision is recorded.
+
+  Filename note: this is spotify.html, not index.html, on purpose. /motif/spike
+  would be a two-segment path with no dot, which middleware.js:39 treats as an
+  entry slug and answers with entry.html. Three segments falls through to static.
+
+  The Spotify Web Playback SDK is loaded from Spotify's official CDN, authorized
+  for spike and player pages only by PRD §9.3.
+-->
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 16px 14px calc(24px + env(safe-area-inset-bottom, 0px));
+    background: #16151a;
+    color: #e6e3dc;
+    font: 13px/1.5 "SF Mono", Menlo, ui-monospace, monospace;
+  }
+  h1 { font-size: 13px; letter-spacing: 0.18em; text-transform: uppercase; color: #b5793e; margin: 0 0 2px; }
+  .sub { color: #7d7970; font-size: 11px; margin-bottom: 16px; }
+  .panel { border: 1px solid #2e2c34; border-radius: 8px; padding: 12px; margin-bottom: 14px; }
+  .panel h2 { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #7d7970; margin: 0 0 10px; font-weight: 400; }
+  .row { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; }
+  .row .k { color: #7d7970; }
+  .row .v { text-align: right; word-break: break-word; }
+  .ok { color: #6fbf73; }
+  .bad { color: #e0625f; }
+  .warn { color: #d8a24a; }
+  button {
+    display: block; width: 100%; margin: 6px 0; padding: 13px 12px;
+    background: #22212a; color: #e6e3dc; border: 1px solid #3a3843;
+    border-radius: 7px; font: inherit; text-align: left; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button:disabled { opacity: 0.38; }
+  button.primary { background: #b5793e; border-color: #b5793e; color: #16151a; font-weight: 600; }
+  button .hint { display: block; color: #7d7970; font-size: 11px; margin-top: 3px; font-weight: 400; }
+  button.primary .hint { color: #3d2a15; }
+  .modes { display: flex; gap: 8px; margin: 6px 0 2px; }
+  .modes button { margin: 0; text-align: center; }
+  .modes button[aria-pressed="true"] { border-color: #b5793e; color: #b5793e; }
+  #log { max-height: 46vh; overflow-y: auto; margin: 0; padding: 0; list-style: none; }
+  #log li { padding: 3px 0; border-bottom: 1px solid #232128; font-size: 11.5px; display: flex; gap: 8px; }
+  #log li:last-child { border-bottom: 0; }
+  #log .t { color: #56535c; flex: 0 0 52px; }
+  #log .m { flex: 1 1 auto; word-break: break-word; }
+  .verdict { background: #201f28; border-left: 2px solid #b5793e; padding: 8px 10px; margin: 8px 0; font-size: 11.5px; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+
+<h1>Motif spike</h1>
+<div class="sub">Path A — Spotify Web Playback SDK. PRD §9.2 checks 1–5.</div>
+
+<div class="panel">
+  <h2>State</h2>
+  <div class="row"><span class="k">auth</span><span class="v" id="s-auth">checking…</span></div>
+  <div class="row"><span class="k">sdk</span><span class="v" id="s-sdk">not loaded</span></div>
+  <div class="row"><span class="k">device</span><span class="v" id="s-device">—</span></div>
+  <div class="row"><span class="k">playlist</span><span class="v" id="s-playlist">—</span></div>
+  <div class="row"><span class="k">track</span><span class="v" id="s-track">—</span></div>
+  <div class="row"><span class="k">position</span><span class="v" id="s-pos">—</span></div>
+  <div class="row"><span class="k">wake lock</span><span class="v" id="s-wake">—</span></div>
+  <div class="row"><span class="k">media session</span><span class="v" id="s-media">—</span></div>
+</div>
+
+<div class="panel">
+  <h2>Run</h2>
+  <button id="b-connect" class="primary">Connect Spotify
+    <span class="hint">check 1 — OAuth, then come back here</span></button>
+
+  <div class="modes">
+    <button id="b-mode-blind" aria-pressed="true">blind</button>
+    <button id="b-mode-queue" aria-pressed="false">native queue</button>
+  </div>
+  <div class="sub" id="mode-hint" style="margin:4px 0 10px">blind: one URI at a time, our JS starts the next track. This is the product.</div>
+
+  <button id="b-play" disabled>1 · Play<span class="hint">check 1 — must be a real tap (iOS needs the gesture)</span></button>
+  <button id="b-seek" disabled>2 · Jump to 20s before end<span class="hint">sets up the transition test without waiting out the song</span></button>
+  <button id="b-next" disabled>skip forward</button>
+  <button id="b-prev" disabled>skip back</button>
+  <button id="b-pause" disabled>pause / resume</button>
+  <button id="b-wake" disabled>3 · Request screen wake lock</button>
+  <button id="b-copy">Copy log</button>
+  <button id="b-logout">Disconnect Spotify</button>
+</div>
+
+<div class="panel">
+  <h2>Log</h2>
+  <div id="verdicts"></div>
+  <ul id="log"></ul>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // Playlist behind motif/data/familiar-fruit.json → spotify_url.
+  var PLAYLIST_ID = '4lnUuG0kxLO25YooXSv2T0';
+  var AUTH = '/api/motif-spike-auth';
+
+  var t0 = Date.now();
+  var player = null;
+  var deviceId = null;
+  var tracks = [];
+  var idx = 0;
+  var mode = 'blind';
+  var lastState = null;
+  var prevState = null;
+  var endedFor = null;      // uri we've already handled an end for
+  var mediaFor = null;      // uri the lock-screen metadata currently describes
+  var wakeLock = null;
+  var bg = null;            // snapshot taken when the page goes hidden
+  var activated = false;
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  function log(msg, cls) {
+    var li = document.createElement('li');
+    var t = document.createElement('span');
+    t.className = 't';
+    t.textContent = ((Date.now() - t0) / 1000).toFixed(1) + 's';
+    var m = document.createElement('span');
+    m.className = 'm' + (cls ? ' ' + cls : '');
+    m.textContent = msg;
+    li.appendChild(t); li.appendChild(m);
+    $('log').appendChild(li);
+    $('log').scrollTop = $('log').scrollHeight;
+  }
+
+  function verdict(text) {
+    var d = document.createElement('div');
+    d.className = 'verdict';
+    d.textContent = text;
+    $('verdicts').appendChild(d);
+    log('VERDICT recorded — see box above', 'warn');
+  }
+
+  function set(id, text, cls) {
+    var el = $(id);
+    el.textContent = text;
+    el.className = 'v' + (cls ? ' ' + cls : '');
+  }
+
+  function secs(ms) { return (ms / 1000).toFixed(1) + 's'; }
+
+  /* ---------- token ---------- */
+
+  var tokenCache = { value: null, expiresAt: 0 };
+
+  function getToken() {
+    if (tokenCache.value && Date.now() < tokenCache.expiresAt - 30000) {
+      return Promise.resolve(tokenCache.value);
+    }
+    return fetch(AUTH + '?action=token', { credentials: 'same-origin' })
+      .then(function (r) {
+        if (r.status === 401) { throw new Error('not_authenticated'); }
+        if (!r.ok) { throw new Error('token http ' + r.status); }
+        return r.json();
+      })
+      .then(function (d) {
+        tokenCache.value = d.access_token;
+        tokenCache.expiresAt = Date.now() + (d.expires_in || 3600) * 1000;
+        return d.access_token;
+      });
+  }
+
+  function api(path, opts) {
+    return getToken().then(function (tok) {
+      var o = opts || {};
+      return fetch('https://api.spotify.com/v1' + path, {
+        method: o.method || 'GET',
+        headers: {
+          Authorization: 'Bearer ' + tok,
+          'Content-Type': 'application/json'
+        },
+        body: o.body ? JSON.stringify(o.body) : undefined
+      });
+    });
+  }
+
+  /* ---------- boot ---------- */
+
+  var params = new URLSearchParams(location.search);
+  if (params.get('auth')) {
+    var a = params.get('auth');
+    log('returned from OAuth: ' + a + (params.get('reason') ? ' (' + params.get('reason') + ')' : ''),
+        a === 'ok' ? 'ok' : 'bad');
+    history.replaceState({}, '', location.pathname);
+  }
+
+  set('s-media', 'mediaSession' in navigator ? 'available' : 'MISSING', 'mediaSession' in navigator ? 'ok' : 'bad');
+  set('s-wake', 'wakeLock' in navigator ? 'available' : 'MISSING', 'wakeLock' in navigator ? '' : 'bad');
+  log('ua: ' + navigator.userAgent);
+
+  fetch(AUTH + '?action=status', { credentials: 'same-origin' })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (d.authenticated) {
+        set('s-auth', 'authenticated', 'ok');
+        $('b-connect').textContent = 'Re-connect Spotify';
+        $('b-connect').className = '';
+        loadPlaylist();
+        loadSdk();
+      } else {
+        set('s-auth', 'not connected', 'warn');
+        log('tap "Connect Spotify" to start');
+      }
+    })
+    .catch(function (e) {
+      set('s-auth', 'status check failed', 'bad');
+      log('status check failed: ' + e.message, 'bad');
+    });
+
+  /* ---------- playlist ---------- */
+
+  function loadPlaylist() {
+    var fields = 'items(track(uri,name,duration_ms,artists(name),album(name,images)))';
+    api('/playlists/' + PLAYLIST_ID + '/tracks?limit=20&fields=' + encodeURIComponent(fields))
+      .then(function (r) {
+        if (!r.ok) { throw new Error('playlist http ' + r.status); }
+        return r.json();
+      })
+      .then(function (d) {
+        tracks = (d.items || [])
+          .map(function (i) { return i.track; })
+          .filter(function (t) { return t && t.uri; });
+        set('s-playlist', tracks.length + ' tracks', tracks.length ? 'ok' : 'bad');
+        log('playlist loaded: ' + tracks.length + ' tracks');
+      })
+      .catch(function (e) {
+        set('s-playlist', 'failed', 'bad');
+        log('playlist load failed: ' + e.message, 'bad');
+      });
+  }
+
+  /* ---------- sdk ---------- */
+
+  function loadSdk() {
+    set('s-sdk', 'loading…');
+    var s = document.createElement('script');
+    s.src = 'https://sdk.scdn.co/spotify-player.js';
+    s.onerror = function () { set('s-sdk', 'CDN load failed', 'bad'); log('SDK script failed to load', 'bad'); };
+    document.head.appendChild(s);
+  }
+
+  window.onSpotifyWebPlaybackSDKReady = function () {
+    set('s-sdk', 'script ready');
+    log('SDK script ready, connecting player');
+
+    player = new Spotify.Player({
+      name: 'Motif spike',
+      getOAuthToken: function (cb) {
+        getToken().then(cb).catch(function (e) {
+          log('getOAuthToken failed: ' + e.message, 'bad');
+        });
+      },
+      volume: 0.8
+    });
+
+    player.addListener('ready', function (d) {
+      deviceId = d.device_id;
+      set('s-sdk', 'connected', 'ok');
+      set('s-device', d.device_id.slice(0, 12) + '…', 'ok');
+      log('player ready, device ' + d.device_id);
+      ['b-play', 'b-seek', 'b-next', 'b-prev', 'b-pause', 'b-wake'].forEach(function (id) {
+        $(id).disabled = false;
+      });
+    });
+
+    player.addListener('not_ready', function (d) {
+      set('s-sdk', 'device went offline', 'bad');
+      log('not_ready: device ' + d.device_id + ' offline', 'bad');
+    });
+
+    ['initialization_error', 'authentication_error', 'account_error', 'playback_error'].forEach(function (ev) {
+      player.addListener(ev, function (e) {
+        log(ev + ': ' + e.message, 'bad');
+        if (ev === 'account_error') {
+          verdict('CHECK 1 FAIL — account_error. The Web Playback SDK requires full Spotify Premium; mobile-only Premium tiers are excluded.');
+        }
+      });
+    });
+
+    player.addListener('autoplay_failed', function () {
+      log('autoplay_failed — playback needs a user gesture', 'warn');
+    });
+
+    player.addListener('player_state_changed', onStateChange);
+
+    player.connect().then(function (ok) {
+      log(ok ? 'player.connect() ok' : 'player.connect() refused', ok ? '' : 'bad');
+    });
+  };
+
+  function onStateChange(state) {
+    if (!state) { log('state → null (playback moved to another device)', 'warn'); return; }
+    prevState = lastState;
+    lastState = state;
+
+    var cur = state.track_window && state.track_window.current_track;
+    if (cur) {
+      set('s-track', cur.name + ' — ' + cur.artists.map(function (a) { return a.name; }).join(', '));
+      // only rebuild metadata on an actual track change — the ticker runs every second
+      if (cur.uri !== mediaFor) { mediaFor = cur.uri; setMediaSession(cur); }
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = state.paused ? 'paused' : 'playing';
+      }
+    }
+    set('s-pos', secs(state.position) + ' / ' + secs(state.duration) + (state.paused ? ' (paused)' : ''));
+
+    if (looksEnded(state, prevState)) {
+      var uri = cur ? cur.uri : 'unknown';
+      if (endedFor !== uri) {
+        endedFor = uri;
+        log('TRACK ENDED (' + (document.visibilityState) + ')', 'ok');
+        onTrackEnded();
+      }
+    }
+  }
+
+  // With a single URI and no context, Spotify parks the player at position 0,
+  // paused, when the track finishes. Require that we were mid-track just before
+  // so a fresh load or a manual pause doesn't read as an ending.
+  function looksEnded(state, prev) {
+    if (!state.paused || state.position !== 0) return false;
+    var r = state.restrictions || {};
+    var reasons = r.disallow_resuming_reasons || [];
+    if (reasons.indexOf('not_paused') !== -1) return true;
+    return Boolean(prev && !prev.paused && prev.position > 0);
+  }
+
+  function onTrackEnded() {
+    if (mode !== 'blind') {
+      log('native queue mode — Spotify advances on its own, no dispatch from us');
+      return;
+    }
+    if (idx + 1 >= tracks.length) { log('end of playlist'); return; }
+    idx += 1;
+    log('dispatching next track from JS → ' + tracks[idx].name);
+    playCurrent();
+  }
+
+  /* ---------- playback ---------- */
+
+  function playCurrent() {
+    if (!deviceId || !tracks.length) return Promise.resolve();
+    // blind: hand Spotify exactly one URI so its queue never learns what's next.
+    // native queue: hand it this track and the following one, to isolate whether
+    // a failed transition is our JS dying or the audio pipeline dying.
+    var uris = mode === 'blind'
+      ? [tracks[idx].uri]
+      : tracks.slice(idx, idx + 2).map(function (t) { return t.uri; });
+    endedFor = null;
+    return api('/me/player/play?device_id=' + deviceId, { method: 'PUT', body: { uris: uris } })
+      .then(function (r) {
+        if (!r.ok) {
+          return r.text().then(function (b) {
+            log('play failed http ' + r.status + ' ' + b.slice(0, 160), 'bad');
+            if (r.status === 403) {
+              verdict('CHECK 1 FAIL — 403 from /me/player/play. Usually a non-Premium account or a Premium tier the SDK excludes.');
+            }
+          });
+        }
+        log('play → [' + uris.length + ' uri] ' + tracks[idx].name);
+      });
+  }
+
+  $('b-play').addEventListener('click', function () {
+    // iOS: the audio element has to be unlocked inside a real user gesture,
+    // synchronously, before any playback call.
+    if (!activated && player && player.activateElement) {
+      try { player.activateElement(); activated = true; log('activateElement() called (iOS audio unlock)'); }
+      catch (e) { log('activateElement() threw: ' + e.message, 'warn'); }
+    }
+    playCurrent();
+  });
+
+  $('b-seek').addEventListener('click', function () {
+    if (!lastState) { log('no state yet — press play first', 'warn'); return; }
+    var target = Math.max(0, lastState.duration - 20000);
+    player.seek(target).then(function () {
+      log('seeked to ' + secs(target) + ' (20s before end)');
+      log('now background the browser — do not just lock the screen');
+    });
+  });
+
+  $('b-next').addEventListener('click', function () {
+    if (idx + 1 >= tracks.length) { log('already on the last track', 'warn'); return; }
+    idx += 1; playCurrent();
+  });
+
+  $('b-prev').addEventListener('click', function () {
+    if (idx === 0) { log('already on the first track', 'warn'); return; }
+    idx -= 1; playCurrent();
+  });
+
+  $('b-pause').addEventListener('click', function () {
+    player.togglePlay().then(function () { log('togglePlay()'); });
+  });
+
+  /* ---------- mode ---------- */
+
+  function setMode(m) {
+    mode = m;
+    $('b-mode-blind').setAttribute('aria-pressed', String(m === 'blind'));
+    $('b-mode-queue').setAttribute('aria-pressed', String(m === 'queue'));
+    $('mode-hint').textContent = m === 'blind'
+      ? 'blind: one URI at a time, our JS starts the next track. This is the product.'
+      : 'native queue: two URIs handed to Spotify at once. Diagnostic only — breaks the blind.';
+    log('mode → ' + m);
+  }
+  $('b-mode-blind').addEventListener('click', function () { setMode('blind'); });
+  $('b-mode-queue').addEventListener('click', function () { setMode('queue'); });
+
+  /* ---------- check 3: wake lock ---------- */
+
+  function requestWakeLock() {
+    if (!('wakeLock' in navigator)) { set('s-wake', 'unsupported', 'bad'); return; }
+    navigator.wakeLock.request('screen').then(function (lock) {
+      wakeLock = lock;
+      set('s-wake', 'held', 'ok');
+      log('wake lock acquired', 'ok');
+      lock.addEventListener('release', function () {
+        set('s-wake', 'released', 'warn');
+        log('wake lock released', 'warn');
+      });
+    }).catch(function (e) {
+      set('s-wake', 'denied', 'bad');
+      log('wake lock request failed: ' + e.name + ' ' + e.message, 'bad');
+    });
+  }
+  $('b-wake').addEventListener('click', requestWakeLock);
+
+  /* ---------- check 4: media session ---------- */
+
+  function setMediaSession(track) {
+    if (!('mediaSession' in navigator)) return;
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: track.name,
+        artist: track.artists.map(function (a) { return a.name; }).join(', '),
+        album: (track.album && track.album.name) || 'Motif',
+        artwork: ((track.album && track.album.images) || []).map(function (i) {
+          return { src: i.url, sizes: i.width + 'x' + i.height, type: 'image/jpeg' };
+        })
+      });
+      navigator.mediaSession.playbackState = lastState && lastState.paused ? 'paused' : 'playing';
+      set('s-media', 'metadata set', 'ok');
+    } catch (e) {
+      set('s-media', 'failed', 'bad');
+      log('mediaSession failed: ' + e.message, 'bad');
+    }
+  }
+
+  if ('mediaSession' in navigator) {
+    var handlers = {
+      play: function () { player && player.resume(); log('lock-screen: play'); },
+      pause: function () { player && player.pause(); log('lock-screen: pause'); },
+      nexttrack: function () { $('b-next').click(); log('lock-screen: next'); },
+      previoustrack: function () { $('b-prev').click(); log('lock-screen: previous'); }
+    };
+    Object.keys(handlers).forEach(function (k) {
+      try { navigator.mediaSession.setActionHandler(k, handlers[k]); }
+      catch (e) { log('mediaSession handler "' + k + '" unsupported', 'warn'); }
+    });
+  }
+
+  /* ---------- checks 2 + 5: background survival ---------- */
+
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden') {
+      var cur = lastState && lastState.track_window && lastState.track_window.current_track;
+      bg = {
+        at: Date.now(),
+        uri: cur ? cur.uri : null,
+        name: cur ? cur.name : '—',
+        pos: lastState ? lastState.position : 0,
+        dur: lastState ? lastState.duration : 0,
+        idx: idx,
+        paused: lastState ? lastState.paused : true,
+        mode: mode
+      };
+      log('→ backgrounded at ' + secs(bg.pos) + ' of "' + bg.name + '"');
+      return;
+    }
+
+    log('← foregrounded');
+    if (wakeLock === null && 'wakeLock' in navigator) {
+      // the platform drops the lock on hide; re-take it so check 3 stays honest
+      requestWakeLock();
+    }
+    if (!bg) return;
+    measureBackground(bg);
+    bg = null;
+  });
+
+  function measureBackground(snap) {
+    var away = Date.now() - snap.at;
+
+    // Ask Spotify's servers rather than the local SDK — local state can be stale
+    // for a moment after resume, and this is the number the decision rests on.
+    api('/me/player').then(function (r) {
+      if (r.status === 204) {
+        verdict(report(snap, away, null, false, 'no active playback on return'));
+        return;
+      }
+      if (!r.ok) { log('player state fetch http ' + r.status, 'bad'); return; }
+      return r.json().then(function (d) {
+        var nowUri = d.item ? d.item.uri : null;
+        var nowPos = d.progress_ms || 0;
+        var advanced;
+        if (nowUri && snap.uri && nowUri === snap.uri) {
+          advanced = nowPos - snap.pos;
+        } else if (nowUri) {
+          var newIdx = indexOfUri(nowUri);
+          if (newIdx > -1 && snap.idx > -1 && newIdx > snap.idx) {
+            advanced = (snap.dur - snap.pos) + nowPos;
+            for (var i = snap.idx + 1; i < newIdx; i++) advanced += tracks[i].duration_ms;
+          } else {
+            advanced = null;
+          }
+        } else {
+          advanced = null;
+        }
+        verdict(report(snap, away, { uri: nowUri, pos: nowPos, playing: d.is_playing, idx: indexOfUri(nowUri) },
+                       advanced !== null, advanced));
+      });
+    }).catch(function (e) { log('background measure failed: ' + e.message, 'bad'); });
+  }
+
+  function indexOfUri(uri) {
+    for (var i = 0; i < tracks.length; i++) if (tracks[i].uri === uri) return i;
+    return -1;
+  }
+
+  function report(snap, away, now, haveAdvance, advanced) {
+    var lines = [];
+    lines.push('BACKGROUND TEST — mode: ' + snap.mode);
+    lines.push('away: ' + secs(away));
+    if (!now) {
+      lines.push('on return: ' + advanced);
+      lines.push('CHECK 2: FAIL — audio did not survive backgrounding.');
+      return lines.join('\n');
+    }
+    var changed = snap.uri && now.uri && snap.uri !== now.uri;
+    if (haveAdvance) {
+      var pct = away > 0 ? Math.round((advanced / away) * 100) : 0;
+      lines.push('audio advanced: ' + secs(advanced) + ' (' + pct + '% of wall clock)');
+      lines.push('CHECK 2: ' + (pct >= 85 ? 'PASS — audio kept playing while backgrounded.'
+                                          : pct >= 15 ? 'PARTIAL — audio ran ' + secs(advanced) + ' then stopped.'
+                                                      : 'FAIL — audio stopped on backgrounding.'));
+    } else {
+      lines.push('audio advance: could not compute (track not in our list)');
+    }
+    lines.push('still playing on return: ' + (now.playing ? 'yes' : 'no'));
+    lines.push('track changed while backgrounded: ' + (changed ? 'YES (' + snap.idx + ' → ' + now.idx + ')' : 'no'));
+    if (snap.mode === 'blind') {
+      lines.push('CHECK 5: ' + (changed
+        ? 'PASS — our JS dispatched the next track while backgrounded.'
+        : 'FAIL — no transition fired while backgrounded (JS suspended or no end event).'));
+    } else {
+      lines.push('CHECK 5: n/a in native-queue mode — a transition here is Spotify\'s, not ours.');
+    }
+    return lines.join('\n');
+  }
+
+  /* ---------- foreground ticker ---------- */
+
+  setInterval(function () {
+    if (!player || document.visibilityState !== 'visible') return;
+    player.getCurrentState().then(function (s) { if (s) onStateChange(s); });
+  }, 1000);
+
+  /* ---------- misc buttons ---------- */
+
+  $('b-connect').addEventListener('click', function () {
+    location.href = AUTH + '?action=login';
+  });
+
+  $('b-logout').addEventListener('click', function () {
+    fetch(AUTH + '?action=logout', { credentials: 'same-origin' })
+      .then(function () { log('disconnected — reload to reconnect'); });
+  });
+
+  $('b-copy').addEventListener('click', function () {
+    var out = [];
+    out.push('MOTIF SPIKE — Path A / Spotify');
+    out.push(navigator.userAgent);
+    Array.prototype.forEach.call($('verdicts').children, function (v) { out.push('\n' + v.textContent); });
+    out.push('');
+    Array.prototype.forEach.call($('log').children, function (li) {
+      out.push(li.querySelector('.t').textContent + '  ' + li.querySelector('.m').textContent);
+    });
+    var text = out.join('\n');
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(
+        function () { log('log copied to clipboard', 'ok'); },
+        function () { log('clipboard blocked — screenshot instead', 'warn'); }
+      );
+    } else {
+      log('clipboard unavailable — screenshot instead', 'warn');
+    }
+  });
+})();
+</script>
+</body>
+</html>
