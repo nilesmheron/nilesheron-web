@@ -29,12 +29,17 @@ const REDIRECT_URI =
 // streaming                  — required by the Web Playback SDK
 // user-read-email/private    — required by the SDK to identify the account
 // user-modify/read-playback  — start a specific track on our device, read progress
+// playlist-read-* are requested because a user token may still be able to read
+// playlist contents even though this app's client-credentials token gets a 403.
+// If it does not, the spike falls back to /v1/search for track URIs.
 const SCOPES = [
   'streaming',
   'user-read-email',
   'user-read-private',
   'user-modify-playback-state',
   'user-read-playback-state',
+  'playlist-read-private',
+  'playlist-read-collaborative',
 ].join(' ');
 
 // Refresh cookie is only ever read by this endpoint, so scope it to this path.

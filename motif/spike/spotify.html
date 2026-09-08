@@ -107,7 +107,12 @@
   'use strict';
 
   // Playlist behind motif/data/familiar-fruit.json → spotify_url.
-  var PLAYLIST_ID = '4lnUuG0kxLO25YooXSv2T0';
+  // Override with ?playlist=<id or open.spotify.com URL> to point at another one.
+  var DEFAULT_PLAYLIST = '4lnUuG0kxLO25YooXSv2T0';
+  // Spotify refuses playlist contents to this app (403 on /playlists/{id}/tracks
+  // even for public playlists). /v1/search still works, so it is the fallback —
+  // the spike only needs playable URIs, not this specific playlist.
+  var FALLBACK_QUERY = 'artist:Tobe Nwigwe';
   var AUTH = '/api/motif-spike-auth';
 
   var t0 = Date.now();
@@ -251,23 +256,67 @@
 
   /* ---------- playlist ---------- */
 
+  function playlistId() {
+    var raw = params.get('playlist');
+    if (!raw) return DEFAULT_PLAYLIST;
+    var m = raw.match(/playlist\/([A-Za-z0-9]+)/);
+    return m ? m[1] : raw.split('?')[0];
+  }
+
+  function usable(list) {
+    return (list || []).filter(function (t) { return t && t.uri && t.duration_ms; });
+  }
+
+  // Try the real playlist first — a user token may have access this app's
+  // client-credentials token does not. Fall back to search so a blocked
+  // playlist never blocks the actual experiment.
   function loadPlaylist() {
+    var id = playlistId();
     var fields = 'items(track(uri,name,duration_ms,artists(name),album(name,images)))';
-    api('/playlists/' + PLAYLIST_ID + '/tracks?limit=20&fields=' + encodeURIComponent(fields))
+    api('/playlists/' + id + '/tracks?limit=20&fields=' + encodeURIComponent(fields))
       .then(function (r) {
-        if (!r.ok) { throw new Error('playlist http ' + r.status); }
+        if (!r.ok) {
+          log('playlist tracks refused: http ' + r.status + ' — falling back to search', 'warn');
+          return null;
+        }
         return r.json();
       })
       .then(function (d) {
-        tracks = (d.items || [])
-          .map(function (i) { return i.track; })
-          .filter(function (t) { return t && t.uri; });
-        set('s-playlist', tracks.length + ' tracks', tracks.length ? 'ok' : 'bad');
-        log('playlist loaded: ' + tracks.length + ' tracks');
+        if (!d) return loadFromSearch();
+        tracks = usable((d.items || []).map(function (i) { return i.track; }));
+        if (!tracks.length) {
+          log('playlist returned no usable tracks — falling back to search', 'warn');
+          return loadFromSearch();
+        }
+        set('s-playlist', tracks.length + ' tracks (playlist)', 'ok');
+        log('playlist loaded: ' + tracks.length + ' tracks from ' + id, 'ok');
+      })
+      .catch(function (e) {
+        log('playlist load errored: ' + e.message + ' — falling back to search', 'warn');
+        return loadFromSearch();
+      });
+  }
+
+  function loadFromSearch() {
+    return api('/search?type=track&limit=10&q=' + encodeURIComponent(FALLBACK_QUERY))
+      .then(function (r) {
+        if (!r.ok) { throw new Error('search http ' + r.status); }
+        return r.json();
+      })
+      .then(function (d) {
+        tracks = usable(((d.tracks || {}).items) || []);
+        set('s-playlist', tracks.length + ' tracks (search)', tracks.length ? 'warn' : 'bad');
+        if (tracks.length) {
+          log('fallback: ' + tracks.length + ' tracks via search "' + FALLBACK_QUERY + '"', 'ok');
+          log('these are stand-ins — the experiment is about playback, not this playlist');
+        } else {
+          log('search returned nothing usable', 'bad');
+        }
       })
       .catch(function (e) {
         set('s-playlist', 'failed', 'bad');
-        log('playlist load failed: ' + e.message, 'bad');
+        log('search fallback failed: ' + e.message, 'bad');
+        verdict('CANNOT RUN — no track URIs from either the playlist or search.\nNothing downstream of this can be tested.');
       });
   }
 
