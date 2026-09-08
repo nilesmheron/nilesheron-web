@@ -125,6 +125,7 @@
   var prevState = null;
   var endedFor = null;      // uri we've already handled an end for
   var mediaFor = null;      // uri the lock-screen metadata currently describes
+  var audibleVerdictShown = false;
   var wakeLock = null;
   var bg = null;            // snapshot taken when the page goes hidden
   var activated = false;
@@ -482,10 +483,13 @@
         }
         if (s.position > 1000) {
           log('4s after play: position advancing (' + secs(s.position) + ') — audio IS running', 'ok');
-          verdict('Playback is running. If you hear nothing, it is output, not playback:\n' +
-                  '1. the physical mute switch on the side of the iPhone\n' +
-                  '2. volume — press volume-up while this is playing\n' +
-                  '3. audio routed to another device (AirPods, CarPlay, a HomePod)');
+          // once is informative; on every track it buries the results that matter
+          if (!audibleVerdictShown) {
+            audibleVerdictShown = true;
+            verdict('CHECK 1 PASS — playback is running.\n' +
+                    'If you hear nothing it is output, not playback: the mute switch on the\n' +
+                    'side of the iPhone, the volume, or audio routed to another device.');
+          }
         } else {
           log('4s after play: position stuck at ' + secs(s.position) + ' — accepted but not advancing', 'bad');
         }
@@ -509,7 +513,8 @@
     var target = Math.max(0, lastState.duration - 20000);
     player.seek(target).then(function () {
       log('seeked to ' + secs(target) + ' (20s before end)');
-      log('now background the browser — do not just lock the screen');
+      log('NOW: swipe up to the home screen and stay out of Safari 45s', 'warn');
+      log('locking the screen is a different test and will not measure this', 'warn');
     });
   });
 
@@ -666,6 +671,24 @@
     var lines = [];
     lines.push('BACKGROUND TEST — mode: ' + snap.mode);
     lines.push('away: ' + secs(away));
+
+    // A window this short cannot support a conclusion either way: the advance
+    // ratio is dominated by jitter and no track boundary can have passed.
+    // Refusing to print a verdict beats printing a wrong one.
+    if (away < 15000) {
+      lines.push('');
+      lines.push('INCONCLUSIVE — too short to measure. Nothing is proven here.');
+      lines.push('Re-run: tap "2 · Jump to 20s before end", swipe up to the home');
+      lines.push('screen, and stay out of Safari for a full 45 seconds so the');
+      lines.push('track boundary passes while you are away.');
+      return lines.join('\n');
+    }
+
+    var boundaryInWindow = snap.dur > 0 && (snap.dur - snap.pos) < away;
+    if (!boundaryInWindow) {
+      lines.push('note: the song had ' + secs(snap.dur - snap.pos) + ' left, longer than you were away,');
+      lines.push('so CHECK 5 could not fire. Use "2 · Jump to 20s before end" first.');
+    }
     if (!now) {
       lines.push('on return: ' + advanced);
       lines.push('CHECK 2: FAIL — audio did not survive backgrounding.');
@@ -686,7 +709,9 @@
     if (snap.mode === 'blind') {
       lines.push('CHECK 5: ' + (changed
         ? 'PASS — our JS dispatched the next track while backgrounded.'
-        : 'FAIL — no transition fired while backgrounded (JS suspended or no end event).'));
+        : boundaryInWindow
+          ? 'FAIL — the song ended while you were away and nothing started it. JS was suspended.'
+          : 'NOT TESTED — no track boundary fell inside the window.'));
     } else {
       lines.push('CHECK 5: n/a in native-queue mode — a transition here is Spotify\'s, not ours.');
     }
