@@ -65,6 +65,7 @@
 <div class="panel">
   <h2>State</h2>
   <div class="row"><span class="k">auth</span><span class="v" id="s-auth">checking…</span></div>
+  <div class="row"><span class="k">account</span><span class="v" id="s-account">—</span></div>
   <div class="row"><span class="k">sdk</span><span class="v" id="s-sdk">not loaded</span></div>
   <div class="row"><span class="k">device</span><span class="v" id="s-device">—</span></div>
   <div class="row"><span class="k">playlist</span><span class="v" id="s-playlist">—</span></div>
@@ -210,6 +211,7 @@
         set('s-auth', 'authenticated', 'ok');
         $('b-connect').textContent = 'Re-connect Spotify';
         $('b-connect').className = '';
+        checkAccount();
         loadPlaylist();
         loadSdk();
       } else {
@@ -221,6 +223,31 @@
       set('s-auth', 'status check failed', 'bad');
       log('status check failed: ' + e.message, 'bad');
     });
+
+  /* ---------- account tier ----------
+     The single most common cause of silent playback failure: the Web Playback
+     SDK requires full Premium and excludes mobile-only Premium tiers. Ask
+     Spotify directly rather than inferring it from a failed play call. */
+
+  function checkAccount() {
+    api('/me').then(function (r) {
+      if (!r.ok) { set('s-account', 'lookup failed http ' + r.status, 'bad'); return; }
+      return r.json().then(function (me) {
+        var product = me.product || 'unknown';
+        var premium = product === 'premium';
+        set('s-account', product + (me.country ? ' · ' + me.country : ''), premium ? 'ok' : 'bad');
+        log('account: ' + product + ' (' + (me.display_name || me.id) + ')', premium ? 'ok' : 'bad');
+        if (!premium) {
+          verdict('CHECK 1 FAIL — this Spotify account reports product "' + product + '".\n' +
+                  'The Web Playback SDK requires full Premium. Playback calls will be\n' +
+                  'accepted or rejected with no audio. Path A cannot be tested on this account.');
+        }
+      });
+    }).catch(function (e) {
+      set('s-account', 'lookup failed', 'bad');
+      log('account lookup failed: ' + e.message, 'bad');
+    });
+  }
 
   /* ---------- playlist ---------- */
 
@@ -354,7 +381,15 @@
   /* ---------- playback ---------- */
 
   function playCurrent() {
-    if (!deviceId || !tracks.length) return Promise.resolve();
+    // These used to bail silently, which looked exactly like "play does nothing".
+    if (!deviceId) {
+      log('CANNOT PLAY — no SDK device yet. The player never reached "ready".', 'bad');
+      return Promise.resolve();
+    }
+    if (!tracks.length) {
+      log('CANNOT PLAY — track list is empty. The playlist fetch failed; see above.', 'bad');
+      return Promise.resolve();
+    }
     // blind: hand Spotify exactly one URI so its queue never learns what's next.
     // native queue: hand it this track and the following one, to isolate whether
     // a failed transition is our JS dying or the audio pipeline dying.
@@ -370,10 +405,44 @@
             if (r.status === 403) {
               verdict('CHECK 1 FAIL — 403 from /me/player/play. Usually a non-Premium account or a Premium tier the SDK excludes.');
             }
+            if (r.status === 404) {
+              verdict('CHECK 1 FAIL — 404 from /me/player/play. Spotify does not see our SDK device.\nThe browser tab probably lost the device; reload the page and reconnect.');
+            }
           });
         }
-        log('play → [' + uris.length + ' uri] ' + tracks[idx].name);
+        log('play accepted (http ' + r.status + ') → ' + tracks[idx].name, 'ok');
+        confirmAudioMoving();
       });
+  }
+
+  // Spotify answers /play with 204 the moment it accepts the command — that is
+  // not the same as audio coming out. Verify the position is actually advancing,
+  // so "accepted but silent" is distinguishable from "never started".
+  function confirmAudioMoving() {
+    var startedAt = Date.now();
+    setTimeout(function () {
+      if (!player) return;
+      player.getCurrentState().then(function (s) {
+        if (!s) {
+          log('4s after play: no player state — playback is on another device, or the SDK lost it', 'bad');
+          return;
+        }
+        if (s.paused) {
+          log('4s after play: player is PAUSED at ' + secs(s.position), 'bad');
+          return;
+        }
+        if (s.position > 1000) {
+          log('4s after play: position advancing (' + secs(s.position) + ') — audio IS running', 'ok');
+          verdict('Playback is running. If you hear nothing, it is output, not playback:\n' +
+                  '1. the physical mute switch on the side of the iPhone\n' +
+                  '2. volume — press volume-up while this is playing\n' +
+                  '3. audio routed to another device (AirPods, CarPlay, a HomePod)');
+        } else {
+          log('4s after play: position stuck at ' + secs(s.position) + ' — accepted but not advancing', 'bad');
+        }
+      });
+    }, 4000);
+    return startedAt;
   }
 
   $('b-play').addEventListener('click', function () {
