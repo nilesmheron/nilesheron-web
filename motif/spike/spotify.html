@@ -298,23 +298,32 @@
   // back into reading the real entry playlist, if Spotify ever allows it again.
   function loadTracks() {
     if (params.get('source') === 'playlist') return loadPlaylist();
-    return api('/tracks?ids=' + FIXED_TRACK_IDS.join(','))
-      .then(function (r) {
-        if (!r.ok) { throw new Error('tracks http ' + r.status); }
-        return r.json();
-      })
-      .then(function (d) {
-        tracks = usable(d.tracks || []);
-        set('s-playlist', tracks.length + ' tracks (fixed)', tracks.length ? 'ok' : 'bad');
-        log('fixed list loaded, same order every run:', 'ok');
-        tracks.forEach(function (t, i) {
-          log('  [' + i + '] ' + t.name + ' · ' + Math.round(t.duration_ms / 1000) + 's');
-        });
-      })
-      .catch(function (e) {
-        log('fixed list failed: ' + e.message + ' — falling back to search', 'warn');
-        return loadFromSearch();
+    // GET /v1/tracks?ids= is 403 for this app, same restriction as playlists.
+    // GET /v1/tracks/{id} still works, so fetch them one at a time and keep order.
+    return Promise.all(FIXED_TRACK_IDS.map(function (id) {
+      return api('/tracks/' + id)
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .catch(function () { return null; });
+    })).then(function (results) {
+      var missing = [];
+      results.forEach(function (t, i) { if (!t) missing.push(FIXED_TRACK_IDS[i]); });
+      tracks = usable(results);
+      if (!tracks.length) {
+        set('s-playlist', 'fixed list failed', 'bad');
+        verdict('FIXED TRACK LIST FAILED TO LOAD — every /v1/tracks/{id} call failed.\n' +
+                'Not falling back to search: a silent fallback is what made the last run\n' +
+                'play the wrong songs. Fix this before running anything else.');
+        return;
+      }
+      if (missing.length) {
+        log(missing.length + ' track(s) failed to load: ' + missing.join(', '), 'bad');
+      }
+      set('s-playlist', tracks.length + ' tracks (fixed)', missing.length ? 'warn' : 'ok');
+      log('fixed list loaded, same order every run:', 'ok');
+      tracks.forEach(function (t, i) {
+        log('  [' + i + '] ' + t.name + ' · ' + t.artists[0].name + ' · ' + Math.round(t.duration_ms / 1000) + 's');
       });
+    });
   }
 
   function loadPlaylist() {
