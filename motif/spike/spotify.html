@@ -145,7 +145,12 @@
     $('log').scrollTop = $('log').scrollHeight;
   }
 
+  var seenVerdicts = {};
   function verdict(text) {
+    // repeating the same verdict buries the ones that differ
+    var key = text.split('\n')[0];
+    if (seenVerdicts[key]) { seenVerdicts[key]++; return; }
+    seenVerdicts[key] = 1;
     var d = document.createElement('div');
     d.className = 'verdict';
     d.textContent = text;
@@ -456,13 +461,32 @@
               verdict('CHECK 1 FAIL — 403 from /me/player/play. Usually a non-Premium account or a Premium tier the SDK excludes.');
             }
             if (r.status === 404) {
-              verdict('CHECK 1 FAIL — 404 from /me/player/play. Spotify does not see our SDK device.\nThe browser tab probably lost the device; reload the page and reconnect.');
+              verdict('DEVICE LOST — 404 from /me/player/play. Spotify no longer sees our SDK\n' +
+                      'device. Observed after a few minutes with the phone locked. Attempting\n' +
+                      'an automatic reconnect; if that fails the page needs a reload.');
+              reconnectDevice();
             }
           });
         }
         log('play accepted (http ' + r.status + ') → ' + tracks[idx].name, 'ok');
         confirmAudioMoving();
       });
+  }
+
+  // The SDK device disappears from Spotify Connect after the phone sits locked
+  // for a few minutes. Try to bring it back rather than dead-ending on 404s.
+  var reconnecting = false;
+  function reconnectDevice() {
+    if (reconnecting || !player) return;
+    reconnecting = true;
+    log('reconnecting SDK device…', 'warn');
+    player.connect().then(function (ok) {
+      reconnecting = false;
+      log(ok ? 'reconnect returned ok — waiting for a new "ready"' : 'reconnect refused', ok ? 'ok' : 'bad');
+    }).catch(function (e) {
+      reconnecting = false;
+      log('reconnect threw: ' + e.message, 'bad');
+    });
   }
 
   // Spotify answers /play with 204 the moment it accepts the command — that is
@@ -479,6 +503,14 @@
         }
         if (s.paused) {
           log('4s after play: player is PAUSED at ' + secs(s.position), 'bad');
+          if (document.visibilityState === 'hidden') {
+            verdict('TRANSITION LOADED BUT DID NOT AUTOPLAY.\n' +
+                    'The next track was accepted and loaded while the phone was locked,\n' +
+                    'then sat paused. iOS requires a user activation to start a NEW media\n' +
+                    'source; the first track inherited one from the Play tap, this one had\n' +
+                    'none. This is the blocker for locked-screen listening — not JS being\n' +
+                    'suspended, which demonstrably still ran.');
+          }
           return;
         }
         if (s.position > 1000) {
@@ -540,8 +572,17 @@
     $('b-mode-queue').setAttribute('aria-pressed', String(m === 'queue'));
     $('mode-hint').textContent = m === 'blind'
       ? 'blind: one URI at a time, our JS starts the next track. This is the product.'
-      : 'native queue: two URIs handed to Spotify at once. Diagnostic only — breaks the blind.';
+      : 'native queue: two URIs handed to Spotify at once, so the transition happens inside the SDK.';
     log('mode → ' + m);
+    // Switching the toggle only affects the NEXT play call. Without re-issuing,
+    // the old single-URI context stays loaded and the test measures nothing —
+    // which is exactly how the 2026-09-08 native-queue run came out void.
+    if (lastState && !lastState.paused) {
+      log('restarting playback so the new mode actually applies', 'warn');
+      playCurrent();
+    } else {
+      log('tap "1 · Play" to load the queue in this mode', 'warn');
+    }
   }
   $('b-mode-blind').addEventListener('click', function () { setMode('blind'); });
   $('b-mode-queue').addEventListener('click', function () { setMode('queue'); });
