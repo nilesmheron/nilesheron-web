@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Motif — playlist builder</title>
+<!--
+  Curator tool. Turns a list of "Title — Artist" lines into a tracks[] block
+  for a Motif entry JSON (PRD §7).
+
+  Exists because Spotify refuses playlist contents to this app, so there is no
+  ingest path — tracks[] can only be built by resolving titles one at a time.
+
+  Always shows candidates and requires a pick. "Fire / SiR" resolves to Jordan
+  St. Cyr's "Fires" on an obvious query; auto-selecting the top hit would put
+  the wrong song in an entry.
+
+  Path is three segments on purpose: /motif/tools would be two segments with no
+  dot, which middleware.js:39 answers with entry.html. Gated by Basic Auth in
+  middleware.js under the /motif/tools prefix.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --page-bg: #e9e6df; --card-bg: #fcfbf8; --ink: #3a3a37;
+    --muted: #9a958c; --hair: #d8d3c8; --amber: #b5793e;
+    --serif: "Lora", Georgia, serif;
+    --mono: "SF Mono", Menlo, ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px 18px calc(40px + env(safe-area-inset-bottom, 0px));
+    background: var(--page-bg); color: var(--ink);
+    font-family: var(--serif); -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  h1 { font-size: 22px; font-weight: 500; margin: 0 0 4px; }
+  .lede { color: #6f6a61; font-size: 14px; margin: 0 0 24px; line-height: 1.5; }
+  .step {
+    font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--muted);
+    display: flex; align-items: center; gap: 10px; margin: 28px 0 10px;
+  }
+  .step::after { content: ""; flex: 1 1 auto; height: 1px; background: var(--hair); }
+  textarea, input[type=text] {
+    width: 100%; background: var(--card-bg); border: 1px solid var(--hair);
+    border-radius: 6px; padding: 12px; font-family: var(--mono);
+    font-size: 13px; color: var(--ink); line-height: 1.6;
+  }
+  textarea { min-height: 150px; resize: vertical; }
+  button {
+    background: var(--amber); color: #fff; border: none; border-radius: 6px;
+    padding: 12px 20px; font-family: var(--mono); font-size: 11px;
+    letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer;
+  }
+  button.ghost { background: none; color: var(--muted); border: 1px solid var(--hair); }
+  button:disabled { opacity: 0.4; cursor: default; }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 12px; }
+  .note { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+  .line {
+    background: var(--card-bg); border: 1px solid var(--hair);
+    border-radius: 8px; padding: 14px; margin-bottom: 12px;
+  }
+  .line.weak { border-color: var(--amber); }
+  .line-h {
+    font-family: var(--mono); font-size: 11px; color: var(--muted);
+    display: flex; justify-content: space-between; gap: 10px;
+    padding-bottom: 10px; margin-bottom: 8px; border-bottom: 1px solid var(--hair);
+  }
+  .line-h strong { color: var(--ink); font-weight: 500; }
+  .flag { color: var(--amber); }
+  label.cand {
+    display: flex; gap: 10px; align-items: flex-start;
+    padding: 7px 0; cursor: pointer; font-size: 13.5px; line-height: 1.4;
+  }
+  label.cand input { margin-top: 4px; flex: 0 0 auto; }
+  .cand-meta { display: block; font-family: var(--mono); font-size: 10.5px; color: var(--muted); margin-top: 2px; }
+  .out { font-size: 12px; min-height: 240px; }
+  .empty { color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Playlist builder</h1>
+  <p class="lede">Turns a list of songs into the <code>tracks[]</code> block for a Motif entry.
+  Spotify will not let us read a playlist's contents, so every track has to be resolved by name — and confirmed, because search guesses wrong more often than you would expect.</p>
+
+  <div class="step">1 · paste the songs</div>
+  <textarea id="in" placeholder="Fire — SiR&#10;Sweet Thing — Cleo Sol&#10;Reign — 2 Chainz&#10;&#10;One per line, Title — Artist. Numbered lines are fine."></textarea>
+  <div class="row">
+    <button id="go">Resolve</button>
+    <span class="note" id="status"></span>
+  </div>
+
+  <div class="step">2 · confirm each match</div>
+  <div id="results"><p class="empty">Nothing resolved yet.</p></div>
+
+  <div class="step">3 · entry details</div>
+  <div class="row">
+    <input type="text" id="slug" placeholder="slug — e.g. familiar-fruit" style="flex:1 1 200px">
+    <input type="text" id="playlistUrl" placeholder="public Spotify playlist URL (for add-to-library)" style="flex:1 1 260px">
+  </div>
+
+  <div class="step">4 · paste into the entry JSON</div>
+  <textarea id="out" class="out" readonly placeholder="Confirm some matches and the JSON appears here."></textarea>
+  <div class="row">
+    <button id="copy" class="ghost">Copy JSON</button>
+    <span class="note" id="copied"></span>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var state = [];
+
+  function slugify(s) {
+    return s.toLowerCase().replace(/['']/g, '').replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '').slice(0, 40);
+  }
+
+  function fmt(ms) {
+    var s = Math.round(ms / 1000);
+    return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+  }
+
+  $('go').addEventListener('click', function () {
+    var lines = $('in').value.split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
+    if (!lines.length) { $('status').textContent = 'nothing to resolve'; return; }
+
+    $('go').disabled = true;
+    $('status').textContent = 'resolving ' + lines.length + ' line(s)…';
+
+    fetch('/api/motif-resolve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lines: lines })
+    })
+      .then(function (r) {
+        return r.json().then(function (d) {
+          if (!r.ok) throw new Error(d.error || ('http ' + r.status));
+          return d;
+        });
+      })
+      .then(function (d) {
+        state = d.results.map(function (r) {
+          return { line: r.line, parsed: r.parsed, confident: r.confident,
+                   candidates: r.candidates, chosen: r.confident ? 0 : null };
+        });
+        render();
+        var weak = state.filter(function (s) { return !s.confident; }).length;
+        $('status').textContent = state.length + ' resolved' +
+          (weak ? ' · ' + weak + ' need a careful look' : ' · all look confident');
+      })
+      .catch(function (e) { $('status').textContent = 'failed: ' + e.message; })
+      .finally(function () { $('go').disabled = false; });
+  });
+
+  function render() {
+    var box = $('results');
+    box.innerHTML = '';
+    if (!state.length) { box.innerHTML = '<p class="empty">Nothing resolved yet.</p>'; return; }
+
+    state.forEach(function (item, i) {
+      var div = document.createElement('div');
+      div.className = 'line' + (item.confident ? '' : ' weak');
+
+      var h = document.createElement('div');
+      h.className = 'line-h';
+      var left = document.createElement('span');
+      left.innerHTML = '<strong>' + esc(item.parsed.title) + '</strong>' +
+        (item.parsed.artist ? ' · ' + esc(item.parsed.artist) : '');
+      var right = document.createElement('span');
+      right.className = item.confident ? '' : 'flag';
+      right.textContent = item.confident ? 'confident' : 'check this one';
+      h.appendChild(left); h.appendChild(right);
+      div.appendChild(h);
+
+      if (!item.candidates.length) {
+        var none = document.createElement('p');
+        none.className = 'empty';
+        none.textContent = 'No matches. Try rewording the line.';
+        div.appendChild(none);
+      }
+
+      item.candidates.forEach(function (c, ci) {
+        var lab = document.createElement('label');
+        lab.className = 'cand';
+        var radio = document.createElement('input');
+        radio.type = 'radio';
+        radio.name = 'pick' + i;
+        radio.checked = item.chosen === ci;
+        radio.addEventListener('change', function () { state[i].chosen = ci; emit(); });
+        var span = document.createElement('span');
+        span.innerHTML = esc(c.title) + '<span class="cand-meta">' +
+          esc(c.artist) + ' · ' + esc(c.album) + ' · ' + fmt(c.duration_ms) + '</span>';
+        lab.appendChild(radio); lab.appendChild(span);
+        div.appendChild(lab);
+      });
+
+      var skip = document.createElement('label');
+      skip.className = 'cand';
+      var sr = document.createElement('input');
+      sr.type = 'radio'; sr.name = 'pick' + i; sr.checked = item.chosen === null;
+      sr.addEventListener('change', function () { state[i].chosen = null; emit(); });
+      var ss = document.createElement('span');
+      ss.innerHTML = '<em>skip this line</em>';
+      skip.appendChild(sr); skip.appendChild(ss);
+      div.appendChild(skip);
+
+      box.appendChild(div);
+    });
+    emit();
+  }
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  }
+
+  function emit() {
+    var picked = state
+      .filter(function (s) { return s.chosen !== null && s.candidates[s.chosen]; })
+      .map(function (s) { return s.candidates[s.chosen]; });
+
+    if (!picked.length) { $('out').value = ''; return; }
+
+    var ids = {};
+    var tracks = picked.map(function (c) {
+      var base = slugify(c.title) || 'track';
+      var id = base;
+      var n = 2;
+      while (ids[id]) { id = base + '-' + n++; }
+      ids[id] = true;
+      return {
+        id: id,
+        spotify_uri: c.uri,
+        title: c.title,
+        artist: c.artist,
+        card: {}
+      };
+    });
+
+    var out = {};
+    var slug = $('slug').value.trim();
+    if (slug) out.slug = slug;
+    var purl = $('playlistUrl').value.trim();
+    if (purl) out.spotify_playlist_url = purl;
+    out.tracks = tracks;
+
+    $('out').value = JSON.stringify(out, null, 2);
+  }
+
+  $('slug').addEventListener('input', emit);
+  $('playlistUrl').addEventListener('input', emit);
+
+  $('copy').addEventListener('click', function () {
+    if (!$('out').value) return;
+    navigator.clipboard.writeText($('out').value).then(
+      function () { $('copied').textContent = 'copied'; setTimeout(function () { $('copied').textContent = ''; }, 1800); },
+      function () { $('out').select(); $('copied').textContent = 'select and copy manually'; }
+    );
+  });
+})();
+</script>
+</body>
+</html>

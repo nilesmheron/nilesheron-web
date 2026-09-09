@@ -16,6 +16,16 @@ const GATES = [
     realm: 'Mothership budget preview',
     // both user and password checked
   },
+  {
+    prefix: '/motif/tools',
+    passwordEnv: 'MOTIF_TOOLS_PASSWORD',
+    realm: 'Motif curator tools',
+    // Curator-only surface (playlist builder). Already inside the existing
+    // '/motif/:path*' matcher, so no matcher change was needed.
+    // Note: only paths of three or more segments reach this gate — the bare
+    // '/motif/tools' is two segments with no dot and is answered by the entry
+    // slug branch below. Tool pages therefore live at /motif/tools/<name>.
+  },
 ];
 
 export const config = {
