@@ -523,12 +523,16 @@
     // blind: hand Spotify exactly one URI so its queue never learns what's next.
     // native queue: hand it this track and the following one, to isolate whether
     // a failed transition is our JS dying or the audio pipeline dying.
-    var uris = mode === 'blind'
-      ? [tracks[idx].uri]
-      : tracks.slice(idx, idx + 2).map(function (t) { return t.uri; });
+    // Spotify plays QUEUED tracks before the remainder of the CONTEXT. Seeding
+    // the context with two and then appending a third makes the appended track
+    // cut in front of the second, stranding it until the queue drains — observed
+    // 2026-09-09, Sweet Thing landing 7th. So auto-queue seeds ONE track and
+    // keeps exactly one queued ahead; the context never has leftovers to strand.
+    var uris = (mode === 'queue')
+      ? tracks.slice(idx, idx + 2).map(function (t) { return t.uri; })
+      : [tracks[idx].uri];
     endedFor = null;
-    // queue×2 and auto-queue both hand over two; auto-queue then tops up as it goes
-    queuedUpTo = mode === 'blind' ? idx : Math.min(idx + 1, tracks.length - 1);
+    queuedUpTo = (mode === 'queue') ? Math.min(idx + 1, tracks.length - 1) : idx;
     return api('/me/player/play?device_id=' + deviceId, { method: 'PUT', body: { uris: uris } })
       .then(function (r) {
         if (!r.ok) {
@@ -559,7 +563,13 @@
   function appendNext(reason) {
     if (!deviceId) { log('append skipped — no device', 'warn'); return Promise.resolve(false); }
     var n = queuedUpTo + 1;
-    if (n >= tracks.length) { log('append skipped — end of list (queued through ' + queuedUpTo + ')'); return Promise.resolve(false); }
+    if (n >= tracks.length) {
+      // Nothing left to queue. When the last track ends Spotify falls back to the
+      // seed context and replays it — the real player must catch this and enter
+      // the §5.3 completion state instead of looping.
+      log('END OF LIST — nothing left to queue. Next boundary will replay the seed track.', 'warn');
+      return Promise.resolve(false);
+    }
     var t = tracks[n];
     return api('/me/player/queue?device_id=' + deviceId + '&uri=' + encodeURIComponent(t.uri), { method: 'POST' })
       .then(function (r) {
