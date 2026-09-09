@@ -95,6 +95,8 @@
   <button id="b-wake" disabled>3 · Request screen wake lock</button>
   <button id="b-append" disabled>Append one track to the queue now
     <span class="hint">tests POST /me/player/queue on its own</span></button>
+  <button id="b-autoseek" aria-pressed="false">Auto-seek: OFF
+    <span class="hint">jump every track to 20s before its end — 8 songs in ~3 min</span></button>
   <button id="b-copy">Copy log</button>
   <button id="b-logout">Disconnect Spotify</button>
 </div>
@@ -113,9 +115,20 @@
   // Override with ?playlist=<id or open.spotify.com URL> to point at another one.
   var DEFAULT_PLAYLIST = '4lnUuG0kxLO25YooXSv2T0';
   // Spotify refuses playlist contents to this app (403 on /playlists/{id}/tracks
-  // even for public playlists). /v1/search still works, so it is the fallback —
-  // the spike only needs playable URIs, not this specific playlist.
+  // even for public playlists). /v1/search still works, so it is the fallback.
   var FALLBACK_QUERY = 'artist:Tobe Nwigwe';
+  // Fixed order so every run is identical and the tester knows what should come
+  // next by ear. Hydrated through /v1/tracks, which returns them in this order.
+  var FIXED_TRACK_IDS = [
+    '4g2OxXjs5skPc9cSFwxLSd', // 0. FYE FYE              232s
+    '70NwUUeK2J8Y55QRUn8uM3', // 1. DISGUISE             150s
+    '2xLrkO5wPNzl5cNjLoPeNW', // 2. On My Soul           160s
+    '3L8pWfEVmI8fQAUUmuJ8HH', // 3. ALL OR NOTHING       197s
+    '04TVU7zwr15pB2GjLAqzNn', // 4. EAT                  208s
+    '10dSPiyXAM0Z1oJXRMqIn9', // 5. LORD FORGIVE ME      204s
+    '6sMyYI4qwMLlZ2WHdjvJbP', // 6. BRAVO                100s
+    '09xqp9eObeCLsRfyHadWow'  // 7. Sanctified           311s
+  ];
   var AUTH = '/api/motif-spike-auth';
 
   var t0 = Date.now();
@@ -130,6 +143,7 @@
   var mediaFor = null;      // uri the lock-screen metadata currently describes
   var audibleVerdictShown = false;
   var queuedUpTo = -1;      // highest track index handed to Spotify
+  var autoSeek = false;
   var wakeLock = null;
   var bg = null;            // snapshot taken when the page goes hidden
   var activated = false;
@@ -227,7 +241,7 @@
         $('b-connect').textContent = 'Re-connect Spotify';
         $('b-connect').className = '';
         checkAccount();
-        loadPlaylist();
+        loadTracks();
         loadSdk();
       } else {
         set('s-auth', 'not connected', 'warn');
@@ -280,6 +294,29 @@
   // Try the real playlist first — a user token may have access this app's
   // client-credentials token does not. Fall back to search so a blocked
   // playlist never blocks the actual experiment.
+  // Fixed list is the default so runs are reproducible. ?source=playlist opts
+  // back into reading the real entry playlist, if Spotify ever allows it again.
+  function loadTracks() {
+    if (params.get('source') === 'playlist') return loadPlaylist();
+    return api('/tracks?ids=' + FIXED_TRACK_IDS.join(','))
+      .then(function (r) {
+        if (!r.ok) { throw new Error('tracks http ' + r.status); }
+        return r.json();
+      })
+      .then(function (d) {
+        tracks = usable(d.tracks || []);
+        set('s-playlist', tracks.length + ' tracks (fixed)', tracks.length ? 'ok' : 'bad');
+        log('fixed list loaded, same order every run:', 'ok');
+        tracks.forEach(function (t, i) {
+          log('  [' + i + '] ' + t.name + ' · ' + Math.round(t.duration_ms / 1000) + 's');
+        });
+      })
+      .catch(function (e) {
+        log('fixed list failed: ' + e.message + ' — falling back to search', 'warn');
+        return loadFromSearch();
+      });
+  }
+
   function loadPlaylist() {
     var id = playlistId();
     var fields = 'items(track(uri,name,duration_ms,artists(name),album(name,images)))';
@@ -440,6 +477,15 @@
     if (mode === 'autoqueue') {
       appendNext('track started');
     }
+    // Let playback settle before seeking, so the seek can't race the track load.
+    if (autoSeek && state && state.duration > 30000) {
+      setTimeout(function () {
+        if (!player) return;
+        player.seek(state.duration - 20000).then(function () {
+          log('auto-seek → 20s before end of ' + cur.name);
+        });
+      }, 2500);
+    }
   }
 
   function onTrackEnded() {
@@ -525,6 +571,13 @@
   }
 
   $('b-append').addEventListener('click', function () { appendNext('manual'); });
+
+  $('b-autoseek').addEventListener('click', function () {
+    autoSeek = !autoSeek;
+    $('b-autoseek').setAttribute('aria-pressed', String(autoSeek));
+    $('b-autoseek').firstChild.nodeValue = 'Auto-seek: ' + (autoSeek ? 'ON' : 'OFF');
+    log('auto-seek ' + (autoSeek ? 'ON — each track jumps to 20s before its end' : 'OFF'), 'warn');
+  });
 
   // The SDK device disappears from Spotify Connect after the phone sits locked
   // for a few minutes. Try to bring it back rather than dead-ending on 404s.
