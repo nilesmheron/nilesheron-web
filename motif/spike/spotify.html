@@ -82,7 +82,8 @@
 
   <div class="modes">
     <button id="b-mode-blind" aria-pressed="true">blind</button>
-    <button id="b-mode-queue" aria-pressed="false">native queue</button>
+    <button id="b-mode-queue" aria-pressed="false">queue×2</button>
+    <button id="b-mode-auto" aria-pressed="false">auto-queue</button>
   </div>
   <div class="sub" id="mode-hint" style="margin:4px 0 10px">blind: one URI at a time, our JS starts the next track. This is the product.</div>
 
@@ -92,6 +93,8 @@
   <button id="b-prev" disabled>skip back</button>
   <button id="b-pause" disabled>pause / resume</button>
   <button id="b-wake" disabled>3 · Request screen wake lock</button>
+  <button id="b-append" disabled>Append one track to the queue now
+    <span class="hint">tests POST /me/player/queue on its own</span></button>
   <button id="b-copy">Copy log</button>
   <button id="b-logout">Disconnect Spotify</button>
 </div>
@@ -126,6 +129,7 @@
   var endedFor = null;      // uri we've already handled an end for
   var mediaFor = null;      // uri the lock-screen metadata currently describes
   var audibleVerdictShown = false;
+  var queuedUpTo = -1;      // highest track index handed to Spotify
   var wakeLock = null;
   var bg = null;            // snapshot taken when the page goes hidden
   var activated = false;
@@ -355,7 +359,7 @@
       set('s-sdk', 'connected', 'ok');
       set('s-device', d.device_id.slice(0, 12) + '…', 'ok');
       log('player ready, device ' + d.device_id);
-      ['b-play', 'b-seek', 'b-next', 'b-prev', 'b-pause', 'b-wake'].forEach(function (id) {
+      ['b-play', 'b-seek', 'b-next', 'b-prev', 'b-pause', 'b-wake', 'b-append'].forEach(function (id) {
         $(id).disabled = false;
       });
     });
@@ -394,7 +398,11 @@
     if (cur) {
       set('s-track', cur.name + ' — ' + cur.artists.map(function (a) { return a.name; }).join(', '));
       // only rebuild metadata on an actual track change — the ticker runs every second
-      if (cur.uri !== mediaFor) { mediaFor = cur.uri; setMediaSession(cur); }
+      if (cur.uri !== mediaFor) {
+        mediaFor = cur.uri;
+        setMediaSession(cur);
+        onTrackStarted(cur, state);
+      }
       if ('mediaSession' in navigator) {
         navigator.mediaSession.playbackState = state.paused ? 'paused' : 'playing';
       }
@@ -420,6 +428,18 @@
     var reasons = r.disallow_resuming_reasons || [];
     if (reasons.indexOf('not_paused') !== -1) return true;
     return Boolean(prev && !prev.paused && prev.position > 0);
+  }
+
+  // Fires whenever the playing track changes, however it changed — our dispatch,
+  // Spotify advancing the queue, or the listener hitting next on the lock screen.
+  // This is where the real player would reveal the card.
+  function onTrackStarted(cur, state) {
+    var known = indexOfUri(cur.uri);
+    if (known > -1) idx = known;
+    log('NOW PLAYING (' + document.visibilityState + '): ' + cur.name + (known > -1 ? ' [' + known + ']' : ' [not in list]'));
+    if (mode === 'autoqueue') {
+      appendNext('track started');
+    }
   }
 
   function onTrackEnded() {
@@ -452,6 +472,8 @@
       ? [tracks[idx].uri]
       : tracks.slice(idx, idx + 2).map(function (t) { return t.uri; });
     endedFor = null;
+    // queue×2 and auto-queue both hand over two; auto-queue then tops up as it goes
+    queuedUpTo = mode === 'blind' ? idx : Math.min(idx + 1, tracks.length - 1);
     return api('/me/player/play?device_id=' + deviceId, { method: 'PUT', body: { uris: uris } })
       .then(function (r) {
         if (!r.ok) {
@@ -472,6 +494,37 @@
         confirmAudioMoving();
       });
   }
+
+  /* ---------- queue top-up ----------
+     The question the build hangs on: can we extend the queue WITHOUT issuing a
+     new play call? A new play call starts a new media source, which iOS refuses
+     to autoplay while locked. POST /me/player/queue should append to the
+     existing context instead, leaving the already-activated audio element alone. */
+
+  function appendNext(reason) {
+    if (!deviceId) { log('append skipped — no device', 'warn'); return Promise.resolve(false); }
+    var n = queuedUpTo + 1;
+    if (n >= tracks.length) { log('append skipped — end of list (queued through ' + queuedUpTo + ')'); return Promise.resolve(false); }
+    var t = tracks[n];
+    return api('/me/player/queue?device_id=' + deviceId + '&uri=' + encodeURIComponent(t.uri), { method: 'POST' })
+      .then(function (r) {
+        if (!r.ok) {
+          return r.text().then(function (b) {
+            log('APPEND FAILED http ' + r.status + ' ' + b.slice(0, 140), 'bad');
+            verdict('QUEUE TOP-UP FAILED — POST /me/player/queue returned ' + r.status + '.\n' +
+                    'The queue cannot be extended without a new play call, which iOS will\n' +
+                    'not autoplay while locked. Fall back to queueing a small N ahead in\n' +
+                    'one play call, per the 2026-09-09 decision.');
+            return false;
+          });
+        }
+        queuedUpTo = n;
+        log('appended (' + reason + ') → ' + t.name + ' · queued through ' + n, 'ok');
+        return true;
+      });
+  }
+
+  $('b-append').addEventListener('click', function () { appendNext('manual'); });
 
   // The SDK device disappears from Spotify Connect after the phone sits locked
   // for a few minutes. Try to bring it back rather than dead-ending on 404s.
@@ -566,13 +619,18 @@
 
   /* ---------- mode ---------- */
 
+  var MODE_HINTS = {
+    blind: 'blind: one URI at a time, our JS starts the next track. Fails when locked.',
+    queue: 'queue×2: two URIs in one play call. Works locked, but stops after the second song.',
+    autoqueue: 'auto-queue: start with two, append one more each time a track begins. THE CANDIDATE DESIGN.'
+  };
+
   function setMode(m) {
     mode = m;
     $('b-mode-blind').setAttribute('aria-pressed', String(m === 'blind'));
     $('b-mode-queue').setAttribute('aria-pressed', String(m === 'queue'));
-    $('mode-hint').textContent = m === 'blind'
-      ? 'blind: one URI at a time, our JS starts the next track. This is the product.'
-      : 'native queue: two URIs handed to Spotify at once, so the transition happens inside the SDK.';
+    $('b-mode-auto').setAttribute('aria-pressed', String(m === 'autoqueue'));
+    $('mode-hint').textContent = MODE_HINTS[m];
     log('mode → ' + m);
     // Switching the toggle only affects the NEXT play call. Without re-issuing,
     // the old single-URI context stays loaded and the test measures nothing —
@@ -586,6 +644,7 @@
   }
   $('b-mode-blind').addEventListener('click', function () { setMode('blind'); });
   $('b-mode-queue').addEventListener('click', function () { setMode('queue'); });
+  $('b-mode-auto').addEventListener('click', function () { setMode('autoqueue'); });
 
   /* ---------- check 3: wake lock ---------- */
 
