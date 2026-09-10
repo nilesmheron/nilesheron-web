@@ -138,11 +138,26 @@
 
   <div class="step">3 · entry details</div>
   <div class="row">
-    <input type="text" id="slug" placeholder="slug — e.g. familiar-fruit" style="flex:1 1 200px">
+    <input type="text" id="slug" placeholder="slug — e.g. familiar-fruit" style="flex:1 1 160px">
+    <input type="text" id="title" placeholder="title — e.g. Familiar Fruit" style="flex:1 1 180px">
+  </div>
+  <div class="row">
     <input type="text" id="playlistUrl" placeholder="public Spotify playlist URL (for add-to-library)" style="flex:1 1 260px">
   </div>
+  <div class="row">
+    <input type="text" id="cover" placeholder="cover image URL (splash screen)" style="flex:1 1 260px">
+    <button class="ghost" data-upload="cover">Upload</button>
+  </div>
 
-  <div class="step">4 · paste into the entry JSON</div>
+  <div class="step">4 · save</div>
+  <div class="row">
+    <input type="password" id="pw" placeholder="curator password" style="flex:1 1 180px" autocomplete="current-password">
+    <button id="save">Save entry</button>
+    <button id="load" class="ghost">Load existing</button>
+  </div>
+  <p class="note" id="saveNote" style="margin-top:8px">Commits <code>motif/data/&lt;slug&gt;.json</code> to the repo. Vercel redeploys, so it goes live about 40 seconds later.</p>
+
+  <div class="step">5 · or copy it yourself</div>
   <textarea id="out" class="out" readonly placeholder="Confirm some matches and the JSON appears here."></textarea>
   <div class="row">
     <button id="copy" class="ghost">Copy JSON</button>
@@ -328,6 +343,7 @@
     var row1 = document.createElement('div');
     row1.className = 'ce-row';
     var front = mkInput('front image URL', card.front_image_url);
+    var frontUp = mkUploadBtn(function (url) { front.value = url; sync(); });
     var fit = document.createElement('select');
     [['cover', 'fill'], ['contain', 'fit']].forEach(function (o) {
       var op = document.createElement('option');
@@ -335,13 +351,14 @@
       if ((card.fit || 'cover') === o[0]) op.selected = true;
       fit.appendChild(op);
     });
-    row1.appendChild(front); row1.appendChild(fit);
+    row1.appendChild(front); row1.appendChild(frontUp); row1.appendChild(fit);
     box.appendChild(row1);
 
     var back = mkInput('back image URL', card.back_image_url);
+    var backUp = mkUploadBtn(function (url) { back.value = url; sync(); });
     var row2 = document.createElement('div');
     row2.className = 'ce-row';
-    row2.appendChild(back);
+    row2.appendChild(back); row2.appendChild(backUp);
     box.appendChild(row2);
 
     var text = document.createElement('textarea');
@@ -367,6 +384,18 @@
 
     drawPreview(prev, card, cand);
     return box;
+  }
+
+  function mkUploadBtn(setUrl) {
+    var b = document.createElement('button');
+    b.className = 'ghost';
+    b.type = 'button';
+    b.textContent = 'Upload';
+    b.style.flex = '0 0 auto';
+    b.style.padding = '8px 14px';
+    b.style.fontSize = '10px';
+    b.addEventListener('click', function () { uploadTo(setUrl); });
+    return b;
   }
 
   function mkInput(placeholder, value) {
@@ -473,18 +502,166 @@
       };
     });
 
-    var out = {};
-    var slug = $('slug').value.trim();
-    if (slug) out.slug = slug;
-    var purl = $('playlistUrl').value.trim();
-    if (purl) out.spotify_playlist_url = purl;
-    out.tracks = tracks;
-
+    var out = buildEntry(tracks);
     $('out').value = JSON.stringify(out, null, 2);
   }
 
-  $('slug').addEventListener('input', emit);
-  $('playlistUrl').addEventListener('input', emit);
+  // The shape the player reads (PRD §7). poems[] is kept so the existing
+  // /motif/<slug> entry page does not hard-error on a playlist-only entry.
+  function buildEntry(tracks) {
+    var out = {};
+    var slug = $('slug').value.trim();
+    if (slug) out.slug = slug;
+    out.no = existingEntry.no || 'T';
+    var title = $('title').value.trim();
+    if (title) out.title = title;
+    else if (existingEntry.title) out.title = existingEntry.title;
+    if (existingEntry.date) out.date = existingEntry.date;
+    var cover = $('cover').value.trim();
+    if (cover) out.cover_image_url = cover;
+    var purl = $('playlistUrl').value.trim();
+    if (purl) out.spotify_playlist_url = purl;
+    out.poems = existingEntry.poems || [];
+    out.tracks = tracks;
+    return out;
+  }
+
+  var existingEntry = {};
+
+  ['slug', 'title', 'playlistUrl', 'cover'].forEach(function (id) {
+    $(id).addEventListener('input', emit);
+  });
+
+  /* ---- save / load / upload ----
+     The write endpoints check the curator password explicitly: middleware
+     gates /motif/tools but not /api, and browsers do not reliably attach
+     cached Basic credentials across path trees via fetch. Typed once, held in
+     memory only — never localStorage, per CLAUDE.md. */
+
+  function authHeader() {
+    var pw = $('pw').value;
+    if (!pw) { note('saveNote', 'enter the curator password first', true); return null; }
+    return 'Basic ' + btoa('mixtape:' + pw);
+  }
+
+  function note(id, msg, bad) {
+    var n = $(id);
+    n.textContent = msg;
+    n.style.color = bad ? 'var(--amber)' : 'var(--muted)';
+  }
+
+  $('save').addEventListener('click', function () {
+    var auth = authHeader();
+    if (!auth) return;
+    var slug = $('slug').value.trim();
+    if (!slug) { note('saveNote', 'a slug is required', true); return; }
+    var picked = state.filter(function (s) { return s.chosen !== null && s.candidates[s.chosen]; });
+    if (!picked.length) { note('saveNote', 'confirm at least one track first', true); return; }
+
+    var entry;
+    try { entry = JSON.parse($('out').value); }
+    catch (e) { note('saveNote', 'the JSON is not valid — check the fields above', true); return; }
+
+    $('save').disabled = true;
+    note('saveNote', 'committing…');
+
+    fetch('/api/motif-save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: auth },
+      body: JSON.stringify({ slug: slug, entry: entry })
+    })
+      .then(function (r) { return r.json().then(function (d) { if (!r.ok) throw new Error(d.error || r.status); return d; }); })
+      .then(function (d) {
+        note('saveNote', (d.created ? 'created ' : 'updated ') + d.path +
+          ' · live in ~40s at ' + d.listen);
+      })
+      .catch(function (e) { note('saveNote', 'save failed: ' + e.message, true); })
+      .finally(function () { $('save').disabled = false; });
+  });
+
+  $('load').addEventListener('click', function () {
+    var auth = authHeader();
+    if (!auth) return;
+    var slug = $('slug').value.trim();
+    if (!slug) { note('saveNote', 'enter the slug to load', true); return; }
+
+    note('saveNote', 'loading…');
+    fetch('/api/motif-save?slug=' + encodeURIComponent(slug), { headers: { Authorization: auth } })
+      .then(function (r) { return r.json().then(function (d) { if (!r.ok) throw new Error(d.error || r.status); return d; }); })
+      .then(function (d) {
+        existingEntry = d.entry || {};
+        if (existingEntry.title) $('title').value = existingEntry.title;
+        if (existingEntry.cover_image_url) $('cover').value = existingEntry.cover_image_url;
+        if (existingEntry.spotify_playlist_url) $('playlistUrl').value = existingEntry.spotify_playlist_url;
+
+        // Rebuild the pick list from the saved tracks so they can be edited.
+        state = (existingEntry.tracks || []).map(function (t) {
+          var cand = {
+            uri: t.spotify_uri, id: (t.spotify_uri || '').split(':').pop(),
+            title: t.title || '', artist: t.artist || '', album: '',
+            duration_ms: 0, art: null, score: 10
+          };
+          return {
+            line: (t.title || '') + ' — ' + (t.artist || ''),
+            parsed: { title: t.title || '', artist: t.artist || '' },
+            confident: true, direct: true,
+            candidates: [cand], chosen: 0,
+            card: Object.assign({}, t.card || {})
+          };
+        });
+        render();
+        summarise();
+        note('saveNote', 'loaded ' + state.length + ' track(s) — edit and save to update');
+      })
+      .catch(function (e) { note('saveNote', 'load failed: ' + e.message, true); });
+  });
+
+  // Upload straight to storage using a short-lived signed URL, so the file
+  // never passes through our function and large images are not a problem.
+  function uploadTo(setUrl) {
+    var auth = authHeader();
+    if (!auth) return;
+    var slug = $('slug').value.trim();
+    if (!slug) { note('saveNote', 'set the slug before uploading — it decides where media lives', true); return; }
+
+    var picker = document.createElement('input');
+    picker.type = 'file';
+    picker.accept = 'image/jpeg,image/png,image/webp,image/gif';
+    picker.addEventListener('change', function () {
+      var file = picker.files && picker.files[0];
+      if (!file) return;
+      note('saveNote', 'uploading ' + file.name + '…');
+
+      fetch('/api/motif-upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: auth },
+        body: JSON.stringify({ slug: slug, filename: file.name, contentType: file.type, size: file.size })
+      })
+        .then(function (r) { return r.json().then(function (d) { if (!r.ok) throw new Error(d.error || r.status); return d; }); })
+        .then(function (d) {
+          return fetch(d.uploadUrl, {
+            method: 'PUT',
+            headers: { 'Content-Type': file.type },
+            body: file
+          }).then(function (up) {
+            if (!up.ok) throw new Error('storage rejected the file (' + up.status + ')');
+            setUrl(d.publicUrl);
+            note('saveNote', 'uploaded');
+          });
+        })
+        .catch(function (e) { note('saveNote', 'upload failed: ' + e.message, true); });
+    });
+    picker.click();
+  }
+
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest && ev.target.closest('[data-upload]');
+    if (!b) return;
+    ev.preventDefault();
+    if (b.getAttribute('data-upload') === 'cover') {
+      uploadTo(function (url) { $('cover').value = url; emit(); });
+    }
+  });
 
   $('copy').addEventListener('click', function () {
     if (!$('out').value) return;
