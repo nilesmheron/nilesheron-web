@@ -79,6 +79,9 @@
   .cand-meta { display: block; font-family: var(--mono); font-size: 10.5px; color: var(--muted); margin-top: 2px; }
   .out { font-size: 12px; min-height: 240px; }
   .empty { color: var(--muted); font-size: 13px; }
+  .retry { display: flex; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--hair); }
+  .retry input { flex: 1 1 auto; font-size: 12px; padding: 8px 10px; }
+  .retry button { flex: 0 0 auto; padding: 8px 14px; font-size: 10px; }
 </style>
 </head>
 <body>
@@ -92,8 +95,10 @@
   <textarea id="in" placeholder="Fire — SiR&#10;Sweet Thing — Cleo Sol&#10;Reign — 2 Chainz&#10;&#10;One per line, Title — Artist. Numbered lines are fine."></textarea>
   <div class="row">
     <button id="go">Resolve</button>
+    <button id="add" class="ghost">Add to list</button>
     <span class="note" id="status"></span>
   </div>
+  <p class="note" style="margin-top:8px">A line can also be a Spotify link, URI, or track id — pasted links resolve exactly, with nothing to guess. Use that for anything search keeps getting wrong.</p>
 
   <div class="step">2 · confirm each match</div>
   <div id="results"><p class="empty">Nothing resolved yet.</p></div>
@@ -129,37 +134,67 @@
     return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
   }
 
-  $('go').addEventListener('click', function () {
-    var lines = $('in').value.split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
-    if (!lines.length) { $('status').textContent = 'nothing to resolve'; return; }
-
-    $('go').disabled = true;
-    $('status').textContent = 'resolving ' + lines.length + ' line(s)…';
-
-    fetch('/api/motif-resolve', {
+  function resolve(lines) {
+    return fetch('/api/motif-resolve', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ lines: lines })
-    })
-      .then(function (r) {
-        return r.json().then(function (d) {
-          if (!r.ok) throw new Error(d.error || ('http ' + r.status));
-          return d;
-        });
-      })
-      .then(function (d) {
-        state = d.results.map(function (r) {
-          return { line: r.line, parsed: r.parsed, confident: r.confident,
-                   candidates: r.candidates, chosen: r.confident ? 0 : null };
-        });
+    }).then(function (r) {
+      return r.json().then(function (d) {
+        if (!r.ok) throw new Error(d.error || ('http ' + r.status));
+        return d.results;
+      });
+    });
+  }
+
+  function toItem(r) {
+    return { line: r.line, parsed: r.parsed, confident: r.confident,
+             direct: r.direct, candidates: r.candidates, chosen: r.confident ? 0 : null };
+  }
+
+  function summarise() {
+    var weak = state.filter(function (s) { return !s.confident; }).length;
+    $('status').textContent = state.length + ' line(s)' +
+      (weak ? ' · ' + weak + ' need a careful look' : ' · all look confident');
+  }
+
+  function runBatch(mode) {
+    var lines = $('in').value.split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
+    if (!lines.length) { $('status').textContent = 'nothing to resolve'; return; }
+    $('go').disabled = $('add').disabled = true;
+    $('status').textContent = 'resolving ' + lines.length + ' line(s)…';
+    resolve(lines)
+      .then(function (results) {
+        var items = results.map(toItem);
+        // "Add to list" appends, so one bad line never costs you the rest.
+        state = (mode === 'append') ? state.concat(items) : items;
+        if (mode === 'append') $('in').value = '';
         render();
-        var weak = state.filter(function (s) { return !s.confident; }).length;
-        $('status').textContent = state.length + ' resolved' +
-          (weak ? ' · ' + weak + ' need a careful look' : ' · all look confident');
+        summarise();
       })
       .catch(function (e) { $('status').textContent = 'failed: ' + e.message; })
-      .finally(function () { $('go').disabled = false; });
-  });
+      .finally(function () { $('go').disabled = $('add').disabled = false; });
+  }
+
+  $('go').addEventListener('click', function () { runBatch('replace'); });
+  $('add').addEventListener('click', function () { runBatch('append'); });
+
+  // Re-resolve a single line in place. Everything else keeps its picks.
+  function retryLine(i, query, btn) {
+    if (!query.trim()) return;
+    btn.disabled = true;
+    var prev = btn.textContent;
+    btn.textContent = '…';
+    resolve([query])
+      .then(function (results) {
+        if (!results.length) throw new Error('no result');
+        state[i] = toItem(results[0]);
+        render();
+        summarise();
+      })
+      .catch(function (e) { $('status').textContent = 'retry failed: ' + e.message; })
+      .finally(function () { btn.disabled = false; btn.textContent = prev; });
+  }
 
   function render() {
     var box = $('results');
@@ -177,7 +212,9 @@
         (item.parsed.artist ? ' · ' + esc(item.parsed.artist) : '');
       var right = document.createElement('span');
       right.className = item.confident ? '' : 'flag';
-      right.textContent = item.confident ? 'confident' : 'check this one';
+      right.textContent = item.direct
+        ? (item.confident ? 'exact link' : 'link not found')
+        : (item.confident ? 'confident' : 'check this one');
       h.appendChild(left); h.appendChild(right);
       div.appendChild(h);
 
@@ -202,6 +239,23 @@
         lab.appendChild(radio); lab.appendChild(span);
         div.appendChild(lab);
       });
+
+      // per-line escape hatch: re-search, or paste the Spotify link outright
+      var retry = document.createElement('div');
+      retry.className = 'retry';
+      var q = document.createElement('input');
+      q.type = 'text';
+      q.value = item.line;
+      q.placeholder = 'reword, or paste a Spotify link';
+      var rb = document.createElement('button');
+      rb.className = 'ghost';
+      rb.textContent = 'Retry';
+      rb.addEventListener('click', function () { retryLine(i, q.value, rb); });
+      q.addEventListener('keydown', function (ev) {
+        if (ev.key === 'Enter') { ev.preventDefault(); retryLine(i, q.value, rb); }
+      });
+      retry.appendChild(q); retry.appendChild(rb);
+      div.appendChild(retry);
 
       var skip = document.createElement('label');
       skip.className = 'cand';

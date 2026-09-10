@@ -53,6 +53,28 @@ async function appToken() {
   return cachedToken.value;
 }
 
+// A line may be a Spotify link, URI, or bare track id instead of a title. That
+// is the escape hatch for songs search keeps getting wrong: grab the link from
+// the Spotify app and paste it, and there is nothing left to guess.
+function trackIdFrom(raw) {
+  const s = String(raw).trim();
+  let m = s.match(/^spotify:track:([A-Za-z0-9]{22})$/);
+  if (m) return m[1];
+  m = s.match(/open\.spotify\.com\/(?:intl-[a-z]{2}\/)?track\/([A-Za-z0-9]{22})/);
+  if (m) return m[1];
+  m = s.match(/^([A-Za-z0-9]{22})$/);
+  if (m) return m[1];
+  return null;
+}
+
+async function lookupTrack(token, id) {
+  const r = await fetch('https://api.spotify.com/v1/tracks/' + id, {
+    headers: { Authorization: 'Bearer ' + token },
+  });
+  if (!r.ok) return null;
+  return r.json();
+}
+
 // "Title — Artist" is the documented form. Accepts em dash, en dash, or a
 // spaced hyphen, and tolerates a leading list number.
 function splitLine(raw) {
@@ -143,6 +165,21 @@ export default async function handler(req, res) {
   const results = [];
   for (const raw of lines) {
     if (!String(raw).trim()) continue;
+
+    // Direct link / URI / id — exact, no guessing.
+    const directId = trackIdFrom(raw);
+    if (directId) {
+      const t = await lookupTrack(token, directId);
+      results.push({
+        line: String(raw).trim(),
+        parsed: { title: t ? t.name : directId, artist: t ? t.artists.map((a) => a.name).join(', ') : '' },
+        confident: Boolean(t),
+        direct: true,
+        candidates: t ? [{ ...shape(t), score: 10 }] : [],
+      });
+      continue;
+    }
+
     const { title, artist } = splitLine(String(raw));
     const byUri = new Map();
 
