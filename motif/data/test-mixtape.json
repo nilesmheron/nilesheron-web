@@ -1,0 +1,40 @@
+{
+  "slug": "test-mixtape",
+  "no": "T",
+  "title": "Test Mixtape",
+  "date": "September 2026",
+  "playlist_title": "Heartyearn Vol. 1",
+  "cover_image_url": "https://mosaic.scdn.co/640/ab67616d00001e020685f57f5521a9701c8e1755ab67616d00001e0283ddc3a8842b5c8f3550ae13ab67616d00001e028e64af93195949d0f91aa1f5ab67616d00001e02f6465d4b8cdd34ed4d7853e2",
+  "spotify_playlist_url": "https://open.spotify.com/playlist/5S3eveNrRlzejjfD84rLla",
+  "poems": [],
+  "tracks": [
+    {
+      "id": "holding-on",
+      "spotify_uri": "spotify:track:0NnM0CgQaifZmhDquugyZV",
+      "title": "Holding On",
+      "artist": "Gregory Porter, Kem",
+      "card": {}
+    },
+    {
+      "id": "so-into-you",
+      "spotify_uri": "spotify:track:3c6afiysmB7OnxQzzSqRfD",
+      "title": "So Into You",
+      "artist": "Tamia",
+      "card": {}
+    },
+    {
+      "id": "before-i-let-go",
+      "spotify_uri": "spotify:track:6e9xnBJPs0y9omrSU3C3N4",
+      "title": "Before I Let Go",
+      "artist": "Maze, Frankie Beverly",
+      "card": {}
+    },
+    {
+      "id": "before-i-let-go-beyonce",
+      "spotify_uri": "spotify:track:7AqrUfAVupf6Zfqv9FgGxg",
+      "title": "Before I Let Go - Homecoming Live Bonus Track",
+      "artist": "Beyoncé",
+      "card": {}
+    }
+  ]
+}

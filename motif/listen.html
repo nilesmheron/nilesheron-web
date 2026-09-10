@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Motif — listen</title>
+  <!--
+    Blind playlist player. Served at /motif/:slug/listen via a vercel.json
+    rewrite (the slug is read back off the pathname, same as entry.js).
+
+    The Spotify Web Playback SDK is loaded from Spotify's official CDN,
+    authorized for the player page only by PRD §9.3. It is loaded lazily, on
+    the listener's first tap, so the splash costs nothing.
+  -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Caveat:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/motif/motif.css">
+  <link rel="stylesheet" href="/motif/listen.css">
+</head>
+<body>
+  <div class="motif-root listen-root" id="listen-root"></div>
+  <script src="/motif/listen.js"></script>
+</body>
+</html>
