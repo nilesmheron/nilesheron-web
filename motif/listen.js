@@ -117,6 +117,28 @@
     root.appendChild(wrap);
     statusEl = el('div', 'status');
     root.appendChild(statusEl);
+    prepare();
+  }
+
+  // Connect the SDK while the listener is still reading the splash. Connecting
+  // needs no gesture; only starting audio does. Without this the first tap is
+  // spent loading the SDK and appears to do nothing.
+  function prepare() {
+    ensureAuth().then(function (ok) {
+      if (!ok) return; // first tap sends them to Spotify instead
+      playBtn.disabled = true;
+      playBtn.textContent = 'Preparing';
+      ensurePlayer()
+        .then(function () {
+          playBtn.disabled = false;
+          playBtn.textContent = 'Play';
+        })
+        .catch(function (e) {
+          playBtn.disabled = false;
+          playBtn.textContent = 'Play';
+          say(friendly(e), true);
+        });
+    });
   }
 
   function errNote(text) {
@@ -131,35 +153,35 @@
 
   function onPlayTap() {
     if (starting) return;
+
+    // MUST be the first thing, synchronously: iOS unlocks the audio element
+    // only during a real user interaction. Any await before this spends the
+    // gesture and the tap silently does nothing.
+    activate();
+
+    if (!deviceId) {
+      ensureAuth().then(function (ok) {
+        if (!ok) {
+          window.location.href = '/api/motif-auth?action=login&return=' +
+            encodeURIComponent(window.location.pathname);
+        } else {
+          prepare(); // authorized but the SDK is still connecting
+        }
+      });
+      return;
+    }
+
     starting = true;
     playBtn.disabled = true;
     playBtn.textContent = 'Starting';
     say('');
 
-    // iOS unlocks audio only inside a real user gesture, so the SDK has to be
-    // ready before this tap is spent. Load it first, then play on the NEXT tap
-    // if we were not already connected.
-    ensureAuth()
-      .then(function (ok) {
-        if (!ok) {
-          window.location.href = '/api/motif-auth?action=login&return=' +
-            encodeURIComponent(window.location.pathname);
-          return null;
-        }
-        return ensurePlayer();
-      })
-      .then(function (ready) {
-        if (ready === null) return;
-        if (!ready) throw new Error('player did not connect');
-        activate();
-        return beginPlayback();
-      })
-      .catch(function (e) {
-        starting = false;
-        playBtn.disabled = false;
-        playBtn.textContent = 'Play';
-        say(friendly(e), true);
-      });
+    beginPlayback().catch(function (e) {
+      starting = false;
+      playBtn.disabled = false;
+      playBtn.textContent = 'Play';
+      say(friendly(e), true);
+    });
   }
 
   function ensureAuth() {
@@ -563,9 +585,17 @@
     npEl.appendChild(l); npEl.appendChild(t); npEl.appendChild(a);
   }
 
+  // Ask the SDK what is actually happening rather than trusting the cached
+  // flag. They can disagree — a stale "playing" made the first press pause an
+  // already-paused player, so it took two presses to start anything.
   function togglePlay() {
     if (!player) return;
-    player.togglePlay();
+    player.getCurrentState().then(function (s) {
+      if (!s) { player.resume(); return; }
+      paused = s.paused;
+      updateTransport();
+      return s.paused ? player.resume() : player.pause();
+    }).catch(function () {});
   }
 
   // Skip forward: a queue operation, so it keeps the audio element's activation.
