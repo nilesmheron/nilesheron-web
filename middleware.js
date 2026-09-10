@@ -38,6 +38,17 @@ export const config = {
   ],
 };
 
+// Fetch a static page and return it under the requested URL. Subrequests made
+// inside middleware bypass middleware, so there is no loop risk.
+async function proxyStatic(path, request) {
+  const res = await fetch(new URL(path, request.url));
+  const html = await res.text();
+  return new Response(html, {
+    status: 200,
+    headers: { 'content-type': 'text/html; charset=utf-8' },
+  });
+}
+
 export default async function middleware(request) {
   const url = new URL(request.url);
 
@@ -47,13 +58,15 @@ export default async function middleware(request) {
   // Subrequests made inside middleware bypass middleware, so no loop risk.
   const segments = url.pathname.split('/').filter(Boolean);
   if (segments[0] === 'motif' && segments.length === 2 && !segments[1].includes('.')) {
-    const entryUrl = new URL('/motif/entry', request.url);
-    const res = await fetch(entryUrl);
-    const html = await res.text();
-    return new Response(html, {
-      status: 200,
-      headers: { 'content-type': 'text/html; charset=utf-8' },
-    });
+    return proxyStatic('/motif/entry', request);
+  }
+
+  // Serve /motif/:slug/listen (the blind player) the same way. A vercel.json
+  // rewrite was tried first and 404s for the same reason as above — verified
+  // live 2026-09-09 — so PRD §10's instruction to add a rewrite does not work
+  // and this mirrors the existing mechanism instead.
+  if (segments[0] === 'motif' && segments.length === 3 && segments[2] === 'listen') {
+    return proxyStatic('/motif/listen', request);
   }
 
   const gate = GATES.find(
