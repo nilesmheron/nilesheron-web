@@ -476,7 +476,11 @@
     document.documentElement.classList.toggle('focus-lock', focused !== null);
   }
 
-  /* ── gestures: ported from entry.js so the deck feels identical ── */
+  /* ── gestures ──
+     Swipe on the deck drives PLAYBACK, not focus: left is the next song,
+     right is the previous one. Both are user-initiated, so re-seeding on
+     "back" is safe — a gesture carries the activation iOS requires.
+     Tap flips the top card to its info side. Tap off the deck drops focus. ── */
   function onDown(e) {
     var startX = e.clientX, startY = e.clientY;
     var moved = false;
@@ -500,11 +504,11 @@
       var dx = ev.clientX - startX, dy = ev.clientY - startY;
       dragDx = 0;
 
-      if (moved && Math.abs(dx) > 34 && Math.abs(dx) > Math.abs(dy) && focusedAtDown !== null) {
-        var dir = dx < 0 ? 1 : -1;
-        focused = (focusedAtDown + dir + revealed.length) % revealed.length;
+      if (moved && Math.abs(dx) > 34 && Math.abs(dx) > Math.abs(dy)) {
         flipped = false;
+        focused = null;
         layout();
+        if (dx < 0) goNext(); else goBack();
         return;
       }
       if (moved) { layout(); return; }
@@ -513,8 +517,11 @@
       var cardEl = hit && hit.closest && hit.closest('.card');
       if (cardEl) {
         var pos = parseInt(cardEl.getAttribute('data-pos'), 10);
-        if (focusedAtDown === null) { focused = pos; flipped = false; }
-        else if (pos === focusedAtDown) { flipped = !flipped; }
+        if (focusedAtDown === pos) {
+          flipped = !flipped;          // tap the focused card → info side
+        } else {
+          focused = pos; flipped = false;  // bring it forward first
+        }
       } else if (focusedAtDown !== null) {
         focused = null; flipped = false;
       }
@@ -540,7 +547,14 @@
     var deck = el('div', 'deck');
     deckZone.appendChild(deck);
     deckZone.appendChild(el('div', 'veil'));
-    deckZone.addEventListener('pointerdown', onDown);
+    var hint = el('div', 'deck-hint');
+    hint.textContent = 'swipe to change songs · tap a card for info';
+    deckZone.appendChild(hint);
+
+    deckZone.addEventListener('pointerdown', function (e) {
+      deckZone.classList.add('touched');
+      onDown(e);
+    });
     root.appendChild(deckZone);
 
     statusEl = el('div', 'status');

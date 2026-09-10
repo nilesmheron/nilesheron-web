@@ -79,6 +79,39 @@
   .cand-meta { display: block; font-family: var(--mono); font-size: 10.5px; color: var(--muted); margin-top: 2px; }
   .out { font-size: 12px; min-height: 240px; }
   .empty { color: var(--muted); font-size: 13px; }
+  /* per-track card editor (PRD §6 overrides) */
+  .cardedit { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--hair); }
+  .ce-h {
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 8px;
+  }
+  .ce-row { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+  .ce-row input[type=text] { flex: 1 1 200px; font-size: 12px; padding: 8px 10px; }
+  .ce-row select {
+    flex: 0 0 auto; background: var(--card-bg); border: 1px solid var(--hair);
+    border-radius: 6px; padding: 8px 10px; font-family: var(--mono); font-size: 11px; color: var(--ink);
+  }
+  .cardedit textarea { min-height: 70px; font-size: 12px; }
+  .ce-prev { display: flex; gap: 14px; margin-top: 12px; }
+  .ce-slot { text-align: center; }
+  .ce-card {
+    width: 96px; height: 128px; border-radius: 6px; overflow: hidden;
+    background: var(--card-bg); border: 1px solid rgba(120,110,95,0.18);
+    box-shadow: 0 6px 14px -10px rgba(60,52,40,0.55);
+    display: flex; align-items: center; justify-content: center; position: relative;
+  }
+  .ce-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .ce-card img.contain { object-fit: contain; background: var(--card-bg); }
+  .ce-card .ce-body {
+    padding: 9px; font-size: 8.5px; line-height: 1.45; color: #4a463f;
+    overflow: hidden; width: 100%; height: 100%; display: flex; flex-direction: column; gap: 4px;
+  }
+  .ce-card .ce-body img { width: 100%; height: auto; flex: 0 0 auto; max-height: 56px; object-fit: cover; }
+  .ce-card .ce-fallback { font-size: 9px; color: var(--muted); padding: 10px; text-align: center; }
+  .ce-cap {
+    font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--muted); margin-top: 5px;
+  }
   .retry { display: flex; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--hair); }
   .retry input { flex: 1 1 auto; font-size: 12px; padding: 8px 10px; }
   .retry button { flex: 0 0 auto; padding: 8px 14px; font-size: 10px; }
@@ -240,6 +273,10 @@
         div.appendChild(lab);
       });
 
+      if (item.chosen !== null && item.candidates[item.chosen]) {
+        div.appendChild(buildCardEditor(i, item.candidates[item.chosen]));
+      }
+
       // per-line escape hatch: re-search, or paste the Spotify link outright
       var retry = document.createElement('div');
       retry.className = 'retry';
@@ -272,6 +309,131 @@
     emit();
   }
 
+  /* ---- per-track card editor (PRD §6) ----
+     Defaults with no input: front is the album art, back is title and artist.
+     Anything set here overrides that. Preview renders exactly what the player
+     will render, so the entry can be composed without a playback round trip. */
+
+  function buildCardEditor(i, cand) {
+    var card = state[i].card || (state[i].card = {});
+
+    var box = document.createElement('div');
+    box.className = 'cardedit';
+
+    var h = document.createElement('div');
+    h.className = 'ce-h';
+    h.textContent = 'card — leave blank to use album art';
+    box.appendChild(h);
+
+    var row1 = document.createElement('div');
+    row1.className = 'ce-row';
+    var front = mkInput('front image URL', card.front_image_url);
+    var fit = document.createElement('select');
+    [['cover', 'fill'], ['contain', 'fit']].forEach(function (o) {
+      var op = document.createElement('option');
+      op.value = o[0]; op.textContent = o[1];
+      if ((card.fit || 'cover') === o[0]) op.selected = true;
+      fit.appendChild(op);
+    });
+    row1.appendChild(front); row1.appendChild(fit);
+    box.appendChild(row1);
+
+    var back = mkInput('back image URL', card.back_image_url);
+    var row2 = document.createElement('div');
+    row2.className = 'ce-row';
+    row2.appendChild(back);
+    box.appendChild(row2);
+
+    var text = document.createElement('textarea');
+    text.placeholder = 'back text — a liner note, a poem, anything short';
+    text.value = card.back_text || '';
+    box.appendChild(text);
+
+    var prev = document.createElement('div');
+    prev.className = 'ce-prev';
+    box.appendChild(prev);
+
+    function sync() {
+      card.front_image_url = front.value.trim();
+      card.back_image_url = back.value.trim();
+      card.back_text = text.value;
+      card.fit = fit.value;
+      drawPreview(prev, card, cand);
+      emit();
+    }
+
+    [front, back, text].forEach(function (n) { n.addEventListener('input', sync); });
+    fit.addEventListener('change', sync);
+
+    drawPreview(prev, card, cand);
+    return box;
+  }
+
+  function mkInput(placeholder, value) {
+    var n = document.createElement('input');
+    n.type = 'text';
+    n.placeholder = placeholder;
+    n.value = value || '';
+    return n;
+  }
+
+  function drawPreview(host, card, cand) {
+    host.innerHTML = '';
+    host.appendChild(slot('front', frontFace(card, cand)));
+    host.appendChild(slot('back', backFace(card, cand)));
+  }
+
+  function slot(label, faceEl) {
+    var s = document.createElement('div');
+    s.className = 'ce-slot';
+    var c = document.createElement('div');
+    c.className = 'ce-card';
+    c.appendChild(faceEl);
+    var cap = document.createElement('div');
+    cap.className = 'ce-cap';
+    cap.textContent = label;
+    s.appendChild(c); s.appendChild(cap);
+    return s;
+  }
+
+  function frontFace(card, cand) {
+    var url = card.front_image_url || cand.art;
+    if (url) {
+      var img = document.createElement('img');
+      if (card.fit === 'contain') img.className = 'contain';
+      img.src = url;
+      img.alt = '';
+      img.onerror = function () {
+        img.replaceWith(fallback('image did not load'));
+      };
+      return img;
+    }
+    return fallback(cand.title);
+  }
+
+  function backFace(card, cand) {
+    var body = document.createElement('div');
+    body.className = 'ce-body';
+    if (card.back_image_url) {
+      var bi = document.createElement('img');
+      bi.src = card.back_image_url;
+      bi.alt = '';
+      bi.onerror = function () { bi.replaceWith(fallback('image did not load')); };
+      body.appendChild(bi);
+    }
+    var t = document.createElement('div');
+    t.textContent = card.back_text || (cand.title + ' — ' + cand.artist);
+    body.appendChild(t);
+    return body;
+  }
+
+  function fallback(msg) {
+    var f = document.createElement('div');
+    f.className = 'ce-fallback';
+    f.textContent = msg;
+    return f;
+  }
+
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
@@ -281,23 +443,33 @@
   function emit() {
     var picked = state
       .filter(function (s) { return s.chosen !== null && s.candidates[s.chosen]; })
-      .map(function (s) { return s.candidates[s.chosen]; });
+      .map(function (s) { return { cand: s.candidates[s.chosen], card: s.card || {} }; });
 
     if (!picked.length) { $('out').value = ''; return; }
 
     var ids = {};
-    var tracks = picked.map(function (c) {
+    var tracks = picked.map(function (p) {
+      var c = p.cand;
       var base = slugify(c.title) || 'track';
       var id = base;
       var n = 2;
       while (ids[id]) { id = base + '-' + n++; }
       ids[id] = true;
+
+      // Only emit overrides that were actually set. An empty card object means
+      // "use the defaults" — album art front, title and artist back.
+      var card = {};
+      if (p.card.front_image_url) card.front_image_url = p.card.front_image_url;
+      if (p.card.front_image_url && p.card.fit && p.card.fit !== 'cover') card.fit = p.card.fit;
+      if (p.card.back_text && p.card.back_text.trim()) card.back_text = p.card.back_text.trim();
+      if (p.card.back_image_url) card.back_image_url = p.card.back_image_url;
+
       return {
         id: id,
         spotify_uri: c.uri,
         title: c.title,
         artist: c.artist,
-        card: {}
+        card: card
       };
     });
 

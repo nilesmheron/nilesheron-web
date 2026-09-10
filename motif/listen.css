@@ -151,6 +151,8 @@
   user-select: none;
   -webkit-user-select: none;
 }
+.listen-deck-zone.touched .deck-hint { opacity: 0; }
+
 .card.revealing {
   animation: card-in 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
