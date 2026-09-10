@@ -18,8 +18,10 @@ const GATES = [
   },
   {
     prefix: '/motif/tools',
+    userEnv: 'MOTIF_TOOLS_USER',
     passwordEnv: 'MOTIF_TOOLS_PASSWORD',
     realm: 'Motif curator tools',
+    // both user and password checked
     // Curator-only surface (playlist builder). Already inside the existing
     // '/motif/:path*' matcher, so no matcher change was needed.
     // Note: only paths of three or more segments reach this gate — the bare
