@@ -116,6 +116,13 @@
     note.textContent = 'Played blind. Each song reveals a card when it begins.';
     wrap.appendChild(note);
 
+    // Say what it costs before they spend a consent screen finding out. The
+    // music plays through the listener's own subscription, so this is a real
+    // prerequisite rather than a preference.
+    var needs = el('p', 'splash-needs');
+    needs.textContent = 'Plays through your own Spotify Premium.';
+    wrap.appendChild(needs);
+
     // Runtime, not track count. How long it lasts says "this is a finite thing
     // somebody shaped"; how many songs there are starts to leak the contents.
     var total = totalMs();
