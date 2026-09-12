@@ -501,7 +501,13 @@
      ============================================================ */
 
   function reveal(trackIndex, spotifyTrack) {
-    if (revealed.indexOf(trackIndex) !== -1) return;
+    if (revealed.indexOf(trackIndex) !== -1) {
+      // Already on the deck — bring it forward rather than stacking a second
+      // copy, which is what happened after going back and forward again.
+      promote(trackIndex);
+      return;
+    }
+    dropCard(trackIndex); // clear any orphan from a previous pass
     revealed.push(trackIndex);
     var card = buildCard(trackIndex, spotifyTrack, revealed.length - 1);
     cardEls[trackIndex] = card;
@@ -510,6 +516,36 @@
       card.classList.add('revealing');
       layout();
     }
+  }
+
+  // Move an already-revealed card to the top of the stack. Going back used to
+  // leave the later card on top, so the deck disagreed with what was playing.
+  function promote(trackIndex) {
+    var at = revealed.indexOf(trackIndex);
+    if (at === -1) return;
+    revealed.splice(at, 1);
+    revealed.push(trackIndex);
+    var card = cardEls[trackIndex];
+    if (card && deckZone) deckZone.querySelector('.deck').appendChild(card);
+    focused = null;
+    flipped = false;
+    layout();
+  }
+
+  function dropCard(trackIndex) {
+    var card = cardEls[trackIndex];
+    if (card && card.parentNode) card.parentNode.removeChild(card);
+    delete cardEls[trackIndex];
+  }
+
+  // Remove every card for a track after `keepThrough`. Filtering the revealed
+  // array alone left the elements in the DOM with stale z-indexes on top.
+  function trimCardsAfter(keepThrough) {
+    revealed.filter(function (ti) { return ti > keepThrough; }).forEach(dropCard);
+    revealed = revealed.filter(function (ti) { return ti <= keepThrough; });
+    focused = null;
+    flipped = false;
+    layout();
   }
 
   function buildCard(trackIndex, spotifyTrack, pos) {
@@ -604,7 +640,9 @@
         t = 'translate(' + (s.x * SPREAD) + 'px, ' + (s.y * SPREAD + DECK_Y) + 'px) rotate(' + (s.r * SPREAD) + 'deg)';
       }
       card.style.transform = t;
-      card.style.zIndex = isFocused ? 60 : (isTop ? 50 : pos + 1);
+      // Strictly by stack position. A card left over from a previous pass used
+      // to keep an old z-index and sit above the one actually playing.
+      card.style.zIndex = isFocused ? 200 : (isTop ? 100 : pos + 1);
       card.classList.toggle('focused', isFocused);
       card.classList.toggle('flipped', isFocused && flipped);
     });
@@ -796,19 +834,22 @@
     }).catch(function () {});
   }
 
-  // Skip forward: a queue operation, so it keeps the audio element's activation.
+  // Both directions re-seed rather than driving Spotify's queue. Spotify has
+  // no way to clear a queue we have already appended to, so after a back the
+  // stale entry was still sitting there and the next skip jumped past a track.
+  // Re-seeding is deterministic, and a tap carries the user activation a new
+  // play call needs. Automatic transitions still ride the queue — that is the
+  // path that has to survive a locked screen, and it is untouched.
   function goNext() {
     if (!player || finished) return;
     if (idx >= tracks.length - 1) { finish(); return; }
-    player.nextTrack();
+    seedAt(idx + 1).catch(function (e) { say(friendly(e), true); });
   }
 
-  // Back re-seeds, which is a new play call — allowed here because a tap is a
-  // user activation. Never do this automatically.
   function goBack() {
     if (idx === 0 || finished) return;
     var target = idx - 1;
-    revealed = revealed.filter(function (ti) { return ti <= target; });
+    trimCardsAfter(target);
     seedAt(target).catch(function (e) { say(friendly(e), true); });
   }
 
@@ -847,6 +888,7 @@
     again.textContent = 'Play again';
     again.addEventListener('click', function () {
       revealed = [];
+      Object.keys(cardEls).forEach(dropCard);
       cardEls = {};
       mediaFor = null;
       var deck = deckZone.querySelector('.deck');
