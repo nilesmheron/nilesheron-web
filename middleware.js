@@ -98,6 +98,15 @@ export default async function middleware(request) {
   // the request and returns 404 before afterFiles rewrites get a chance to run.
   // Subrequests made inside middleware bypass middleware, so no loop risk.
   const segments = url.pathname.split('/').filter(Boolean);
+
+  // Two-segment /motif/* paths that are pages, not entry slugs. Without this
+  // they fall into the slug branch below and get answered with entry.html.
+  const MOTIF_PAGES = { mixtape: '/motif/mixtape-index' };
+
+  if (segments[0] === 'motif' && segments.length === 2 && MOTIF_PAGES[segments[1]]) {
+    return proxyStatic(MOTIF_PAGES[segments[1]], request);
+  }
+
   if (segments[0] === 'motif' && segments.length === 2 && !segments[1].includes('.')) {
     return proxyStatic('/motif/entry', request);
   }

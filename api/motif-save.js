@@ -30,6 +30,62 @@ function gh(path, options = {}) {
   });
 }
 
+const MANIFEST = `${DIR}/mixtapes.json`;
+
+// Read every entry once and return the mixtape ones (those with tracks).
+async function readAllEntries() {
+  const dir = await gh(`contents/${DIR}?ref=${BRANCH}`);
+  if (!dir.ok) throw new Error('list failed ' + dir.status);
+  const files = (await dir.json()).filter(
+    (f) => f.type === 'file' && f.name.endsWith('.json') &&
+      f.name !== 'entries.json' && f.name !== 'mixtapes.json'
+  );
+  const out = await Promise.all(files.map(async (f) => {
+    try {
+      const raw = await fetch(f.download_url);
+      const e = await raw.json();
+      return { slug: f.name.replace(/\.json$/, ''), entry: e };
+    } catch (_) {
+      return null;
+    }
+  }));
+  return out.filter(Boolean);
+}
+
+// The public index reads a static manifest rather than calling an API, so
+// /motif/mixtape keeps working even if the GitHub token expires. Regenerated
+// after every save and delete; a failure here is logged, not fatal, because
+// the entry itself is already committed.
+async function rebuildManifest() {
+  const all = await readAllEntries();
+  const mixtapes = all
+    .filter(({ entry }) => Array.isArray(entry.tracks) && entry.tracks.length)
+    .map(({ slug, entry }) => ({
+      slug,
+      title: entry.title || slug,
+      date: entry.date || '',
+      cover_image_url: entry.cover_image_url || null,
+      track_count: entry.tracks.length,
+    }))
+    .sort((a, b) => a.title.localeCompare(b.title));
+
+  let sha;
+  const existing = await gh(`contents/${MANIFEST}?ref=${BRANCH}`);
+  if (existing.ok) sha = (await existing.json()).sha;
+
+  const content = Buffer.from(JSON.stringify(mixtapes, null, 2) + '\n', 'utf8').toString('base64');
+  const put = await gh(`contents/${MANIFEST}`, {
+    method: 'PUT',
+    body: JSON.stringify({
+      message: 'chore(motif): rebuild mixtape index',
+      content,
+      branch: BRANCH,
+      ...(sha ? { sha } : {}),
+    }),
+  });
+  return put.ok;
+}
+
 // Reject anything that would produce an entry the player cannot read.
 function validateEntry(entry, slug) {
   if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return 'entry must be an object';
@@ -126,9 +182,11 @@ export default async function handler(req, res) {
       return res.status(del.status).json({ error: d.message || 'github delete failed' });
     }
 
+    const indexed = await rebuildManifest().catch(() => false);
+
     // The file is gone from main but stays in history — recoverable with
     // `git show <commit>^:motif/data/<slug>.json` if it was a mistake.
-    return res.status(200).json({ ok: true, deleted: path });
+    return res.status(200).json({ ok: true, deleted: path, indexed });
   }
 
   if (req.method !== 'POST') {
@@ -173,10 +231,13 @@ export default async function handler(req, res) {
     });
   }
 
+  const indexed = await rebuildManifest().catch(() => false);
+
   return res.status(200).json({
     ok: true,
     created: !sha,
     path,
+    indexed,
     commit: result.commit && result.commit.sha,
     listen: `/motif/${slug}/listen`,
   });
