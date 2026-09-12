@@ -763,6 +763,42 @@
       });
   }
 
+  // A saved entry stores only uri, title and artist — no artwork, duration or
+  // year, since those belong to Spotify rather than to us. Look them back up
+  // on load so an edited entry shows the same detail as a freshly resolved
+  // one. The resolver already treats a Spotify URI as an exact lookup.
+  function hydrateLoaded() {
+    var uris = state.map(function (s) {
+      return s.candidates[0] && s.candidates[0].uri;
+    });
+    if (!uris.filter(Boolean).length) { note('saveNote', 'loaded ' + state.length + ' track(s)'); return; }
+
+    // The resolver caps at 40 lines per request.
+    var chunks = [];
+    for (var i = 0; i < uris.length; i += 40) chunks.push(uris.slice(i, i + 40));
+
+    Promise.all(chunks.map(function (c) { return resolve(c); }))
+      .then(function (all) {
+        var results = [].concat.apply([], all);
+        results.forEach(function (r, i) {
+          if (!state[i] || !r.candidates || !r.candidates.length) return;
+          var fresh = r.candidates[0];
+          // Keep the curator's own title/artist if they edited them by hand.
+          var saved = state[i].candidates[0] || {};
+          state[i].candidates = [Object.assign({}, fresh, {
+            title: saved.title || fresh.title,
+            artist: saved.artist || fresh.artist
+          })];
+          state[i].chosen = 0;
+        });
+        render();
+        note('saveNote', 'loaded ' + state.length + ' track(s) — edit and save to update');
+      })
+      .catch(function (e) {
+        note('saveNote', 'loaded, but artwork lookup failed: ' + e.message, true);
+      });
+  }
+
   function startNew() {
     currentSlug = null;
     existingEntry = {};
@@ -812,7 +848,8 @@
         render();
         summarise();
         renderEntries(lastList);
-        note('saveNote', 'loaded ' + state.length + ' track(s) — edit and save to update');
+        note('saveNote', 'loaded ' + state.length + ' track(s) — fetching artwork…');
+        hydrateLoaded();
       })
       .catch(function (e) { note('saveNote', 'load failed: ' + e.message, true); });
   }
