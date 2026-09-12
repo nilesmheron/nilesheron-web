@@ -10,6 +10,13 @@
 //
 // The token carries an `origin` claim, so even if it leaks it is only usable
 // from our own pages rather than as free access to the Apple Music API.
+//
+// GOTCHA, verified 2026-09-12: Apple enforces that claim on every request, not
+// just browser ones. A server-side call with no Origin header gets a bare 401
+// with an empty body. Anything calling the Apple Music API from our own
+// functions — the builder's catalog resolver, for one — must send
+// `Origin: https://dev.nilesheron.com` explicitly, or use a token minted
+// without the claim.
 
 import crypto from 'crypto';
 
