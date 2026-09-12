@@ -55,6 +55,19 @@
   var root = document.getElementById('listen-root');
   var deckZone, npEl, transportEl, statusEl, playBtn, progressEl;
 
+  /* ── diagnostics ──
+     A listener cannot open a console, and "Starting then Play" looks identical
+     whatever caused it. Record the steps so a failure can be reported rather
+     than guessed at — the same thing that made the playback spike tractable. */
+  var t0 = Date.now();
+  var diag = [];
+  function trace(msg) {
+    diag.push(((Date.now() - t0) / 1000).toFixed(1) + 's  ' + msg);
+    if (window.console && console.log) console.log('[motif] ' + msg);
+  }
+  trace('ua: ' + navigator.userAgent);
+  trace('standalone: ' + !!window.navigator.standalone + ' · cookies: ' + navigator.cookieEnabled);
+
   /* ── routing: /motif/<slug>/listen ── */
   var m = window.location.pathname.match(/^\/motif\/([^/]+)\/listen\/?$/);
   var slug = m ? m[1] : '';
@@ -171,8 +184,10 @@
     // works before handing the SDK something that will never arrive.
     ensureAuth()
       .then(function (ok) {
+        trace('auth status: ' + ok);
         if (!ok) return false;
-        return getToken().then(function () { return true; }).catch(function (e) {
+        return getToken().then(function () { trace('token ok'); return true; }).catch(function (e) {
+          trace('token failed: ' + (e && e.message));
           if (e && e.message === 'not_authenticated') return false;
           throw e;
         });
@@ -199,11 +214,43 @@
 
   function blockedNote(e) {
     say('');
+    trace('blocked: ' + (e && e.message));
     var wrap = root.querySelector('.splash');
     if (!wrap) { say(friendly(e), true); return; }
     var old = wrap.querySelector('.splash-err');
     if (old) old.remove();
-    wrap.appendChild(errNote(friendly(e)));
+
+    var box = errNote(friendly(e));
+    var copy = document.createElement('button');
+    copy.className = 'play-btn ghost';
+    copy.style.marginTop = '14px';
+    copy.textContent = 'Copy details';
+    copy.addEventListener('click', function () {
+      var text = 'MOTIF PLAYER — ' + (entry && entry.slug) + '\n' + diag.join('\n');
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(
+          function () { copy.textContent = 'Copied — send these to Niles'; },
+          function () { showRaw(box, text); }
+        );
+      } else {
+        showRaw(box, text);
+      }
+    });
+    box.appendChild(document.createElement('br'));
+    box.appendChild(copy);
+    wrap.appendChild(box);
+  }
+
+  // Clipboard is blocked in some in-app browsers; fall back to selectable text.
+  function showRaw(box, text) {
+    var pre = document.createElement('textarea');
+    pre.readOnly = true;
+    pre.value = text;
+    pre.style.cssText = 'width:100%;min-height:140px;margin-top:10px;font-size:11px;' +
+      'font-family:var(--mono);background:var(--card-bg);border:1px solid var(--hair);' +
+      'border-radius:6px;padding:8px;color:var(--ink)';
+    box.appendChild(pre);
+    pre.select();
   }
 
   function ensureAuth() {
@@ -271,7 +318,9 @@
         player.connect();
       });
     }
+    trace('connecting player');
     return loadSdk().then(function () {
+      trace('sdk script loaded');
       return new Promise(function (resolve, reject) {
         var settled = false;
         var timer = setTimeout(function () {
@@ -292,10 +341,11 @@
         });
 
         player.addListener('ready', function (d) {
+          trace('player ready: ' + d.device_id);
           deviceId = d.device_id;
           if (!settled) { settled = true; clearTimeout(timer); resolve(true); }
         });
-        player.addListener('not_ready', function () { deviceId = null; });
+        player.addListener('not_ready', function () { trace('not_ready'); deviceId = null; });
         player.addListener('player_state_changed', onStateChange);
 
         // These have to settle the promise, not just log. A free account fires
@@ -303,16 +353,24 @@
         // meant the listener stared at "Starting" for the full 15s timeout and
         // was then told the network had failed, which was simply untrue.
         function fail(reason) {
+          trace('FAIL: ' + reason);
           if (settled) return;
           settled = true;
           clearTimeout(timer);
           reject(new Error(reason));
         }
-        player.addListener('account_error', function () { fail('premium_required'); });
+        player.addListener('account_error', function (e) {
+          trace('account_error: ' + (e && e.message));
+          fail('premium_required');
+        });
         player.addListener('authentication_error', function () { fail('not_authenticated'); });
-        player.addListener('initialization_error', function (e) { fail(e.message || 'init'); });
+        player.addListener('initialization_error', function (e) {
+          trace('initialization_error: ' + (e && e.message));
+          fail(e && e.message ? 'init:' + e.message : 'init');
+        });
+        player.addListener('playback_error', function (e) { trace('playback_error: ' + (e && e.message)); });
 
-        player.connect();
+        player.connect().then(function (ok) { trace('connect() returned ' + ok); });
       });
     });
   }
@@ -352,6 +410,7 @@
       method: 'PUT',
       body: { uris: [tracks[i].spotify_uri] }
     }).then(function (r) {
+      trace('play http ' + r.status);
       if (r.status === 404) { deviceId = null; throw new Error('device_lost'); }
       if (r.status === 403) throw new Error('premium_required');
       if (!r.ok) throw new Error('play_' + r.status);
