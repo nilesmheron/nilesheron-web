@@ -151,7 +151,11 @@
       // Warm the SDK quietly. The button stays live the whole time — tapping
       // during connection is fine now, it simply waits. Disabling it here is
       // what made the button look like it was cycling for no reason.
-      ensurePlayer().catch(function (e) { say(friendly(e), true); });
+      ensurePlayer().catch(function (e) {
+        // A permanent refusal is worth surfacing before they tap and wait.
+        if (terminalReason) blockedNote(e);
+        else say(friendly(e), true);
+      });
     });
   }
 
@@ -314,9 +318,16 @@
   // this each call built another Spotify.Player — stacked instances competing
   // for the same account, which is why repeated taps went nowhere.
   var playerPromise = null;
+  // Some refusals are permanent for this account — retrying cannot change the
+  // answer. Remembering them means the listener is told the real reason at
+  // once, instead of waiting out a reconnect that reports a timeout. A
+  // non-Premium account hit exactly that: Spotify said "premium only" at 1.1s,
+  // and the tap at 18.6s reported a network timeout at 33.6s.
+  var terminalReason = null;
 
   function ensurePlayer() {
     if (deviceId) return Promise.resolve(true);
+    if (terminalReason) return Promise.reject(new Error(terminalReason));
     if (playerPromise) return playerPromise;
     playerPromise = connectPlayer().catch(function (e) {
       playerPromise = null;   // let a later attempt rebuild it
@@ -372,6 +383,9 @@
         // was then told the network had failed, which was simply untrue.
         function fail(reason) {
           trace('FAIL: ' + reason);
+          if (reason === 'premium_required' || reason === 'not_authenticated') {
+            terminalReason = reason;
+          }
           if (settled) return;
           settled = true;
           clearTimeout(timer);
