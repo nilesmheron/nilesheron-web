@@ -125,6 +125,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  /* track numbers are narrow — keep them from jittering as digits change */
+  font-variant-numeric: tabular-nums;
   padding: 8px 26px 2px;
   font-family: var(--mono);
   font-size: 9px;
@@ -146,6 +148,7 @@
   opacity: calc(var(--amber-on) * 1.6);
   transition: width 0.6s linear;
 }
+.pr-now { color: var(--ink); }
 
 /* ---- transport (PRD §5.2: three actions, nothing else) ---- */
 .transport {

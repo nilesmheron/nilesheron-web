@@ -123,14 +123,12 @@
     needs.textContent = 'Plays through your own Spotify Premium.';
     wrap.appendChild(needs);
 
-    // Runtime, not track count. How long it lasts says "this is a finite thing
-    // somebody shaped"; how many songs there are starts to leak the contents.
+    // Count and length both. A count says how many turns this takes without
+    // saying what any of them are — it shapes the listen rather than spoiling it.
     var total = totalMs();
-    if (total) {
-      var rt = el('div', 'splash-no');
-      rt.textContent = roughLength(total);
-      wrap.appendChild(rt);
-    }
+    var rt = el('div', 'splash-no');
+    rt.textContent = tracks.length + ' songs' + (total ? ' · ' + roughLength(total) : '');
+    wrap.appendChild(rt);
 
     playBtn = el('button', 'play-btn');
     playBtn.textContent = 'Play';
@@ -488,7 +486,7 @@
     var cur = state.track_window && state.track_window.current_track;
     paused = state.paused;
     updateTransport();
-    updateProgress(state.position);
+    updateProgress(state.position, state.duration);
 
     if (!cur) return;
 
@@ -740,9 +738,9 @@
 
     progressEl = el('div', 'progress');
     progressEl.innerHTML =
-      '<span class="pr-now">0:00</span>' +
+      '<span class="pr-now">1</span>' +
       '<span class="pr-track"><span class="pr-fill"></span></span>' +
-      '<span class="pr-total">0:00</span>';
+      '<span class="pr-total">' + tracks.length + '</span>';
     root.appendChild(progressEl);
     updateProgress(0);
 
@@ -817,17 +815,16 @@
     return m + ':' + String(s % 60).padStart(2, '0');
   }
 
-  function updateProgress(position) {
-    if (!progressEl) return;
-    var total = totalMs();
-    if (!total) { progressEl.style.display = 'none'; return; }
-    var elapsed = 0;
-    for (var i = 0; i < idx && i < tracks.length; i++) elapsed += tracks[i].duration_ms;
-    elapsed += position || 0;
-    var pct = Math.max(0, Math.min(100, (elapsed / total) * 100));
+  // Position by track, not by clock. The bar still creeps within a song so it
+  // reads as alive rather than stepping, but the numbers are songs — which is
+  // what tells a listener where they are in something somebody sequenced.
+  function updateProgress(position, duration) {
+    if (!progressEl || !tracks.length) return;
+    var within = (duration && position) ? Math.min(1, position / duration) : 0;
+    var pct = Math.max(0, Math.min(100, ((idx + within) / tracks.length) * 100));
     progressEl.querySelector('.pr-fill').style.width = pct + '%';
-    progressEl.querySelector('.pr-now').textContent = clock(elapsed);
-    progressEl.querySelector('.pr-total').textContent = clock(total);
+    progressEl.querySelector('.pr-now').textContent = String(idx + 1);
+    progressEl.querySelector('.pr-total').textContent = String(tracks.length);
   }
 
   function renderNowPlaying(cur) {
