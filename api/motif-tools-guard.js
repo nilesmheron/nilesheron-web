@@ -17,6 +17,17 @@ function safeEqual(a, b) {
   return crypto.timingSafeEqual(ab, bb);
 }
 
+// Mirrors mintToolsToken() in middleware.js: "<expiryMs>.<hex hmac of expiryMs>".
+function verifyToolsToken(token, secret) {
+  const dot = token.indexOf('.');
+  if (dot < 1) return false;
+  const exp = token.slice(0, dot);
+  const sig = token.slice(dot + 1);
+  if (!/^\d+$/.test(exp) || Number(exp) < Date.now()) return false;
+  const expected = crypto.createHmac('sha256', secret).update(exp).digest('hex');
+  return safeEqual(sig, expected);
+}
+
 // Returns true if the request is authorized. Otherwise writes the response
 // and returns false — callers should just `return`.
 export function requireCurator(req, res) {
@@ -25,6 +36,16 @@ export function requireCurator(req, res) {
 
   if (!expectedPassword) {
     res.status(503).json({ error: 'MOTIF_TOOLS_PASSWORD not configured' });
+    return false;
+  }
+
+  // Preferred path: the token middleware injected into the gated page, so the
+  // curator does not type the password a second time. Basic auth still works,
+  // which keeps curl and scripted use possible.
+  const token = req.headers['x-motif-token'];
+  if (token) {
+    if (verifyToolsToken(String(token), expectedPassword)) return true;
+    res.status(401).json({ error: 'token expired or invalid — reload the page' });
     return false;
   }
 

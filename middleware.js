@@ -51,6 +51,45 @@ async function proxyStatic(path, request) {
   });
 }
 
+// Token the curator tools present to the write endpoints under /api.
+// Format: "<expiryMs>.<hex hmac of expiryMs>", keyed on the tools password, so
+// no extra secret to manage. Verified by api/motif-tools-guard.js.
+const TOOLS_TOKEN_TTL_MS = 12 * 60 * 60 * 1000;
+
+async function mintToolsToken(secret) {
+  const exp = String(Date.now() + TOOLS_TOKEN_TTL_MS);
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+  );
+  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(exp));
+  const hex = Array.from(new Uint8Array(sig))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+  return `${exp}.${hex}`;
+}
+
+async function injectToolsToken(request, secret) {
+  const res = await fetch(request.url, { headers: { 'x-motif-internal': '1' } });
+  const type = res.headers.get('content-type') || '';
+  if (!type.includes('text/html')) return; // assets pass through untouched
+
+  const html = await res.text();
+  const token = await mintToolsToken(secret);
+  const tag = `<script>window.__MOTIF_TOOLS_TOKEN__=${JSON.stringify(token)};</script>`;
+  const out = html.includes('</head>')
+    ? html.replace('</head>', tag + '</head>')
+    : tag + html;
+
+  return new Response(out, {
+    status: 200,
+    headers: {
+      'content-type': 'text/html; charset=utf-8',
+      'cache-control': 'no-store', // the token is per-response; never cache it
+    },
+  });
+}
+
 export default async function middleware(request) {
   const url = new URL(request.url);
 
@@ -100,6 +139,15 @@ export default async function middleware(request) {
       const userOk = expectedUser ? user === expectedUser : true;
 
       if (passwordOk && userOk) {
+        // The curator tools call write endpoints under /api, which this
+        // matcher does not cover — and browsers do not reliably attach cached
+        // Basic credentials across path trees on a fetch. Rather than asking
+        // for the password a second time on the page, mint a short-lived
+        // token here (the gate has already proven who they are) and inject it
+        // into the HTML for the page's own fetches to carry.
+        if (gate.prefix === '/motif/tools') {
+          return injectToolsToken(request, expectedPassword);
+        }
         return; // authenticated — let the request continue to the static file
       }
     } catch (_) {

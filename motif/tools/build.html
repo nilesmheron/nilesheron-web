@@ -162,7 +162,6 @@
 
   <div class="step">4 · save it to the site</div>
   <div class="row">
-    <input type="password" id="pw" placeholder="curator password" style="flex:1 1 180px" autocomplete="current-password">
     <button id="save">Save entry</button>
     <button id="load" class="ghost">Load existing</button>
   </div>
@@ -596,10 +595,15 @@
      cached Basic credentials across path trees via fetch. Typed once, held in
      memory only — never localStorage, per CLAUDE.md. */
 
-  function authHeader() {
-    var pw = $('pw').value;
-    if (!pw) { note('saveNote', 'enter the curator password first', true); return null; }
-    return 'Basic ' + btoa('mixtape:' + pw);
+  // middleware.js injects this after the Basic Auth gate passes, so the write
+  // endpoints can tell we are already authenticated without asking again.
+  function authHeaders() {
+    var t = window.__MOTIF_TOOLS_TOKEN__;
+    if (!t) {
+      note('saveNote', 'session token missing — reload the page', true);
+      return null;
+    }
+    return { 'X-Motif-Token': t };
   }
 
   function note(id, msg, bad) {
@@ -609,8 +613,8 @@
   }
 
   $('save').addEventListener('click', function () {
-    var auth = authHeader();
-    if (!auth) return;
+    var hdrs = authHeaders();
+    if (!hdrs) return;
     var slug = $('slug').value.trim();
     if (!slug) { note('saveNote', 'a slug is required', true); return; }
     var picked = state.filter(function (s) { return s.chosen !== null && s.candidates[s.chosen]; });
@@ -625,7 +629,7 @@
 
     fetch('/api/motif-save', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: auth },
+      headers: Object.assign({ 'Content-Type': 'application/json' }, hdrs),
       body: JSON.stringify({ slug: slug, entry: entry })
     })
       .then(function (r) { return r.json().then(function (d) { if (!r.ok) throw new Error(d.error || r.status); return d; }); })
@@ -638,13 +642,13 @@
   });
 
   $('load').addEventListener('click', function () {
-    var auth = authHeader();
-    if (!auth) return;
+    var hdrs = authHeaders();
+    if (!hdrs) return;
     var slug = $('slug').value.trim();
     if (!slug) { note('saveNote', 'enter the slug to load', true); return; }
 
     note('saveNote', 'loading…');
-    fetch('/api/motif-save?slug=' + encodeURIComponent(slug), { headers: { Authorization: auth } })
+    fetch('/api/motif-save?slug=' + encodeURIComponent(slug), { headers: hdrs })
       .then(function (r) { return r.json().then(function (d) { if (!r.ok) throw new Error(d.error || r.status); return d; }); })
       .then(function (d) {
         existingEntry = d.entry || {};
@@ -677,8 +681,8 @@
   // Upload straight to storage using a short-lived signed URL, so the file
   // never passes through our function and large images are not a problem.
   function uploadTo(setUrl) {
-    var auth = authHeader();
-    if (!auth) return;
+    var hdrs = authHeaders();
+    if (!hdrs) return;
     var slug = $('slug').value.trim();
     if (!slug) { note('saveNote', 'set the slug before uploading — it decides where media lives', true); return; }
 
@@ -692,7 +696,7 @@
 
       fetch('/api/motif-upload', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: auth },
+        headers: Object.assign({ 'Content-Type': 'application/json' }, hdrs),
         body: JSON.stringify({ slug: slug, filename: file.name, contentType: file.type, size: file.size })
       })
         .then(function (r) { return r.json().then(function (d) { if (!r.ok) throw new Error(d.error || r.status); return d; }); })
