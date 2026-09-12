@@ -563,6 +563,9 @@
         spotify_uri: c.uri,
         title: c.title,
         artist: c.artist,
+        // Stored so the player can show total runtime without looking up every
+        // track first — a mixtape should announce its length, unlike a radio.
+        duration_ms: c.duration_ms || 0,
         card: card
       };
     });

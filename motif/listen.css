@@ -108,6 +108,37 @@
   color: #6f6a61;
 }
 
+/* ---- progress through the whole mixtape ----
+   Position within a known length, not a track counter. It says the thing was
+   composed and has an end, which is what separates it from a radio stream,
+   without hinting at what is coming. Not a scrubber — it does not seek. ---- */
+.progress {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 26px 2px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+.pr-track {
+  flex: 1 1 auto;
+  height: 2px;
+  background: var(--hair);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.pr-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--amber);
+  opacity: calc(var(--amber-on) * 1.6);
+  transition: width 0.6s linear;
+}
+
 /* ---- transport (PRD §5.2: three actions, nothing else) ---- */
 .transport {
   flex: 0 0 auto;

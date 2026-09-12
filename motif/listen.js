@@ -53,7 +53,7 @@
   var starting = false;
 
   var root = document.getElementById('listen-root');
-  var deckZone, npEl, transportEl, statusEl, playBtn;
+  var deckZone, npEl, transportEl, statusEl, playBtn, progressEl;
 
   /* ── routing: /motif/<slug>/listen ── */
   var m = window.location.pathname.match(/^\/motif\/([^/]+)\/listen\/?$/);
@@ -102,6 +102,15 @@
     var note = el('p', 'splash-note');
     note.textContent = 'Played blind. Each song reveals a card when it begins.';
     wrap.appendChild(note);
+
+    // Runtime, not track count. How long it lasts says "this is a finite thing
+    // somebody shaped"; how many songs there are starts to leak the contents.
+    var total = totalMs();
+    if (total) {
+      var rt = el('div', 'splash-no');
+      rt.textContent = roughLength(total);
+      wrap.appendChild(rt);
+    }
 
     playBtn = el('button', 'play-btn');
     playBtn.textContent = 'Play';
@@ -332,6 +341,7 @@
     var cur = state.track_window && state.track_window.current_track;
     paused = state.paused;
     updateTransport();
+    updateProgress(state.position);
 
     if (!cur) return;
 
@@ -543,6 +553,14 @@
     npEl = el('div', 'np');
     root.appendChild(npEl);
 
+    progressEl = el('div', 'progress');
+    progressEl.innerHTML =
+      '<span class="pr-now">0:00</span>' +
+      '<span class="pr-track"><span class="pr-fill"></span></span>' +
+      '<span class="pr-total">0:00</span>';
+    root.appendChild(progressEl);
+    updateProgress(0);
+
     deckZone = el('div', 'listen-deck-zone');
     var deck = el('div', 'deck');
     deckZone.appendChild(deck);
@@ -585,6 +603,46 @@
     if (p) p.textContent = paused ? 'Play' : 'Pause';
     var b = transportEl.querySelector('.t-back');
     if (b) b.disabled = idx === 0;
+  }
+
+  /* ---- runtime and progress ----
+     Deliberately no track numbers and no "3 of 12". Position within a known
+     length tells the listener this was composed and has an end — the thing a
+     radio stream cannot say — without telling them what is coming. ---- */
+
+  function totalMs() {
+    var sum = 0;
+    for (var i = 0; i < tracks.length; i++) {
+      if (!tracks[i].duration_ms) return 0;   // incomplete data, show nothing
+      sum += tracks[i].duration_ms;
+    }
+    return sum;
+  }
+
+  function roughLength(ms) {
+    var mins = Math.round(ms / 60000);
+    if (mins < 60) return 'about ' + mins + ' minutes';
+    var h = Math.floor(mins / 60), m = mins % 60;
+    return 'about ' + h + 'h ' + (m ? m + 'm' : '');
+  }
+
+  function clock(ms) {
+    var s = Math.max(0, Math.round(ms / 1000));
+    var m = Math.floor(s / 60);
+    return m + ':' + String(s % 60).padStart(2, '0');
+  }
+
+  function updateProgress(position) {
+    if (!progressEl) return;
+    var total = totalMs();
+    if (!total) { progressEl.style.display = 'none'; return; }
+    var elapsed = 0;
+    for (var i = 0; i < idx && i < tracks.length; i++) elapsed += tracks[i].duration_ms;
+    elapsed += position || 0;
+    var pct = Math.max(0, Math.min(100, (elapsed / total) * 100));
+    progressEl.querySelector('.pr-fill').style.width = pct + '%';
+    progressEl.querySelector('.pr-now').textContent = clock(elapsed);
+    progressEl.querySelector('.pr-total').textContent = clock(total);
   }
 
   function renderNowPlaying(cur) {
