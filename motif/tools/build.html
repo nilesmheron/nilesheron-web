@@ -186,6 +186,7 @@
   <div class="row">
     <input type="text" id="cover" placeholder="cover image URL (splash screen)" style="flex:1 1 260px">
     <button class="ghost" data-upload="cover">Upload</button>
+    <button class="ghost" id="gencover">Generate</button>
   </div>
 
   <div class="step">4 · save it to the site</div>
@@ -871,41 +872,149 @@
 
   // Upload straight to storage using a short-lived signed URL, so the file
   // never passes through our function and large images are not a problem.
-  function uploadTo(setUrl) {
+  function uploadBlob(blob, filename, setUrl) {
     var hdrs = authHeaders();
-    if (!hdrs) return;
+    if (!hdrs) return Promise.reject(new Error('no session'));
     var slug = $('slug').value.trim();
-    if (!slug) { note('saveNote', 'set the slug before uploading — it decides where media lives', true); return; }
+    if (!slug) {
+      note('saveNote', 'set the slug before uploading — it decides where media lives', true);
+      return Promise.reject(new Error('no slug'));
+    }
+    note('saveNote', 'uploading ' + filename + '…');
 
+    return fetch('/api/motif-upload', {
+      method: 'POST',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, hdrs),
+      body: JSON.stringify({ slug: slug, filename: filename, contentType: blob.type, size: blob.size })
+    })
+      .then(function (r) { return r.json().then(function (d) { if (!r.ok) throw new Error(d.error || r.status); return d; }); })
+      .then(function (d) {
+        return fetch(d.uploadUrl, {
+          method: 'PUT',
+          headers: { 'Content-Type': blob.type },
+          body: blob
+        }).then(function (up) {
+          if (!up.ok) throw new Error('storage rejected the file (' + up.status + ')');
+          setUrl(d.publicUrl);
+          note('saveNote', 'uploaded');
+        });
+      })
+      .catch(function (e) { note('saveNote', 'upload failed: ' + e.message, true); });
+  }
+
+  function uploadTo(setUrl) {
     var picker = document.createElement('input');
     picker.type = 'file';
     picker.accept = 'image/jpeg,image/png,image/webp,image/gif';
     picker.addEventListener('change', function () {
       var file = picker.files && picker.files[0];
-      if (!file) return;
-      note('saveNote', 'uploading ' + file.name + '…');
-
-      fetch('/api/motif-upload', {
-        method: 'POST',
-        headers: Object.assign({ 'Content-Type': 'application/json' }, hdrs),
-        body: JSON.stringify({ slug: slug, filename: file.name, contentType: file.type, size: file.size })
-      })
-        .then(function (r) { return r.json().then(function (d) { if (!r.ok) throw new Error(d.error || r.status); return d; }); })
-        .then(function (d) {
-          return fetch(d.uploadUrl, {
-            method: 'PUT',
-            headers: { 'Content-Type': file.type },
-            body: file
-          }).then(function (up) {
-            if (!up.ok) throw new Error('storage rejected the file (' + up.status + ')');
-            setUrl(d.publicUrl);
-            note('saveNote', 'uploaded');
-          });
-        })
-        .catch(function (e) { note('saveNote', 'upload failed: ' + e.message, true); });
+      if (file) uploadBlob(file, file.name, setUrl);
     });
     picker.click();
   }
+
+  /* ---- generated cover ----
+     Four album covers in a grid under a paper-toned band with the title set in
+     the Motif serif, so a generated cover reads as part of the archive rather
+     than as a Spotify screenshot. Spotify serves art with
+     access-control-allow-origin:*, so the canvas stays exportable. */
+
+  function loadImage(url) {
+    return new Promise(function (resolve, reject) {
+      var img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = function () { resolve(img); };
+      img.onerror = function () { reject(new Error('could not load album art')); };
+      img.src = url;
+    });
+  }
+
+  function wrapText(ctx, text, x0, y0, maxWidth, lineHeight, maxLines) {
+    var words = String(text).split(/\s+/);
+    var line = '', y = y0, lines = 0;
+    for (var i = 0; i < words.length; i++) {
+      var test = line ? line + ' ' + words[i] : words[i];
+      if (ctx.measureText(test).width > maxWidth && line) {
+        lines++;
+        if (lines === maxLines) {
+          while (line.length && ctx.measureText(line + '…').width > maxWidth) line = line.slice(0, -1);
+          ctx.fillText(line + '…', x0, y);
+          return;
+        }
+        ctx.fillText(line, x0, y);
+        y += lineHeight;
+        line = words[i];
+      } else {
+        line = test;
+      }
+    }
+    ctx.fillText(line, x0, y);
+  }
+
+  $('gencover').addEventListener('click', function () {
+    var arts = [];
+    state.forEach(function (s) {
+      var c = s.chosen !== null && s.candidates[s.chosen];
+      if (c && c.art && arts.indexOf(c.art) === -1) arts.push(c.art);
+    });
+    if (arts.length < 4) {
+      note('saveNote', 'need four tracks with artwork before a cover can be generated', true);
+      return;
+    }
+    arts = arts.slice(0, 4);
+
+    var title = ($('title').value || '').trim() || $('slug').value.trim() || 'Motif';
+    note('saveNote', 'generating cover…');
+
+    Promise.all(arts.map(loadImage))
+      .then(function (imgs) {
+        var ready = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+        return ready.then(function () { return imgs; });
+      })
+      .then(function (imgs) {
+        var S = 640, half = S / 2;
+        var c = document.createElement('canvas');
+        c.width = S; c.height = S;
+        var x = c.getContext('2d');
+
+        imgs.forEach(function (img, i) {
+          x.drawImage(img, (i % 2) * half, Math.floor(i / 2) * half, half, half);
+        });
+
+        x.fillStyle = 'rgba(233,230,223,0.12)';   // warm it toward the paper palette
+        x.fillRect(0, 0, S, S);
+
+        var bandH = 176;
+        x.fillStyle = 'rgba(233,230,223,0.94)';
+        x.fillRect(0, S - bandH, S, bandH);
+
+        x.fillStyle = '#9a958c';
+        x.font = '500 15px "SF Mono", Menlo, monospace';
+        x.fillText('M O T I F   ·   M I X T A P E', 36, S - bandH + 44);
+
+        x.fillStyle = '#3a3a37';
+        x.font = '500 40px Lora, Georgia, serif';
+        wrapText(x, title, 36, S - bandH + 96, S - 108, 46, 2);
+
+        x.beginPath();                             // amber seal, as on the cards
+        x.arc(S - 40, S - 40, 7, 0, Math.PI * 2);
+        x.fillStyle = 'rgba(181,121,62,0.45)';
+        x.fill();
+
+        return new Promise(function (resolve) {
+          c.toBlob(function (b) { resolve(b); }, 'image/jpeg', 0.9);
+        });
+      })
+      .then(function (blob) {
+        if (!blob) throw new Error('canvas export failed');
+        return uploadBlob(blob, 'cover.jpg', function (url) {
+          $('cover').value = url;
+          emit();
+          note('saveNote', 'cover generated — save the entry to publish it');
+        });
+      })
+      .catch(function (e) { note('saveNote', 'cover failed: ' + e.message, true); });
+  });
 
   document.addEventListener('click', function (ev) {
     var b = ev.target.closest && ev.target.closest('[data-upload]');
