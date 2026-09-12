@@ -274,7 +274,11 @@
     resolve([query])
       .then(function (results) {
         if (!results.length) throw new Error('no result');
+        // Swapping the track must not discard the card built for that slot —
+        // the custom art and liner note usually still apply to the new version.
+        var keepCard = state[i] && state[i].card;
         state[i] = toItem(results[0]);
+        if (keepCard) state[i].card = keepCard;
         render();
         summarise();
       })
@@ -350,13 +354,18 @@
       // per-line escape hatch: re-search, or paste the Spotify link outright
       var retry = document.createElement('div');
       retry.className = 'retry';
+      var rlabel = document.createElement('div');
+      rlabel.className = 'ce-h';
+      rlabel.style.marginTop = '10px';
+      rlabel.textContent = 'wrong version? search again or paste the right link';
+      div.appendChild(rlabel);
       var q = document.createElement('input');
       q.type = 'text';
       q.value = item.line;
-      q.placeholder = 'reword, or paste a Spotify link';
+      q.placeholder = 'swap this track — reword, or paste a Spotify link';
       var rb = document.createElement('button');
       rb.className = 'ghost';
-      rb.textContent = 'Retry';
+      rb.textContent = 'Swap';
       rb.addEventListener('click', function () { retryLine(i, q.value, rb); });
       q.addEventListener('keydown', function (ev) {
         if (ev.key === 'Enter') { ev.preventDefault(); retryLine(i, q.value, rb); }
