@@ -135,18 +135,10 @@
   function prepare() {
     ensureAuth().then(function (ok) {
       if (!ok) return; // first tap sends them to Spotify instead
-      playBtn.disabled = true;
-      playBtn.textContent = 'Preparing';
-      ensurePlayer()
-        .then(function () {
-          playBtn.disabled = false;
-          playBtn.textContent = 'Play';
-        })
-        .catch(function (e) {
-          playBtn.disabled = false;
-          playBtn.textContent = 'Play';
-          say(friendly(e), true);
-        });
+      // Warm the SDK quietly. The button stays live the whole time — tapping
+      // during connection is fine now, it simply waits. Disabling it here is
+      // what made the button look like it was cycling for no reason.
+      ensurePlayer().catch(function (e) { say(friendly(e), true); });
     });
   }
 
@@ -165,32 +157,32 @@
 
     // MUST be the first thing, synchronously: iOS unlocks the audio element
     // only during a real user interaction. Any await before this spends the
-    // gesture and the tap silently does nothing.
+    // gesture and the tap silently does nothing. The unlock persists on the
+    // element afterwards, which is why a tap can safely wait for the SDK.
     activate();
-
-    if (!deviceId) {
-      ensureAuth().then(function (ok) {
-        if (!ok) {
-          window.location.href = '/api/motif-auth?action=login&return=' +
-            encodeURIComponent(window.location.pathname);
-        } else {
-          prepare(); // authorized but the SDK is still connecting
-        }
-      });
-      return;
-    }
 
     starting = true;
     playBtn.disabled = true;
     playBtn.textContent = 'Starting';
     say('');
 
-    beginPlayback().catch(function (e) {
-      starting = false;
-      playBtn.disabled = false;
-      playBtn.textContent = 'Play';
-      say(friendly(e), true);
-    });
+    ensureAuth()
+      .then(function (ok) {
+        if (!ok) {
+          window.location.href = '/api/motif-auth?action=login&return=' +
+            encodeURIComponent(window.location.pathname);
+          return null;
+        }
+        // Wait for the device rather than sending the listener back to a Play
+        // button. The gesture is already spent and still counts.
+        return ensurePlayer().then(beginPlayback);
+      })
+      .catch(function (e) {
+        starting = false;
+        playBtn.disabled = false;
+        playBtn.textContent = 'Play';
+        say(friendly(e), true);
+      });
   }
 
   function ensureAuth() {
@@ -232,8 +224,32 @@
     });
   }
 
+  // Single-flight. Called from both the splash and the Play tap, and without
+  // this each call built another Spotify.Player — stacked instances competing
+  // for the same account, which is why repeated taps went nowhere.
+  var playerPromise = null;
+
   function ensurePlayer() {
     if (deviceId) return Promise.resolve(true);
+    if (playerPromise) return playerPromise;
+    playerPromise = connectPlayer().catch(function (e) {
+      playerPromise = null;   // let a later attempt rebuild it
+      throw e;
+    });
+    return playerPromise;
+  }
+
+  function connectPlayer() {
+    if (player) {
+      // Already built, just not ready yet — reconnect rather than duplicate.
+      return new Promise(function (resolve, reject) {
+        var t = setTimeout(function () { reject(new Error('sdk_timeout')); }, 15000);
+        var check = setInterval(function () {
+          if (deviceId) { clearInterval(check); clearTimeout(t); resolve(true); }
+        }, 250);
+        player.connect();
+      });
+    }
     return loadSdk().then(function () {
       return new Promise(function (resolve, reject) {
         var settled = false;
