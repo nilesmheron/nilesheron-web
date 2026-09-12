@@ -212,9 +212,27 @@
       });
   }
 
+  var reported = false;
+  function reportFailure(e) {
+    if (reported) return;
+    reported = true;
+    try {
+      fetch('/api/motif-report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          slug: entry && entry.slug,
+          reason: (e && e.message) || 'unknown',
+          diag: diag
+        })
+      }).catch(function () {});
+    } catch (_) {}
+  }
+
   function blockedNote(e) {
     say('');
     trace('blocked: ' + (e && e.message));
+    reportFailure(e);
     var wrap = root.querySelector('.splash');
     if (!wrap) { say(friendly(e), true); return; }
     var old = wrap.querySelector('.splash-err');
