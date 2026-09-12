@@ -35,6 +35,18 @@
   var SPREAD = 2.5;
   var DECK_Y = -14;
 
+  /* ── platforms ──
+     Apple Music is the intended front door: it has no development-mode cap, so
+     anyone with a subscription can listen. Spotify stays as a side door for the
+     five people Niles can allowlist. Flip APPLE_ENABLED when the MusicKit
+     adapter exists — until then showing an Apple button that cannot play would
+     be worse than not showing one. */
+  var APPLE_ENABLED = false;
+
+  function appleReady() {
+    return APPLE_ENABLED && tracks.some(function (t) { return t.apple_id; });
+  }
+
   /* ── state ── */
   var entry = null;
   var tracks = [];
@@ -120,7 +132,9 @@
     // music plays through the listener's own subscription, so this is a real
     // prerequisite rather than a preference.
     var needs = el('p', 'splash-needs');
-    needs.textContent = 'Plays through your own Spotify Premium.';
+    needs.textContent = appleReady()
+      ? 'Plays through your own Apple Music.'
+      : 'Plays through your own Spotify Premium.';
     wrap.appendChild(needs);
 
     // Count and length both. A count says how many turns this takes without
@@ -131,9 +145,29 @@
     wrap.appendChild(rt);
 
     playBtn = el('button', 'play-btn');
-    playBtn.textContent = 'Play';
+    playBtn.textContent = appleReady() ? 'Play with Apple Music' : 'Play';
     playBtn.addEventListener('click', onPlayTap);
     wrap.appendChild(playBtn);
+
+    // Side door. Spotify only works for listeners Niles has added by hand, so
+    // say that plainly rather than letting them discover it at the consent
+    // screen or, worse, at a silent playback failure.
+    if (appleReady()) {
+      var side = el('div', 'side-door');
+      var link = document.createElement('button');
+      link.className = 'side-door-btn';
+      link.textContent = 'Use Spotify instead';
+      link.addEventListener('click', function () { startWith('spotify'); });
+      var why = el('p', 'side-door-note');
+      why.textContent = 'Spotify needs Niles to add you first — ask him.';
+      side.appendChild(link);
+      side.appendChild(why);
+      wrap.appendChild(side);
+    } else {
+      var only = el('p', 'side-door-note');
+      only.textContent = 'Spotify needs Niles to add you first — ask him.';
+      wrap.appendChild(only);
+    }
 
     if (authFlag === 'denied') {
       wrap.appendChild(errNote('Spotify access was declined. Playback needs it — the music plays through your own subscription.'));
@@ -173,6 +207,12 @@
   /* ============================================================
      AUTH + START
      ============================================================ */
+
+  // Explicit platform choice from the side door. Only Spotify exists today;
+  // when the MusicKit adapter lands this routes to whichever was chosen.
+  function startWith(service) {
+    if (service === 'spotify') onPlayTap();
+  }
 
   function onPlayTap() {
     if (starting) return;
