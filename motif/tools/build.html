@@ -123,6 +123,27 @@
     font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.16em;
     text-transform: uppercase; color: var(--muted); margin-top: 5px;
   }
+  /* entry picker */
+  .entry {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--card-bg); border: 1px solid var(--hair);
+    border-radius: 8px; padding: 10px 12px; margin-bottom: 8px;
+  }
+  .entry.active { border-color: var(--amber); }
+  .entry-cover {
+    flex: 0 0 auto; width: 40px; height: 40px; border-radius: 4px;
+    object-fit: cover; background: var(--page-bg);
+  }
+  .entry-main { flex: 1 1 auto; min-width: 0; cursor: pointer; }
+  .entry-title { font-size: 15px; font-weight: 500; line-height: 1.2; }
+  .entry-meta {
+    font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: 3px;
+  }
+  .entry button {
+    flex: 0 0 auto; padding: 7px 12px; font-size: 9.5px;
+    background: none; color: var(--muted); border: 1px solid var(--hair);
+  }
+  .entry button.danger { color: var(--amber); border-color: var(--amber); }
   .retry { display: flex; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--hair); }
   .retry input { flex: 1 1 auto; font-size: 12px; padding: 8px 10px; }
   .retry button { flex: 0 0 auto; padding: 8px 14px; font-size: 10px; }
@@ -134,6 +155,13 @@
   <h1>Playlist builder</h1>
   <p class="lede">Turns a list of songs into the <code>tracks[]</code> block for a Motif entry.
   Spotify will not let us read a playlist's contents, so every track has to be resolved by name — and confirmed, because search guesses wrong more often than you would expect.</p>
+
+  <div class="step">0 · pick an entry, or start a new one</div>
+  <div id="entries"><p class="empty">loading entries…</p></div>
+  <div class="row">
+    <button id="new" class="ghost">New mixtape</button>
+    <span class="note" id="listNote"></span>
+  </div>
 
   <div class="step">1 · paste the songs</div>
   <textarea id="in" placeholder="Fire — SiR&#10;Sweet Thing — Cleo Sol&#10;Reign — 2 Chainz&#10;&#10;One per line, Title — Artist. Numbered lines are fine."></textarea>
@@ -634,19 +662,128 @@
     })
       .then(function (r) { return r.json().then(function (d) { if (!r.ok) throw new Error(d.error || r.status); return d; }); })
       .then(function (d) {
+        currentSlug = slug;
         note('saveNote', (d.created ? 'created ' : 'updated ') + d.path +
           ' · live in ~40s at ' + d.listen);
+        refreshEntries();
       })
       .catch(function (e) { note('saveNote', 'save failed: ' + e.message, true); })
       .finally(function () { $('save').disabled = false; });
   });
 
-  $('load').addEventListener('click', function () {
+  /* ---- entry picker ---- */
+
+  var currentSlug = null;
+
+  function refreshEntries() {
     var hdrs = authHeaders();
     if (!hdrs) return;
-    var slug = $('slug').value.trim();
-    if (!slug) { note('saveNote', 'enter the slug to load', true); return; }
+    fetch('/api/motif-save?action=list', { headers: hdrs })
+      .then(function (r) { return r.json().then(function (d) { if (!r.ok) throw new Error(d.error || r.status); return d; }); })
+      .then(function (d) { renderEntries(d.entries || []); })
+      .catch(function (e) {
+        $('entries').innerHTML = '';
+        note('listNote', 'could not list entries: ' + e.message, true);
+      });
+  }
 
+  function renderEntries(list) {
+    var box = $('entries');
+    box.innerHTML = '';
+    if (!list.length) {
+      box.innerHTML = '<p class="empty">No entries yet. Start a new one below.</p>';
+      return;
+    }
+    list.forEach(function (e) {
+      var row = document.createElement('div');
+      row.className = 'entry' + (e.slug === currentSlug ? ' active' : '');
+
+      if (e.cover) {
+        var img = document.createElement('img');
+        img.className = 'entry-cover';
+        img.src = e.cover;
+        img.alt = '';
+        row.appendChild(img);
+      }
+
+      var main = document.createElement('div');
+      main.className = 'entry-main';
+      var bits = [e.slug, e.tracks + ' track' + (e.tracks === 1 ? '' : 's')];
+      if (e.poems) bits.push(e.poems + ' poem' + (e.poems === 1 ? '' : 's'));
+      if (e.unreadable) bits.push('unreadable');
+      main.innerHTML = '<div class="entry-title">' + esc(e.title) + '</div>' +
+        '<div class="entry-meta">' + esc(bits.join(' · ')) + '</div>';
+      main.addEventListener('click', function () { doLoad(e.slug); });
+      row.appendChild(main);
+
+      var edit = document.createElement('button');
+      edit.textContent = 'Edit';
+      edit.addEventListener('click', function () { doLoad(e.slug); });
+      row.appendChild(edit);
+
+      // Two-step rather than a modal: the second press is the confirmation.
+      var del = document.createElement('button');
+      del.textContent = 'Delete';
+      var armed = false;
+      del.addEventListener('click', function () {
+        if (!armed) {
+          armed = true;
+          del.textContent = 'Really?';
+          del.className = 'danger';
+          setTimeout(function () {
+            if (!armed) return;
+            armed = false; del.textContent = 'Delete'; del.className = '';
+          }, 4000);
+          return;
+        }
+        armed = false;
+        doDelete(e.slug, del);
+      });
+      row.appendChild(del);
+
+      box.appendChild(row);
+    });
+  }
+
+  function doDelete(slug, btn) {
+    var hdrs = authHeaders();
+    if (!hdrs) return;
+    btn.disabled = true;
+    btn.textContent = 'deleting';
+    fetch('/api/motif-save?slug=' + encodeURIComponent(slug), { method: 'DELETE', headers: hdrs })
+      .then(function (r) { return r.json().then(function (d) { if (!r.ok) throw new Error(d.error || r.status); return d; }); })
+      .then(function () {
+        note('listNote', 'deleted ' + slug + ' — still recoverable from git history');
+        if (currentSlug === slug) startNew();
+        refreshEntries();
+      })
+      .catch(function (e) {
+        btn.disabled = false; btn.textContent = 'Delete';
+        note('listNote', 'delete failed: ' + e.message, true);
+      });
+  }
+
+  function startNew() {
+    currentSlug = null;
+    existingEntry = {};
+    state = [];
+    ['slug', 'title', 'playlistUrl', 'cover', 'in'].forEach(function (id) { $(id).value = ''; });
+    render();
+    $('status').textContent = '';
+    note('saveNote', 'new entry — add songs and give it a slug');
+    renderEntries(lastList);
+  }
+
+  var lastList = [];
+  var _renderEntries = renderEntries;
+  renderEntries = function (list) { lastList = list; _renderEntries(list); };
+
+  $('new').addEventListener('click', startNew);
+
+  function doLoad(slug) {
+    var hdrs = authHeaders();
+    if (!hdrs) return;
+    $('slug').value = slug;
     note('saveNote', 'loading…');
     fetch('/api/motif-save?slug=' + encodeURIComponent(slug), { headers: hdrs })
       .then(function (r) { return r.json().then(function (d) { if (!r.ok) throw new Error(d.error || r.status); return d; }); })
@@ -671,11 +808,19 @@
             card: Object.assign({}, t.card || {})
           };
         });
+        currentSlug = slug;
         render();
         summarise();
+        renderEntries(lastList);
         note('saveNote', 'loaded ' + state.length + ' track(s) — edit and save to update');
       })
       .catch(function (e) { note('saveNote', 'load failed: ' + e.message, true); });
+  }
+
+  $('load').addEventListener('click', function () {
+    var slug = $('slug').value.trim();
+    if (!slug) { note('saveNote', 'enter the slug to load', true); return; }
+    doLoad(slug);
   });
 
   // Upload straight to storage using a short-lived signed URL, so the file
@@ -724,6 +869,8 @@
       uploadTo(function (url) { $('cover').value = url; emit(); });
     }
   });
+
+  refreshEntries();
 
   $('copy').addEventListener('click', function () {
     if (!$('out').value) return;

@@ -53,6 +53,39 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: 'GITHUB_TOKEN not configured on this deployment' });
   }
 
+  // List every entry so the builder can offer them for editing. One directory
+  // listing plus a parallel raw fetch per file — GitHub rather than the
+  // deployed /motif/data/*.json, so a just-saved entry appears immediately
+  // instead of after the next deploy.
+  if (req.method === 'GET' && req.query.action === 'list') {
+    const dir = await gh(`contents/${DIR}?ref=${BRANCH}`);
+    if (!dir.ok) return res.status(502).json({ error: 'github list failed: ' + dir.status });
+    const files = (await dir.json())
+      .filter((f) => f.type === 'file' && f.name.endsWith('.json') && f.name !== 'entries.json')
+      .slice(0, 50);
+
+    const entries = await Promise.all(files.map(async (f) => {
+      const slug = f.name.replace(/\.json$/, '');
+      try {
+        const raw = await fetch(f.download_url);
+        if (!raw.ok) throw new Error(raw.status);
+        const e = await raw.json();
+        return {
+          slug,
+          title: e.title || slug,
+          tracks: Array.isArray(e.tracks) ? e.tracks.length : 0,
+          poems: Array.isArray(e.poems) ? e.poems.length : 0,
+          cover: e.cover_image_url || null,
+        };
+      } catch (_) {
+        return { slug, title: slug, tracks: 0, poems: 0, cover: null, unreadable: true };
+      }
+    }));
+
+    entries.sort((a, b) => a.slug.localeCompare(b.slug));
+    return res.status(200).json({ entries });
+  }
+
   if (req.method === 'GET') {
     const slug = String(req.query.slug || '');
     if (!validSlug(slug)) return res.status(400).json({ error: 'bad slug' });
@@ -69,8 +102,37 @@ export default async function handler(req, res) {
     return res.status(200).json({ entry, sha: d.sha });
   }
 
+  if (req.method === 'DELETE') {
+    const slug = String(req.query.slug || '');
+    if (!validSlug(slug)) return res.status(400).json({ error: 'bad slug' });
+
+    const path = `${DIR}/${slug}.json`;
+    const existing = await gh(`contents/${path}?ref=${BRANCH}`);
+    if (existing.status === 404) return res.status(404).json({ error: 'no such entry' });
+    if (!existing.ok) return res.status(502).json({ error: 'github read failed: ' + existing.status });
+    const { sha } = await existing.json();
+
+    const del = await gh(`contents/${path}`, {
+      method: 'DELETE',
+      body: JSON.stringify({
+        message: `chore(motif): delete ${slug} entry from the builder`,
+        sha,
+        branch: BRANCH,
+      }),
+    });
+
+    if (!del.ok) {
+      const d = await del.json().catch(() => ({}));
+      return res.status(del.status).json({ error: d.message || 'github delete failed' });
+    }
+
+    // The file is gone from main but stays in history — recoverable with
+    // `git show <commit>^:motif/data/<slug>.json` if it was a mistake.
+    return res.status(200).json({ ok: true, deleted: path });
+  }
+
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'GET or POST only' });
+    return res.status(405).json({ error: 'GET, POST or DELETE only' });
   }
 
   const { slug, entry } = req.body || {};
