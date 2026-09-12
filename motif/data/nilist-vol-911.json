@@ -2,6 +2,7 @@
   "slug": "nilist-vol-911",
   "no": "T",
   "title": "The Nilist Vol. 911 (Before, Wego, Any, Further)",
+  "cover_image_url": "https://gdellbtfpcmdsfogxqwf.supabase.co/storage/v1/object/public/motif-images/mixtape/nilist-vol-911/mtxs3793-cover.jpg",
   "spotify_playlist_url": "https://open.spotify.com/playlist/3HSccO2XoH8EZagIh0yPv8?si=3ff170b4d4f54011",
   "poems": [],
   "tracks": [
@@ -10,145 +11,144 @@
       "spotify_uri": "spotify:track:1uaGSDFsLdReQgg8p7Obwh",
       "title": "Avril 14th",
       "artist": "Aphex Twin",
-      "card": {},
-      "duration_ms": 125520
+      "duration_ms": 125520,
+      "card": {}
     },
     {
       "id": "high",
       "spotify_uri": "spotify:track:1k0X1YAP8J9hQ0lC93N71a",
       "title": "High",
       "artist": "Little Dragon",
-      "card": {},
-      "duration_ms": 256973
+      "duration_ms": 256973,
+      "card": {}
     },
     {
       "id": "vintage",
       "spotify_uri": "spotify:track:0EQt3hJTjy2dYuxZp3cqo9",
       "title": "Vintage",
       "artist": "Moses Sumney",
-      "card": {},
-      "duration_ms": 222826
+      "duration_ms": 222826,
+      "card": {}
     },
     {
       "id": "high-road",
       "spotify_uri": "spotify:track:70gjgZ9hREB49y3JnKMzAi",
       "title": "High Road",
       "artist": "Charlotte Day Wilson",
-      "card": {},
-      "duration_ms": 206143
+      "duration_ms": 206143,
+      "card": {}
     },
     {
       "id": "day-one",
       "spotify_uri": "spotify:track:6QJVQSuMC77psM4vgPo31D",
       "title": "Day One",
       "artist": "Bon Iver, Dijon, Flock of Dimes",
-      "card": {},
-      "duration_ms": 213005
+      "duration_ms": 213005,
+      "card": {}
     },
     {
       "id": "lovin-gotchu-high",
       "spotify_uri": "spotify:track:1007RTeL6grubVScN6cehf",
       "title": "Lovin Gotchu High",
       "artist": "agajon",
-      "card": {},
-      "duration_ms": 140593
+      "duration_ms": 140593,
+      "card": {}
     },
     {
       "id": "am-i-okay",
       "spotify_uri": "spotify:track:6QLRg3NlTVItMsH3WBLn6q",
       "title": "AM I OKAY?!",
       "artist": "Durand Bernarr",
-      "card": {},
-      "duration_ms": 217662
+      "duration_ms": 217662,
+      "card": {}
     },
     {
       "id": "give-it-up",
       "spotify_uri": "spotify:track:7AoCNArsiCSt4vr2dqAjJx",
       "title": "Give It Up",
       "artist": "CARRTOONS, Joanna Teters",
-      "card": {},
-      "duration_ms": 134742
+      "duration_ms": 134742,
+      "card": {}
     },
     {
       "id": "know",
       "spotify_uri": "spotify:track:4xyoLXrUb0cpROQwZe1ggb",
       "title": "Know",
       "artist": "Syd",
-      "card": {},
-      "duration_ms": 214706
+      "duration_ms": 214706,
+      "card": {}
     },
     {
       "id": "what-am-i-waiting-for",
       "spotify_uri": "spotify:track:7uWj004PAUVTlu7kqlb8wn",
       "title": "What Am I Waiting For",
       "artist": "The O'Jays",
-      "card": {},
-      "duration_ms": 236466
+      "duration_ms": 236466,
+      "card": {}
     },
     {
       "id": "skit-pt-1",
-      "spotify_uri": "spotify:track:22s5u2luDtpIVfZlpYQjix",
+      "spotify_uri": "spotify:track:3XzpVJGgXxxhLPNACa0J0Z",
       "title": "Skit, Pt. 1",
       "artist": "French Montana, Max B",
-      "card": {},
-      "duration_ms": 7082
+      "duration_ms": 7082,
+      "card": {}
     },
     {
       "id": "ski-mask-way",
       "spotify_uri": "spotify:track:0BRBDRdjgP4Iw8coBDAeeT",
       "title": "Ski Mask Way",
       "artist": "50 Cent",
-      "card": {},
-      "duration_ms": 185586
+      "duration_ms": 185586,
+      "card": {}
     },
     {
       "id": "newports",
       "spotify_uri": "spotify:track:0bJL4vVjfcbgIdXZOoZATd",
       "title": "Newports",
       "artist": "House Shoes",
-      "card": {},
-      "duration_ms": 185480
+      "duration_ms": 185480,
+      "card": {}
     },
     {
       "id": "devils-pie",
       "spotify_uri": "spotify:track:5ILWEn8WXPezgpHkGHDk8s",
       "title": "Devil's Pie",
       "artist": "D'Angelo",
-      "card": {},
-      "duration_ms": 321642
+      "duration_ms": 321642,
+      "card": {}
     },
     {
       "id": "back-and-forth-feat-missy-elliott",
       "spotify_uri": "spotify:track:6Ia05odJX7EOVCNM6txaKO",
       "title": "Back and Forth (feat. Missy Elliott)",
       "artist": "Kehlani, Missy Elliott",
-      "card": {},
-      "duration_ms": 214757
+      "duration_ms": 214757,
+      "card": {}
     },
     {
       "id": "friends-and-strangers",
       "spotify_uri": "spotify:track:6vkvSBJIrpdbwwrmBrER8V",
       "title": "Friends And Strangers",
       "artist": "Ronnie Laws",
-      "card": {},
-      "duration_ms": 289013
+      "duration_ms": 289013,
+      "card": {}
     },
     {
       "id": "deep-fried-frenz",
       "spotify_uri": "spotify:track:2cSFwTLwLE3xhhQOPXQw3Q",
       "title": "Deep Fried Frenz",
       "artist": "MF DOOM",
-      "card": {},
-      "duration_ms": 299626
+      "duration_ms": 299626,
+      "card": {}
     },
     {
       "id": "wildflower",
       "spotify_uri": "spotify:track:6k1NlbXRqTu51DiDJ7Mwwf",
       "title": "Wildflower",
       "artist": "Hank Crawford",
-      "card": {},
-      "duration_ms": 234306
+      "duration_ms": 234306,
+      "card": {}
     }
-  ],
-  "cover_image_url": "https://gdellbtfpcmdsfogxqwf.supabase.co/storage/v1/object/public/motif-images/mixtape/nilist-vol-911/mtxs3793-cover.jpg"
+  ]
 }
