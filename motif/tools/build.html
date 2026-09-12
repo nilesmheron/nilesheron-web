@@ -556,8 +556,38 @@
 
   var existingEntry = {};
 
-  ['slug', 'title', 'playlistUrl', 'cover'].forEach(function (id) {
+  ['title', 'playlistUrl', 'cover'].forEach(function (id) {
     $(id).addEventListener('input', emit);
+  });
+
+  // The slug becomes a file path and a URL, and the save endpoint rejects
+  // anything outside [a-z0-9-]. Normalise as it is typed rather than failing
+  // at save time. Trailing hyphens are kept while typing so "test mix" can
+  // become "test-mix" without the hyphen vanishing under the cursor.
+  $('slug').addEventListener('input', function () {
+    var el = $('slug');
+    var cleaned = el.value
+      .toLowerCase()
+      .replace(/['’]/g, '')
+      .replace(/[^a-z0-9-]+/g, '-')
+      .replace(/-{2,}/g, '-')
+      .replace(/^-+/, '')
+      .slice(0, 49);
+    if (cleaned !== el.value) {
+      var pos = el.selectionStart;
+      el.value = cleaned;
+      try { el.setSelectionRange(pos, pos); } catch (_) {}
+    }
+    emit();
+  });
+
+  // A slug is usually just the title. Offer it, but never overwrite typing.
+  $('title').addEventListener('blur', function () {
+    if ($('slug').value.trim()) return;
+    var t = $('title').value.trim();
+    if (!t) return;
+    $('slug').value = slugify(t);
+    emit();
   });
 
   /* ---- save / load / upload ----
