@@ -107,6 +107,7 @@ async function search(token, q) {
 
 function shape(t) {
   const art = (t.album && t.album.images) || [];
+  const date = (t.album && t.album.release_date) || '';
   return {
     uri: t.uri,
     id: t.id,
@@ -114,7 +115,14 @@ function shape(t) {
     artist: t.artists.map((a) => a.name).join(', '),
     album: (t.album && t.album.name) || '',
     duration_ms: t.duration_ms,
-    art: art.length ? art[art.length - 1].url : null,
+    // Full-size art for the card front, thumbnail for the picker.
+    art: art.length ? art[0].url : null,
+    thumb: art.length ? art[art.length - 1].url : null,
+    // The distinctions that separate near-identical results: explicit vs clean,
+    // original vs reissue, and which pressing Spotify considers canonical.
+    explicit: Boolean(t.explicit),
+    year: date ? date.slice(0, 4) : '',
+    popularity: typeof t.popularity === 'number' ? t.popularity : null,
   };
 }
 

@@ -77,6 +77,17 @@
   }
   label.cand input { margin-top: 4px; flex: 0 0 auto; }
   .cand-meta { display: block; font-family: var(--mono); font-size: 10.5px; color: var(--muted); margin-top: 2px; }
+  .cand-thumb {
+    flex: 0 0 auto; width: 40px; height: 40px; border-radius: 4px;
+    object-fit: cover; display: block; background: var(--page-bg);
+  }
+  .badge {
+    display: inline-block; vertical-align: 2px; margin-left: 6px;
+    font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.1em;
+    text-transform: uppercase; padding: 1px 5px; border-radius: 3px; line-height: 1.5;
+  }
+  .badge-e { background: var(--ink); color: var(--card-bg); }
+  .badge-c { background: none; color: var(--muted); border: 1px solid var(--hair); }
   .out { font-size: 12px; min-height: 240px; }
   .empty { color: var(--muted); font-size: 13px; }
   /* per-track card editor (PRD §6 overrides) */
@@ -133,7 +144,7 @@
   </div>
   <p class="note" style="margin-top:8px">A line can also be a Spotify link, URI, or track id — pasted links resolve exactly, with nothing to guess. Use that for anything search keeps getting wrong.</p>
 
-  <div class="step">2 · confirm each match</div>
+  <div class="step">2 · confirm each match — check the E badge</div>
   <div id="results"><p class="empty">Nothing resolved yet.</p></div>
 
   <div class="step">3 · entry details</div>
@@ -149,7 +160,7 @@
     <button class="ghost" data-upload="cover">Upload</button>
   </div>
 
-  <div class="step">4 · save</div>
+  <div class="step">4 · save it to the site</div>
   <div class="row">
     <input type="password" id="pw" placeholder="curator password" style="flex:1 1 180px" autocomplete="current-password">
     <button id="save">Save entry</button>
@@ -157,7 +168,7 @@
   </div>
   <p class="note" id="saveNote" style="margin-top:8px">Commits <code>motif/data/&lt;slug&gt;.json</code> to the repo. Vercel redeploys, so it goes live about 40 seconds later.</p>
 
-  <div class="step">5 · or copy it yourself</div>
+  <div class="step">5 · or copy the JSON by hand</div>
   <textarea id="out" class="out" readonly placeholder="Confirm some matches and the JSON appears here."></textarea>
   <div class="row">
     <button id="copy" class="ghost">Copy JSON</button>
@@ -276,15 +287,32 @@
       item.candidates.forEach(function (c, ci) {
         var lab = document.createElement('label');
         lab.className = 'cand';
+
         var radio = document.createElement('input');
         radio.type = 'radio';
         radio.name = 'pick' + i;
         radio.checked = item.chosen === ci;
-        radio.addEventListener('change', function () { state[i].chosen = ci; emit(); });
+        radio.addEventListener('change', function () { state[i].chosen = ci; render(); });
+        lab.appendChild(radio);
+
+        if (c.thumb) {
+          var th = document.createElement('img');
+          th.className = 'cand-thumb';
+          th.src = c.thumb;
+          th.alt = '';
+          lab.appendChild(th);
+        }
+
         var span = document.createElement('span');
-        span.innerHTML = esc(c.title) + '<span class="cand-meta">' +
-          esc(c.artist) + ' · ' + esc(c.album) + ' · ' + fmt(c.duration_ms) + '</span>';
-        lab.appendChild(radio); lab.appendChild(span);
+        var badge = c.explicit
+          ? '<span class="badge badge-e" title="explicit">E</span>'
+          : '<span class="badge badge-c" title="clean or not marked explicit">clean</span>';
+        var meta = [c.artist, c.album, c.year, fmt(c.duration_ms)]
+          .filter(Boolean).map(esc).join(' · ');
+        span.innerHTML = esc(c.title) + ' ' + badge +
+          '<span class="cand-meta">' + meta + '</span>';
+        lab.appendChild(span);
+
         div.appendChild(lab);
       });
 
