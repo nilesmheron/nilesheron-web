@@ -181,8 +181,19 @@
         starting = false;
         playBtn.disabled = false;
         playBtn.textContent = 'Play';
-        say(friendly(e), true);
+        // A one-line status under the deck is too easy to miss when the button
+        // just springs back. Blocking reasons belong on the splash itself.
+        blockedNote(e);
       });
+  }
+
+  function blockedNote(e) {
+    say('');
+    var wrap = root.querySelector('.splash');
+    if (!wrap) { say(friendly(e), true); return; }
+    var old = wrap.querySelector('.splash-err');
+    if (old) old.remove();
+    wrap.appendChild(errNote(friendly(e)));
   }
 
   function ensureAuth() {
@@ -269,15 +280,20 @@
         });
         player.addListener('not_ready', function () { deviceId = null; });
         player.addListener('player_state_changed', onStateChange);
-        player.addListener('account_error', function () {
-          say('Spotify Premium is required to play here. Free accounts can sign in but not stream.', true);
-        });
-        player.addListener('authentication_error', function () {
-          say('Spotify sign-in expired. Reload and play again.', true);
-        });
-        player.addListener('initialization_error', function (e) {
-          if (!settled) { settled = true; clearTimeout(timer); reject(new Error(e.message || 'init')); }
-        });
+
+        // These have to settle the promise, not just log. A free account fires
+        // account_error and then never becomes ready, so leaving it unsettled
+        // meant the listener stared at "Starting" for the full 15s timeout and
+        // was then told the network had failed, which was simply untrue.
+        function fail(reason) {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          reject(new Error(reason));
+        }
+        player.addListener('account_error', function () { fail('premium_required'); });
+        player.addListener('authentication_error', function () { fail('not_authenticated'); });
+        player.addListener('initialization_error', function (e) { fail(e.message || 'init'); });
 
         player.connect();
       });
@@ -810,11 +826,16 @@
 
   function friendly(e) {
     var k = (e && e.message) || '';
-    if (k === 'premium_required') return 'Spotify Premium is required to play here.';
-    if (k === 'not_authenticated') return 'Sign-in expired. Reload and play again.';
+    if (k === 'premium_required') {
+      return 'This needs a Spotify Premium account. The music plays through your own ' +
+             'subscription, and Spotify does not allow free accounts to stream this way. ' +
+             'Premium Duo and Family work; mobile-only Premium plans do not.';
+    }
+    if (k === 'not_authenticated') return 'Your Spotify sign-in expired. Reload the page and press play again.';
     if (k === 'device_lost') return 'Lost the connection to Spotify. Reload to start again.';
-    if (k === 'sdk_timeout' || k === 'sdk_load') return 'Could not reach Spotify. Check your connection and try again.';
-    return 'Something went wrong starting playback. Try again.';
+    if (k === 'sdk_timeout') return 'Spotify did not respond. Check your connection, or try reloading.';
+    if (k === 'sdk_load') return 'Could not load Spotify. Check your connection and try again.';
+    return 'Something went wrong starting playback. Try again, and tell Niles if it keeps happening.';
   }
 
   function fatal(msg) {
