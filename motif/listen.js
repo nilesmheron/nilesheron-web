@@ -166,7 +166,17 @@
     playBtn.textContent = 'Starting';
     say('');
 
+    // A cookie existing is not the same as a working token — a revoked or
+    // expired refresh token still leaves the cookie in place. Prove the token
+    // works before handing the SDK something that will never arrive.
     ensureAuth()
+      .then(function (ok) {
+        if (!ok) return false;
+        return getToken().then(function () { return true; }).catch(function (e) {
+          if (e && e.message === 'not_authenticated') return false;
+          throw e;
+        });
+      })
       .then(function (ok) {
         if (!ok) {
           window.location.href = '/api/motif-auth?action=login&return=' +
@@ -270,7 +280,14 @@
 
         player = new window.Spotify.Player({
           name: 'Motif',
-          getOAuthToken: function (cb) { getToken().then(cb).catch(function () {}); },
+          getOAuthToken: function (cb) {
+            // Swallowing a failure here is fatal-but-silent: the SDK simply
+            // never receives a token, never becomes ready, and the listener
+            // waits out the timeout for what looks like no reason.
+            getToken().then(cb).catch(function (err) {
+              fail(err && err.message === 'not_authenticated' ? 'not_authenticated' : 'token_failed');
+            });
+          },
           volume: 0.85
         });
 
@@ -832,6 +849,7 @@
              'Premium Duo and Family work; mobile-only Premium plans do not.';
     }
     if (k === 'not_authenticated') return 'Your Spotify sign-in expired. Reload the page and press play again.';
+    if (k === 'token_failed') return 'Could not get a playback token from Spotify. Reload and try again.';
     if (k === 'device_lost') return 'Lost the connection to Spotify. Reload to start again.';
     if (k === 'sdk_timeout') return 'Spotify did not respond. Check your connection, or try reloading.';
     if (k === 'sdk_load') return 'Could not load Spotify. Check your connection and try again.';

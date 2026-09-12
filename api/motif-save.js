@@ -117,7 +117,10 @@ export default async function handler(req, res) {
     const dir = await gh(`contents/${DIR}?ref=${BRANCH}`);
     if (!dir.ok) return res.status(502).json({ error: 'github list failed: ' + dir.status });
     const files = (await dir.json())
-      .filter((f) => f.type === 'file' && f.name.endsWith('.json') && f.name !== 'entries.json')
+      // mixtapes.json is the generated public index and entries.json is the
+      // poetry archive index — neither is an entry.
+      .filter((f) => f.type === 'file' && f.name.endsWith('.json') &&
+        f.name !== 'entries.json' && f.name !== 'mixtapes.json')
       .slice(0, 50);
 
     const entries = await Promise.all(files.map(async (f) => {
