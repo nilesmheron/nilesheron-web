@@ -189,14 +189,20 @@
     <button class="ghost" id="gencover">Generate</button>
   </div>
 
-  <div class="step">4 · save it to the site</div>
+  <div class="step">4 · match Apple Music</div>
+  <div class="row">
+    <button id="apple" class="ghost">Match all tracks</button>
+    <span class="note" id="appleNote">Apple is the front door — no listener cap. A track with no Apple match stays playable on Spotify only.</span>
+  </div>
+
+  <div class="step">5 · save it to the site</div>
   <div class="row">
     <button id="save">Save entry</button>
     <button id="load" class="ghost">Load existing</button>
   </div>
   <p class="note" id="saveNote" style="margin-top:8px">Commits <code>motif/data/&lt;slug&gt;.json</code> to the repo. Vercel redeploys, so it goes live about 40 seconds later.</p>
 
-  <div class="step">5 · or copy the JSON by hand</div>
+  <div class="step">6 · or copy the JSON by hand</div>
   <textarea id="out" class="out" readonly placeholder="Confirm some matches and the JSON appears here."></textarea>
   <div class="row">
     <button id="copy" class="ghost">Copy JSON</button>
@@ -236,7 +242,159 @@
 
   function toItem(r) {
     return { line: r.line, parsed: r.parsed, confident: r.confident,
-             direct: r.direct, candidates: r.candidates, chosen: r.confident ? 0 : null };
+             direct: r.direct, candidates: r.candidates, chosen: r.confident ? 0 : null,
+             apple: null };
+  }
+
+  /* ---------- Apple Music ----------
+     Matched against the Spotify track the curator has already chosen, not the
+     original line. By this point the recording is settled, so the server can
+     compare title, artist and duration instead of guessing at a search. Never
+     auto-selects below its confidence bar — the MusicKit spike got two of five
+     bare searches wrong, and a silent mismatch here puts the wrong song in
+     front of a listener. */
+  function matchApple(indices) {
+    var wants = indices.map(function (i) {
+      var c = state[i].candidates[state[i].chosen];
+      return {
+        title: c.title, artist: c.artist, album: c.album || '',
+        duration_ms: c.duration_ms || 0,
+        link: state[i].appleLink || ''
+      };
+    });
+    return fetch('/api/motif-resolve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ apple: wants })
+    }).then(function (r) {
+      return r.json().then(function (d) {
+        if (!r.ok) throw new Error(d.error || ('http ' + r.status));
+        d.results.forEach(function (res, n) {
+          var i = indices[n];
+          state[i].apple = {
+            confident: res.confident,
+            direct: res.direct,
+            candidates: res.candidates || [],
+            chosen: res.confident ? 0 : null
+          };
+        });
+      });
+    });
+  }
+
+  /* The Apple row per track. Stays quiet when it agrees with the Spotify pick
+     and gets loud when it does not, because the failure that matters is a
+     confident-looking wrong song rather than a missing one. */
+  function buildAppleBlock(i, item) {
+    var wrap = document.createElement('div');
+    wrap.className = 'retry';
+    wrap.style.marginTop = '10px';
+
+    var h = document.createElement('div');
+    h.className = 'ce-h';
+    h.textContent = 'apple music';
+    wrap.appendChild(h);
+
+    var a = item.apple;
+    if (!a) {
+      var todo = document.createElement('p');
+      todo.className = 'empty';
+      todo.style.margin = '4px 0 0';
+      todo.textContent = 'not matched yet — use “Match all tracks” in step 4.';
+      wrap.appendChild(todo);
+      return wrap;
+    }
+
+    if (!a.candidates.length) {
+      var none = document.createElement('p');
+      none.className = 'empty';
+      none.style.margin = '4px 0 0';
+      none.textContent = 'no Apple match. This track will be Spotify-only.';
+      wrap.appendChild(none);
+    } else {
+      var sel = document.createElement('select');
+      sel.style.cssText = 'width:100%;margin-top:4px';
+      var optNone = document.createElement('option');
+      optNone.value = '';
+      optNone.textContent = '— no Apple match (Spotify only) —';
+      optNone.selected = a.chosen === null;
+      sel.appendChild(optNone);
+
+      var want = item.candidates[item.chosen] || {};
+      a.candidates.forEach(function (c, ci) {
+        var o = document.createElement('option');
+        o.value = String(ci);
+        var drift = (want.duration_ms && c.duration_ms)
+          ? Math.round(Math.abs(c.duration_ms - want.duration_ms) / 1000) : null;
+        o.textContent = c.title + ' · ' + c.artist +
+          (c.album ? ' · ' + c.album : '') +
+          ' · ' + fmt(c.duration_ms) +
+          (drift !== null ? (drift === 0 ? ' · exact length' : ' · ' + drift + 's off') : '');
+        o.selected = a.chosen === ci;
+        sel.appendChild(o);
+      });
+      sel.addEventListener('change', function () {
+        state[i].apple.chosen = sel.value === '' ? null : Number(sel.value);
+        emit();
+        summariseApple();
+      });
+      wrap.appendChild(sel);
+
+      if (!a.confident && a.chosen === null) {
+        var warn = document.createElement('div');
+        warn.className = 'flag';
+        warn.style.marginTop = '4px';
+        warn.textContent = 'no candidate matched on title, artist and length together — pick one or leave it Spotify-only.';
+        wrap.appendChild(warn);
+      }
+    }
+
+    // Escape hatch, same shape as the Spotify one: paste the Apple share link.
+    var q = document.createElement('input');
+    q.type = 'text';
+    q.placeholder = 'or paste an Apple Music song link';
+    q.style.marginTop = '6px';
+    var rb = document.createElement('button');
+    rb.className = 'ghost';
+    rb.textContent = 'Use link';
+    function useLink() {
+      if (!q.value.trim()) return;
+      rb.disabled = true; rb.textContent = 'Looking…';
+      state[i].appleLink = q.value.trim();
+      matchApple([i])
+        .then(function () { state[i].appleLink = ''; render(); emit(); summariseApple(); })
+        .catch(function (e) {
+          rb.disabled = false; rb.textContent = 'Use link';
+          note('appleNote', 'link lookup failed: ' + e.message, true);
+        });
+    }
+    rb.addEventListener('click', useLink);
+    q.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter') { ev.preventDefault(); useLink(); }
+    });
+    wrap.appendChild(q); wrap.appendChild(rb);
+
+    return wrap;
+  }
+
+  function summariseApple() {
+    var c = appleCounts();
+    if (!c.total) { note('appleNote', 'Resolve some tracks first.'); return; }
+    note('appleNote',
+      c.picked + ' of ' + c.total + ' matched to Apple' +
+      (c.missing ? ' · ' + c.missing + ' will be Spotify-only' : ' · the whole tape plays on Apple'),
+      c.missing > 0);
+  }
+
+  function appleCounts() {
+    var picked = 0, missing = 0, total = 0;
+    state.forEach(function (s) {
+      if (s.chosen === null) return;
+      total++;
+      if (s.apple && s.apple.chosen !== null) picked++;
+      else missing++;
+    });
+    return { picked: picked, missing: missing, total: total };
   }
 
   function summarise() {
@@ -349,6 +507,7 @@
       });
 
       if (item.chosen !== null && item.candidates[item.chosen]) {
+        div.appendChild(buildAppleBlock(i, item));
         div.appendChild(buildCardEditor(i, item.candidates[item.chosen]));
       }
 
@@ -558,9 +717,14 @@
       if (p.card.back_text && p.card.back_text.trim()) card.back_text = p.card.back_text.trim();
       if (p.card.back_image_url) card.back_image_url = p.card.back_image_url;
 
+      // apple_id is optional per PRD §7 — a track may carry one platform only.
+      // The player picks whichever matches the listener's service.
+      var ap = p.apple && p.apple.chosen !== null ? p.apple.candidates[p.apple.chosen] : null;
+
       return {
         id: id,
         spotify_uri: c.uri,
+        apple_id: ap ? ap.apple_id : undefined,
         title: c.title,
         artist: c.artist,
         // Stored so the player can show total runtime without looking up every
@@ -849,11 +1013,24 @@
             title: t.title || '', artist: t.artist || '', album: '',
             duration_ms: 0, art: null, score: 10
           };
+          // Carry a saved apple_id straight through as an already-chosen
+          // candidate. Re-matching on every load would burn Apple lookups and,
+          // worse, could quietly replace a match the curator picked by hand.
+          var apple = t.apple_id ? {
+            confident: true, direct: true, chosen: 0,
+            candidates: [{
+              apple_id: t.apple_id, title: t.title || '', artist: t.artist || '',
+              album: '', duration_ms: t.duration_ms || 0, art: null, thumb: null,
+              explicit: false, year: '', score: 10
+            }]
+          } : null;
+
           return {
             line: (t.title || '') + ' — ' + (t.artist || ''),
             parsed: { title: t.title || '', artist: t.artist || '' },
             confident: true, direct: true,
             candidates: [cand], chosen: 0,
+            apple: apple,
             card: Object.assign({}, t.card || {})
           };
         });
@@ -871,6 +1048,33 @@
     var slug = $('slug').value.trim();
     if (!slug) { note('saveNote', 'enter the slug to load', true); return; }
     doLoad(slug);
+  });
+
+  $('apple').addEventListener('click', function () {
+    var btn = this;
+    var indices = [];
+    state.forEach(function (s, i) { if (s.chosen !== null) indices.push(i); });
+    if (!indices.length) { note('appleNote', 'resolve and pick some tracks first', true); return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Matching…';
+    // The endpoint caps at 40 per request, same as the Spotify path.
+    var chunks = [];
+    for (var i = 0; i < indices.length; i += 40) chunks.push(indices.slice(i, i + 40));
+
+    chunks.reduce(function (p, c) {
+      return p.then(function () { return matchApple(c); });
+    }, Promise.resolve())
+      .then(function () {
+        render(); emit(); summariseApple();
+      })
+      .catch(function (e) {
+        note('appleNote', 'Apple matching failed: ' + e.message, true);
+      })
+      .then(function () {
+        btn.disabled = false;
+        btn.textContent = 'Match all tracks';
+      });
   });
 
   // Upload straight to storage using a short-lived signed URL, so the file
