@@ -72,22 +72,36 @@ function mint() {
   return { token: signingInput + '.' + b64url(signature), exp };
 }
 
-export default async function handler(req, res) {
-  const missing = ['APPLE_MUSIC_TEAM_ID', 'APPLE_MUSIC_KEY_ID', 'APPLE_MUSIC_PRIVATE_KEY']
+export const MISSING_ENV = () =>
+  ['APPLE_MUSIC_TEAM_ID', 'APPLE_MUSIC_KEY_ID', 'APPLE_MUSIC_PRIVATE_KEY']
     .filter((k) => !process.env[k]);
+
+// Shared with api/motif-resolve.js so the builder's Apple lookups reuse this
+// cache and this signing path rather than growing a second copy of it.
+// Callers hitting the Apple Music API from the server MUST send
+// `Origin: https://dev.nilesheron.com` — see the note at the top of this file.
+// Verified again 2026-09-13: without it the catalog returns a bare 401.
+export function appleDeveloperToken() {
+  const now = Math.floor(Date.now() / 1000);
+  if (!cached.token || cached.expiresAt - 300 < now) {
+    const { token, exp } = mint();
+    cached = { token, expiresAt: exp };
+  }
+  return { token: cached.token, expiresIn: cached.expiresAt - now };
+}
+
+export default async function handler(req, res) {
+  const missing = MISSING_ENV();
   if (missing.length) {
     return res.status(503).json({ error: 'not configured: ' + missing.join(', ') });
   }
 
   const now = Math.floor(Date.now() / 1000);
-  if (!cached.token || cached.expiresAt - 300 < now) {
-    try {
-      const { token, exp } = mint();
-      cached = { token, expiresAt: exp };
-    } catch (e) {
-      // Almost always a malformed key — wrong file, or newlines lost in transit.
-      return res.status(500).json({ error: 'could not sign token: ' + e.message });
-    }
+  try {
+    appleDeveloperToken();
+  } catch (e) {
+    // Almost always a malformed key — wrong file, or newlines lost in transit.
+    return res.status(500).json({ error: 'could not sign token: ' + e.message });
   }
 
   res.setHeader('Cache-Control', 'private, max-age=300');

@@ -98,6 +98,13 @@ If the change set was trivial (single-line copy edit, typo fix), skip the sessio
 
 - Don't add a build step, bundler, or framework without explicit direction. The no-build-step constraint is deliberate.
 - Don't introduce browser storage (`localStorage`, `sessionStorage`) in any page that might end up embedded as an iframe — same rule as `niles-task-dashboard`. Use in-memory state only.
+
+  **One exception, granted 2026-09-13: MusicKit JS on the Motif player pages.** Apple's library persists the listener's Music User Token to `localStorage` itself (`music.<id>.media-user-token`, `.itua`, `.itre`) and offers no supported way to relocate it. The choice was to accept this or not ship Apple Music, and Apple is the only path to an audience larger than five people. The exception is narrow and carries a condition:
+
+  - It covers `motif/listen.*` and `motif/spike/apple.html` only. It does not generalise to any other page, and it is not a precedent for our own code storing anything.
+  - The listen page is never iframe-embedded, so the hazard this rule was written against does not apply to it.
+  - **The condition:** the stored token is readable by any script running on the page, so the player must never render untrusted or curator-authored content as HTML. Everything from the entry JSON goes through `textContent`, which is how `listen.js` already does it. Verified 2026-09-13: the only `innerHTML` in the player clears a node or interpolates a number. If you ever add a field that renders formatting, or any listener-supplied text, that decision reopens this one.
+  - Spotify's token stays in an httpOnly cookie and must not move. That is strictly stronger, and the asymmetry is deliberate rather than an inconsistency to tidy up.
 - Don't commit env values. Env vars live in Vercel; local dev needs `vercel env pull .env.local` or equivalent.
 - Don't touch `grav/` content without confirming with the user — that's client work under a separate engagement.
 - Don't touch `tbp/` assets without confirming they aren't currently in use as iframe embeds on `tasks.nilesheron.com`.
