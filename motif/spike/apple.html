@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Motif spike — MusicKit / Apple Music</title>
+<!--
+  THROWAWAY instrument panel for the Motif blind-playlist spike, Apple leg.
+  Mirrors motif/spike/spotify.html and runs the same five PRD §9.2 checks.
+  Delete this directory with the rest of the spike once the platform decision
+  is recorded.
+
+  Filename note: apple.html, not index.html, for the same reason spotify.html
+  is named that way. /motif/spike would be a two-segment path with no dot,
+  which middleware.js treats as an entry slug and answers with entry.html.
+  Three segments falls through to the static file.
+
+  MusicKit JS is loaded from Apple's official CDN, authorized for spike and
+  player pages by PRD §9.3. api/motif-apple-token.js mints the developer JWT;
+  the .p8 never reaches the browser.
+
+  WHY THIS IS NOT A PORT OF THE SPOTIFY SPIKE
+  -------------------------------------------
+  The four rules in listen.js (seed one, queue one ahead, never a new play call,
+  handle the drained queue) are answers to Spotify's constraint: its only queue
+  lever was POST /me/player/queue against a context we did not own. MusicKit
+  hands the page a real client-side queue, so those rules do not transfer and
+  are deliberately NOT assumed here.
+
+  What does transfer is the platform rule underneath them. iOS refuses to start
+  a new media source without a user activation, and that is true of any player.
+  So check 5 is still the deciding one, and this page still measures checks 2
+  and 5 separately, because they can dissociate: iOS can keep audio alive while
+  suspending our JavaScript, which would keep the music going while the blind
+  dies at the first track boundary.
+
+  What the mode toggle isolates, and it is the whole point of the page:
+
+    full queue  — every song handed to setQueue at once. The reliability
+                  baseline. If a locked transition fails even here, inside a
+                  queue MusicKit owns end to end, then nothing else will work.
+    one ahead   — one song seeded, the next appended via playLater() as each
+                  track starts. This is the product, and the blind depth we
+                  actually want.
+
+  If both pass, Apple is strictly better than Spotify and the blind costs
+  nothing. If only "full queue" passes, the blind becomes a dial the same way
+  it did on Spotify. If neither passes, Apple is not a playback platform for
+  this product and the answer is no.
+-->
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 16px 14px calc(24px + env(safe-area-inset-bottom, 0px));
+    background: #16151a;
+    color: #e6e3dc;
+    font: 13px/1.5 "SF Mono", Menlo, ui-monospace, monospace;
+  }
+  h1 { font-size: 13px; letter-spacing: 0.18em; text-transform: uppercase; color: #b5793e; margin: 0 0 2px; }
+  .sub { color: #7d7970; font-size: 11px; margin-bottom: 16px; }
+  .panel { border: 1px solid #2e2c34; border-radius: 8px; padding: 12px; margin-bottom: 14px; }
+  .panel h2 { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #7d7970; margin: 0 0 10px; font-weight: 400; }
+  .row { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; }
+  .row .k { color: #7d7970; }
+  .row .v { text-align: right; word-break: break-word; }
+  .ok { color: #6fbf73; }
+  .bad { color: #e0625f; }
+  .warn { color: #d8a24a; }
+  button {
+    display: block; width: 100%; margin: 6px 0; padding: 13px 12px;
+    background: #22212a; color: #e6e3dc; border: 1px solid #3a3843;
+    border-radius: 7px; font: inherit; text-align: left; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button:disabled { opacity: 0.38; }
+  button.primary { background: #b5793e; border-color: #b5793e; color: #16151a; font-weight: 600; }
+  button .hint { display: block; color: #7d7970; font-size: 11px; margin-top: 3px; font-weight: 400; }
+  button.primary .hint { color: #3d2a15; }
+  .modes { display: flex; gap: 8px; margin: 6px 0 2px; }
+  .modes button { margin: 0; text-align: center; }
+  .modes button[aria-pressed="true"] { border-color: #b5793e; color: #b5793e; }
+  #log { max-height: 46vh; overflow-y: auto; margin: 0; padding: 0; list-style: none; }
+  #log li { padding: 3px 0; border-bottom: 1px solid #232128; font-size: 11.5px; display: flex; gap: 8px; }
+  #log li:last-child { border-bottom: 0; }
+  #log .t { color: #56535c; flex: 0 0 52px; }
+  #log .m { flex: 1 1 auto; word-break: break-word; }
+  .verdict { background: #201f28; border-left: 2px solid #b5793e; padding: 8px 10px; margin: 8px 0; font-size: 11.5px; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+
+<h1>Motif spike — Apple</h1>
+<div class="sub">MusicKit JS v3. PRD §9.2 checks 1–5. Check 5, locked, decides.</div>
+
+<div class="panel">
+  <h2>State</h2>
+  <div class="row"><span class="k">musickit</span><span class="v" id="s-mk">not loaded</span></div>
+  <div class="row"><span class="k">dev token</span><span class="v" id="s-token">—</span></div>
+  <div class="row"><span class="k">authorized</span><span class="v" id="s-auth">—</span></div>
+  <div class="row"><span class="k">playback mode</span><span class="v" id="s-mode">—</span></div>
+  <div class="row"><span class="k">storefront</span><span class="v" id="s-store">—</span></div>
+  <div class="row"><span class="k">catalog</span><span class="v" id="s-catalog">—</span></div>
+  <div class="row"><span class="k">queue</span><span class="v" id="s-queue">—</span></div>
+  <div class="row"><span class="k">track</span><span class="v" id="s-track">—</span></div>
+  <div class="row"><span class="k">position</span><span class="v" id="s-pos">—</span></div>
+  <div class="row"><span class="k">wake lock</span><span class="v" id="s-wake">—</span></div>
+  <div class="row"><span class="k">media session</span><span class="v" id="s-media">—</span></div>
+  <div class="row"><span class="k">localStorage</span><span class="v" id="s-ls">—</span></div>
+</div>
+
+<div class="panel">
+  <h2>Run</h2>
+
+  <button id="b-connect" class="primary">Connect Apple Music
+    <span class="hint">check 1 — opens Apple's popup, must be a real tap</span></button>
+
+  <div class="sub" style="margin:10px 0 2px">Queue mode</div>
+  <div class="modes">
+    <button id="b-mode-full" aria-pressed="true">full queue</button>
+    <button id="b-mode-one" aria-pressed="false">one ahead</button>
+  </div>
+  <div class="sub" id="mode-hint" style="margin:4px 0 10px">full queue: every song handed over at once. The reliability baseline, not the product.</div>
+
+  <button id="b-play" disabled>1 · Play
+    <span class="hint">authorizes first if needed, so we learn whether one tap is enough</span></button>
+  <button id="b-seek" disabled>2 · Jump to 20s before end
+    <span class="hint">sets up the transition test without waiting out the song</span></button>
+  <button id="b-next" disabled>skip forward</button>
+  <button id="b-prev" disabled>skip back</button>
+  <button id="b-pause" disabled>pause / resume</button>
+  <button id="b-wake" disabled>3 · Request screen wake lock</button>
+  <button id="b-append" disabled>Append one track now
+    <span class="hint">manual playLater() — does appending work mid-playback?</span></button>
+  <button id="b-autoseek" aria-pressed="false">Auto-seek: OFF
+    <span class="hint">jump near the end of every track, to chain transitions fast</span></button>
+  <button id="b-copy">Copy log</button>
+  <button id="b-logout">Disconnect Apple Music</button>
+</div>
+
+<div class="panel">
+  <h2>Verdicts and log</h2>
+  <div id="verdicts"></div>
+  <ul id="log"></ul>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* Stand-ins, same role the Tobe Nwigwe tracks played in the Spotify spike:
+     we need real catalog songs, not the Motif playlist, to prove transport.
+     Resolved by catalog search so no Apple IDs are hardcoded and stale. */
+  var SEARCH_TERMS = [
+    'Fire Tobe Nwigwe',
+    'Sweet Thing Rufus Chaka Khan',
+    'Reign Tobe Nwigwe',
+    'Ultralight Beam Kanye West',
+    'Rain Tobe Nwigwe'
+  ];
+
+  var TOKEN_URL = '/api/motif-apple-token';
+  var MK_CDN = 'https://js-cdn.music.apple.com/musickit/v3/musickit.js';
+
+  /* ---------- state ---------- */
+  var music = null;
+  var devToken = null;
+  var tracks = [];          // { id, name, artist, durationMs }
+  var idx = 0;              // our notion of position in tracks[]
+  var queuedUpTo = -1;      // highest track index handed to MusicKit
+  var mode = 'full';        // 'full' | 'one'
+  var autoSeek = false;
+  var wakeLock = null;
+  var bg = null;            // backgrounding snapshot for check 2
+  var lastItemId = null;
+  var lsBefore = [];
+  var posTicker = null;
+
+  var t0 = Date.now();
+
+  /* ---------- tiny DOM helpers, lifted from the Spotify spike ---------- */
+  var $ = function (id) { return document.getElementById(id); };
+
+  function log(msg, cls) {
+    var li = document.createElement('li');
+    var t = document.createElement('span');
+    t.className = 't';
+    t.textContent = ((Date.now() - t0) / 1000).toFixed(1) + 's';
+    var m = document.createElement('span');
+    m.className = 'm' + (cls ? ' ' + cls : '');
+    m.textContent = msg;
+    li.appendChild(t); li.appendChild(m);
+    $('log').appendChild(li);
+    $('log').scrollTop = $('log').scrollHeight;
+    if (window.console && console.log) console.log('[mk] ' + msg);
+  }
+
+  /* Verdicts go in the page, not the console. A phone that has been locked for
+     four minutes has no console worth reading, and this is the whole reason the
+     Spotify spike was tractable. */
+  function verdict(text) {
+    var d = document.createElement('div');
+    d.className = 'verdict';
+    d.textContent = text;
+    $('verdicts').appendChild(d);
+    log('VERDICT recorded', 'warn');
+  }
+
+  function set(id, text, cls) {
+    var el = $(id);
+    el.textContent = text;
+    el.className = 'v' + (cls ? ' ' + cls : '');
+  }
+
+  function secs(s) { return (s || 0).toFixed(1) + 's'; }
+
+  /* Read a property we have not verified exists on this MusicKit build without
+     letting it take the page down. The spike is an instrument; an instrument
+     that crashes on an unknown field is worse than one that reports a gap. */
+  function safe(fn, fallback) {
+    try {
+      var v = fn();
+      return (v === undefined || v === null) ? (fallback === undefined ? '—' : fallback) : v;
+    } catch (e) {
+      return fallback === undefined ? '—' : fallback;
+    }
+  }
+
+  /* ---------- localStorage watch ----------
+     CLAUDE.md and PRD §8 forbid browser storage in this repo, and the Spotify
+     player honours that with an httpOnly cookie. MusicKit is expected to
+     persist the Music User Token in localStorage on its own and there is no
+     supported way to stop it. Rather than assume, record the delta so the
+     policy call is made on evidence. */
+  function lsKeys() {
+    try { return Object.keys(window.localStorage); } catch (e) { return []; }
+  }
+
+  function reportLsDelta(when) {
+    var now = lsKeys();
+    var added = now.filter(function (k) { return lsBefore.indexOf(k) === -1; });
+    if (!added.length) {
+      set('s-ls', when + ': no new keys', 'ok');
+      log('localStorage: no new keys after ' + when, 'ok');
+      return;
+    }
+    set('s-ls', added.length + ' key(s) written', 'warn');
+    log('localStorage after ' + when + ' → ' + added.join(', '), 'warn');
+    verdict('STORAGE — MusicKit wrote ' + added.length + ' localStorage key(s):\n' +
+            added.join('\n') + '\n\n' +
+            'CLAUDE.md and PRD §8 forbid browser storage in this repo. If these\n' +
+            'carry the Music User Token there is no supported way to relocate\n' +
+            'them, so this needs an explicit exception rather than silence.');
+  }
+
+  /* ============================================================
+     BOOT — developer token, then the SDK, then configure
+     ============================================================ */
+
+  log('ua: ' + navigator.userAgent);
+  lsBefore = lsKeys();
+
+  fetch(TOKEN_URL, { credentials: 'same-origin' })
+    .then(function (r) {
+      if (!r.ok) return r.text().then(function (b) { throw new Error('http ' + r.status + ' ' + b.slice(0, 140)); });
+      return r.json();
+    })
+    .then(function (d) {
+      devToken = d.token;
+      set('s-token', 'ok · expires in ' + Math.round((d.expires_in || 0) / 3600) + 'h', 'ok');
+      log('developer token minted', 'ok');
+      loadSdk();
+    })
+    .catch(function (e) {
+      set('s-token', 'FAILED', 'bad');
+      verdict('CHECK 1 FAIL — no developer token: ' + e.message + '\n' +
+              'api/motif-apple-token.js is the only dependency here. Check the\n' +
+              'three APPLE_MUSIC_* env vars on Production.');
+    });
+
+  function loadSdk() {
+    /* The library dispatches musickitloaded on document as it parses, so the
+       listener has to be attached before the script is injected. onload is a
+       belt-and-braces fallback for the case where it has already fired. */
+    document.addEventListener('musickitloaded', onSdkReady);
+    var s = document.createElement('script');
+    s.src = MK_CDN;
+    s.async = true;
+    s.onload = function () { if (window.MusicKit) onSdkReady(); };
+    s.onerror = function () {
+      set('s-mk', 'CDN load failed', 'bad');
+      verdict('CHECK 1 FAIL — MusicKit JS did not load from Apple\'s CDN.');
+    };
+    document.head.appendChild(s);
+  }
+
+  var configured = false;
+  function onSdkReady() {
+    if (configured || !window.MusicKit) return;
+    configured = true;
+    set('s-mk', 'v' + safe(function () { return MusicKit.version; }, '?'), 'ok');
+    log('MusicKit loaded', 'ok');
+
+    MusicKit.configure({
+      developerToken: devToken,
+      app: { name: 'Motif spike', build: '1.0.0' }
+    }).then(function () {
+      music = MusicKit.getInstance();
+      log('configured', 'ok');
+      wireEvents();
+      refreshAuthState();
+      reportLsDelta('configure');
+      loadCatalog();
+      $('b-play').disabled = false;
+    }).catch(function (e) {
+      set('s-mk', 'configure failed', 'bad');
+      verdict('CHECK 1 FAIL — MusicKit.configure() rejected: ' + (e && e.message) + '\n' +
+              'Usually a bad developer token. Note api/motif-apple-token.js puts\n' +
+              'an origin claim on the JWT, so it only works from our own pages.');
+    });
+  }
+
+  /* ---------- authorization and capability ----------
+     The Spotify lesson worth carrying: a listener who cannot play must be told
+     before they tap, not after a timeout. Spotify's tell was account_error;
+     Apple's is playbackMode landing on PREVIEW_ONLY. */
+  function refreshAuthState() {
+    if (!music) return;
+    var authed = !!safe(function () { return music.isAuthorized; }, false);
+    set('s-auth', authed ? 'yes' : 'no', authed ? 'ok' : 'warn');
+    set('s-store', String(safe(function () { return music.storefrontId; })));
+
+    var pm = safe(function () { return music.playbackMode; }, null);
+    if (pm === null || pm === '—') { set('s-mode', '—'); return; }
+    var names = safe(function () { return MusicKit.PlaybackMode; }, {});
+    var label = 'PREVIEW_ONLY';
+    if (pm === names.FULL_PLAYBACK_ONLY) label = 'FULL_PLAYBACK_ONLY';
+    else if (pm === names.MIXED_CONTENT) label = 'MIXED_CONTENT';
+    set('s-mode', label, label === 'PREVIEW_ONLY' ? 'bad' : 'ok');
+
+    if (authed && label === 'PREVIEW_ONLY') {
+      verdict('CHECK 1 FAIL — authorized, but playbackMode is PREVIEW_ONLY.\n' +
+              'This Apple ID has no active Apple Music subscription, so it gets\n' +
+              '30-second previews rather than full tracks. Apple\'s equivalent of\n' +
+              'Spotify\'s account_error, and it is knowable before the first tap.');
+    }
+  }
+
+  /* ---------- catalog ----------
+     Developer token alone is enough for catalog search, so the track list can
+     load before the listener authorizes. Origin goes on the request
+     automatically from a browser, which is what the JWT's origin claim wants. */
+  function loadCatalog() {
+    var store = safe(function () { return music.storefrontId; }, 'us') || 'us';
+    set('s-catalog', 'searching…');
+    Promise.all(SEARCH_TERMS.map(function (term) {
+      var url = 'https://api.music.apple.com/v1/catalog/' + store +
+                '/search?types=songs&limit=1&term=' + encodeURIComponent(term);
+      return fetch(url, { headers: { Authorization: 'Bearer ' + devToken } })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) {
+          var hit = d && d.results && d.results.songs && d.results.songs.data && d.results.songs.data[0];
+          if (!hit) return null;
+          return {
+            id: hit.id,
+            name: hit.attributes.name,
+            artist: hit.attributes.artistName,
+            durationMs: hit.attributes.durationInMillis || 0
+          };
+        })
+        .catch(function () { return null; });
+    })).then(function (results) {
+      tracks = results.filter(Boolean);
+      if (!tracks.length) {
+        set('s-catalog', 'no results', 'bad');
+        verdict('Catalog search returned nothing. Playback cannot be tested.\n' +
+                'If this is a 401 with an empty body, it is the origin claim on\n' +
+                'the developer token (see api/motif-apple-token.js).');
+        return;
+      }
+      set('s-catalog', tracks.length + ' of ' + SEARCH_TERMS.length + ' resolved',
+          tracks.length === SEARCH_TERMS.length ? 'ok' : 'warn');
+      tracks.forEach(function (t, i) {
+        log('[' + i + '] ' + t.name + ' — ' + t.artist + ' (' + Math.round(t.durationMs / 1000) + 's)');
+      });
+    });
+  }
+
+  /* ============================================================
+     EVENTS
+     ============================================================ */
+
+  function wireEvents() {
+    var E = MusicKit.Events;
+
+    music.addEventListener(E.authorizationStatusDidChange, function () {
+      log('authorizationStatusDidChange');
+      refreshAuthState();
+    });
+
+    /* The card-reveal trigger in the real player, and the thing check 5 turns
+       on. Logged with visibilityState because "did this fire while the phone
+       was locked" is the entire question. */
+    music.addEventListener(E.nowPlayingItemDidChange, function () {
+      var item = safe(function () { return music.nowPlayingItem; }, null);
+      if (!item || item === '—') return;
+      var id = safe(function () { return item.id; }, null);
+      if (id === lastItemId) return;
+      lastItemId = id;
+
+      var name = safe(function () { return item.title; }, safe(function () { return item.attributes && item.attributes.name; }, '?'));
+      var known = indexOfId(id);
+      if (known > -1) idx = known;
+
+      log('NOW PLAYING (' + document.visibilityState + '): ' + name +
+          (known > -1 ? ' [' + known + ']' : ' [not in list]'), 'ok');
+      set('s-track', name);
+      setMediaSession(item, name);
+      updateQueueRow();
+
+      /* one-ahead: this is where the blind is maintained. Append the next
+         track only once the current one has actually started. */
+      if (mode === 'one') appendNext('track started');
+
+      if (autoSeek) scheduleAutoSeek();
+    });
+
+    music.addEventListener(E.playbackStateDidChange, function (e) {
+      var st = e && e.state;
+      var names = safe(function () { return MusicKit.PlaybackStates; }, {});
+      var label = String(st);
+      Object.keys(names).forEach(function (k) { if (names[k] === st && isNaN(Number(k))) label = k; });
+      log('playbackState → ' + label + ' (' + document.visibilityState + ')');
+
+      /* MusicKit distinguishes a track ending from the queue running out.
+         'completed' is the drained-queue signal Spotify never gave us — there
+         we had to infer it from the seed context replaying. */
+      if (label === 'completed') {
+        log('QUEUE COMPLETED — MusicKit says the list is done', 'ok');
+        verdict('END OF LIST — playbackState reached "completed".\n' +
+                'Apple signals a drained queue natively, so Spotify rule 4\n' +
+                '(detect the seed context replaying) has no analogue here.\n' +
+                'Confirm autoplay stayed off: if a song we did not choose starts\n' +
+                'after this, MusicKit appended a station and the blind is broken.');
+      }
+    });
+
+    music.addEventListener(E.playbackTimeDidChange, function () {
+      var cur = safe(function () { return music.currentPlaybackTime; }, 0);
+      var dur = safe(function () { return music.currentPlaybackDuration; }, 0);
+      set('s-pos', secs(cur) + ' / ' + secs(dur));
+    });
+
+    /* Queue depth is the blind, measured. If this reports the whole list while
+       we are in one-ahead mode, the blind is not holding. */
+    [E.queueItemsDidChange, E.queuePositionDidChange].forEach(function (ev) {
+      music.addEventListener(ev, updateQueueRow);
+    });
+
+    music.addEventListener(E.mediaPlaybackError, function (e) {
+      log('mediaPlaybackError: ' + JSON.stringify(e && e.error || e).slice(0, 200), 'bad');
+    });
+  }
+
+  function updateQueueRow() {
+    var len = safe(function () { return music.queue.items.length; }, 0);
+    var pos = safe(function () { return music.queue.position; }, -1);
+    var ahead = (typeof len === 'number' && typeof pos === 'number' && pos >= 0) ? (len - pos - 1) : '?';
+    set('s-queue', 'pos ' + pos + ' of ' + len + ' · ' + ahead + ' ahead',
+        (mode === 'one' && ahead !== '?' && ahead > 1) ? 'warn' : '');
+  }
+
+  function indexOfId(id) {
+    for (var i = 0; i < tracks.length; i++) if (tracks[i].id === id) return i;
+    return -1;
+  }
+
+  /* ============================================================
+     PLAYBACK
+     ============================================================ */
+
+  /* autoplay:false is load-bearing and easy to miss. Left on, MusicKit appends
+     a station of similar songs when the queue runs out, which both breaks the
+     blind and means the list never ends. */
+  function startPlayback() {
+    if (!tracks.length) { log('CANNOT PLAY — no catalog tracks resolved', 'bad'); return Promise.resolve(); }
+    idx = 0;
+    lastItemId = null;
+
+    var ids = (mode === 'full')
+      ? tracks.map(function (t) { return t.id; })
+      : [tracks[0].id];
+    queuedUpTo = (mode === 'full') ? tracks.length - 1 : 0;
+
+    log('setQueue(' + ids.length + ' song' + (ids.length === 1 ? '' : 's') + ', autoplay off) → ' + mode);
+
+    return music.setQueue({ songs: ids, startPlaying: true, autoplay: false })
+      .then(function () {
+        log('setQueue resolved, playback requested', 'ok');
+        enableTransport();
+        updateQueueRow();
+      })
+      .catch(function (e) {
+        log('setQueue failed: ' + (e && e.message), 'bad');
+        verdict('CHECK 1 FAIL — setQueue rejected: ' + (e && e.message));
+      });
+  }
+
+  /* The one-ahead lever. If this works mid-playback while backgrounded, the
+     blind holds on Apple. It is the direct analogue of Spotify's queue append,
+     and the only rule of the four that has any counterpart here. */
+  function appendNext(why) {
+    if (mode !== 'one') return;
+    var next = queuedUpTo + 1;
+    if (next >= tracks.length) { log('nothing left to append (end of list)'); return; }
+    music.playLater({ songs: [tracks[next].id] })
+      .then(function () {
+        queuedUpTo = next;
+        log('appended [' + next + '] ' + tracks[next].name + ' (' + why + ', ' + document.visibilityState + ')', 'ok');
+        updateQueueRow();
+      })
+      .catch(function (e) {
+        log('playLater failed: ' + (e && e.message), 'bad');
+        verdict('ONE-AHEAD FAIL — playLater() rejected while ' + document.visibilityState + ':\n' +
+                (e && e.message) + '\nIf this only fails when hidden, the blind costs reliability\n' +
+                'and queue depth becomes a dial, exactly as it did on Spotify.');
+      });
+  }
+
+  function enableTransport() {
+    ['b-seek', 'b-next', 'b-prev', 'b-pause', 'b-wake', 'b-append'].forEach(function (id) {
+      $(id).disabled = false;
+    });
+  }
+
+  /* ---------- check 1: does one tap do it? ----------
+     Spotify needed two taps because its OAuth redirect destroyed the page and
+     with it the user activation. MusicKit authorizes in a popup, so the page
+     survives. Whether the activation survives with it is worth knowing: it is
+     the difference between a two-tap splash and a one-tap one. */
+  function onPlayTap() {
+    var authed = !!safe(function () { return music.isAuthorized; }, false);
+    if (authed) return startPlayback();
+
+    log('not authorized — authorizing inside the tap, then playing');
+    return music.authorize()
+      .then(function () {
+        refreshAuthState();
+        reportLsDelta('authorize');
+        loadCatalog();
+        return startPlayback();
+      })
+      .then(function () {
+        setTimeout(function () {
+          var st = safe(function () { return music.playbackState; }, null);
+          var names = safe(function () { return MusicKit.PlaybackStates; }, {});
+          if (st === names.playing) {
+            verdict('ONE TAP IS ENOUGH — authorize() and play in a single gesture.\n' +
+                    'Better than Spotify, which needs a second Play tap because its\n' +
+                    'OAuth redirect destroys the activation. The splash can be one tap.');
+          } else {
+            verdict('TWO TAPS NEEDED — after authorize() the player is not playing.\n' +
+                    'Same shape as Spotify: the gesture did not survive the popup.\n' +
+                    'Tap Play again; if that works, the splash needs two taps.');
+          }
+        }, 3000);
+      })
+      .catch(function (e) {
+        log('authorize failed: ' + (e && e.message), 'bad');
+        verdict('CHECK 1 FAIL — authorize() rejected or was dismissed: ' + (e && e.message) + '\n' +
+                'If nothing appeared, iOS blocked the popup, which means authorize()\n' +
+                'was not called directly inside the tap.');
+      });
+  }
+
+  function scheduleAutoSeek() {
+    setTimeout(function () {
+      var dur = safe(function () { return music.currentPlaybackDuration; }, 0);
+      if (!dur || dur < 30) return;
+      /* MusicKit takes SECONDS. Spotify's seek took milliseconds; mixing them
+         up sends you to the start of the track and looks like a failed seek. */
+      music.seekToTime(dur - 20).then(function () {
+        log('auto-seek → 20s before end');
+      }).catch(function (e) { log('seek failed: ' + (e && e.message), 'warn'); });
+    }, 2500);
+  }
+
+  /* ============================================================
+     CHECKS 2 AND 5 — measured separately, on purpose
+     ============================================================ */
+
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden') {
+      bg = {
+        at: Date.now(),
+        time: safe(function () { return music.currentPlaybackTime; }, 0),
+        /* nowPlayingItemIndex reads the queue directly. Our own idx comes from
+           nowPlayingItemDidChange, and if iOS defers that event until the page
+           is foregrounded it would land AFTER this measurement and read as a
+           missed transition. The deciding number must not depend on our
+           event plumbing having stayed awake. */
+        idx: safe(function () { return music.nowPlayingItemIndex; }, idx),
+        name: $('s-track').textContent,
+        queueLen: safe(function () { return music.queue.items.length; }, 0),
+        mode: mode
+      };
+      log('→ backgrounded at ' + secs(bg.time) + ' of "' + bg.name + '"');
+      return;
+    }
+
+    log('← foregrounded');
+    /* iOS drops the wake lock on hide and refuses to re-take it without a
+       gesture. Try anyway so the refusal is recorded rather than assumed. */
+    if (wakeLock === null && 'wakeLock' in navigator) requestWakeLock(true);
+    if (!bg) return;
+    measureBackground(bg);
+    bg = null;
+  });
+
+  function measureBackground(snap) {
+    var awayMs = Date.now() - snap.at;
+    var away = awayMs / 1000;
+
+    /* currentPlaybackTime reads the media element live rather than a cached JS
+       variable, so it is honest even if our timers were throttled while hidden.
+       No server call is needed, and none exists: Apple has no Connect API. */
+    var now = safe(function () { return music.currentPlaybackTime; }, 0);
+    var nowIdx = safe(function () { return music.nowPlayingItemIndex; }, idx);
+    var moved = nowIdx - snap.idx;
+
+    log('away ' + secs(away) + ' · track ' + snap.idx + ' → ' + nowIdx +
+        ' · position ' + secs(snap.time) + ' → ' + secs(now));
+
+    if (moved === 0) {
+      var advance = now - snap.time;
+      var pct = away > 0 ? Math.round((advance / away) * 100) : 0;
+      if (advance <= 0.5) {
+        verdict('CHECK 2 FAIL — no audio advance across ' + secs(away) + ' hidden.\n' +
+                'Playback stopped when the browser was backgrounded.');
+      } else {
+        verdict('CHECK 2 ' + (pct >= 90 ? 'PASS' : 'PARTIAL') + ' — ' + secs(advance) +
+                ' of audio across ' + secs(away) + ' away (' + pct + '%).\n' +
+                'No track boundary was crossed, so this says nothing about check 5.\n' +
+                'Use "Jump to 20s before end" and background it again.');
+      }
+      return;
+    }
+
+    verdict('CHECK 5 PASS — ' + moved + ' transition' + (moved === 1 ? '' : 's') +
+            ' while hidden, mode "' + snap.mode + '".\n' +
+            'Track ' + snap.idx + ' → ' + nowIdx + ' across ' + secs(away) + ' away.\n' +
+            'If the phone was LOCKED for this, that is the deciding result.\n' +
+            'Queue depth at background: ' + snap.queueLen + '.');
+  }
+
+  /* ---------- check 3 ---------- */
+  function requestWakeLock(silent) {
+    if (!('wakeLock' in navigator)) { set('s-wake', 'unsupported', 'bad'); return; }
+    navigator.wakeLock.request('screen').then(function (l) {
+      wakeLock = l;
+      set('s-wake', 'held', 'ok');
+      log('wake lock acquired', 'ok');
+      l.addEventListener('release', function () {
+        wakeLock = null;
+        set('s-wake', 'released', 'warn');
+        log('wake lock released');
+      });
+    }).catch(function (e) {
+      set('s-wake', e.name, 'bad');
+      log('wake lock refused: ' + e.name + ' ' + e.message, silent ? 'warn' : 'bad');
+      if (silent) {
+        log('(expected — iOS will not re-acquire without a gesture; same as Spotify)', 'warn');
+      }
+    });
+  }
+
+  /* ---------- check 4 ----------
+     The Spotify spike found the lock screen reading "Spotify Embedded Player"
+     rather than our metadata. Set ours, then read back what actually stuck. */
+  function setMediaSession(item, name) {
+    if (!('mediaSession' in navigator)) { set('s-media', 'unsupported', 'bad'); return; }
+    try {
+      var artist = safe(function () { return item.artistName; },
+                   safe(function () { return item.attributes && item.attributes.artistName; }, ''));
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: name,
+        artist: String(artist),
+        album: 'Motif spike'
+      });
+      set('s-media', 'set', 'ok');
+      setTimeout(function () {
+        var m = navigator.mediaSession.metadata;
+        var got = m ? m.title : '(null)';
+        if (got !== name) {
+          set('s-media', 'overridden', 'warn');
+          log('media session was overridden → "' + got + '"', 'warn');
+          verdict('CHECK 4 PARTIAL — our MediaMetadata did not stick. Reads "' + got + '".\n' +
+                  'Same failure the Spotify spike hit. Check the lock screen to see\n' +
+                  'what the platform is actually showing.');
+        }
+      }, 2500);
+    } catch (e) {
+      set('s-media', 'failed', 'bad');
+    }
+  }
+
+  /* ============================================================
+     WIRING
+     ============================================================ */
+
+  $('b-connect').addEventListener('click', function () {
+    if (!music) { log('MusicKit not configured yet', 'bad'); return; }
+    music.authorize().then(function () {
+      log('authorized', 'ok');
+      refreshAuthState();
+      reportLsDelta('authorize');
+      loadCatalog();
+    }).catch(function (e) {
+      log('authorize failed: ' + (e && e.message), 'bad');
+    });
+  });
+
+  $('b-play').addEventListener('click', onPlayTap);
+
+  $('b-seek').addEventListener('click', function () {
+    var dur = safe(function () { return music.currentPlaybackDuration; }, 0);
+    if (!dur) { log('no duration yet', 'warn'); return; }
+    music.seekToTime(Math.max(0, dur - 20)).then(function () {
+      log('seeked to 20s before end — background or lock the phone now', 'ok');
+    });
+  });
+
+  $('b-next').addEventListener('click', function () { music.skipToNextItem(); });
+  $('b-prev').addEventListener('click', function () { music.skipToPreviousItem(); });
+
+  $('b-pause').addEventListener('click', function () {
+    var names = safe(function () { return MusicKit.PlaybackStates; }, {});
+    var st = safe(function () { return music.playbackState; }, null);
+    if (st === names.playing) music.pause(); else music.play();
+  });
+
+  $('b-wake').addEventListener('click', function () { requestWakeLock(false); });
+  $('b-append').addEventListener('click', function () { appendNext('manual'); });
+
+  $('b-autoseek').addEventListener('click', function () {
+    autoSeek = !autoSeek;
+    this.setAttribute('aria-pressed', String(autoSeek));
+    this.firstChild.nodeValue = 'Auto-seek: ' + (autoSeek ? 'ON' : 'OFF');
+    log('auto-seek ' + (autoSeek ? 'on' : 'off'));
+  });
+
+  function setMode(m) {
+    mode = m;
+    $('b-mode-full').setAttribute('aria-pressed', String(m === 'full'));
+    $('b-mode-one').setAttribute('aria-pressed', String(m === 'one'));
+    $('mode-hint').textContent = (m === 'full')
+      ? 'full queue: every song handed over at once. The reliability baseline, not the product.'
+      : 'one ahead: one song seeded, the next appended as each starts. This is the product.';
+    log('mode → ' + m);
+    /* The Spotify spike's toggle only affected the NEXT play call, which voided
+       a whole day's run. Restart immediately so the mode on screen is the mode
+       being measured. */
+    var st = safe(function () { return music.playbackState; }, null);
+    var names = safe(function () { return MusicKit.PlaybackStates; }, {});
+    if (music && st === names.playing) {
+      log('restarting playback under the new mode');
+      startPlayback();
+    }
+  }
+
+  $('b-mode-full').addEventListener('click', function () { setMode('full'); });
+  $('b-mode-one').addEventListener('click', function () { setMode('one'); });
+
+  $('b-copy').addEventListener('click', function () {
+    var lines = [];
+    $('verdicts').querySelectorAll('.verdict').forEach(function (v) { lines.push(v.textContent); });
+    $('log').querySelectorAll('li').forEach(function (li) {
+      lines.push(li.querySelector('.t').textContent + '  ' + li.querySelector('.m').textContent);
+    });
+    var text = lines.join('\n');
+    if (navigator.clipboard) navigator.clipboard.writeText(text).then(function () { log('log copied'); });
+    else log('clipboard unavailable', 'warn');
+  });
+
+  $('b-logout').addEventListener('click', function () {
+    if (!music) return;
+    music.unauthorize().then(function () {
+      log('unauthorized');
+      refreshAuthState();
+    });
+  });
+
+  /* A slow ticker so the position row still moves when playbackTimeDidChange is
+     throttled. Foreground only — a background timer proves nothing. */
+  posTicker = setInterval(function () {
+    if (!music || document.visibilityState !== 'visible') return;
+    var cur = safe(function () { return music.currentPlaybackTime; }, 0);
+    var dur = safe(function () { return music.currentPlaybackDuration; }, 0);
+    if (dur) set('s-pos', secs(cur) + ' / ' + secs(dur));
+  }, 1000);
+})();
+</script>
+
+</body>
+</html>
