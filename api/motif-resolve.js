@@ -1,19 +1,38 @@
-// api/motif-resolve.js — resolve "Title — Artist" lines to Spotify track URIs
+// api/motif-resolve.js — turn a list of songs into tracks[] for a Motif entry
 //
-// Exists because Spotify refuses playlist contents to this app: GET
-// /playlists/{id}/tracks and GET /v1/tracks?ids= both return 403, while
-// /v1/search and /v1/tracks/{id} still work. There is therefore no ingest
-// path for a playlist — tracks[] can only be built by resolving titles.
+// APPLE IS PRIMARY. That is the product decision made 2026-09-11 (Apple is the
+// front door, Spotify the side door, capped at five listeners) finally showing
+// up in the tooling. A curator building a mixtape is choosing songs, not
+// choosing Spotify songs and then also finding them on Apple.
 //
-// Returns CANDIDATES, never a single answer. Search matching is not exact:
-// "Fire / SiR" resolves to Jordan St. Cyr's "Fires" on an obvious query and
-// needs an album-scoped search to find the right track. A resolver that
-// silently takes the top hit will put wrong songs into entries.
+// Three jobs, keyed on which body field is present:
+//
+//   { lines: [...] }    "Title — Artist" per line → Apple candidates.
+//   { spotify: [...] }  a chosen song → the matching Spotify track.
+//   { playlist: url }   an Apple playlist link → its tracks, exactly.
+//
+// Why the asymmetry between the two services:
+//
+// Apple will hand us a playlist's contents for a plain developer token, so an
+// Apple playlist imports exactly with nothing to guess. Spotify refuses —
+// GET /playlists/{id}/tracks returns 403 for this app on a public playlist,
+// for its owner, with every scope, because of their tightened API policy for
+// new apps. Confirmed 2026-09-03 and unchanged. So there is no Spotify import
+// and there never will be on these credentials.
+//
+// Search returns CANDIDATES, never a single answer. Measured 2026-09-13: bare
+// Apple search agrees with duration-verified truth 18 times out of 18 when the
+// line names a real song by a real artist, and goes confidently wrong when it
+// does not — "Rain / Tobe Nwigwe", a song that does not exist, comes back as
+// "HEAD SHOTS". A resolver that silently takes the top hit will put wrong
+// songs in front of listeners.
+//
+// Spotify is matched FROM the chosen Apple track rather than from the line,
+// because by then the recording is settled and title + artist + duration
+// identify it almost uniquely. Same technique in the other direction scored
+// 18/18 at +0s drift on the real mixtape.
 //
 // Consumer: motif/tools/build.html (Basic Auth gated via middleware.js).
-//
-// Uses the client-credentials grant — no user context needed for catalog
-// search, and the client secret stays server-side.
 
 import { appleDeveloperToken, MISSING_ENV as APPLE_MISSING_ENV } from './motif-apple-token.js';
 
@@ -159,17 +178,20 @@ function score(cand, title, artist) {
 /* ============================================================
    APPLE MUSIC
 
-   Deliberately NOT a second copy of the Spotify path. By the time this runs
-   the curator has already picked an exact Spotify track, so we are not
-   guessing at "Title — Artist" any more, we are finding the same recording in
-   another catalogue. That is a much stronger problem: title, artist and
-   duration together identify a master almost uniquely.
+   Two entry points, and the difference between them is the whole design.
 
-   It matters because bare search is bad. The MusicKit spike searched five
-   terms and got two wrong — 'Reign Tobe Nwigwe' came back as AMBER FREESTYLE,
-   'Rain Tobe Nwigwe' as EAT. Anything that takes the top hit on a loose query
-   will put wrong songs into entries, which is the same lesson the Spotify
-   resolver above already carries.
+   appleFromLine() guesses from "Title — Artist" and is the primary path. It
+   has a title and an artist and nothing else, so it holds a lower bar and the
+   curator always confirms.
+
+   resolveAppleOne() matches a recording that is already settled — used when a
+   line was a pasted Spotify link, and by the Spotify direction in reverse. It
+   also has duration, which identifies a master almost uniquely, so it can hold
+   a much higher bar and be trusted without a human.
+
+   Neither auto-selects below its bar. 'Rain / Tobe Nwigwe' is not a real song
+   and Apple answers 'HEAD SHOTS' with no hesitation at all; anything that
+   takes the top hit regardless puts that in front of a listener.
    ============================================================ */
 
 // music.apple.com/us/album/<name>/<albumId>?i=<songId> is what the share sheet
@@ -249,6 +271,138 @@ function scoreApple(cand, want) {
   return s;
 }
 
+/* ---------- line → Apple ----------
+   No duration to lean on here, unlike matching from a chosen track, so the bar
+   is title plus artist and the curator still confirms. */
+function scoreAppleLine(cand, title, artist) {
+  let s = 0;
+  const ct = norm(cand.title);
+  const wt = norm(title);
+  if (ct === wt) s += 4;
+  else if (ct && wt && (ct.includes(wt) || wt.includes(ct))) s += 2;
+
+  const ca = norm(cand.artist);
+  const wa = norm(artist);
+  if (!wa) return s; // artist-less line can never be confident
+  if (ca === wa) s += 3;
+  else if (ca.includes(wa) || wa.includes(ca)) s += 2;
+  else if (wa.split(' ').some((w) => w.length > 2 && ca.includes(w))) s += 1;
+  return s;
+}
+
+async function appleFromLine(token, raw, spotifyToken) {
+  const line = String(raw).trim();
+
+  // An Apple link is exact. Nothing to guess.
+  const appleId = appleIdFrom(line);
+  if (appleId) {
+    const d = await appleFetch(APPLE_SONGS + '/' + appleId, token);
+    const song = d && d.data && d.data[0];
+    return {
+      line,
+      parsed: { title: song ? song.attributes.name : appleId, artist: song ? song.attributes.artistName : '' },
+      direct: true,
+      confident: Boolean(song),
+      candidates: song ? [{ ...shapeApple(song), score: 10 }] : [],
+    };
+  }
+
+  // A Spotify link is also exact, but on the wrong service. Look it up there,
+  // then find the same recording on Apple — the curator pasted it because
+  // search was getting the song wrong, so honour that.
+  const spotId = trackIdFrom(line);
+  if (spotId && spotifyToken) {
+    const t = await lookupTrack(spotifyToken, spotId);
+    if (t) {
+      const want = {
+        title: t.name,
+        artist: t.artists.map((a) => a.name).join(', '),
+        album: (t.album && t.album.name) || '',
+        duration_ms: t.duration_ms,
+      };
+      const m = await resolveAppleOne(token, want);
+      return { line, parsed: { title: want.title, artist: want.artist }, direct: true,
+               confident: m.confident, candidates: m.candidates, viaSpotify: true };
+    }
+  }
+
+  const { title, artist } = splitLine(line);
+  const terms = [artist ? `${title} ${artist}` : title, title].filter(
+    (v, i, a) => v && a.indexOf(v) === i
+  );
+
+  const byId = new Map();
+  for (const term of terms) {
+    const url = `${APPLE_SEARCH}?${new URLSearchParams({ types: 'songs', limit: '10', term })}`;
+    const d = await appleFetch(url, token);
+    const hits = (d && d.results && d.results.songs && d.results.songs.data) || [];
+    for (const song of hits) {
+      if (!byId.has(song.id)) byId.set(song.id, shapeApple(song));
+    }
+    if ([...byId.values()].some((c) => scoreAppleLine(c, title, artist) >= 7)) break;
+  }
+
+  const candidates = [...byId.values()]
+    .map((c) => ({ ...c, score: scoreAppleLine(c, title, artist) }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, CANDIDATES_PER_LINE);
+
+  return {
+    line,
+    parsed: { title, artist },
+    direct: false,
+    confident: candidates.length > 0 && candidates[0].score >= 6,
+    candidates,
+  };
+}
+
+/* ---------- Apple playlist import ----------
+   The thing Spotify will not do. Paginates, because a real mixtape source
+   playlist is routinely longer than one page. */
+function applePlaylistIdFrom(raw) {
+  const s = String(raw).trim();
+  const m = s.match(/playlist\/[^/]+\/(pl\.[A-Za-z0-9-]+)/) || s.match(/^(pl\.[A-Za-z0-9-]+)$/);
+  return m ? m[1] : null;
+}
+
+async function importApplePlaylist(token, url) {
+  const id = applePlaylistIdFrom(url);
+  if (!id) {
+    return { error: 'That does not look like an Apple Music playlist link. Expected something containing pl.…' };
+  }
+
+  const meta = await appleFetch(`${APPLE_SONGS.replace('/songs', '/playlists')}/${id}`, token);
+  const pl = meta && meta.data && meta.data[0];
+  if (!pl) {
+    return {
+      error: 'Apple would not return that playlist. Personal library playlists are ' +
+             'only readable with the owner signed in; a shared or catalogue playlist should work.',
+    };
+  }
+
+  const tracks = [];
+  let next = `${APPLE_SONGS.replace('/songs', '/playlists')}/${id}/tracks?limit=100`;
+  // Hard stop so a pathological response cannot loop forever.
+  for (let page = 0; next && page < 20; page++) {
+    const d = await appleFetch(next, token);
+    if (!d || !d.data) break;
+    for (const song of d.data) {
+      if (song.type === 'songs') tracks.push(shapeApple(song));
+    }
+    next = d.next ? 'https://api.music.apple.com' + d.next + '&limit=100' : null;
+  }
+
+  return {
+    playlist: {
+      id,
+      name: (pl.attributes && pl.attributes.name) || '',
+      curator: (pl.attributes && pl.attributes.curatorName) || '',
+      url: (pl.attributes && pl.attributes.url) || '',
+    },
+    tracks,
+  };
+}
+
 async function resolveAppleOne(token, want) {
   // An explicit link wins outright — nothing left to guess.
   const direct = appleIdFrom(want.link || '');
@@ -296,131 +450,157 @@ async function resolveAppleOne(token, want) {
   };
 }
 
+/* ---------- chosen song → Spotify ----------
+   The mirror of resolveAppleOne. Runs after the curator has settled on an
+   Apple track, so it matches a known recording rather than guessing at a
+   line, and duration does most of the work. */
+function scoreSpotifyMatch(cand, want) {
+  let s = 0;
+  const ct = norm(cand.title);
+  const wt = norm(want.title);
+  if (ct === wt) s += 4;
+  else if (ct && wt && (ct.includes(wt) || wt.includes(ct))) s += 2;
+
+  const ca = norm(cand.artist);
+  const wa = norm(want.artist);
+  if (ca === wa) s += 3;
+  else if (ca && wa && (ca.includes(wa) || wa.includes(ca))) s += 2;
+  else if (wa && wa.split(' ').some((w) => w.length > 2 && ca.includes(w))) s += 1;
+
+  if (want.duration_ms && cand.duration_ms) {
+    const d = Math.abs(cand.duration_ms - want.duration_ms);
+    if (d <= DURATION_TOLERANCE_MS) s += 3;
+    else if (d <= 15000) s += 1;
+    else s -= 2;
+  }
+  return s;
+}
+
+async function resolveSpotifyOne(token, want) {
+  const direct = trackIdFrom(want.link || '');
+  if (direct) {
+    const t = await lookupTrack(token, direct);
+    return { want, direct: true, confident: Boolean(t),
+             candidates: t ? [{ ...shape(t), score: 10 }] : [] };
+  }
+
+  const byUri = new Map();
+  for (const q of queriesFor(want.title, want.artist)) {
+    let items = [];
+    try { items = await search(token, q); } catch (_) { /* one bad query is not fatal */ }
+    for (const t of items) if (!byUri.has(t.uri)) byUri.set(t.uri, shape(t));
+    if ([...byUri.values()].some((c) => scoreSpotifyMatch(c, want) >= 9)) break;
+  }
+
+  const candidates = [...byUri.values()]
+    .map((c) => ({ ...c, score: scoreSpotifyMatch(c, want) }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, CANDIDATES_PER_LINE);
+
+  return {
+    want,
+    direct: false,
+    confident: candidates.length > 0 && candidates[0].score >= 9,
+    candidates,
+  };
+}
+
+function badRequest(res, msg) {
+  return res.status(400).json({ error: msg });
+}
+
 export default async function handler(req, res) {
   const allowed = parseList(process.env.CHAT_ALLOWED_ORIGINS, DEFAULT_ALLOWED_ORIGINS);
   const origin = req.headers.origin;
   if (origin && !allowed.includes(origin)) {
     return res.status(403).json({ error: 'origin not allowed' });
   }
-
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'POST only' });
   }
 
-  /* Apple branch. Keyed on a distinct body field rather than a mode flag so
-     the existing builder call — { lines: [...] } — reaches the Spotify path
-     byte for byte and cannot regress. */
-  const appleWants = (req.body && req.body.apple) || null;
-  if (Array.isArray(appleWants)) {
-    const missing = APPLE_MISSING_ENV();
-    if (missing.length) {
-      return res.status(503).json({ error: 'Apple credentials not configured: ' + missing.join(', ') });
-    }
-    if (!appleWants.length) {
-      return res.status(400).json({ error: 'apple[] was empty' });
-    }
-    if (appleWants.length > MAX_LINES) {
-      return res.status(400).json({ error: `at most ${MAX_LINES} tracks per request` });
-    }
+  const body = req.body || {};
+  const appleMissing = APPLE_MISSING_ENV();
+  const spotifyReady = Boolean(process.env.SPOTIFY_CLIENT_ID && process.env.SPOTIFY_CLIENT_SECRET);
 
-    let token;
-    try {
-      token = appleDeveloperToken().token;
-    } catch (e) {
-      return res.status(502).json({ error: 'apple token failed: ' + e.message });
+  /* ---- import an Apple playlist ---- */
+  if (typeof body.playlist === 'string') {
+    if (appleMissing.length) {
+      return res.status(503).json({ error: 'Apple credentials not configured: ' + appleMissing.join(', ') });
     }
+    let token;
+    try { token = appleDeveloperToken().token; }
+    catch (e) { return res.status(502).json({ error: 'apple token failed: ' + e.message }); }
+
+    const out = await importApplePlaylist(token, body.playlist);
+    if (out.error) return badRequest(res, out.error);
+    if (!out.tracks.length) return badRequest(res, 'That playlist came back empty.');
+    return res.status(200).json({ service: 'apple', ...out });
+  }
+
+  /* ---- a chosen song → its Spotify twin ---- */
+  if (Array.isArray(body.spotify)) {
+    if (!spotifyReady) {
+      return res.status(503).json({ error: 'Spotify credentials not configured' });
+    }
+    if (!body.spotify.length) return badRequest(res, 'spotify[] was empty');
+    if (body.spotify.length > MAX_LINES) {
+      return badRequest(res, `at most ${MAX_LINES} tracks per request`);
+    }
+    let token;
+    try { token = await appToken(); }
+    catch (e) { return res.status(502).json({ error: 'spotify auth failed: ' + e.message }); }
 
     const results = [];
-    for (const w of appleWants) {
+    for (const w of body.spotify) {
       const want = {
         title: String((w && w.title) || '').slice(0, 200),
         artist: String((w && w.artist) || '').slice(0, 200),
         album: String((w && w.album) || '').slice(0, 200),
         duration_ms: Number((w && w.duration_ms) || 0) || 0,
         link: String((w && w.link) || '').slice(0, 400),
-        id: (w && w.id) || null,
       };
       if (!want.title && !want.link) {
         results.push({ want, direct: false, confident: false, candidates: [] });
         continue;
       }
-      try {
-        results.push(await resolveAppleOne(token, want));
-      } catch (e) {
-        // One bad lookup must not sink a 20-track resolve.
-        results.push({ want, direct: false, confident: false, candidates: [], error: e.message });
-      }
+      try { results.push(await resolveSpotifyOne(token, want)); }
+      catch (e) { results.push({ want, direct: false, confident: false, candidates: [], error: e.message }); }
     }
-    return res.status(200).json({ service: 'apple', results });
+    return res.status(200).json({ service: 'spotify', results });
   }
 
-  if (!process.env.SPOTIFY_CLIENT_ID || !process.env.SPOTIFY_CLIENT_SECRET) {
-    return res.status(503).json({ error: 'Spotify credentials not configured' });
-  }
-
-  const lines = (req.body && req.body.lines) || [];
-  if (!Array.isArray(lines) || !lines.length) {
-    return res.status(400).json({ error: 'lines[] required' });
+  /* ---- lines → Apple candidates (the default path) ---- */
+  const lines = Array.isArray(body.lines) ? body.lines : null;
+  if (!lines || !lines.length) {
+    return badRequest(res, 'lines[], spotify[] or playlist required');
   }
   if (lines.length > MAX_LINES) {
-    return res.status(400).json({ error: `at most ${MAX_LINES} lines per request` });
+    return badRequest(res, `at most ${MAX_LINES} lines per request`);
+  }
+  if (appleMissing.length) {
+    return res.status(503).json({ error: 'Apple credentials not configured: ' + appleMissing.join(', ') });
   }
 
-  let token;
-  try {
-    token = await appToken();
-  } catch (e) {
-    return res.status(502).json({ error: 'spotify auth failed: ' + e.message });
+  let appleToken;
+  try { appleToken = appleDeveloperToken().token; }
+  catch (e) { return res.status(502).json({ error: 'apple token failed: ' + e.message }); }
+
+  // Only minted if a line turns out to be a Spotify link. Most runs never
+  // touch Spotify at all, which is the point of the reordering.
+  let spotifyToken = null;
+  if (spotifyReady && lines.some((l) => trackIdFrom(l))) {
+    try { spotifyToken = await appToken(); } catch (_) { spotifyToken = null; }
   }
 
   const results = [];
   for (const raw of lines) {
     if (!String(raw).trim()) continue;
-
-    // Direct link / URI / id — exact, no guessing.
-    const directId = trackIdFrom(raw);
-    if (directId) {
-      const t = await lookupTrack(token, directId);
-      results.push({
-        line: String(raw).trim(),
-        parsed: { title: t ? t.name : directId, artist: t ? t.artists.map((a) => a.name).join(', ') : '' },
-        confident: Boolean(t),
-        direct: true,
-        candidates: t ? [{ ...shape(t), score: 10 }] : [],
-      });
-      continue;
+    try { results.push(await appleFromLine(appleToken, raw, spotifyToken)); }
+    catch (e) {
+      results.push({ line: String(raw).trim(), parsed: { title: String(raw).trim(), artist: '' },
+                     direct: false, confident: false, candidates: [], error: e.message });
     }
-
-    const { title, artist } = splitLine(String(raw));
-    const byUri = new Map();
-
-    for (const q of queriesFor(title, artist)) {
-      let items = [];
-      try {
-        items = await search(token, q);
-      } catch (_) {
-        // one bad query should not sink the line
-      }
-      for (const t of items) {
-        if (!byUri.has(t.uri)) byUri.set(t.uri, shape(t));
-      }
-      // Stop early once we have a confident match plus alternatives to show.
-      const best = [...byUri.values()].some((c) => score(c, title, artist) >= 6);
-      if (best && byUri.size >= 3) break;
-    }
-
-    const candidates = [...byUri.values()]
-      .map((c) => ({ ...c, score: score(c, title, artist) }))
-      .sort((a, b) => b.score - a.score)
-      .slice(0, CANDIDATES_PER_LINE);
-
-    results.push({
-      line: String(raw).trim(),
-      parsed: { title, artist },
-      confident: candidates.length > 0 && candidates[0].score >= 6,
-      candidates,
-    });
   }
-
-  return res.status(200).json({ results });
+  return res.status(200).json({ service: 'apple', results });
 }

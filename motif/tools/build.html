@@ -3,13 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Motif — playlist builder</title>
+<title>Motif — mixtape builder</title>
 <!--
   Curator tool. Turns a list of "Title — Artist" lines into a tracks[] block
   for a Motif entry JSON (PRD §7).
 
-  Exists because Spotify refuses playlist contents to this app, so there is no
-  ingest path — tracks[] can only be built by resolving titles one at a time.
+  APPLE IS PRIMARY, which is the 2026-09-11 product decision (Apple front door,
+  Spotify side door capped at five listeners) reaching the tooling. Songs are
+  found on Apple and matched to Spotify automatically once confirmed. There is
+  no "match Apple" step because a mixtape is a list of songs, not a list of
+  Spotify songs that also need Apple ids.
+
+  An Apple playlist link imports exactly. Spotify has no import and never will
+  on these credentials: GET /playlists/{id}/tracks returns 403 for this app on
+  a public playlist even for its owner.
 
   Always shows candidates and requires a pick. "Fire / SiR" resolves to Jordan
   St. Cyr's "Fires" on an obvious query; auto-selecting the top hit would put
@@ -152,9 +159,9 @@
 <body>
 <div class="wrap">
 
-  <h1>Playlist builder</h1>
+  <h1>Mixtape builder</h1>
   <p class="lede">Turns a list of songs into the <code>tracks[]</code> block for a Motif entry.
-  Spotify will not let us read a playlist's contents, so every track has to be resolved by name — and confirmed, because search guesses wrong more often than you would expect.</p>
+  Apple Music is the front door, so songs are found there first and matched to Spotify automatically for the five people on the side door. Every match still gets confirmed by you — search guesses wrong more often than you would expect.</p>
 
   <div class="step">0 · pick an entry, or start a new one</div>
   <div id="entries"><p class="empty">loading entries…</p></div>
@@ -163,46 +170,58 @@
     <span class="note" id="listNote"></span>
   </div>
 
-  <div class="step">1 · paste the songs</div>
-  <textarea id="in" placeholder="Fire — SiR&#10;Sweet Thing — Cleo Sol&#10;Reign — 2 Chainz&#10;&#10;One per line, Title — Artist. Numbered lines are fine."></textarea>
-  <div class="row">
-    <button id="go">Resolve</button>
-    <button id="add" class="ghost">Add to list</button>
-    <span class="note" id="status"></span>
-  </div>
-  <p class="note" style="margin-top:8px">A line can also be a Spotify link, URI, or track id — pasted links resolve exactly, with nothing to guess. Use that for anything search keeps getting wrong.</p>
-
-  <div class="step">2 · confirm each match — check the E badge</div>
-  <div id="results"><p class="empty">Nothing resolved yet.</p></div>
-
-  <div class="step">3 · entry details</div>
+  <div class="step">1 · name it</div>
   <div class="row">
     <input type="text" id="slug" placeholder="slug — e.g. familiar-fruit" style="flex:1 1 160px">
     <input type="text" id="title" placeholder="title — e.g. Familiar Fruit" style="flex:1 1 180px">
   </div>
+
+  <div class="step">2 · add the songs</div>
   <div class="row">
-    <input type="text" id="playlistUrl" placeholder="public Spotify playlist URL (for add-to-library)" style="flex:1 1 260px">
+    <input type="text" id="plUrl" placeholder="paste an Apple Music playlist link" style="flex:1 1 260px">
+    <button id="import" class="ghost">Import</button>
   </div>
+  <p class="note" style="margin:6px 0 12px" id="importNote">Imports exactly, no guessing. Spotify refuses to hand over playlist contents to this app, so a Spotify playlist link will not work — paste its songs as text below instead.</p>
+
+  <textarea id="in" placeholder="Avril 14th — Aphex Twin&#10;High — Little Dragon&#10;Vintage — Moses Sumney&#10;&#10;One per line, Title — Artist. Numbered lines are fine."></textarea>
   <div class="row">
-    <input type="text" id="cover" placeholder="cover image URL (splash screen)" style="flex:1 1 260px">
+    <button id="go">Find these songs</button>
+    <button id="add" class="ghost">Add to list</button>
+    <span class="note" id="status"></span>
+  </div>
+  <p class="note" style="margin-top:8px">A line can also be an Apple Music or Spotify song link — pasted links resolve exactly, with nothing to guess. Use that for anything search keeps getting wrong.</p>
+
+  <div class="step">3 · confirm each song</div>
+  <div id="results"><p class="empty">Nothing found yet.</p></div>
+  <div class="row" style="margin-top:10px">
+    <button id="spotify" class="ghost">Re-check Spotify matches</button>
+    <span class="note" id="appleNote">Spotify is matched automatically as songs are confirmed. This only re-runs it.</span>
+  </div>
+
+  <div class="step">4 · cover art</div>
+  <div id="artpick"><p class="empty">Confirm some songs and their album art appears here to choose from.</p></div>
+  <div class="row" style="margin-top:10px">
+    <input type="text" id="cover" placeholder="or paste a cover image URL" style="flex:1 1 260px">
     <button class="ghost" data-upload="cover">Upload</button>
     <button class="ghost" id="gencover">Generate</button>
   </div>
 
-  <div class="step">4 · match Apple Music</div>
+  <div class="step">5 · add-to-library links <span style="text-transform:none;letter-spacing:0">(optional, shown on the completion screen)</span></div>
   <div class="row">
-    <button id="apple" class="ghost">Match all tracks</button>
-    <span class="note" id="appleNote">Apple is the front door — no listener cap. A track with no Apple match stays playable on Spotify only.</span>
+    <input type="text" id="applePlaylistUrl" placeholder="public Apple Music playlist URL" style="flex:1 1 260px">
+  </div>
+  <div class="row">
+    <input type="text" id="playlistUrl" placeholder="public Spotify playlist URL" style="flex:1 1 260px">
   </div>
 
-  <div class="step">5 · save it to the site</div>
+  <div class="step">6 · save it to the site</div>
   <div class="row">
     <button id="save">Save entry</button>
     <button id="load" class="ghost">Load existing</button>
   </div>
   <p class="note" id="saveNote" style="margin-top:8px">Commits <code>motif/data/&lt;slug&gt;.json</code> to the repo. Vercel redeploys, so it goes live about 40 seconds later.</p>
 
-  <div class="step">6 · or copy the JSON by hand</div>
+  <div class="step">7 · or copy the JSON by hand</div>
   <textarea id="out" class="out" readonly placeholder="Confirm some matches and the JSON appears here."></textarea>
   <div class="row">
     <button id="copy" class="ghost">Copy JSON</button>
@@ -240,38 +259,54 @@
     });
   }
 
+  /* candidates[] is APPLE. spotify{} is the secondary match, filled in
+     automatically once a song is confirmed. That order is the product: Apple
+     has no listener cap, Spotify has five seats. */
   function toItem(r) {
     return { line: r.line, parsed: r.parsed, confident: r.confident,
              direct: r.direct, candidates: r.candidates, chosen: r.confident ? 0 : null,
-             apple: null };
+             spotify: null };
   }
 
-  /* ---------- Apple Music ----------
-     Matched against the Spotify track the curator has already chosen, not the
-     original line. By this point the recording is settled, so the server can
-     compare title, artist and duration instead of guessing at a search. Never
-     auto-selects below its confidence bar — the MusicKit spike got two of five
-     bare searches wrong, and a silent mismatch here puts the wrong song in
-     front of a listener. */
-  function matchApple(indices) {
+  function importPlaylist(url) {
+    return fetch('/api/motif-resolve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ playlist: url })
+    }).then(function (r) {
+      return r.json().then(function (d) {
+        if (!r.ok) throw new Error(d.error || ('http ' + r.status));
+        return d;
+      });
+    });
+  }
+
+  /* ---------- Spotify ----------
+     Matched from the Apple track the curator has confirmed, not from the
+     original line. By this point the recording is settled, so the server
+     compares title, artist and duration rather than guessing at a search.
+     Runs on its own after every resolve — it is not a chore the curator
+     should have to remember, and a mixtape is a list of songs rather than a
+     list of Spotify songs. */
+  function matchSpotify(indices) {
     var wants = indices.map(function (i) {
       var c = state[i].candidates[state[i].chosen];
       return {
         title: c.title, artist: c.artist, album: c.album || '',
         duration_ms: c.duration_ms || 0,
-        link: state[i].appleLink || ''
+        link: state[i].spotifyLink || ''
       };
     });
     return fetch('/api/motif-resolve', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ apple: wants })
+      body: JSON.stringify({ spotify: wants })
     }).then(function (r) {
       return r.json().then(function (d) {
         if (!r.ok) throw new Error(d.error || ('http ' + r.status));
         d.results.forEach(function (res, n) {
           var i = indices[n];
-          state[i].apple = {
+          state[i].spotify = {
             confident: res.confident,
             direct: res.direct,
             candidates: res.candidates || [],
@@ -282,25 +317,52 @@
     });
   }
 
-  /* The Apple row per track. Stays quiet when it agrees with the Spotify pick
-     and gets loud when it does not, because the failure that matters is a
-     confident-looking wrong song rather than a missing one. */
-  function buildAppleBlock(i, item) {
+  // Every confirmed song that has not been matched to Spotify yet.
+  function pendingSpotify() {
+    var out = [];
+    state.forEach(function (s, i) {
+      if (s.chosen !== null && s.candidates[s.chosen] && !s.spotify) out.push(i);
+    });
+    return out;
+  }
+
+  function autoMatchSpotify() {
+    var todo = pendingSpotify();
+    if (!todo.length) { summariseSpotify(); return Promise.resolve(); }
+    note('appleNote', 'matching ' + todo.length + ' to Spotify…');
+    var chunks = [];
+    for (var i = 0; i < todo.length; i += 40) chunks.push(todo.slice(i, i + 40));
+    return chunks.reduce(function (p, c) {
+      return p.then(function () { return matchSpotify(c); });
+    }, Promise.resolve())
+      .then(function () { render(); emit(); summariseSpotify(); })
+      .catch(function (e) {
+        // Spotify is the side door. Failing to match it must never block a
+        // mixtape that plays perfectly well on Apple.
+        note('appleNote', 'Spotify matching failed: ' + e.message + ' — Apple playback is unaffected', true);
+      });
+  }
+
+  /* The Spotify row per track. Stays quiet when it agrees with the confirmed
+     Apple song and gets loud when it does not, because the failure that
+     matters is a confident-looking wrong song rather than a missing one. */
+  function buildSpotifyBlock(i, item) {
     var wrap = document.createElement('div');
     wrap.className = 'retry';
-    wrap.style.marginTop = '10px';
+    // .retry lays out as a flex row; this block stacks.
+    wrap.style.cssText = 'margin-top:10px;display:block';
 
     var h = document.createElement('div');
     h.className = 'ce-h';
-    h.textContent = 'apple music';
+    h.textContent = 'spotify (side door)';
     wrap.appendChild(h);
 
-    var a = item.apple;
+    var a = item.spotify;
     if (!a) {
       var todo = document.createElement('p');
       todo.className = 'empty';
       todo.style.margin = '4px 0 0';
-      todo.textContent = 'not matched yet — use “Match all tracks” in step 4.';
+      todo.textContent = 'matching…';
       wrap.appendChild(todo);
       return wrap;
     }
@@ -309,14 +371,14 @@
       var none = document.createElement('p');
       none.className = 'empty';
       none.style.margin = '4px 0 0';
-      none.textContent = 'no Apple match. This track will be Spotify-only.';
+      none.textContent = 'no Spotify match — this song plays on Apple only.';
       wrap.appendChild(none);
     } else {
       var sel = document.createElement('select');
       sel.style.cssText = 'width:100%;margin-top:4px';
       var optNone = document.createElement('option');
       optNone.value = '';
-      optNone.textContent = '— no Apple match (Spotify only) —';
+      optNone.textContent = '\u2014 no Spotify match (Apple only) \u2014';
       optNone.selected = a.chosen === null;
       sel.appendChild(optNone);
 
@@ -326,17 +388,17 @@
         o.value = String(ci);
         var drift = (want.duration_ms && c.duration_ms)
           ? Math.round(Math.abs(c.duration_ms - want.duration_ms) / 1000) : null;
-        o.textContent = c.title + ' · ' + c.artist +
-          (c.album ? ' · ' + c.album : '') +
-          ' · ' + fmt(c.duration_ms) +
-          (drift !== null ? (drift === 0 ? ' · exact length' : ' · ' + drift + 's off') : '');
+        o.textContent = c.title + ' \u00b7 ' + c.artist +
+          (c.album ? ' \u00b7 ' + c.album : '') +
+          ' \u00b7 ' + fmt(c.duration_ms) +
+          (drift !== null ? (drift === 0 ? ' \u00b7 exact length' : ' \u00b7 ' + drift + 's off') : '');
         o.selected = a.chosen === ci;
         sel.appendChild(o);
       });
       sel.addEventListener('change', function () {
-        state[i].apple.chosen = sel.value === '' ? null : Number(sel.value);
+        state[i].spotify.chosen = sel.value === '' ? null : Number(sel.value);
         emit();
-        summariseApple();
+        summariseSpotify();
       });
       wrap.appendChild(sel);
 
@@ -344,25 +406,25 @@
         var warn = document.createElement('div');
         warn.className = 'flag';
         warn.style.marginTop = '4px';
-        warn.textContent = 'no candidate matched on title, artist and length together — pick one or leave it Spotify-only.';
+        warn.textContent = 'nothing matched on title, artist and length together \u2014 pick one or leave it Apple-only.';
         wrap.appendChild(warn);
       }
     }
 
-    // Escape hatch, same shape as the Spotify one: paste the Apple share link.
+    // Escape hatch: paste the Spotify share link for this song.
     var q = document.createElement('input');
     q.type = 'text';
-    q.placeholder = 'or paste an Apple Music song link';
+    q.placeholder = 'or paste a Spotify song link';
     q.style.marginTop = '6px';
     var rb = document.createElement('button');
     rb.className = 'ghost';
     rb.textContent = 'Use link';
     function useLink() {
       if (!q.value.trim()) return;
-      rb.disabled = true; rb.textContent = 'Looking…';
-      state[i].appleLink = q.value.trim();
-      matchApple([i])
-        .then(function () { state[i].appleLink = ''; render(); emit(); summariseApple(); })
+      rb.disabled = true; rb.textContent = 'Looking\u2026';
+      state[i].spotifyLink = q.value.trim();
+      matchSpotify([i])
+        .then(function () { state[i].spotifyLink = ''; render(); emit(); summariseSpotify(); })
         .catch(function (e) {
           rb.disabled = false; rb.textContent = 'Use link';
           note('appleNote', 'link lookup failed: ' + e.message, true);
@@ -377,21 +439,80 @@
     return wrap;
   }
 
-  function summariseApple() {
-    var c = appleCounts();
-    if (!c.total) { note('appleNote', 'Resolve some tracks first.'); return; }
-    note('appleNote',
-      c.picked + ' of ' + c.total + ' matched to Apple' +
-      (c.missing ? ' · ' + c.missing + ' will be Spotify-only' : ' · the whole tape plays on Apple'),
-      c.missing > 0);
+  /* ---------- cover art ----------
+     The album art is already on screen in the candidate list, so making the
+     curator find and paste a URL to use one of them was busywork. Click a
+     sleeve to make it the cover. The generated 2x2 mosaic stays for when no
+     single sleeve should speak for the whole tape. */
+  function renderArtPicker() {
+    var box = $('artpick');
+    box.innerHTML = '';
+    var arts = [];
+    var seen = {};
+    state.forEach(function (s) {
+      if (s.chosen === null) return;
+      var c = s.candidates[s.chosen];
+      var url = c && (c.art || c.thumb);
+      if (!url || seen[url]) return;
+      seen[url] = true;
+      arts.push({ url: url, title: c.title, artist: c.artist });
+    });
+
+    if (!arts.length) {
+      box.innerHTML = '<p class="empty">Confirm some songs and their album art appears here to choose from.</p>';
+      return;
+    }
+
+    var current = $('cover').value.trim();
+    var strip = document.createElement('div');
+    strip.style.cssText = 'display:flex;gap:8px;overflow-x:auto;padding:2px 0 6px';
+
+    arts.forEach(function (a) {
+      var b = document.createElement('button');
+      b.className = 'ghost';
+      b.title = a.title + ' — ' + a.artist;
+      b.style.cssText =
+        'flex:0 0 auto;padding:0;width:66px;height:66px;border-radius:6px;overflow:hidden;' +
+        'border:2px solid ' + (current === a.url ? 'var(--amber)' : 'var(--hair)');
+      var img = document.createElement('img');
+      img.src = a.url;
+      img.alt = '';
+      img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block';
+      b.appendChild(img);
+      b.addEventListener('click', function () {
+        $('cover').value = a.url;
+        emit();
+        renderArtPicker();
+      });
+      strip.appendChild(b);
+    });
+
+    box.appendChild(strip);
+
+    var hint = document.createElement('p');
+    hint.className = 'note';
+    hint.style.margin = '4px 0 0';
+    hint.textContent = current
+      ? 'cover set — click another sleeve to change it, or clear the field below'
+      : 'click a sleeve to use it as the cover';
+    box.appendChild(hint);
   }
 
-  function appleCounts() {
+  function summariseSpotify() {
+    var c = spotifyCounts();
+    if (!c.total) { note('appleNote', 'Find some songs first.'); return; }
+    note('appleNote',
+      c.total + ' song(s) on Apple \u00b7 ' + c.picked + ' also on Spotify' +
+      (c.missing ? ' \u00b7 ' + c.missing + ' Apple-only' : ''),
+      false);
+  }
+
+  function spotifyCounts() {
     var picked = 0, missing = 0, total = 0;
     state.forEach(function (s) {
       if (s.chosen === null) return;
       total++;
-      if (s.apple && s.apple.chosen !== null) picked++;
+      if (s.spotify && s.spotify.chosen !== null) picked++;
       else missing++;
     });
     return { picked: picked, missing: missing, total: total };
@@ -405,7 +526,7 @@
 
   function runBatch(mode) {
     var lines = $('in').value.split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
-    if (!lines.length) { $('status').textContent = 'nothing to resolve'; return; }
+    if (!lines.length) { $('status').textContent = 'nothing to look up'; return; }
     $('go').disabled = $('add').disabled = true;
     $('status').textContent = 'resolving ' + lines.length + ' line(s)…';
     resolve(lines)
@@ -416,6 +537,9 @@
         if (mode === 'append') $('in').value = '';
         render();
         summarise();
+        renderArtPicker();
+        // Matching Spotify is not a chore the curator should have to remember.
+        autoMatchSpotify();
       })
       .catch(function (e) { $('status').textContent = 'failed: ' + e.message; })
       .finally(function () { $('go').disabled = $('add').disabled = false; });
@@ -507,7 +631,7 @@
       });
 
       if (item.chosen !== null && item.candidates[item.chosen]) {
-        div.appendChild(buildAppleBlock(i, item));
+        div.appendChild(buildSpotifyBlock(i, item));
         div.appendChild(buildCardEditor(i, item.candidates[item.chosen]));
       }
 
@@ -696,10 +820,11 @@
   function emit() {
     var picked = state
       .filter(function (s) { return s.chosen !== null && s.candidates[s.chosen]; })
-      // apple must be carried through this reduction. It was left out when the
-      // Apple step was added, so apple_id silently never reached the JSON —
-      // matching reported 18 of 18 and the saved entry had none of them.
-      .map(function (s) { return { cand: s.candidates[s.chosen], card: s.card || {}, apple: s.apple }; });
+      // spotify must be carried through this reduction. The Apple version of
+      // this was left out when the second service was added and apple_id
+      // silently never reached the JSON — matching reported 18 of 18 and the
+      // saved entry had none of them. Same trap, other direction.
+      .map(function (s) { return { cand: s.candidates[s.chosen], card: s.card || {}, spotify: s.spotify }; });
 
     if (!picked.length) { $('out').value = ''; return; }
 
@@ -720,14 +845,15 @@
       if (p.card.back_text && p.card.back_text.trim()) card.back_text = p.card.back_text.trim();
       if (p.card.back_image_url) card.back_image_url = p.card.back_image_url;
 
-      // apple_id is optional per PRD §7 — a track may carry one platform only.
-      // The player picks whichever matches the listener's service.
-      var ap = p.apple && p.apple.chosen !== null ? p.apple.candidates[p.apple.chosen] : null;
+      // Per PRD §7 a track may carry one platform only. Apple leads because it
+      // has no listener cap; spotify_uri is omitted when nothing matched, and
+      // the player falls back to whichever id fits the listener's service.
+      var sp = p.spotify && p.spotify.chosen !== null ? p.spotify.candidates[p.spotify.chosen] : null;
 
       return {
         id: id,
-        spotify_uri: c.uri,
-        apple_id: ap ? ap.apple_id : undefined,
+        apple_id: c.apple_id,
+        spotify_uri: sp ? sp.uri : undefined,
         title: c.title,
         artist: c.artist,
         // Stored so the player can show total runtime without looking up every
@@ -754,6 +880,8 @@
     if (existingEntry.date) out.date = existingEntry.date;
     var cover = $('cover').value.trim();
     if (cover) out.cover_image_url = cover;
+    var apurl = $('applePlaylistUrl').value.trim();
+    if (apurl) out.apple_playlist_url = apurl;
     var purl = $('playlistUrl').value.trim();
     if (purl) out.spotify_playlist_url = purl;
     out.poems = existingEntry.poems || [];
@@ -948,8 +1076,11 @@
   // on load so an edited entry shows the same detail as a freshly resolved
   // one. The resolver already treats a Spotify URI as an exact lookup.
   function hydrateLoaded() {
+    // Saved entries carry only ids, titles and artists. Re-resolve to pull
+    // artwork and album back down so the card previews and the cover picker
+    // have something to show.
     var uris = state.map(function (s) {
-      return s.candidates[0] && s.candidates[0].uri;
+      return s.candidates[0] && s.candidates[0].apple_id;
     });
     if (!uris.filter(Boolean).length) { note('saveNote', 'loaded ' + state.length + ' track(s)'); return; }
 
@@ -972,7 +1103,9 @@
           state[i].chosen = 0;
         });
         render();
-        note('saveNote', 'loaded ' + state.length + ' track(s) — edit and save to update');
+        renderArtPicker();
+        summariseSpotify();
+        note('saveNote', 'loaded ' + state.length + ' track(s) \u2014 edit and save to update');
       })
       .catch(function (e) {
         note('saveNote', 'loaded, but artwork lookup failed: ' + e.message, true);
@@ -1008,32 +1141,34 @@
         if (existingEntry.title) $('title').value = existingEntry.title;
         if (existingEntry.cover_image_url) $('cover').value = existingEntry.cover_image_url;
         if (existingEntry.spotify_playlist_url) $('playlistUrl').value = existingEntry.spotify_playlist_url;
+        if (existingEntry.apple_playlist_url) $('applePlaylistUrl').value = existingEntry.apple_playlist_url;
 
         // Rebuild the pick list from the saved tracks so they can be edited.
         state = (existingEntry.tracks || []).map(function (t) {
           var cand = {
-            uri: t.spotify_uri, id: (t.spotify_uri || '').split(':').pop(),
+            apple_id: t.apple_id || '',
             title: t.title || '', artist: t.artist || '', album: '',
-            duration_ms: 0, art: null, score: 10
+            duration_ms: t.duration_ms || 0, art: null, thumb: null, score: 10
           };
-          // Carry a saved apple_id straight through as an already-chosen
-          // candidate. Re-matching on every load would burn Apple lookups and,
-          // worse, could quietly replace a match the curator picked by hand.
-          var apple = t.apple_id ? {
+          // Carry a saved spotify_uri straight through as an already-chosen
+          // match. Re-matching on every load would burn lookups and, worse,
+          // could quietly replace a match the curator picked by hand.
+          var spotify = t.spotify_uri ? {
             confident: true, direct: true, chosen: 0,
             candidates: [{
-              apple_id: t.apple_id, title: t.title || '', artist: t.artist || '',
+              uri: t.spotify_uri, id: (t.spotify_uri || '').split(':').pop(),
+              title: t.title || '', artist: t.artist || '',
               album: '', duration_ms: t.duration_ms || 0, art: null, thumb: null,
               explicit: false, year: '', score: 10
             }]
           } : null;
 
           return {
-            line: (t.title || '') + ' — ' + (t.artist || ''),
+            line: (t.title || '') + ' \u2014 ' + (t.artist || ''),
             parsed: { title: t.title || '', artist: t.artist || '' },
             confident: true, direct: true,
             candidates: [cand], chosen: 0,
-            apple: apple,
+            spotify: spotify,
             card: Object.assign({}, t.card || {})
           };
         });
@@ -1053,30 +1188,60 @@
     doLoad(slug);
   });
 
-  $('apple').addEventListener('click', function () {
+  $('spotify').addEventListener('click', function () {
     var btn = this;
     var indices = [];
     state.forEach(function (s, i) { if (s.chosen !== null) indices.push(i); });
-    if (!indices.length) { note('appleNote', 'resolve and pick some tracks first', true); return; }
-
+    if (!indices.length) { note('appleNote', 'find some songs first', true); return; }
+    indices.forEach(function (i) { state[i].spotify = null; });
     btn.disabled = true;
-    btn.textContent = 'Matching…';
-    // The endpoint caps at 40 per request, same as the Spotify path.
-    var chunks = [];
-    for (var i = 0; i < indices.length; i += 40) chunks.push(indices.slice(i, i + 40));
+    btn.textContent = 'Matching\u2026';
+    render();
+    autoMatchSpotify().then(function () {
+      btn.disabled = false;
+      btn.textContent = 'Re-check Spotify matches';
+    });
+  });
 
-    chunks.reduce(function (p, c) {
-      return p.then(function () { return matchApple(c); });
-    }, Promise.resolve())
-      .then(function () {
-        render(); emit(); summariseApple();
+  $('import').addEventListener('click', function () {
+    var btn = this;
+    var url = $('plUrl').value.trim();
+    if (!url) { note('importNote', 'paste an Apple Music playlist link first', true); return; }
+    if (/open\.spotify\.com|spotify:/.test(url)) {
+      note('importNote',
+        'Spotify will not hand this app a playlist\u2019s contents \u2014 it returns 403 on ' +
+        'public playlists, even for their owner. Paste the songs as text below instead.', true);
+      return;
+    }
+    btn.disabled = true;
+    btn.textContent = 'Importing\u2026';
+    note('importNote', 'reading the playlist\u2026');
+    importPlaylist(url)
+      .then(function (d) {
+        // Exact ids straight from Apple, so every one is already confirmed.
+        var items = d.tracks.map(function (c) {
+          return {
+            line: c.title + ' \u2014 ' + c.artist,
+            parsed: { title: c.title, artist: c.artist },
+            confident: true, direct: true,
+            candidates: [Object.assign({ score: 10 }, c)], chosen: 0,
+            spotify: null, card: {}
+          };
+        });
+        state = state.concat(items);
+        if (!$('title').value.trim() && d.playlist.name) $('title').value = d.playlist.name;
+        if (!$('applePlaylistUrl').value.trim() && d.playlist.url) $('applePlaylistUrl').value = d.playlist.url;
+        $('plUrl').value = '';
+        render();
+        summarise();
+        renderArtPicker();
+        note('importNote', 'imported ' + items.length + ' song(s) from \u201c' + d.playlist.name + '\u201d');
+        autoMatchSpotify();
       })
-      .catch(function (e) {
-        note('appleNote', 'Apple matching failed: ' + e.message, true);
-      })
+      .catch(function (e) { note('importNote', 'import failed: ' + e.message, true); })
       .then(function () {
         btn.disabled = false;
-        btn.textContent = 'Match all tracks';
+        btn.textContent = 'Import';
       });
   });
 
