@@ -4,9 +4,14 @@
   /* ============================================================
      MOTIF — blind playlist player (PRD §5)
 
-     The playback rules below are not obvious and were each established by
-     the 2026-09-08/09 spike. Changing any of them breaks locked-screen
-     listening, which is the product:
+     Two services, two sets of rules. The SPOTIFY rules below were each
+     established by the 2026-09-08/09 spike; the Apple ones live with the
+     MusicKit adapter further down and are deliberately different, because
+     Spotify's constraints came from having no client-side queue and Apple
+     hands us a real one.
+
+     Changing any of these breaks locked-screen listening, which is the
+     product. Spotify:
 
        1. Seed the Spotify context with exactly ONE track.
        2. Keep exactly one track queued ahead via POST /me/player/queue,
@@ -38,10 +43,13 @@
   /* ── platforms ──
      Apple Music is the intended front door: it has no development-mode cap, so
      anyone with a subscription can listen. Spotify stays as a side door for the
-     five people Niles can allowlist. Flip APPLE_ENABLED when the MusicKit
-     adapter exists — until then showing an Apple button that cannot play would
-     be worse than not showing one. */
-  var APPLE_ENABLED = false;
+     five people Niles can allowlist.
+
+     Enabled 2026-09-13, once the MusicKit adapter existed and the spike had
+     cleared all five PRD §9.2 checks on a locked iPhone. An entry still falls
+     back to Spotify-only if its tracks carry no apple_id, so switching this on
+     cannot strand an entry that predates Apple. */
+  var APPLE_ENABLED = true;
 
   function appleReady() {
     return APPLE_ENABLED && tracks.some(function (t) { return t.apple_id; });
@@ -57,6 +65,7 @@
   var focused = null;       // position within revealed[]
   var flipped = false;
   var dragDx = 0;
+  var service = 'spotify';   // 'spotify' | 'apple' — set by the splash choice
   var player = null;
   var deviceId = null;
   var paused = false;
@@ -146,7 +155,11 @@
 
     playBtn = el('button', 'play-btn');
     playBtn.textContent = appleReady() ? 'Play with Apple Music' : 'Play';
-    playBtn.addEventListener('click', onPlayTap);
+    // Route through startWith rather than straight to the Spotify handler —
+    // the primary button IS Apple once the front door is open.
+    playBtn.addEventListener('click', function () {
+      startWith(appleReady() ? 'apple' : 'spotify');
+    });
     wrap.appendChild(playBtn);
 
     // Side door. Spotify only works for listeners Niles has added by hand, so
@@ -185,6 +198,16 @@
   // needs no gesture; only starting audio does. Without this the first tap is
   // spent loading the SDK and appears to do nothing.
   function prepare() {
+    // Warm whichever front door this entry actually opens. Configuring
+    // MusicKit needs no gesture and takes a moment; doing it now means the
+    // first tap spends itself on playback rather than on setup.
+    if (appleReady()) {
+      ensureMusic().catch(function (e) { trace('apple warm failed: ' + (e && e.message)); });
+      // Deliberately NOT returning. The Spotify side door needs its SDK warm
+      // too, or the first tap on "Use Spotify instead" is spent loading it and
+      // appears to do nothing — the exact failure the note below describes.
+      // A listener who never touches the side door pays one idle SDK load.
+    }
     ensureAuth().then(function (ok) {
       if (!ok) return; // first tap sends them to Spotify instead
       // Warm the SDK quietly. The button stays live the whole time — tapping
@@ -208,10 +231,13 @@
      AUTH + START
      ============================================================ */
 
-  // Explicit platform choice from the side door. Only Spotify exists today;
-  // when the MusicKit adapter lands this routes to whichever was chosen.
-  function startWith(service) {
-    if (service === 'spotify') onPlayTap();
+  // Explicit platform choice from the splash. Apple is the front door and
+  // needs no allowlist; Spotify is the side door for the five people Niles
+  // can add by hand.
+  function startWith(which) {
+    if (which === 'apple') { onApplePlayTap(); return; }
+    service = 'spotify';
+    onPlayTap();
   }
 
   function onPlayTap() {
@@ -452,6 +478,186 @@
     });
   }
 
+  /* ============================================================
+     APPLE MUSIC — MusicKit adapter
+
+     Proven by the 2026-09-13 spike, and deliberately NOT a port of the Spotify
+     rules above. Those exist because Spotify gave us no client-side queue.
+     MusicKit gives the page a real one, so:
+
+       · Rule 2 (never seed more than one URI) has no counterpart. Apple does
+         not reorder appended tracks ahead of the context.
+       · Rule 4 (detect the seed context replaying) is obsolete. Apple reaches
+         playbackState "completed" on its own.
+
+     What DOES carry over is rule 3, because it is a platform rule and not a
+     Spotify one: iOS will not start a new media source without a user
+     activation. Automatic transitions must come from the queue. Verified with
+     the phone locked: four consecutive transitions and three appends, all
+     while hidden.
+
+     autoplay:false is load-bearing. Left on, MusicKit appends a station of
+     similar songs when the list runs out, which both breaks the blind and
+     means the tape never ends.
+     ============================================================ */
+
+  var music = null;
+  var appleQueuedUpTo = -1;
+
+  function loadMusicKit() {
+    if (window.MusicKit) return Promise.resolve();
+    return new Promise(function (resolve, reject) {
+      // The library dispatches musickitloaded as it parses, so the listener
+      // has to be attached before the script is injected.
+      document.addEventListener('musickitloaded', function () { resolve(); });
+      var s = document.createElement('script');
+      s.src = 'https://js-cdn.music.apple.com/musickit/v3/musickit.js';
+      s.async = true;
+      s.onload = function () { if (window.MusicKit) resolve(); };
+      s.onerror = function () { reject(new Error('sdk_load')); };
+      document.head.appendChild(s);
+    });
+  }
+
+  function ensureMusic() {
+    if (music) return Promise.resolve(music);
+    return loadMusicKit()
+      .then(function () {
+        return fetch('/api/motif-apple-token', { credentials: 'same-origin' })
+          .then(function (r) {
+            if (!r.ok) throw new Error('apple_token');
+            return r.json();
+          });
+      })
+      .then(function (d) {
+        trace('apple developer token ok');
+        return window.MusicKit.configure({
+          developerToken: d.token,
+          app: { name: 'Motif', build: '1.0.0' }
+        });
+      })
+      .then(function () {
+        music = window.MusicKit.getInstance();
+        wireApple();
+        trace('musickit configured');
+        return music;
+      });
+  }
+
+  function wireApple() {
+    var E = window.MusicKit.Events;
+
+    music.addEventListener(E.nowPlayingItemDidChange, function () {
+      var item = music.nowPlayingItem;
+      if (!item) return;
+      var now = normApple(item);
+      if (now.key === mediaFor) return;
+      mediaFor = now.key;
+
+      var known = indexOfAppleId(now.key);
+      trace('apple now playing [' + known + '] ' + now.title);
+      if (known > -1) {
+        idx = known;
+        reveal(known, now);
+        appleAppendNext();
+      }
+      setMediaSession(now);
+      renderNowPlaying(now);
+      updateTransport();
+    });
+
+    music.addEventListener(E.playbackStateDidChange, function (e) {
+      var states = window.MusicKit.PlaybackStates || {};
+      paused = e && (e.state === states.paused || e.state === states.stopped);
+      updateTransport();
+      // Apple tells us the queue drained. No inference needed.
+      if (e && e.state === states.completed && !finished) {
+        trace('apple queue completed');
+        finish();
+      }
+    });
+
+    music.addEventListener(E.playbackTimeDidChange, function () {
+      updateProgress(music.currentPlaybackTime || 0, music.currentPlaybackDuration || 0);
+    });
+
+    music.addEventListener(E.mediaPlaybackError, function (e) {
+      trace('apple playback error: ' + JSON.stringify((e && e.error) || e).slice(0, 160));
+    });
+  }
+
+  function indexOfAppleId(id) {
+    for (var i = 0; i < tracks.length; i++) {
+      if (String(tracks[i].apple_id) === String(id)) return i;
+    }
+    return -1;
+  }
+
+  function appleSeedAt(i) {
+    idx = i;
+    appleQueuedUpTo = i;
+    finished = false;
+    mediaFor = null;
+    return music.setQueue({
+      songs: [String(tracks[i].apple_id)],
+      startPlaying: true,
+      autoplay: false
+    }).then(function () {
+      paused = false;
+      return appleAppendNext();
+    });
+  }
+
+  // One song ahead, appended as each starts. Confirmed working while hidden,
+  // which is what makes the blind hold at depth two rather than needing the
+  // whole list handed over up front.
+  function appleAppendNext() {
+    var n = appleQueuedUpTo + 1;
+    if (!music || n >= tracks.length) return Promise.resolve(false);
+    var id = tracks[n].apple_id;
+    if (!id) return Promise.resolve(false);
+    return music.playLater({ songs: [String(id)] })
+      .then(function () { appleQueuedUpTo = n; return true; })
+      .catch(function (e) { trace('playLater failed: ' + (e && e.message)); return false; });
+  }
+
+  function onApplePlayTap() {
+    if (starting) return;
+    starting = true;
+    service = 'apple';
+    playBtn.disabled = true;
+    playBtn.textContent = 'Starting';
+    say('');
+
+    ensureMusic()
+      .then(function () {
+        // authorize() opens a popup rather than redirecting away, so the page
+        // survives and the activation with it. The spike confirmed one tap is
+        // enough — unlike Spotify, whose redirect destroys the gesture.
+        if (music.isAuthorized) return true;
+        return music.authorize().then(function () { return true; });
+      })
+      .then(function () {
+        var modes = window.MusicKit.PlaybackMode || {};
+        if (music.playbackMode === modes.PREVIEW_ONLY) {
+          throw new Error('apple_subscription_required');
+        }
+        idx = 0;
+        return appleSeedAt(0);
+      })
+      .then(function () {
+        renderPlayer();
+        requestWakeLock();
+      })
+      .catch(function (e) {
+        starting = false;
+        playBtn.disabled = false;
+        playBtn.textContent = 'Play';
+        trace('apple start failed: ' + (e && e.message));
+        blockedNote(e);
+      });
+  }
+
   function loadSdk() {
     if (window.Spotify) return Promise.resolve();
     return new Promise(function (resolve, reject) {
@@ -540,13 +746,14 @@
         return;
       }
 
+      var now = normSpotify(cur);
       if (known > -1) {
         idx = known;
-        reveal(known, cur);
+        reveal(known, now);
         appendNext();
       }
-      setMediaSession(cur);
-      renderNowPlaying(cur);
+      setMediaSession(now);
+      renderNowPlaying(now);
     }
 
     if (state.paused && state.position === 0 && idx === tracks.length - 1 &&
@@ -556,10 +763,54 @@
   }
 
   /* ============================================================
+     WHAT IS PLAYING — one shape, either service
+
+     The deck, the card, the now-playing line and the lock screen all used to
+     take a raw Spotify track object and dig through .artists[].name and
+     .album.images[0].url. Normalising here is what lets a second service exist
+     without a second copy of the deck.
+     ============================================================ */
+
+  function normSpotify(cur) {
+    var imgs = (cur.album && cur.album.images) || [];
+    return {
+      key: cur.uri,
+      title: cur.name || '',
+      artist: (cur.artists || []).map(function (a) { return a.name; }).join(', '),
+      artUrl: imgs.length ? imgs[0].url : null,
+      artwork: imgs.map(function (i) {
+        return { src: i.url, sizes: i.width + 'x' + i.height, type: 'image/jpeg' };
+      })
+    };
+  }
+
+  function normApple(item) {
+    // MusicKit exposes artwork as a template with {w}/{h} placeholders.
+    var art = null;
+    try { art = item.artwork && item.artwork.url; } catch (_) { art = null; }
+    function at(px) { return art ? art.replace('{w}', px).replace('{h}', px) : null; }
+    var title = '';
+    var artist = '';
+    try { title = item.title || (item.attributes && item.attributes.name) || ''; } catch (_) {}
+    try { artist = item.artistName || (item.attributes && item.attributes.artistName) || ''; } catch (_) {}
+    return {
+      key: String(item.id || ''),
+      title: title,
+      artist: artist,
+      artUrl: at(1000),
+      artwork: art
+        ? [256, 512, 1000].map(function (px) {
+            return { src: at(px), sizes: px + 'x' + px, type: 'image/jpeg' };
+          })
+        : []
+    };
+  }
+
+  /* ============================================================
      DECK
      ============================================================ */
 
-  function reveal(trackIndex, spotifyTrack) {
+  function reveal(trackIndex, now) {
     if (revealed.indexOf(trackIndex) !== -1) {
       // Already on the deck — bring it forward rather than stacking a second
       // copy, which is what happened after going back and forward again.
@@ -568,7 +819,7 @@
     }
     dropCard(trackIndex); // clear any orphan from a previous pass
     revealed.push(trackIndex);
-    var card = buildCard(trackIndex, spotifyTrack, revealed.length - 1);
+    var card = buildCard(trackIndex, now, revealed.length - 1);
     cardEls[trackIndex] = card;
     if (deckZone) {
       deckZone.querySelector('.deck').appendChild(card);
@@ -607,7 +858,7 @@
     layout();
   }
 
-  function buildCard(trackIndex, spotifyTrack, pos) {
+  function buildCard(trackIndex, now, pos) {
     var t = tracks[trackIndex];
     var c = t.card || {};
 
@@ -617,9 +868,7 @@
 
     /* front — curator image if given, else the album art (PRD §6) */
     var front = el('div', 'face face-front');
-    var frontUrl = c.front_image_url ||
-      (spotifyTrack && spotifyTrack.album && spotifyTrack.album.images &&
-       spotifyTrack.album.images.length ? spotifyTrack.album.images[0].url : null);
+    var frontUrl = c.front_image_url || (now && now.artUrl) || null;
 
     if (frontUrl) {
       var art = el('img', 'card-art');
@@ -867,22 +1116,43 @@
     progressEl.querySelector('.pr-total').textContent = String(tracks.length);
   }
 
-  function renderNowPlaying(cur) {
+  function renderNowPlaying(now) {
     if (!npEl) return;
     npEl.innerHTML = '';
     var l = el('div', 'np-label');
     l.textContent = 'now playing';
     var t = el('div', 'np-title');
-    t.textContent = cur.name;
+    t.textContent = now.title;
     var a = el('div', 'np-artist');
-    a.textContent = cur.artists.map(function (x) { return x.name; }).join(', ');
+    a.textContent = now.artist;
     npEl.appendChild(l); npEl.appendChild(t); npEl.appendChild(a);
   }
 
-  // Ask the SDK what is actually happening rather than trusting the cached
-  // flag. They can disagree — a stale "playing" made the first press pause an
-  // already-paused player, so it took two presses to start anything.
+  /* ---------- transport, routed to whichever service is playing ----------
+     Every one of these asks the player what is actually happening rather than
+     trusting the cached flag. They can disagree: a stale "playing" made the
+     first press pause an already-paused player, so it took two presses to
+     start anything. That bug is service-agnostic and so is the fix. */
+  function svcResume() {
+    if (service === 'apple') { if (music) music.play(); return; }
+    if (player) player.resume();
+  }
+
+  function svcPause() {
+    if (service === 'apple') { if (music) music.pause(); return; }
+    if (player) player.pause();
+  }
+
   function togglePlay() {
+    if (service === 'apple') {
+      if (!music) return;
+      var states = (window.MusicKit && MusicKit.PlaybackStates) || {};
+      var playing = music.playbackState === states.playing;
+      paused = playing;           // about to become paused
+      updateTransport();
+      if (playing) music.pause(); else music.play();
+      return;
+    }
     if (!player) return;
     player.getCurrentState().then(function (s) {
       if (!s) { player.resume(); return; }
@@ -899,16 +1169,26 @@
   // play call needs. Automatic transitions still ride the queue — that is the
   // path that has to survive a locked screen, and it is untouched.
   function goNext() {
-    if (!player || finished) return;
+    if (finished) return;
+    if (service !== 'apple' && !player) return;
     if (idx >= tracks.length - 1) { finish(); return; }
-    seedAt(idx + 1).catch(function (e) { say(friendly(e), true); });
+    seedAny(idx + 1).catch(function (e) { say(friendly(e), true); });
   }
 
   function goBack() {
     if (idx === 0 || finished) return;
     var target = idx - 1;
     trimCardsAfter(target);
-    seedAt(target).catch(function (e) { say(friendly(e), true); });
+    seedAny(target).catch(function (e) { say(friendly(e), true); });
+  }
+
+  // A user-initiated jump re-seeds on both services. Neither lets us clear a
+  // queue we have already appended to, so without this a back leaves a stale
+  // entry and the next skip jumps a track. A tap carries the user activation
+  // a fresh play call needs. AUTOMATIC transitions still ride the queue on
+  // both — that is the path that has to survive a locked screen.
+  function seedAny(i) {
+    return service === 'apple' ? appleSeedAt(i) : seedAt(i);
   }
 
   /* ============================================================
@@ -918,7 +1198,7 @@
   function finish() {
     if (finished) return;
     finished = true;
-    if (player) player.pause();
+    svcPause();
     releaseWakeLock();
     if (npEl) npEl.innerHTML = '';
     if (transportEl) transportEl.remove();
@@ -931,7 +1211,9 @@
     h.textContent = 'that was ' + (entry.title || 'the mixtape');
     done.appendChild(h);
 
-    var url = entry.spotify_playlist_url;
+    var url = service === 'apple'
+      ? (entry.apple_playlist_url || entry.spotify_playlist_url)
+      : (entry.spotify_playlist_url || entry.apple_playlist_url);
     if (url) {
       var a = document.createElement('a');
       a.className = 'add-link';
@@ -964,20 +1246,18 @@
      PLATFORM BITS
      ============================================================ */
 
-  function setMediaSession(cur) {
+  function setMediaSession(now) {
     if (!('mediaSession' in navigator)) return;
     try {
       navigator.mediaSession.metadata = new window.MediaMetadata({
-        title: cur.name,
-        artist: cur.artists.map(function (a) { return a.name; }).join(', '),
+        title: now.title,
+        artist: now.artist,
         album: entry.title || 'Motif',
-        artwork: ((cur.album && cur.album.images) || []).map(function (i) {
-          return { src: i.url, sizes: i.width + 'x' + i.height, type: 'image/jpeg' };
-        })
+        artwork: now.artwork || []
       });
       navigator.mediaSession.playbackState = paused ? 'paused' : 'playing';
-      navigator.mediaSession.setActionHandler('play', function () { player && player.resume(); });
-      navigator.mediaSession.setActionHandler('pause', function () { player && player.pause(); });
+      navigator.mediaSession.setActionHandler('play', function () { svcResume(); });
+      navigator.mediaSession.setActionHandler('pause', function () { svcPause(); });
       navigator.mediaSession.setActionHandler('nexttrack', goNext);
       navigator.mediaSession.setActionHandler('previoustrack', goBack);
     } catch (_) {}
@@ -1019,6 +1299,13 @@
   }
 
   function friendly(e) {
+    if (e && e.message === 'apple_subscription_required') {
+      return 'This Apple ID does not have an Apple Music subscription, so Apple only ' +
+             'allows 30-second previews. A mixtape needs the full songs.';
+    }
+    if (e && e.message === 'apple_token') {
+      return 'Could not start Apple Music. Try again in a moment.';
+    }
     var k = (e && e.message) || '';
     if (k === 'premium_required') {
       return 'This needs a Spotify Premium account. The music plays through your own ' +
