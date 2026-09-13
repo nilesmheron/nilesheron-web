@@ -32,6 +32,25 @@ function gh(path, options = {}) {
 
 const MANIFEST = `${DIR}/mixtapes.json`;
 
+// Read one entry through the GitHub API rather than the download_url the
+// contents listing hands back.
+//
+// download_url points at raw.githubusercontent.com, which is CDN-cached and
+// does NOT reflect a commit made moments ago. rebuildManifest() runs about a
+// second after the entry is written, so it was reading the PREVIOUS version of
+// the file it had just changed: saving a new cover updated the entry and left
+// the public index showing the old one. Observed 2026-09-13, entry commit
+// 977ffc3 and index rebuild 9605ae7 one second apart.
+//
+// The API honours ?ref and is read-your-writes consistent, which is the whole
+// reason to pay for an extra request per file here.
+async function readEntry(path) {
+  const r = await gh(`contents/${path}?ref=${BRANCH}`);
+  if (!r.ok) throw new Error('read failed ' + r.status);
+  const meta = await r.json();
+  return JSON.parse(Buffer.from(meta.content, 'base64').toString('utf8'));
+}
+
 // Read every entry once and return the mixtape ones (those with tracks).
 async function readAllEntries() {
   const dir = await gh(`contents/${DIR}?ref=${BRANCH}`);
@@ -42,8 +61,7 @@ async function readAllEntries() {
   );
   const out = await Promise.all(files.map(async (f) => {
     try {
-      const raw = await fetch(f.download_url);
-      const e = await raw.json();
+      const e = await readEntry(`${DIR}/${f.name}`);
       return { slug: f.name.replace(/\.json$/, ''), entry: e };
     } catch (_) {
       return null;
@@ -56,9 +74,22 @@ async function readAllEntries() {
 // /motif/mixtape keeps working even if the GitHub token expires. Regenerated
 // after every save and delete; a failure here is logged, not fatal, because
 // the entry itself is already committed.
-async function rebuildManifest() {
+// `fresh` is the entry this request just wrote, and `dropSlug` the one it just
+// deleted. Both are applied over whatever the listing returns, so the file that
+// actually changed is authoritative from memory and cannot be wrong however
+// GitHub decides to cache today.
+async function rebuildManifest(fresh, dropSlug) {
   const all = await readAllEntries();
-  const mixtapes = all
+
+  if (fresh && fresh.slug) {
+    const at = all.findIndex((x) => x.slug === fresh.slug);
+    if (at === -1) all.push({ slug: fresh.slug, entry: fresh.entry });
+    else all[at] = { slug: fresh.slug, entry: fresh.entry };
+  }
+
+  const kept = dropSlug ? all.filter((x) => x.slug !== dropSlug) : all;
+
+  const mixtapes = kept
     .filter(({ entry }) => Array.isArray(entry.tracks) && entry.tracks.length)
     .map(({ slug, entry }) => ({
       slug,
@@ -128,7 +159,7 @@ export default async function handler(req, res) {
   }
 
   // List every entry so the builder can offer them for editing. One directory
-  // listing plus a parallel raw fetch per file — GitHub rather than the
+  // listing plus a parallel API read per file — GitHub rather than the
   // deployed /motif/data/*.json, so a just-saved entry appears immediately
   // instead of after the next deploy.
   if (req.method === 'GET' && req.query.action === 'list') {
@@ -144,9 +175,9 @@ export default async function handler(req, res) {
     const entries = await Promise.all(files.map(async (f) => {
       const slug = f.name.replace(/\.json$/, '');
       try {
-        const raw = await fetch(f.download_url);
-        if (!raw.ok) throw new Error(raw.status);
-        const e = await raw.json();
+        // Same staleness trap as the manifest — the picker showed the old
+        // cover for a few minutes after a save.
+        const e = await readEntry(`${DIR}/${f.name}`);
         return {
           slug,
           title: e.title || slug,
@@ -203,7 +234,7 @@ export default async function handler(req, res) {
       return res.status(del.status).json({ error: d.message || 'github delete failed' });
     }
 
-    const indexed = await rebuildManifest().catch(() => false);
+    const indexed = await rebuildManifest(null, slug).catch(() => false);
 
     // The file is gone from main but stays in history — recoverable with
     // `git show <commit>^:motif/data/<slug>.json` if it was a mistake.
@@ -252,7 +283,7 @@ export default async function handler(req, res) {
     });
   }
 
-  const indexed = await rebuildManifest().catch(() => false);
+  const indexed = await rebuildManifest({ slug, entry }).catch(() => false);
 
   return res.status(200).json({
     ok: true,
