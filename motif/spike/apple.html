@@ -195,6 +195,14 @@
   var lsBefore = [];
   var posTicker = null;
 
+  /* Audio actually heard while hidden, accumulated from the heartbeat rather
+     than differenced across the whole absence. Differencing breaks the moment
+     a track changes, because position resets to zero — which is precisely the
+     run we care about, so the naive measure is silent exactly when check 2 and
+     check 5 need to be read together. */
+  var hiddenAudio = 0;
+  var lastHb = null;
+
   var t0 = Date.now();
 
   /* ---------- tiny DOM helpers, lifted from the Spotify spike ---------- */
@@ -675,6 +683,8 @@
         queueLen: safe(function () { return music.queue.items.length; }, 0),
         mode: mode
       };
+      hiddenAudio = 0;
+      lastHb = null;
       log('→ backgrounded at ' + secs(bg.time) + ' of "' + bg.name + '"');
       flush('hiding', true);
       return;
@@ -696,6 +706,17 @@
   function measureBackground(snap) {
     var awayMs = Date.now() - snap.at;
     var away = awayMs / 1000;
+
+    /* Apple's authorization popup takes over the page and fires
+       visibilitychange exactly like a real minimize. Measuring audio advance
+       across it reports CHECK 2 FAIL against a window where nothing was
+       playing. Observed 2026-09-13, and the false verdict was convincing
+       enough to be worth guarding rather than remembering. */
+    if (snap.idx < 0) {
+      log('ignored background window — nothing was playing (auth popup, or before first play)', 'warn');
+      hiddenAudio = 0; lastHb = null;
+      return;
+    }
 
     /* currentPlaybackTime reads the media element live rather than a cached JS
        variable, so it is honest even if our timers were throttled while hidden.
@@ -722,11 +743,18 @@
       return;
     }
 
+    /* Report check 2 alongside check 5 rather than instead of it. The run that
+       crosses a boundary is the run where both answers matter, and the earlier
+       version printed only one of them. */
+    var pct2 = away > 0 ? Math.round((hiddenAudio / away) * 100) : 0;
     verdict('CHECK 5 PASS — ' + moved + ' transition' + (moved === 1 ? '' : 's') +
             ' while hidden, mode "' + snap.mode + '".\n' +
             'Track ' + snap.idx + ' → ' + nowIdx + ' across ' + secs(away) + ' away.\n' +
             'If the phone was LOCKED for this, that is the deciding result.\n' +
-            'Queue depth at background: ' + snap.queueLen + '.');
+            'Queue depth at background: ' + snap.queueLen + '.\n' +
+            'CHECK 2 ' + (pct2 >= 90 ? 'PASS' : 'PARTIAL') + ' over the same window — ' +
+            secs(hiddenAudio) + ' of audio heard across ' + secs(away) + ' (' + pct2 + '%), ' +
+            'measured from the heartbeat so the track change does not hide it.');
   }
 
   /* ---------- check 3 ---------- */
@@ -886,7 +914,16 @@
     if (hidden && music) {
       var cur = safe(function () { return music.currentPlaybackTime; }, 0);
       var i = safe(function () { return music.nowPlayingItemIndex; }, -1);
-      log('heartbeat (hidden): track ' + i + ' at ' + secs(cur));
+      if (lastHb !== null) {
+        var d = cur - lastHb;
+        /* A sane forward step is audio we heard. A negative step means the
+           track rolled over, so what we heard is however far into the new one
+           we now are. Anything wildly large is a seek, not listening. */
+        if (d > 0 && d < 60) hiddenAudio += d;
+        else if (d < 0 && cur < 60) hiddenAudio += cur;
+      }
+      lastHb = cur;
+      log('heartbeat (hidden): track ' + i + ' at ' + secs(cur) + ' · heard ' + secs(hiddenAudio));
     }
     flush(hidden ? 'hidden-tick' : 'tick', hidden);
   }, 5000);
