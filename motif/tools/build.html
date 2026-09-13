@@ -852,7 +852,7 @@
 
       return {
         id: id,
-        apple_id: c.apple_id,
+        apple_id: c.apple_id || undefined,
         spotify_uri: sp ? sp.uri : undefined,
         title: c.title,
         artist: c.artist,

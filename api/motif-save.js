@@ -93,8 +93,26 @@ function validateEntry(entry, slug) {
   if (!Array.isArray(entry.tracks) || !entry.tracks.length) return 'entry.tracks must be a non-empty array';
   for (const t of entry.tracks) {
     if (!t || typeof t !== 'object') return 'each track must be an object';
-    if (typeof t.spotify_uri !== 'string' || !/^spotify:track:[A-Za-z0-9]{22}$/.test(t.spotify_uri)) {
-      return `track "${t.id || t.title || '?'}" has an invalid spotify_uri`;
+    const name = t.id || t.title || '?';
+
+    // PRD §7: a track may carry one platform only. This used to demand a
+    // spotify_uri on every track, which was right when Spotify was the only
+    // player and wrong the moment Apple became the front door — it would
+    // reject an Apple-only song, and Apple is the side of this with no
+    // listener cap. Require at least one playable id, and validate whichever
+    // are present.
+    const hasApple = typeof t.apple_id === 'string' && /^\d+$/.test(t.apple_id);
+    const hasSpotify = typeof t.spotify_uri === 'string' &&
+      /^spotify:track:[A-Za-z0-9]{22}$/.test(t.spotify_uri);
+
+    if (t.apple_id !== undefined && !hasApple) {
+      return `track "${name}" has an invalid apple_id`;
+    }
+    if (t.spotify_uri !== undefined && !hasSpotify) {
+      return `track "${name}" has an invalid spotify_uri`;
+    }
+    if (!hasApple && !hasSpotify) {
+      return `track "${name}" has no apple_id or spotify_uri — nothing could play it`;
     }
     if (typeof t.id !== 'string' || !t.id) return 'each track needs an id';
   }
