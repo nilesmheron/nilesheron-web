@@ -696,7 +696,10 @@
   function emit() {
     var picked = state
       .filter(function (s) { return s.chosen !== null && s.candidates[s.chosen]; })
-      .map(function (s) { return { cand: s.candidates[s.chosen], card: s.card || {} }; });
+      // apple must be carried through this reduction. It was left out when the
+      // Apple step was added, so apple_id silently never reached the JSON —
+      // matching reported 18 of 18 and the saved entry had none of them.
+      .map(function (s) { return { cand: s.candidates[s.chosen], card: s.card || {}, apple: s.apple }; });
 
     if (!picked.length) { $('out').value = ''; return; }
 
