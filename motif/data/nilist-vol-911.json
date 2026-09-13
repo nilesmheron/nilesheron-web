@@ -2,14 +2,14 @@
   "slug": "nilist-vol-911",
   "no": "T",
   "title": "The Nilist Vol. 911 (Before, Wego, Any, Further)",
-  "cover_image_url": "https://gdellbtfpcmdsfogxqwf.supabase.co/storage/v1/object/public/motif-images/mixtape/nilist-vol-911/mtxs3793-cover.jpg",
+  "cover_image_url": "https://is1-ssl.mzstatic.com/image/thumb/Music/f7/1f/e1/mzi.mlmqsakm.jpg/1000x1000bb.jpg",
   "spotify_playlist_url": "https://open.spotify.com/playlist/3HSccO2XoH8EZagIh0yPv8?si=3ff170b4d4f54011",
   "poems": [],
   "tracks": [
     {
       "id": "avril-14th",
-      "spotify_uri": "spotify:track:1uaGSDFsLdReQgg8p7Obwh",
       "apple_id": "282559791",
+      "spotify_uri": "spotify:track:1uaGSDFsLdReQgg8p7Obwh",
       "title": "Avril 14th",
       "artist": "Aphex Twin",
       "duration_ms": 125520,
@@ -17,8 +17,8 @@
     },
     {
       "id": "high",
-      "spotify_uri": "spotify:track:1k0X1YAP8J9hQ0lC93N71a",
       "apple_id": "1440930420",
+      "spotify_uri": "spotify:track:1k0X1YAP8J9hQ0lC93N71a",
       "title": "High",
       "artist": "Little Dragon",
       "duration_ms": 256973,
@@ -26,17 +26,17 @@
     },
     {
       "id": "vintage",
-      "spotify_uri": "spotify:track:0EQt3hJTjy2dYuxZp3cqo9",
       "apple_id": "1745308661",
+      "spotify_uri": "spotify:track:0EQt3hJTjy2dYuxZp3cqo9",
       "title": "Vintage",
       "artist": "Moses Sumney",
-      "duration_ms": 222826,
+      "duration_ms": 222827,
       "card": {}
     },
     {
       "id": "high-road",
-      "spotify_uri": "spotify:track:70gjgZ9hREB49y3JnKMzAi",
       "apple_id": "1870281315",
+      "spotify_uri": "spotify:track:70gjgZ9hREB49y3JnKMzAi",
       "title": "High Road",
       "artist": "Charlotte Day Wilson",
       "duration_ms": 206143,
@@ -44,35 +44,35 @@
     },
     {
       "id": "day-one",
-      "spotify_uri": "spotify:track:6QJVQSuMC77psM4vgPo31D",
       "apple_id": "1791161543",
+      "spotify_uri": "spotify:track:6QJVQSuMC77psM4vgPo31D",
       "title": "Day One",
       "artist": "Bon Iver, Dijon, Flock of Dimes",
-      "duration_ms": 213005,
+      "duration_ms": 213006,
       "card": {}
     },
     {
       "id": "lovin-gotchu-high",
-      "spotify_uri": "spotify:track:1007RTeL6grubVScN6cehf",
       "apple_id": "1891515854",
+      "spotify_uri": "spotify:track:1007RTeL6grubVScN6cehf",
       "title": "Lovin Gotchu High",
       "artist": "agajon",
-      "duration_ms": 140593,
+      "duration_ms": 140594,
       "card": {}
     },
     {
       "id": "am-i-okay",
-      "spotify_uri": "spotify:track:6QLRg3NlTVItMsH3WBLn6q",
       "apple_id": "1893157047",
+      "spotify_uri": "spotify:track:6QLRg3NlTVItMsH3WBLn6q",
       "title": "AM I OKAY?!",
       "artist": "Durand Bernarr",
-      "duration_ms": 217662,
+      "duration_ms": 217663,
       "card": {}
     },
     {
       "id": "give-it-up",
-      "spotify_uri": "spotify:track:7AoCNArsiCSt4vr2dqAjJx",
       "apple_id": "1535835072",
+      "spotify_uri": "spotify:track:7AoCNArsiCSt4vr2dqAjJx",
       "title": "Give It Up",
       "artist": "CARRTOONS, Joanna Teters",
       "duration_ms": 134742,
@@ -80,26 +80,26 @@
     },
     {
       "id": "know",
-      "spotify_uri": "spotify:track:4xyoLXrUb0cpROQwZe1ggb",
       "apple_id": "1196828439",
+      "spotify_uri": "spotify:track:4xyoLXrUb0cpROQwZe1ggb",
       "title": "Know",
       "artist": "Syd",
-      "duration_ms": 214706,
+      "duration_ms": 214696,
       "card": {}
     },
     {
       "id": "what-am-i-waiting-for",
-      "spotify_uri": "spotify:track:7uWj004PAUVTlu7kqlb8wn",
       "apple_id": "158513484",
+      "spotify_uri": "spotify:track:7uWj004PAUVTlu7kqlb8wn",
       "title": "What Am I Waiting For",
       "artist": "The O'Jays",
-      "duration_ms": 236466,
+      "duration_ms": 236467,
       "card": {}
     },
     {
       "id": "skit-pt-1",
-      "spotify_uri": "spotify:track:3XzpVJGgXxxhLPNACa0J0Z",
       "apple_id": "1863124174",
+      "spotify_uri": "spotify:track:3XzpVJGgXxxhLPNACa0J0Z",
       "title": "Skit, Pt. 1",
       "artist": "French Montana, Max B",
       "duration_ms": 7082,
@@ -107,35 +107,35 @@
     },
     {
       "id": "ski-mask-way",
-      "spotify_uri": "spotify:track:0BRBDRdjgP4Iw8coBDAeeT",
       "apple_id": "1440767958",
+      "spotify_uri": "spotify:track:0BRBDRdjgP4Iw8coBDAeeT",
       "title": "Ski Mask Way",
       "artist": "50 Cent",
-      "duration_ms": 185586,
+      "duration_ms": 185587,
       "card": {}
     },
     {
       "id": "newports",
-      "spotify_uri": "spotify:track:0bJL4vVjfcbgIdXZOoZATd",
       "apple_id": "1584945687",
+      "spotify_uri": "spotify:track:0bJL4vVjfcbgIdXZOoZATd",
       "title": "Newports",
       "artist": "House Shoes",
-      "duration_ms": 185480,
+      "duration_ms": 185481,
       "card": {}
     },
     {
       "id": "devils-pie",
-      "spotify_uri": "spotify:track:5ILWEn8WXPezgpHkGHDk8s",
       "apple_id": "1440841728",
+      "spotify_uri": "spotify:track:5ILWEn8WXPezgpHkGHDk8s",
       "title": "Devil's Pie",
       "artist": "D'Angelo",
-      "duration_ms": 321642,
+      "duration_ms": 321609,
       "card": {}
     },
     {
       "id": "back-and-forth-feat-missy-elliott",
-      "spotify_uri": "spotify:track:6Ia05odJX7EOVCNM6txaKO",
       "apple_id": "1885055415",
+      "spotify_uri": "spotify:track:6Ia05odJX7EOVCNM6txaKO",
       "title": "Back and Forth (feat. Missy Elliott)",
       "artist": "Kehlani, Missy Elliott",
       "duration_ms": 214757,
@@ -143,8 +143,8 @@
     },
     {
       "id": "friends-and-strangers",
-      "spotify_uri": "spotify:track:6vkvSBJIrpdbwwrmBrER8V",
       "apple_id": "1444211059",
+      "spotify_uri": "spotify:track:6vkvSBJIrpdbwwrmBrER8V",
       "title": "Friends And Strangers",
       "artist": "Ronnie Laws",
       "duration_ms": 289013,
@@ -152,20 +152,20 @@
     },
     {
       "id": "deep-fried-frenz",
-      "spotify_uri": "spotify:track:2cSFwTLwLE3xhhQOPXQw3Q",
       "apple_id": "1558162319",
+      "spotify_uri": "spotify:track:2cSFwTLwLE3xhhQOPXQw3Q",
       "title": "Deep Fried Frenz",
       "artist": "MF DOOM",
-      "duration_ms": 299626,
+      "duration_ms": 299627,
       "card": {}
     },
     {
       "id": "wildflower",
-      "spotify_uri": "spotify:track:6k1NlbXRqTu51DiDJ7Mwwf",
       "apple_id": "192830706",
+      "spotify_uri": "spotify:track:6k1NlbXRqTu51DiDJ7Mwwf",
       "title": "Wildflower",
       "artist": "Hank Crawford",
-      "duration_ms": 234306,
+      "duration_ms": 234307,
       "card": {}
     }
   ]
