@@ -108,6 +108,7 @@
   <div class="row"><span class="k">wake lock</span><span class="v" id="s-wake">—</span></div>
   <div class="row"><span class="k">media session</span><span class="v" id="s-media">—</span></div>
   <div class="row"><span class="k">localStorage</span><span class="v" id="s-ls">—</span></div>
+  <div class="row"><span class="k">trace</span><span class="v" id="s-trace">—</span></div>
 </div>
 
 <div class="panel">
@@ -161,7 +162,24 @@
   ];
 
   var TOKEN_URL = '/api/motif-apple-token';
+  var REPORT_URL = '/api/motif-spike-report';
   var MK_CDN = 'https://js-cdn.music.apple.com/musickit/v3/musickit.js';
+
+  /* ---------- server-side trace ----------
+     The run that decides this happens with the phone locked, when nobody is
+     reading the page. A copy-log button asks the tester to reconstruct a fail
+     state afterwards, which makes them the diagnostician instead of the
+     listener. So every line ships as it happens and the log is read from the
+     Vercel runtime log instead.
+
+     Sequence numbers never renumber on retry. A gap in what the server
+     receives is the measurement, not a defect: it says iOS suspended us
+     between those two lines, which is exactly the question checks 2 and 5
+     are trying to separate. */
+  var RUN = 'r' + Date.now().toString(36).slice(-5);
+  var seq = 0;
+  var outbox = [];
+  var shipped = 0, dropped = 0;
 
   /* ---------- state ---------- */
   var music = null;
@@ -194,6 +212,55 @@
     $('log').appendChild(li);
     $('log').scrollTop = $('log').scrollHeight;
     if (window.console && console.log) console.log('[mk] ' + msg);
+
+    outbox.push({
+      seq: ++seq,
+      t: ((Date.now() - t0) / 1000).toFixed(1),
+      vis: document.visibilityState,
+      m: msg
+    });
+    if (outbox.length >= 20) flush('batch', document.visibilityState === 'hidden');
+  }
+
+  /* Never call log() from in here. A failed send that logs its own failure
+     writes a line, which schedules a send, which fails. */
+  function flush(phase, beacon) {
+    if (!outbox.length) return;
+    var batch = outbox.splice(0, 200);
+    var payload = JSON.stringify({ run: RUN, mode: mode, phase: phase, lines: batch });
+
+    function requeue() { outbox = batch.concat(outbox); dropped++; shipRow(); }
+    function done() { shipped += batch.length; shipRow(); }
+
+    /* sendBeacon survives the page being frozen on background, which fetch
+       does not reliably do. keepalive fetch is the fallback for the paths
+       where we want a status code back. */
+    if (beacon && navigator.sendBeacon) {
+      var ok = false;
+      try {
+        ok = navigator.sendBeacon(REPORT_URL, new Blob([payload], { type: 'application/json' }));
+      } catch (e) { ok = false; }
+      if (ok) done(); else requeue();
+      return;
+    }
+
+    fetch(REPORT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: payload,
+      keepalive: true,
+      credentials: 'same-origin'
+    }).then(function (r) {
+      if (!r.ok) throw new Error(String(r.status));
+      done();
+    }).catch(requeue);
+  }
+
+  function shipRow() {
+    set('s-trace', RUN + ' · ' + shipped + ' sent' +
+        (outbox.length ? ' · ' + outbox.length + ' pending' : '') +
+        (dropped ? ' · ' + dropped + ' retried' : ''),
+        outbox.length > 40 ? 'warn' : 'ok');
   }
 
   /* Verdicts go in the page, not the console. A phone that has been locked for
@@ -204,7 +271,10 @@
     d.className = 'verdict';
     d.textContent = text;
     $('verdicts').appendChild(d);
-    log('VERDICT recorded', 'warn');
+    /* Ship the verdict text itself, not just a marker. The whole point is that
+       the answer reaches the server without anyone reading the screen. */
+    text.split('\n').forEach(function (line) { log('VERDICT | ' + line, 'warn'); });
+    flush('verdict', document.visibilityState === 'hidden');
   }
 
   function set(id, text, cls) {
@@ -606,10 +676,15 @@
         mode: mode
       };
       log('→ backgrounded at ' + secs(bg.time) + ' of "' + bg.name + '"');
+      flush('hiding', true);
       return;
     }
 
     log('← foregrounded');
+    /* Anything the locked phone could not send is still buffered with its
+       original sequence numbers, so it arrives now in the right order and the
+       gap in send times is visible. */
+    flush('foreground');
     /* iOS drops the wake lock on hide and refuses to re-take it without a
        gesture. Try anyway so the refusal is recorded rather than assumed. */
     if (wakeLock === null && 'wakeLock' in navigator) requestWakeLock(true);
@@ -799,6 +874,28 @@
     var dur = safe(function () { return music.currentPlaybackDuration; }, 0);
     if (dur) set('s-pos', secs(cur) + ' / ' + secs(dur));
   }, 1000);
+
+  /* Heartbeat. While visible it just drains the outbox. While HIDDEN it does
+     double duty: it records that our timers are still running at all, with the
+     playback position as of that moment, and it tries to ship that line from a
+     locked phone. Whether these arrive live or only on unlock is itself a
+     result — it tells us whether iOS is throttling us, freezing us, or letting
+     us run, which is the mechanism underneath checks 2 and 5. */
+  setInterval(function () {
+    var hidden = document.visibilityState === 'hidden';
+    if (hidden && music) {
+      var cur = safe(function () { return music.currentPlaybackTime; }, 0);
+      var i = safe(function () { return music.nowPlayingItemIndex; }, -1);
+      log('heartbeat (hidden): track ' + i + ' at ' + secs(cur));
+    }
+    flush(hidden ? 'hidden-tick' : 'tick', hidden);
+  }, 5000);
+
+  /* Last chance if Safari discards the page outright. */
+  window.addEventListener('pagehide', function () { flush('pagehide', true); });
+
+  shipRow();
+  log('run ' + RUN + ' — trace shipping to ' + REPORT_URL);
 })();
 </script>
 
