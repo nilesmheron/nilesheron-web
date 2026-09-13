@@ -153,8 +153,17 @@
   /* Stand-ins, same role the Tobe Nwigwe tracks played in the Spotify spike:
      we need real catalog songs, not the Motif playlist, to prove transport.
      Resolved by catalog search so no Apple IDs are hardcoded and stale. */
+  /* Slot 0 is the seed on every run and the target of every seek test, so it
+     gets heard many times more than the rest. Swap it whenever it wears out —
+     one line, nothing else to change.
+
+     These are search terms, not IDs, and limit=1 takes whatever Apple ranks
+     first. 'Fire Tobe Nwigwe' resolved to 'Fye Fye' rather than 'Fire', which
+     is the same loose matching the builder's resolver shows. Harmless here
+     since any real song proves transport, but the resolved title is logged
+     next to the term so a bad match is visible rather than puzzling. */
   var SEARCH_TERMS = [
-    'Fire Tobe Nwigwe',
+    'Umi Says Mos Def',
     'Sweet Thing Rufus Chaka Khan',
     'Reign Tobe Nwigwe',
     'Ultralight Beam Kanye West',
@@ -444,7 +453,8 @@
             id: hit.id,
             name: hit.attributes.name,
             artist: hit.attributes.artistName,
-            durationMs: hit.attributes.durationInMillis || 0
+            durationMs: hit.attributes.durationInMillis || 0,
+            term: term
           };
         })
         .catch(function () { return null; });
@@ -460,7 +470,9 @@
       set('s-catalog', tracks.length + ' of ' + SEARCH_TERMS.length + ' resolved',
           tracks.length === SEARCH_TERMS.length ? 'ok' : 'warn');
       tracks.forEach(function (t, i) {
-        log('[' + i + '] ' + t.name + ' — ' + t.artist + ' (' + Math.round(t.durationMs / 1000) + 's)');
+        var miss = t.name.toLowerCase().indexOf(String(t.term).split(' ')[0].toLowerCase()) === -1;
+        log('[' + i + '] ' + t.name + ' — ' + t.artist + ' (' + Math.round(t.durationMs / 1000) + 's)' +
+            (miss ? '  ⚠ searched "' + t.term + '"' : ''), miss ? 'warn' : undefined);
       });
     });
   }
