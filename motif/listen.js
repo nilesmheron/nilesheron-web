@@ -1240,9 +1240,12 @@
     h.textContent = 'that was ' + (entry.title || 'the mixtape');
     done.appendChild(h);
 
-    var url = service === 'apple'
-      ? (entry.apple_playlist_url || entry.spotify_playlist_url)
-      : (entry.spotify_playlist_url || entry.apple_playlist_url);
+    /* Matching service only — PRD §15 Q3, and the fallback that used to be
+       here was actively wrong: it offered an Apple listener the SPOTIFY
+       playlist, which is exactly the service they cannot use. Better to show
+       no call to action than one that leads nowhere they can go. If this is
+       missing, the entry needs an apple_playlist_url; the builder now says so. */
+    var url = service === 'apple' ? entry.apple_playlist_url : entry.spotify_playlist_url;
     if (url) {
       var a = document.createElement('a');
       a.className = 'add-link';
@@ -1264,7 +1267,9 @@
       if (deck) deck.innerHTML = '';
       done.remove();
       root.appendChild(transportEl);
-      seedAt(0).catch(function (e) { say(friendly(e), true); });
+      // seedAny, not seedAt — seedAt is the Spotify seeder and would fail
+      // outright on Apple. Never caught because nobody has reached this screen.
+      seedAny(0).catch(function (e) { say(friendly(e), true); });
     });
     done.appendChild(again);
 

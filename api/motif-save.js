@@ -90,7 +90,11 @@ async function rebuildManifest(fresh, dropSlug) {
   const kept = dropSlug ? all.filter((x) => x.slug !== dropSlug) : all;
 
   const mixtapes = kept
-    .filter(({ entry }) => Array.isArray(entry.tracks) && entry.tracks.length)
+    // `unlisted` keeps an entry out of the public index while leaving it fully
+    // playable at its own URL. Needed because every entry with tracks is
+    // published to /motif/mixtape automatically, so a throwaway test tape
+    // would otherwise appear to the public the moment it was saved.
+    .filter(({ entry }) => Array.isArray(entry.tracks) && entry.tracks.length && !entry.unlisted)
     .map(({ slug, entry }) => ({
       slug,
       title: entry.title || slug,
@@ -148,6 +152,9 @@ function validateEntry(entry, slug) {
     if (typeof t.id !== 'string' || !t.id) return 'each track needs an id';
   }
   if (entry.poems && !Array.isArray(entry.poems)) return 'poems must be an array if present';
+  if (entry.unlisted !== undefined && typeof entry.unlisted !== 'boolean') {
+    return 'unlisted must be true or false if present';
+  }
   return null;
 }
 

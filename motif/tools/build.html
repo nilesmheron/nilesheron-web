@@ -175,6 +175,12 @@
     <input type="text" id="slug" placeholder="slug — e.g. familiar-fruit" style="flex:1 1 160px">
     <input type="text" id="title" placeholder="title — e.g. Familiar Fruit" style="flex:1 1 180px">
   </div>
+  <div class="row">
+    <label class="note" style="display:flex;align-items:center;gap:8px;cursor:pointer">
+      <input type="checkbox" id="unlisted" style="width:auto;margin:0">
+      Unlisted — playable at its own link, kept off <code>/motif/mixtape</code>. Use for test tapes.
+    </label>
+  </div>
 
   <div class="step">2 · add the songs</div>
   <div class="row">
@@ -210,6 +216,7 @@
   <div class="row">
     <input type="text" id="applePlaylistUrl" placeholder="public Apple Music playlist URL" style="flex:1 1 260px">
   </div>
+  <p class="note" id="linksNote" style="margin-top:6px">Without the Apple one, an Apple listener reaching the end is offered nothing — the player only ever shows the link for the service they actually played on.</p>
   <div class="row">
     <input type="text" id="playlistUrl" placeholder="public Spotify playlist URL" style="flex:1 1 260px">
   </div>
@@ -880,6 +887,7 @@
     if (existingEntry.date) out.date = existingEntry.date;
     var cover = $('cover').value.trim();
     if (cover) out.cover_image_url = cover;
+    if ($('unlisted').checked) out.unlisted = true;
     var apurl = $('applePlaylistUrl').value.trim();
     if (apurl) out.apple_playlist_url = apurl;
     var purl = $('playlistUrl').value.trim();
@@ -1142,6 +1150,7 @@
         if (existingEntry.cover_image_url) $('cover').value = existingEntry.cover_image_url;
         if (existingEntry.spotify_playlist_url) $('playlistUrl').value = existingEntry.spotify_playlist_url;
         if (existingEntry.apple_playlist_url) $('applePlaylistUrl').value = existingEntry.apple_playlist_url;
+        $('unlisted').checked = existingEntry.unlisted === true;
 
         // Rebuild the pick list from the saved tracks so they can be edited.
         state = (existingEntry.tracks || []).map(function (t) {
