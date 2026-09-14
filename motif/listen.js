@@ -1273,7 +1273,13 @@
     });
     done.appendChild(again);
 
-    root.appendChild(done);
+    /* Above the deck, not after it. Appending put the primary call to action
+       (PRD §5.3) below the whole deck, in the slot the transport had just
+       vacated — technically on screen, but the last thing the eye reaches on
+       the one screen that is asking for an action. Reported 2026-09-14 on the
+       first completion anyone has ever seen. Provisional: the completion
+       screen is part of the visual redesign. */
+    root.insertBefore(done, deckZone);
   }
 
   /* ============================================================
