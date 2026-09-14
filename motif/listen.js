@@ -214,11 +214,40 @@
       // during connection is fine now, it simply waits. Disabling it here is
       // what made the button look like it was cycling for no reason.
       ensurePlayer().catch(function (e) {
+        // On an Apple-first entry this is only the SIDE DOOR warming up, and a
+        // failure here must stay silent. A listener with Apple Music and no
+        // Spotify Premium was being shown "needs Spotify Premium" on the
+        // splash of a mixtape that plays perfectly well on Apple — which is
+        // exactly the audience Apple exists to reach. Observed 2026-09-13/14:
+        // the same listener bounced four times.
+        //
+        // ensurePlayer() remembers a terminal refusal and rejects immediately
+        // on the next call, so if they do choose Spotify they still get the
+        // real reason, at the moment it is actually true for them.
+        if (appleReady()) {
+          trace('spotify side door unavailable: ' + (e && e.message));
+          markSideDoorClosed(e);
+          return;
+        }
         // A permanent refusal is worth surfacing before they tap and wait.
         if (terminalReason) blockedNote(e);
         else say(friendly(e), true);
       });
     });
+  }
+
+  /* The side door is not available to this listener. Say so quietly, on the
+     side-door note itself, rather than letting them tap into a refusal we
+     already know about. Never an error box: nothing is wrong with the mixtape
+     and Apple is sitting right there. */
+  function markSideDoorClosed(e) {
+    var note = root.querySelector('.side-door-note');
+    if (!note) return;
+    note.textContent = (e && e.message === 'premium_required')
+      ? 'Spotify needs its own Premium subscription — use Apple Music above.'
+      : 'Spotify is not available right now — use Apple Music above.';
+    var btn = root.querySelector('.side-door-btn');
+    if (btn) btn.style.opacity = '0.45';
   }
 
   function errNote(text) {
