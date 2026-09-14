@@ -134,11 +134,12 @@
           var img = document.createElement('img');
           img.className = 'mx-cover';
           img.alt = '';
-          // loading MUST be set before src. Assigning src first on an element
-          // that is not yet in the document starts a load the lazy observer
-          // then never adopts, and the image stays at complete=false forever —
-          // every tile rendered blank. Observed live 2026-09-14.
-          img.loading = 'lazy';
+          // Not lazy. On this page the covers ARE the content — there is one
+          // tile per mixtape and the grid is the whole point, so deferring
+          // them buys nothing and leaves the page looking empty while they
+          // arrive. (Set `loading` before `src` if lazy ever comes back:
+          // assigning src first on a detached element is the documented
+          // ordering trap.)
           img.src = m.cover_image_url;
           a.appendChild(img);
         } else {
