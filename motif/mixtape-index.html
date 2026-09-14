@@ -133,9 +133,13 @@
         if (m.cover_image_url) {
           var img = document.createElement('img');
           img.className = 'mx-cover';
-          img.src = m.cover_image_url;
           img.alt = '';
+          // loading MUST be set before src. Assigning src first on an element
+          // that is not yet in the document starts a load the lazy observer
+          // then never adopts, and the image stays at complete=false forever —
+          // every tile rendered blank. Observed live 2026-09-14.
           img.loading = 'lazy';
+          img.src = m.cover_image_url;
           a.appendChild(img);
         } else {
           var blank = document.createElement('div');
