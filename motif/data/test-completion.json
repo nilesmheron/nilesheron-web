@@ -1,0 +1,37 @@
+{
+  "slug": "test-completion",
+  "no": "T",
+  "title": "Test — completion screen",
+  "unlisted": true,
+  "cover_image_url": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/80/87/35/808735da-d2ff-6493-df64-a89fd9a79f7e/885288191004.jpg/1000x1000bb.jpg",
+  "apple_playlist_url": "https://music.apple.com/us/playlist/rap-life/pl.abe8ba42278f4ef490e3a9fc5ec8e8c5",
+  "poems": [],
+  "tracks": [
+    {
+      "id": "skit-1",
+      "apple_id": "6797886909",
+      "title": "INTRO SKIT",
+      "artist": "Hit Boy",
+      "duration_ms": 18000,
+      "card": {},
+      "spotify_uri": "spotify:track:4Acwo3aXkBF7tyJRDbQhN8"
+    },
+    {
+      "id": "skit-2",
+      "apple_id": "1468015003",
+      "title": "Intro Skit",
+      "artist": "Benny the Butcher",
+      "duration_ms": 26799,
+      "card": {},
+      "spotify_uri": "spotify:track:599xQzIXeWSLNvfT2EIWaL"
+    },
+    {
+      "id": "skit-3",
+      "apple_id": "286516993",
+      "title": "Interlude (Skit)",
+      "artist": "K-Def",
+      "duration_ms": 31040,
+      "card": {}
+    }
+  ]
+}
