@@ -168,5 +168,9 @@
       "duration_ms": 234307,
       "card": {}
     }
-  ]
+  ],
+  "curator": {
+    "handle": "niles",
+    "name": "Niles"
+  }
 }
