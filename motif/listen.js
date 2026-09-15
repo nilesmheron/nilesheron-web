@@ -122,6 +122,19 @@
     };
   }
 
+  /* ── state ──
+     Everything the views read. Kept together and above them: the Tape rewrite
+     replaced the blocks these used to sit in and took the declarations with
+     them, which under 'use strict' fails at the first assignment. */
+  var entry = null;
+  var tracks = [];
+  var revealed = [];        // track indices, in the order they were revealed
+  var idx = 0;
+  var queuedUpTo = -1;
+  var awaitingFlip = false;
+  var mode = 'rest';        // 'rest' | 'spot' | 'turn' | 'flip'
+  var flippedInGrid = {};   // played index -> showing its back in the grid
+
   var service = 'spotify';   // 'spotify' | 'apple' — set by the splash choice
   var player = null;
   var deviceId = null;
