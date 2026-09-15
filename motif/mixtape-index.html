@@ -24,6 +24,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/motif/listen.css">
 <style>
+  .index-head { padding: calc(26px + env(safe-area-inset-top, 0px)) 24px 20px; display: flex; flex-direction: column; gap: 9px; flex: 0 0 auto; }
+  .index-head .k { font-size: var(--micro); letter-spacing: 0.24em; text-transform: uppercase; color: var(--mute); }
+  .index-head h1 { font-family: var(--serif-display); font-size: 36px; line-height: 1; font-weight: 400; margin: 0; }
+  .index-head .handle { font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mute); }
+  .index-head p { font-family: var(--serif-body); font-size: 14.5px; line-height: 1.55; color: var(--body); margin: 0; max-width: 30ch; text-wrap: pretty; }
+
   /* the shelf, from the handoff — rows are explicit so the shelf line always
      runs the full width: one tape reads as a tape on a shelf with room,
      rather than as a broken grid */
