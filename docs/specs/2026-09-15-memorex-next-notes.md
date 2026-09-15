@@ -50,7 +50,15 @@ Should go to Claude Design in the same stream as splash / completion / index, af
 - **Disclosure — a real decision, not a detail.** Showing "6 of 9 · Side A" tells the listener a boundary is coming. That is new information the blind does not currently give. It is still not *song* information, so the core rule holds, but it changes the shape of what a listener knows.
 
   Niles's framing is that this is the point: sides create **thematic adjacency without continuation** — permission for side B to be a different mood rather than more of side A. Recorded as intentional, and it should be an explicit line in v0.2 rather than something a future reader has to infer.
-- **Splash.** Does `18 songs · about 1h 2m` become `9 + 9`? Unresolved. Stating the split on the splash discloses the structure before a note plays, which may be exactly right for a tape, or may be one disclosure too many.
+- **Splash — DECIDED 2026-09-15, and shipped.** The primary button reads **"Play side A"** on a two-sided tape.
+
+  This resolves the disclosure question in the best available way. It tells the listener a side B exists and nothing else — no songs, no boundary position, no runtimes — so the blind is untouched, and it *pre-frames the flip*. Someone who pressed "play side A" has already been told the tape has sides; someone who pressed "play" and then had the music stop in their pocket has met a bug. The cost of the flip reading as a defect the first time, which Niles had accepted, is largely paid off by one word on one button.
+
+  The service name moves off the button and onto the line above it, which already says "Plays through your own Apple Music." That line is load-bearing — it exists because a real listener failed for want of it — so it stays.
+
+  Still open: whether `18 songs · about 1h 2m` should become per-side (`9 + 9`). Leaving the total for now; "Play side A" already carries the structural disclosure, and splitting the count adds a second one for less benefit.
+
+  **Also open: can a listener start on side B?** A real cassette lets you put in either side. The current answer is no — side B is reached only by flipping — which preserves the sequence the curator built. Worth a deliberate decision rather than a default.
 
 ---
 
