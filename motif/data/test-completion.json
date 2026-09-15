@@ -34,5 +34,9 @@
       "card": {}
     }
   ],
-  "side_b_starts_at": 1
+  "side_b_starts_at": 1,
+  "curator": {
+    "handle": "niles",
+    "name": "Niles"
+  }
 }
