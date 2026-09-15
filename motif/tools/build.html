@@ -176,6 +176,11 @@
     <input type="text" id="title" placeholder="title — e.g. Familiar Fruit" style="flex:1 1 180px">
   </div>
   <div class="row">
+    <input type="text" id="curatorName" placeholder="made by — e.g. Niles" style="flex:1 1 160px">
+    <input type="text" id="curatorHandle" placeholder="handle — e.g. niles" style="flex:1 1 140px">
+  </div>
+  <p class="note" style="margin-top:6px">Nothing shows this yet. It is recorded now so that when other people build tapes, every existing one already knows whose it is — the handle becomes their shelf.</p>
+  <div class="row">
     <label class="note" style="display:flex;align-items:center;gap:8px;cursor:pointer">
       <input type="checkbox" id="unlisted" style="width:auto;margin:0">
       Unlisted — playable at its own link, kept off <code>/motif/mixtape</code>. Use for test tapes.
@@ -998,6 +1003,9 @@
     if (existingEntry.date) out.date = existingEntry.date;
     var cover = $('cover').value.trim();
     if (cover) out.cover_image_url = cover;
+    var cn = $('curatorName').value.trim();
+    var ch = $('curatorHandle').value.trim().toLowerCase();
+    if (cn || ch) out.curator = { handle: ch || slugify(cn), name: cn || ch };
     if ($('unlisted').checked) out.unlisted = true;
     if (sideBStart !== null && sideBStart > 0 && sideBStart < tracks.length) {
       out.side_b_starts_at = sideBStart;
@@ -1265,6 +1273,9 @@
         if (existingEntry.spotify_playlist_url) $('playlistUrl').value = existingEntry.spotify_playlist_url;
         if (existingEntry.apple_playlist_url) $('applePlaylistUrl').value = existingEntry.apple_playlist_url;
         $('unlisted').checked = existingEntry.unlisted === true;
+        var cur = existingEntry.curator || {};
+        $('curatorName').value = cur.name || '';
+        $('curatorHandle').value = cur.handle || '';
         sideBStart = (typeof existingEntry.side_b_starts_at === 'number')
           ? existingEntry.side_b_starts_at : null;
 

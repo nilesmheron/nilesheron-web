@@ -32,6 +32,31 @@ function gh(path, options = {}) {
 
 const MANIFEST = `${DIR}/mixtapes.json`;
 
+/* ---------- curator ----------
+   Added 2026-09-15 ahead of anything reading it. Every mixtape is by someone;
+   today that someone is always Niles, but the day a second person builds one
+   the alternative is retrofitting authorship across every saved entry, and
+   that is the expensive version of this change. So the field exists now,
+   defaulted, and the schema stops being the thing that blocks it.
+
+   `handle` is slug-safe because it is the future URL — /motif/by/<handle> —
+   and a handle that cannot be a path segment is a migration waiting to
+   happen. `name` is only ever display. */
+const DEFAULT_CURATOR = {
+  handle: process.env.MOTIF_DEFAULT_CURATOR_HANDLE || 'niles',
+  name: process.env.MOTIF_DEFAULT_CURATOR_NAME || 'Niles',
+};
+
+function normaliseCurator(c) {
+  if (!c || typeof c !== 'object') return { ...DEFAULT_CURATOR };
+  const handle = String(c.handle || '').trim().toLowerCase();
+  const name = String(c.name || '').trim();
+  return {
+    handle: handle || DEFAULT_CURATOR.handle,
+    name: name || DEFAULT_CURATOR.name,
+  };
+}
+
 // Read one entry through the GitHub API rather than the download_url the
 // contents listing hands back.
 //
@@ -101,6 +126,9 @@ async function rebuildManifest(fresh, dropSlug) {
       date: entry.date || '',
       cover_image_url: entry.cover_image_url || null,
       track_count: entry.tracks.length,
+      // The index will eventually group by curator, and it reads only this
+      // manifest — so it carries authorship from the start.
+      curator: normaliseCurator(entry.curator),
     }))
     .sort((a, b) => a.title.localeCompare(b.title));
 
@@ -157,6 +185,16 @@ function validateEntry(entry, slug) {
   }
   // The side break. Out of range would either strand side B or make side A
   // empty, and the player would stop at a boundary it can never cross.
+  if (entry.curator !== undefined) {
+    const c = entry.curator;
+    if (!c || typeof c !== 'object' || Array.isArray(c)) return 'curator must be an object if present';
+    if (c.handle !== undefined && !/^[a-z0-9][a-z0-9-]{0,30}$/.test(String(c.handle).toLowerCase())) {
+      return 'curator.handle must be url-safe: lowercase letters, numbers and hyphens';
+    }
+    if (c.name !== undefined && String(c.name).trim().length > 60) {
+      return 'curator.name must be 60 characters or fewer';
+    }
+  }
   if (entry.side_b_starts_at !== undefined) {
     const sb = entry.side_b_starts_at;
     if (!Number.isInteger(sb) || sb < 1 || sb >= entry.tracks.length) {
@@ -266,6 +304,11 @@ export default async function handler(req, res) {
   }
   const problem = validateEntry(entry, slug);
   if (problem) return res.status(400).json({ error: problem });
+
+  // Stamp authorship on the way in, so no saved entry can be anonymous and
+  // the backfill problem never starts. Normalised rather than trusted: the
+  // handle becomes a URL later.
+  entry.curator = normaliseCurator(entry.curator);
 
   const path = `${DIR}/${slug}.json`;
 
