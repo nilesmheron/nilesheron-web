@@ -132,8 +132,8 @@
   var idx = 0;
   var queuedUpTo = -1;
   var awaitingFlip = false;
-  var mode = 'rest';        // 'rest' | 'spot' | 'turn' | 'flip'
-  var flippedInGrid = {};   // played index -> showing its back in the grid
+  var mode = 'rest';        // 'rest' | 'spot' | 'turn'
+  var spotIdx = 0;          // which track the spotlight is showing
 
   var service = 'spotify';   // 'spotify' | 'apple' — set by the splash choice
   var player = null;
@@ -1157,8 +1157,6 @@
     var f = face(t, artFor(i));
     var isCurrent = (i === idx) && !awaitingFlip && !finished;
 
-    if (flippedInGrid[i]) return gridBack(i, t, f);
-
     var card = el('div', 'card' + (f.contain ? ' card--contain' : '') + (isCurrent ? ' card--current' : ''));
     if (f.src) {
       var im = document.createElement('img');
@@ -1171,16 +1169,21 @@
       var tb = el('div', 't'); tb.textContent = t.title || '';
       card.appendChild(nb); card.appendChild(tb);
     }
+    /* Any revealed card opens, not just the current one. The handoff reserved
+       the spotlight for the song playing and flipped older cards in place at
+       tile size, but a played card is exactly what a listener wants to look
+       up — which song was that, who was it — and a 110px tile cannot answer
+       it. The deck is a record, and the record should be readable. */
     card.addEventListener('click', function (e) {
       e.stopPropagation();
-      // The spotlight is for the current song. Anything already played flips
-      // in place instead.
-      if (isCurrent) { mode = 'spot'; renderPlayer(); }
-      else { flippedInGrid[i] = !flippedInGrid[i]; renderPlayer(); }
+      spotIdx = i;
+      mode = 'spot';
+      renderPlayer();
     });
     return card;
   }
 
+  // Kept for the no-artwork fallback only; the in-place flip is gone.
   function gridBack(i, t, f) {
     var card = el('div', 'card card--back');
     var nb = el('div', 'no');
@@ -1209,7 +1212,8 @@
     }
     card.addEventListener('click', function (e) {
       e.stopPropagation();
-      flippedInGrid[i] = false;
+      spotIdx = i;
+      mode = 'spot';
       renderPlayer();
     });
     return card;
@@ -1249,14 +1253,20 @@
 
   function buildStage() {
     var stage = el('div', 'stage');
-    var t = tracks[idx];
-    var f = face(t, artFor(idx));
-    var p = pos(idx);
+    var i = spotIdx;
+    var t = tracks[i];
+    var f = face(t, artFor(i));
+    var p = pos(i);
+    // Amber marks the live song. A card pulled up from earlier in the tape is
+    // set in ordinary ink, so the deck never lies about what is playing.
+    var live = (i === idx) && !finished && !awaitingFlip;
+    var cls = live ? 'live' : '';
 
     var bar = el('div', 'stage-bar');
     bar.innerHTML = mode === 'spot'
-      ? '<span class="live">Song ' + (p.inSide + 1) + ' of ' + p.total + '</span><span>Close</span>'
-      : '<span class="live">Memorex · ' + esc(entry.no || 'T') + ' · ' + esc(p.label) +
+      ? '<span class="' + cls + '">Song ' + (p.inSide + 1) + ' of ' + p.total +
+        (p.sided ? ' · side ' + esc(p.label) : '') + '</span><span>Close</span>'
+      : '<span class="' + cls + '">Memorex · ' + esc(entry.no || 'T') + ' · ' + esc(p.label) +
         String(p.inSide + 1).padStart(2, '0') + '</span><span>Close</span>';
     bar.addEventListener('click', function (e) { e.stopPropagation(); mode = 'rest'; renderPlayer(); });
     stage.appendChild(bar);
@@ -1344,9 +1354,19 @@
   var artCache = {};
   function artFor(i) { return artCache[i] || null; }
 
+  var lastLive = -1;
+
   function reveal(trackIndex, now) {
     if (now && now.artUrl) artCache[trackIndex] = now.artUrl;
     if (revealed.indexOf(trackIndex) === -1) revealed.push(trackIndex);
+
+    /* If the open card was the song that was playing, follow the music. If it
+       was one the listener pulled up deliberately from earlier in the tape,
+       leave it alone — they are reading it, and yanking them forward on a
+       track change would be the player taking the page back. */
+    if (mode !== 'rest' && spotIdx === lastLive) spotIdx = trackIndex;
+    lastLive = trackIndex;
+
     renderPlayer();
   }
 
@@ -1354,9 +1374,7 @@
   // is playing.
   function trimCardsAfter(keepThrough) {
     revealed = revealed.filter(function (ti) { return ti <= keepThrough; });
-    Object.keys(flippedInGrid).forEach(function (k) {
-      if (Number(k) > keepThrough) delete flippedInGrid[k];
-    });
+    if (spotIdx > keepThrough) spotIdx = keepThrough;
     mode = 'rest';
   }
 
@@ -1378,12 +1396,30 @@
 
     root.appendChild(deckHead({ spent: awaitingFlip }));
 
+    /* The spotlight outranks the terminal screens. A finished tape is meant to
+       be browsable (PRD §5.3) and a flip screen shows a completed side — in
+       both, pressing a card must open it rather than do nothing. Closing
+       returns to whichever screen was underneath. */
+    if (mode === 'spot' || mode === 'turn') {
+      npEl = null;   // not drawn in this mode; do not paint into a detached node
+      root.appendChild(buildStage());
+      statusEl = el('div', 'status-line');
+      root.appendChild(statusEl);
+      if (!finished && !awaitingFlip) {
+        transportEl = el('div', 'transport');
+        transportEl.appendChild(tbtn('t-back', 'Back', goBack));
+        transportEl.appendChild(tbtn('t-play', paused ? 'Play' : 'Pause', togglePlay));
+        transportEl.appendChild(tbtn('t-next', 'Next', goNext));
+        root.appendChild(transportEl);
+        updateTransport();
+      }
+      return;
+    }
+
     if (finished) { renderClosing(); return; }
     if (awaitingFlip) { renderFlip(); return; }
 
-    if (mode === 'spot' || mode === 'turn') {
-      root.appendChild(buildStage());
-    } else {
+    {
       npEl = el('div', 'np');
       root.appendChild(npEl);
       root.appendChild(buildDeck());
@@ -1699,7 +1735,7 @@
     again.addEventListener('click', function (e) {
       e.stopPropagation();
       revealed = [];
-      flippedInGrid = {};
+      spotIdx = 0;
       artCache = {};
       mediaFor = null;
       finished = false;
