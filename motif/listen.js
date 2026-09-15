@@ -25,6 +25,17 @@
           replays it. Detect the final track and stop.
      ============================================================ */
 
+  /* ── platforms ──
+     Apple Music is the front door: no development-mode cap, so anyone with a
+     subscription can listen. Spotify is the side door for the five people
+     Niles can allowlist by hand. An entry whose tracks carry no apple_id
+     falls back to Spotify-only, so nothing that predates Apple is stranded. */
+  var APPLE_ENABLED = true;
+
+  function appleReady() {
+    return APPLE_ENABLED && tracks.some(function (t) { return t.apple_id; });
+  }
+
   /* ============================================================
      THE SIDES MODEL
 
@@ -197,16 +208,22 @@
     history.replaceState({}, '', window.location.pathname);
   }
 
+  /* The render is deliberately OUTSIDE the fetch chain. Calling it inside a
+     .then means any error it throws lands in the .catch below and is reported
+     as "entry not found" — which is what happened on 2026-09-15 when a helper
+     went missing in a refactor, and cost real time because the message named
+     the wrong thing entirely. */
   fetch('/motif/data/' + slug + '.json')
     .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .catch(function () { fatal('entry not found'); return null; })
     .then(function (e) {
+      if (!e) return;
       entry = e;
       tracks = e.tracks || [];
       if (!tracks.length) { fatal('this entry has no playlist yet'); return; }
       sides = buildSides(e);
       renderSplash();
-    })
-    .catch(function () { fatal('entry not found'); });
+    });
 
   /* ============================================================
      SPLASH
@@ -1458,6 +1475,25 @@
     return service === 'apple' ? appleSeedAt(i) : seedAt(i);
   }
 
+  /* Lock screen for an ordinary track. Artwork comes from the song; the flip
+     screen deliberately overrides this with the tape's own cover. */
+  function setMediaSession(now) {
+    if (!('mediaSession' in navigator)) return;
+    try {
+      navigator.mediaSession.metadata = new window.MediaMetadata({
+        title: now.title,
+        artist: now.artist,
+        album: entry.title || 'Memorex',
+        artwork: now.artwork || []
+      });
+      navigator.mediaSession.playbackState = paused ? 'paused' : 'playing';
+      navigator.mediaSession.setActionHandler('play', function () { svcResume(); });
+      navigator.mediaSession.setActionHandler('pause', function () { svcPause(); });
+      navigator.mediaSession.setActionHandler('nexttrack', goNext);
+      navigator.mediaSession.setActionHandler('previoustrack', goBack);
+    } catch (_) {}
+  }
+
   /* ============================================================
      THE FLIP
 
@@ -1653,6 +1689,21 @@
   /* ============================================================
      HELPERS
      ============================================================ */
+
+  /* Length, for the splash only. "about 1h 2m" rather than a precise number:
+     a mixtape announces roughly how long it asks for. */
+  function totalMs() {
+    var n = 0;
+    for (var i = 0; i < tracks.length; i++) n += tracks[i].duration_ms || 0;
+    return n;
+  }
+
+  function roughLength(ms) {
+    var mins = Math.round(ms / 60000);
+    if (mins < 60) return 'about ' + mins + ' min';
+    var h = Math.floor(mins / 60), m = mins % 60;
+    return 'about ' + h + 'h' + (m ? ' ' + m + 'm' : '');
+  }
 
   function el(tag, cls) {
     var e = document.createElement(tag);
