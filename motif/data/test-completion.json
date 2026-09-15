@@ -34,9 +34,18 @@
       "card": {}
     }
   ],
-  "side_b_starts_at": 1,
   "curator": {
     "handle": "niles",
     "name": "Niles"
-  }
+  },
+  "sides": [
+    {
+      "label": "A",
+      "total": 1
+    },
+    {
+      "label": "B",
+      "total": 2
+    }
+  ]
 }
