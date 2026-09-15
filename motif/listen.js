@@ -89,6 +89,57 @@
   trace('ua: ' + navigator.userAgent);
   trace('standalone: ' + !!window.navigator.standalone + ' · cookies: ' + navigator.cookieEnabled);
 
+  /* ── pulse: how the tape was actually listened to ──
+     Deliberately replacing an accident. Until now the only record of a listen
+     was that the nm.h logo sat on every card back, so each reveal produced a
+     static-asset request and a listen could be reconstructed from timings.
+     The Tape redesign removes that logo from the grid and the trace with it.
+
+     A per-listen random id, never stored, dead when the tab closes — two
+     listens by the same person are not linkable. No account id, no token, no
+     title, no user agent. See api/motif-pulse.js. */
+  var listenId = Math.random().toString(36).slice(2, 10);
+  var pulseSeq = 0;
+  var pulseBox = [];
+
+  function pulse(ev, i) {
+    pulseBox.push({
+      seq: ++pulseSeq,
+      t: Math.round((Date.now() - t0) / 1000),
+      ev: ev,
+      i: (i === undefined ? null : i),
+      svc: service
+    });
+    // 'complete' and 'leave' are the two that must not be lost, so they go at
+    // once and by beacon; the rest ride along in batches.
+    if (ev === 'complete' || ev === 'leave') flushPulse(true);
+    else if (pulseBox.length >= 6) flushPulse(false);
+  }
+
+  function flushPulse(beacon) {
+    if (!pulseBox.length) return;
+    var batch = pulseBox.splice(0, 40);
+    var payload = JSON.stringify({ slug: slug, listen: listenId, events: batch });
+    try {
+      if (beacon && navigator.sendBeacon) {
+        if (navigator.sendBeacon('/api/motif-pulse', new Blob([payload], { type: 'application/json' }))) return;
+      }
+      fetch('/api/motif-pulse', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload,
+        keepalive: true
+      }).catch(function () {});
+    } catch (_) { /* never let telemetry break playback */ }
+  }
+
+  // A listener who closes the tab mid-tape is the most informative case and
+  // the easiest to lose. pagehide fires where unload does not on iOS.
+  window.addEventListener('pagehide', function () {
+    if (finished) return;
+    pulse('leave', idx);
+  });
+
   /* ── routing: /motif/<slug>/listen ── */
   var m = window.location.pathname.match(/^\/motif\/([^/]+)\/listen\/?$/);
   var slug = m ? m[1] : '';
@@ -587,6 +638,7 @@
       trace('apple now playing [' + known + '] ' + now.title);
       if (known > -1) {
         idx = known;
+        pulse('track', known);
         reveal(known, now);
         appleAppendNext();
       }
@@ -778,6 +830,7 @@
       var now = normSpotify(cur);
       if (known > -1) {
         idx = known;
+        pulse('track', known);
         reveal(known, now);
         appendNext();
       }
@@ -1049,6 +1102,7 @@
      ============================================================ */
 
   function renderPlayer() {
+    pulse('start', 0);
     root.innerHTML = '';
 
     npEl = el('div', 'np');
@@ -1227,6 +1281,7 @@
   function finish() {
     if (finished) return;
     finished = true;
+    pulse('complete', idx);
     svcPause();
     releaseWakeLock();
     if (npEl) npEl.innerHTML = '';
