@@ -520,7 +520,7 @@
 
   /* ---------- sides ----------
      sideBStart is an index into the CONFIRMED tracks, not into state[], so a
-     skipped line never shifts the break. Stored as side_b_starts_at. */
+     skipped line never shifts the break. Emitted as sides[]. */
   var sideBStart = null;
 
   function confirmedTracks() {
@@ -1007,8 +1007,13 @@
     var ch = $('curatorHandle').value.trim().toLowerCase();
     if (cn || ch) out.curator = { handle: ch || slugify(cn), name: cn || ch };
     if ($('unlisted').checked) out.unlisted = true;
+    // sides[] declares the tape: labels are data, and the model generalises
+    // past two sides even though the builder only offers one break today.
     if (sideBStart !== null && sideBStart > 0 && sideBStart < tracks.length) {
-      out.side_b_starts_at = sideBStart;
+      out.sides = [
+        { label: 'A', total: sideBStart },
+        { label: 'B', total: tracks.length - sideBStart }
+      ];
     }
     var apurl = $('applePlaylistUrl').value.trim();
     if (apurl) out.apple_playlist_url = apurl;
@@ -1276,8 +1281,10 @@
         var cur = existingEntry.curator || {};
         $('curatorName').value = cur.name || '';
         $('curatorHandle').value = cur.handle || '';
-        sideBStart = (typeof existingEntry.side_b_starts_at === 'number')
-          ? existingEntry.side_b_starts_at : null;
+        var sd = existingEntry.sides;
+        sideBStart = (Object.prototype.toString.call(sd) === '[object Array]' && sd.length > 1)
+          ? Number(sd[0].total) || null
+          : null;
 
         // Rebuild the pick list from the saved tracks so they can be edited.
         state = (existingEntry.tracks || []).map(function (t) {

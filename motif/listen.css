@@ -1,351 +1,415 @@
 /* ============================================================
-   MOTIF — blind playlist player
-   Extends motif.css. Deck visuals are inherited; everything here
-   is the player chrome around them.
+   MEMOREX — the blind mixtape player
+   "Tape" direction, from design_handoff_memorex_tape2.
+
+   Two grounds, 6a light and 6b night, following the device. The design
+   reference framed everything at 390x812 inside a .phone; here the root
+   fills the viewport instead and the frame styling is dropped. Everything
+   else is the reference's values.
    ============================================================ */
+
+:root {
+  --serif-display: "Instrument Serif", Lora, Georgia, serif;
+  --serif-body: Lora, Georgia, "Times New Roman", serif;
+  --mono: "IBM Plex Mono", Menlo, "SF Mono", ui-monospace, monospace;
+
+  --r-slot: 7px;
+  --r-panel: 14px;
+  --r-card: 16px;
+  --micro: 8px;
+  --micro-track: 0.2em;
+
+  /* 6a — tape, light */
+  --bg: #efeae0;
+  --panel: #e5dfd2;
+  --panel-top: rgba(255,255,255,0.8);
+  --card-bg: #faf7f1;
+  --label-band: #efeae0;
+  --ink: #2f2b25;
+  --soft: #5d564b;
+  --body: #403a32;
+  --mute: #6a6358;
+  --line: rgba(70,58,40,0.16);
+  --line-2: rgba(70,58,40,0.2);
+  --rule: rgba(70,58,40,0.1);
+  --shadow: rgba(70,58,40,0.35);
+  --amber: #a1622b;
+  --glow: rgba(161,98,43,0.4);
+  --tick-on: #6a6358;
+  --tick-off: rgba(70,58,40,0.2);
+  --reel-bg: #faf7f1;
+  --reel-tape: #cfc6b4;
+  --hub: #8d8475;
+  --lit-edge: rgba(70,58,40,0.35);
+  --lit-ring: rgba(161,98,43,0.28);
+  --slot: rgba(70,58,40,0.05);
+  --band: rgba(32,26,20,0.8);
+  --band-solid: rgba(32,26,20,0.92);
+  --key: #e5dfd2;
+  --key-on: #2f2b25;
+  --key-on-ink: #f6f2ea;
+  --past-art: grayscale(1) brightness(1.04) contrast(0.9);
+  --past-paper: grayscale(1) contrast(1.06);
+  --logo-filter: none;
+
+  color-scheme: light dark;
+}
+
+/* 6b — tape, night. Follows the device; there is no in-page toggle, because
+   a listener choosing a theme is not a decision this product should ask for. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #13110e;
+    --panel: #1d1a16;
+    --panel-top: rgba(240,232,218,0.1);
+    --card-bg: #1c1a16;
+    --label-band: #232019;
+    --ink: #f2ece1;
+    --soft: #bab2a4;
+    --body: #d8d1c4;
+    --mute: #a09889;
+    --line: rgba(240,232,218,0.14);
+    --line-2: rgba(240,232,218,0.2);
+    --rule: rgba(240,232,218,0.07);
+    --shadow: rgba(0,0,0,0.85);
+    --amber: #d99a5b;
+    --glow: rgba(217,154,91,0.5);
+    --tick-on: #a09889;
+    --tick-off: rgba(240,232,218,0.2);
+    --reel-bg: #171512;
+    --reel-tape: #4a4237;
+    --hub: #8d8475;
+    --lit-edge: rgba(240,232,218,0.4);
+    --lit-ring: rgba(217,154,91,0.3);
+    --slot: rgba(240,232,218,0.04);
+    --band: rgba(14,12,10,0.82);
+    --band-solid: rgba(14,12,10,0.93);
+    --key: #221f1a;
+    --key-on: #f2ece1;
+    --key-on-ink: #1a1713;
+    --past-art: grayscale(1) brightness(0.62);
+    --past-paper: grayscale(1) brightness(0.72) contrast(1.02);
+    --logo-filter: invert(1);
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--mono);
+  -webkit-font-smoothing: antialiased;
+}
 
 .listen-root {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-}
-
-/* ---- splash (PRD §5.1) ----
-   Cover art, title, one button. No track count, no runtime, no list. */
-.splash {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 22px;
-  padding: 40px 26px calc(40px + env(safe-area-inset-bottom, 0px));
-  text-align: center;
-}
-.splash-cover {
-  width: 208px;
-  height: 208px;
-  border-radius: 10px;
-  object-fit: cover;
-  box-shadow:
-    0 18px 40px -18px rgba(60, 52, 40, 0.55),
-    0 3px 10px -6px rgba(60, 52, 40, 0.4);
-  background: var(--card-bg);
-}
-.splash-no {
-  font-family: var(--mono);
-  font-size: 9.5px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-.splash-title {
-  font-size: 30px;
-  font-weight: 500;
-  letter-spacing: -0.015em;
-  margin: 0;
-  text-wrap: balance;
-}
-.splash-note {
-  font-size: 14px;
-  line-height: 1.55;
-  color: #6f6a61;
-  margin: 0;
-  max-width: 30ch;
-}
-.splash-needs {
-  font-family: var(--mono);
-  font-size: 9.5px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin: -6px 0 0;
-}
-.side-door {
-  margin-top: 18px;
-  padding-top: 16px;
-  border-top: 1px solid var(--hair);
-  width: 100%;
-  max-width: 300px;
-}
-.side-door-btn {
-  appearance: none;
-  background: none;
-  border: none;
-  padding: 4px 0;
-  cursor: pointer;
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--muted);
-  text-decoration: underline;
-  text-underline-offset: 4px;
-  -webkit-tap-highlight-color: transparent;
-}
-.side-door-btn:hover { color: var(--ink); }
-.side-door-note {
-  font-size: 12px;
-  line-height: 1.5;
-  color: var(--muted);
-  margin: 8px 0 0;
-  max-width: 32ch;
-}
-.splash-err {
-  font-family: var(--mono);
-  font-size: 11.5px;
-  line-height: 1.6;
-  color: var(--amber);
-  max-width: 34ch;
-}
-
-.play-btn {
-  appearance: none;
-  border: 1px solid var(--amber);
-  background: var(--amber);
-  color: #fdfbf7;
-  border-radius: 999px;
-  padding: 15px 40px;
-  font-family: var(--mono);
-  font-size: 12px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: opacity 0.2s ease;
-  -webkit-tap-highlight-color: transparent;
-}
-.play-btn:disabled { opacity: 0.45; cursor: default; }
-.play-btn.ghost {
-  background: none;
-  color: var(--muted);
-  border-color: var(--hair);
-}
-
-/* ---- now playing ---- */
-.np {
-  flex: 0 0 auto;
-  text-align: center;
-  padding: 16px 22px 4px;
-}
-.np-label {
-  font-family: var(--mono);
-  font-size: 9px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-.np-title {
-  font-size: 17px;
-  font-weight: 500;
-  margin: 6px 0 2px;
-  text-wrap: balance;
-}
-.np-artist {
-  font-size: 13px;
-  font-style: italic;
-  color: #6f6a61;
-}
-
-/* ---- progress through the whole mixtape ----
-   Position within a known length, not a track counter. It says the thing was
-   composed and has an end, which is what separates it from a radio stream,
-   without hinting at what is coming. Not a scrubber — it does not seek. ---- */
-.progress {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  /* track numbers are narrow — keep them from jittering as digits change */
-  font-variant-numeric: tabular-nums;
-  padding: 8px 26px 2px;
-  font-family: var(--mono);
-  font-size: 9px;
-  letter-spacing: 0.12em;
-  color: var(--muted);
-}
-.pr-track {
-  flex: 1 1 auto;
-  height: 2px;
-  background: var(--hair);
-  border-radius: 2px;
-  overflow: hidden;
-}
-.pr-fill {
-  display: block;
-  height: 100%;
-  width: 0;
-  background: var(--amber);
-  opacity: calc(var(--amber-on) * 1.6);
-  transition: width 0.6s linear;
-}
-.pr-now { color: var(--ink); }
-
-/* ---- transport (PRD §5.2: three actions, nothing else) ---- */
-.transport {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 26px;
-  padding: 12px 22px calc(16px + env(safe-area-inset-bottom, 0px));
-  border-top: 1px solid var(--hair);
-}
-.transport button {
-  appearance: none;
-  background: none;
-  border: none;
-  padding: 8px 4px;
-  cursor: pointer;
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--muted);
-  transition: color 0.2s ease;
-  -webkit-tap-highlight-color: transparent;
-}
-.transport button:hover { color: var(--ink); }
-.transport button:disabled { opacity: 0.35; cursor: default; }
-.transport .t-play {
+  background: var(--bg);
   color: var(--ink);
-  font-size: 12px;
-  min-width: 6ch;
-}
-
-/* ---- deck: same visual language as the entry page, grown one card at a
-   time. Cards animate in from below as their song starts. ---- */
-.listen-deck-zone {
-  flex: 1 1 auto;
-  min-height: 0;
-  position: relative;
   overflow: hidden;
-  touch-action: pan-y;
-  user-select: none;
-  -webkit-user-select: none;
-}
-.listen-deck-zone.touched .deck-hint { opacity: 0; }
-
-.card.revealing {
-  animation: card-in 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) both;
-}
-@keyframes card-in {
-  from { opacity: 0; transform: translate(0, 90px) rotate(0deg) scale(0.86); }
-}
-.face-track {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 26px 22px;
-  text-align: center;
-  gap: 8px;
-}
-.face-track .t-name {
-  font-size: 15px;
-  font-weight: 500;
-  line-height: 1.25;
-  text-wrap: balance;
-}
-.face-track .t-artist {
-  font-size: 12.5px;
-  font-style: italic;
-  color: #6f6a61;
-}
-.card-art {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 6px;
-  display: block;
-}
-.back-image {
-  width: 100%;
-  height: auto;
-  display: block;
-  border-radius: 3px;
-  margin-bottom: 10px;
 }
 
-/* ---- completion (PRD §5.3) ---- */
-.done {
-  flex: 0 0 auto;
+/* ---- transport panel: two reels and the side's ticks ---- */
+.deck-head {
+  margin: calc(16px + env(safe-area-inset-top, 0px)) 20px 0;
+  border-radius: var(--r-panel);
+  background: var(--panel);
+  box-shadow: inset 0 1px 0 var(--panel-top), 0 1px 2px var(--shadow);
+  padding: 14px 16px;
   display: flex;
-  flex-direction: column;
   align-items: center;
   gap: 14px;
-  padding: 20px 26px calc(24px + env(safe-area-inset-bottom, 0px));
-  border-top: 1px solid var(--hair);
-  text-align: center;
+  flex: 0 0 auto;
 }
-.done-h {
-  font-family: var(--mono);
-  font-size: 9.5px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--muted);
+.reel {
+  width: 38px; height: 38px; flex: 0 0 auto;
+  border-radius: 50%;
+  border: 1px solid var(--line-2);
+  background: var(--reel-bg);
+  display: flex; align-items: center; justify-content: center;
 }
-.add-link {
-  display: inline-block;
-  border: 1px solid var(--amber);
-  background: var(--amber);
-  color: #fdfbf7;
-  border-radius: 999px;
-  padding: 13px 32px;
-  font-family: var(--mono);
-  font-size: 11.5px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  text-decoration: none;
+.reel--supply { box-shadow: inset 0 0 0 7px var(--reel-tape); }
+.reel--takeup { box-shadow: inset 0 0 0 3px var(--reel-tape); }
+.reel--full { box-shadow: inset 0 0 0 9px var(--reel-tape); }
+.reel--empty { box-shadow: inset 0 0 0 1px var(--reel-tape); }
+.reel i { display: block; width: 11px; height: 11px; border-radius: 50%; background: var(--hub); }
+
+.counter { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 7px; }
+.ticks { display: flex; align-items: flex-end; gap: 3px; height: 6px; }
+.ticks span { flex: 1 1 0; height: 3px; border-radius: 2px; background: var(--tick-off); }
+.ticks span.played { background: var(--tick-on); }
+.ticks span.current { height: 5px; border-radius: 3px; background: var(--amber); box-shadow: 0 0 10px var(--glow); }
+.counter-line {
+  display: flex; justify-content: space-between;
+  font-size: var(--micro); letter-spacing: var(--micro-track);
+  text-transform: uppercase; color: var(--mute);
 }
+.counter-line b { font-weight: 400; color: var(--ink); }
+
+/* ---- now playing ---- */
+.np { padding: 20px 24px 16px; display: flex; flex-direction: column; gap: 5px; flex: 0 0 auto; }
+.np-label { font-size: 8.5px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mute); }
+.np-title { font-family: var(--serif-display); font-size: 27px; line-height: 1.02; }
+.np-artist { font-family: var(--serif-body); font-style: italic; font-size: 14.5px; color: var(--soft); }
+
+/* ---- deck ---- */
+.deck { flex: 1 1 auto; padding: 0 20px 14px; display: flex; flex-direction: column; gap: 9px; min-height: 0; }
+.deck-hint {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: var(--micro); letter-spacing: var(--micro-track);
+  text-transform: uppercase; color: var(--mute); flex: 0 0 auto;
+}
+.deck-hint b { font-weight: 400; color: var(--soft); }
+.deck-sides { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 12px; }
+.side-block { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; gap: 6px; }
+.side-label {
+  display: flex; justify-content: space-between; flex: 0 0 auto;
+  padding-bottom: 5px; box-shadow: inset 0 -1px 0 var(--line);
+  font-size: 7.5px; letter-spacing: var(--micro-track); text-transform: uppercase; color: var(--mute);
+}
+.side-label b { font-weight: 400; color: var(--soft); }
+.side-label--live b { color: var(--amber); }
+
+.grid {
+  flex: 1 1 auto; min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: 1fr;   /* load-bearing: rows stretch so the deck always fills */
+  gap: 7px;
+}
+.slot { border-radius: var(--r-slot); background: var(--slot); }
+.card {
+  border-radius: var(--r-slot);
+  overflow: hidden;
+  box-shadow: 0 0 0 1px var(--line), 0 3px 8px -6px var(--shadow);
+}
+.card img { width: 100%; height: 100%; object-fit: cover; display: block; filter: var(--past-art); }
+/* fit:"contain" — a portrait poem scan is never cropped to nonsense; it is
+   mounted on card stock and allowed to letterbox. --past-paper drops the
+   brightness lift --past-art applies, which would wash pencil off the page. */
+.card--contain { background: var(--card-bg); padding: 5px; }
+.card--contain img { object-fit: contain; filter: var(--past-paper); }
+.card--current {
+  cursor: pointer;
+  box-shadow: 0 0 0 1px var(--lit-edge), 0 0 0 4px var(--lit-ring), 0 6px 14px -8px var(--shadow);
+  -webkit-tap-highlight-color: transparent;
+}
+.card--current img { filter: none; }
+.card--back {
+  background: var(--card-bg);
+  box-shadow: 0 0 0 1px var(--line-2), 0 3px 8px -6px var(--shadow);
+  padding: 9px;
+  display: flex; flex-direction: column; justify-content: space-between;
+  overflow: hidden;
+}
+.card--back .no { display: flex; justify-content: space-between; font-size: 6.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mute); }
+.card--back .t { font-family: var(--serif-display); font-size: 13px; line-height: 1.02; }
+.card--back .a { font-family: var(--serif-body); font-style: italic; font-size: 9.5px; line-height: 1.15; color: var(--soft); }
+.card--back .n { font-family: var(--serif-body); font-size: 9px; line-height: 1.3; color: var(--soft); }
+.card--back .fig { flex: 1 1 auto; min-height: 0; margin-top: 5px; }
+.card--back .fig img { width: 100%; height: 100%; object-fit: contain; display: block; filter: var(--past-paper); }
+
+/* ---- spotlight: the deck becomes the card ---- */
+.stage { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; padding: 0 20px; }
+.stage-bar {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 18px 4px 12px; cursor: pointer;
+  font-size: 8.5px; letter-spacing: var(--micro-track);
+  text-transform: uppercase; color: var(--mute);
+  -webkit-tap-highlight-color: transparent;
+}
+.stage-bar .live { color: var(--amber); }
+.sleeve {
+  flex: 1 1 auto; min-height: 0; position: relative; cursor: pointer;
+  overflow: hidden; border-radius: var(--r-card);
+  box-shadow: 0 0 0 1px var(--line-2), 0 22px 40px -26px var(--shadow);
+  -webkit-tap-highlight-color: transparent;
+}
+.sleeve img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sleeve--paper { background: var(--card-bg); display: flex; flex-direction: column; }
+.sleeve--paper .sleeve-art { flex: 1 1 auto; min-height: 0; padding: 18px 18px 0; }
+.sleeve--paper .sleeve-art img { object-fit: contain; }
+.sleeve--paper .sleeve-cap { position: static; background: none; padding: 16px 20px 20px; }
+.sleeve--paper .sleeve-cap .t { color: var(--ink); }
+.sleeve--paper .sleeve-cap .a { color: var(--soft); }
+.sleeve--paper .sleeve-cap .h { color: var(--mute); }
+.sleeve-ramp {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 60%;
+  background: linear-gradient(to top, var(--band) 0%, var(--band) 30%, transparent 100%);
+  pointer-events: none;
+}
+.sleeve-cap {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  padding: 20px 22px; background: var(--band-solid);
+  display: flex; flex-direction: column; gap: 5px;
+}
+.sleeve-cap .t { font-family: var(--serif-display); font-size: 26px; line-height: 1.02; color: #f6f2ea; }
+.sleeve-cap .a { font-family: var(--serif-body); font-style: italic; font-size: 14.5px; color: #e2dbcf; }
+.sleeve-cap .h { margin-top: 7px; font-size: var(--micro); letter-spacing: var(--micro-track); text-transform: uppercase; color: #d8d0c2; }
+
+/* liner note: ruled index card, printed bands top and bottom */
+.liner {
+  flex: 1 1 auto; min-height: 0; position: relative; cursor: pointer;
+  overflow: hidden; border-radius: var(--r-card); background: var(--card-bg);
+  box-shadow: 0 0 0 1px var(--line-2), 0 22px 40px -26px var(--shadow);
+  -webkit-tap-highlight-color: transparent;
+}
+.liner-rules {
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(to bottom, transparent 0 27px, var(--rule) 27px 28px);
+  opacity: 0.9;
+}
+.liner-band {
+  position: absolute; left: 0; right: 0; padding: 13px 20px;
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--label-band);
+  font-size: 7.5px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mute);
+}
+.liner-band--top { top: 0; box-shadow: 0 1px 0 var(--line); }
+.liner-band--bottom { bottom: 0; box-shadow: 0 -1px 0 var(--line); }
+.liner-band img { height: 13px; width: auto; display: block; opacity: 0.75; filter: var(--logo-filter); }
+.liner-body {
+  position: relative; height: 100%;
+  padding: 70px 24px 60px;
+  display: flex; flex-direction: column; justify-content: center; gap: 14px;
+}
+.liner-body .t { font-family: var(--serif-display); font-size: 32px; line-height: 1; }
+.liner-body .a { font-family: var(--serif-body); font-style: italic; font-size: 16px; color: var(--soft); }
+.liner-body .rule { width: 26px; height: 1px; background: var(--amber); }
+.liner-body .n { font-family: var(--serif-body); font-size: 15.5px; line-height: 1.6; color: var(--body); text-wrap: pretty; }
+/* back_image_url: always above the text, always contained, never cropped */
+.liner-figure { flex: 0 0 auto; height: 40%; min-height: 90px; display: block; }
+.liner-figure img {
+  width: 100%; height: 100%; display: block;
+  object-fit: contain; object-position: center top; border-radius: 8px;
+}
+.liner--figured .liner-body { justify-content: flex-start; gap: 12px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.liner--figured .liner-body .t { font-size: 22px; }
+.liner--figured .liner-body .a { font-size: 13.5px; }
+.liner--figured .liner-body .n { font-size: 14px; line-height: 1.55; flex: 0 0 auto; }
+
+/* ---- transport / rail: three actions, nothing else ---- */
+.transport, .rail {
+  display: flex; gap: 10px; flex: 0 0 auto;
+  padding: 14px 20px calc(18px + env(safe-area-inset-bottom, 16px));
+}
+.transport button, .key {
+  appearance: none; border: none; border-radius: 999px;
+  padding: 15px 0; cursor: pointer;
+  font-family: var(--mono); font-size: 9.5px;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  -webkit-tap-highlight-color: transparent;
+  background: var(--key-on); color: var(--key-on-ink);
+  box-shadow: 0 6px 16px -10px var(--shadow);
+  width: 100%;
+}
+.t-back, .t-next {
+  flex: 1 1 0; background: var(--key); color: var(--soft);
+  box-shadow: inset 0 1px 0 var(--panel-top), 0 1px 2px var(--shadow);
+}
+.t-play { flex: 1.4 1 0; letter-spacing: 0.2em; }
+.transport button:disabled { opacity: 0.35; cursor: default; }
+.key--quiet {
+  background: var(--key); color: var(--soft); letter-spacing: 0.18em;
+  box-shadow: inset 0 1px 0 var(--panel-top), 0 1px 2px var(--shadow);
+}
+.rail .key { flex: 1.6 1 0; width: auto; }
+.rail .key--quiet { flex: 1 1 0; }
+.rail-note {
+  flex: 0 0 auto; margin: 0 20px; padding: 13px 0 0;
+  box-shadow: inset 0 1px 0 var(--line);
+  font-size: var(--micro); letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--mute); text-align: center;
+}
+
+/* ============================================================
+   SPLASH
+   ============================================================ */
+.splash { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; padding: 0 24px; }
+.splash-top { flex: 0 0 auto; display: flex; flex-direction: column; gap: 22px; padding-top: 26px; }
+.splash-slack { flex: 1 1 auto; min-height: 26px; }
+.label {
+  border-radius: var(--r-slot); overflow: hidden;
+  box-shadow: 0 0 0 1px var(--line-2), 0 10px 20px -14px var(--shadow);
+}
+.label-art { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); }
+.label-art img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; filter: var(--past-art); }
+.label-art--single { display: block; }
+.label-art--single img { aspect-ratio: 1; }
+.label-band {
+  padding: 11px 13px; background: var(--label-band);
+  display: flex; justify-content: space-between;
+  font-size: 7.5px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--mute);
+  box-shadow: 0 -1px 0 var(--line);
+}
+.splash-title { display: flex; flex-direction: column; gap: 9px; }
+.splash-title .no { font-size: var(--micro); letter-spacing: 0.24em; text-transform: uppercase; color: var(--mute); }
+.splash-title h1 { font-family: var(--serif-display); font-size: 40px; line-height: 0.98; font-weight: 400; margin: 0; }
+.by { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
+.by .v { font-family: var(--serif-body); font-style: italic; font-size: 14px; color: var(--soft); }
+.by .v b { font-weight: 400; font-style: normal; color: var(--ink); }
+.by .h { font-size: 7.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mute); }
+.splash-title p { font-family: var(--serif-body); font-size: 15.5px; line-height: 1.55; color: var(--body); margin: 0; text-wrap: pretty; }
+.facts { flex: 0 0 auto; display: flex; flex-direction: column; gap: 9px; padding-top: 16px; box-shadow: inset 0 1px 0 var(--line); }
+.fact { display: flex; gap: 12px; align-items: baseline; }
+.fact .k { flex: 0 0 74px; font-size: 7.5px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--mute); }
+.fact .v { font-family: var(--serif-body); font-size: 13.5px; line-height: 1.45; color: var(--body); }
+.notice {
+  border-radius: var(--r-slot); background: var(--card-bg);
+  box-shadow: 0 0 0 1px var(--line-2);
+  padding: 13px 15px; display: flex; flex-direction: column; gap: 6px;
+}
+.notice .h { font-size: var(--micro); letter-spacing: var(--micro-track); text-transform: uppercase; color: var(--amber); }
+.notice .b { font-family: var(--serif-body); font-size: 13.5px; line-height: 1.5; color: var(--body); text-wrap: pretty; }
+.notice .id { font-size: 8.5px; letter-spacing: 0.1em; color: var(--mute); }
+.doors { flex: 0 0 auto; display: flex; flex-direction: column; gap: 12px; padding: 18px 0 calc(20px + env(safe-area-inset-bottom, 16px)); }
+.plaque {
+  border-radius: var(--r-slot); background: var(--slot);
+  padding: 11px 13px; display: flex; flex-direction: column; gap: 5px;
+}
+.plaque .k { display: flex; justify-content: space-between; font-size: 7.5px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--mute); }
+.plaque .v { font-family: var(--serif-body); font-size: 13px; line-height: 1.45; color: var(--soft); }
+
+/* ============================================================
+   THE FLIP — end of a side
+   ============================================================ */
+.flip {
+  margin: 18px 20px 14px; flex: 0 0 auto;
+  border-radius: var(--r-panel); background: var(--card-bg);
+  /* the current-card ring, lifted off the deck: on this screen the only
+     lit object is the one that is waiting */
+  box-shadow: 0 0 0 1px var(--lit-edge), 0 0 0 4px var(--lit-ring), 0 10px 22px -16px var(--shadow);
+  padding: 16px 18px; display: flex; flex-direction: column; gap: 12px;
+}
+.flip .k { font-size: 8.5px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--amber); }
+.flip .b { font-family: var(--serif-body); font-size: 15px; line-height: 1.5; color: var(--body); text-wrap: pretty; }
+.flip-sides { display: flex; align-items: center; gap: 10px; }
+.flip-chip { padding: 6px 10px; border-radius: 5px; font-size: 7.5px; letter-spacing: 0.2em; text-transform: uppercase; }
+.flip-chip--done { background: var(--slot); color: var(--mute); box-shadow: inset 0 0 0 1px var(--line); }
+/* side B's label is upside down on a real cassette, so the chip is too.
+   This is the whole illustration: one rotation, in the object's own language. */
+.flip-chip--next { background: var(--label-band); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line-2); transform: rotate(180deg); }
+.flip-arrow { font-size: 10px; color: var(--mute); }
+
+/* ============================================================
+   COMPLETION
+   ============================================================ */
+.closing { padding: 20px 24px 14px; display: flex; flex-direction: column; gap: 5px; flex: 0 0 auto; }
+.closing .k { font-size: 8.5px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mute); }
+.closing .t { font-family: var(--serif-display); font-size: 29px; line-height: 1.02; }
+.closing .s { margin-top: 3px; font-size: var(--micro); letter-spacing: 0.16em; text-transform: uppercase; color: var(--mute); }
 
 /* ---- status line: errors and recoverable states, quietly ---- */
-.status {
-  flex: 0 0 auto;
-  text-align: center;
-  padding: 0 22px 10px;
-  font-family: var(--mono);
-  font-size: 10.5px;
-  letter-spacing: 0.06em;
-  line-height: 1.5;
-  color: var(--muted);
-  min-height: 16px;
-}
-.status.bad { color: var(--amber); }
-
-/* ---- the flip: end of side A ----
-   Sits where the now-playing block was, above the deck. Loud on purpose:
-   the tape has stopped and nothing restarts until the listener acts. */
-.flip {
-  flex: 0 0 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 22px 26px 18px;
+.status-line {
+  flex: 0 0 auto; min-height: 16px; padding: 0 24px 8px;
+  font-size: var(--micro); letter-spacing: 0.16em; text-transform: uppercase; color: var(--mute);
   text-align: center;
 }
-.flip-label {
-  font-family: var(--mono);
-  font-size: 9.5px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--amber);
-}
-.flip-note {
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--muted);
-  max-width: 30ch;
-}
-/* side label on the progress row */
-.pr-side {
-  font-family: var(--mono);
-  font-size: 9px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-left: 10px;
+.status-line.bad { color: var(--amber); }
+.fatal {
+  flex: 1 1 auto; display: flex; align-items: center; justify-content: center;
+  padding: 40px 26px; text-align: center;
+  font-family: var(--serif-body); font-size: 15px; line-height: 1.55; color: var(--soft);
 }

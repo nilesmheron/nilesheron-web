@@ -103,6 +103,11 @@ export default async function middleware(request) {
   // they fall into the slug branch below and get answered with entry.html.
   const MOTIF_PAGES = { mixtape: '/motif/mixtape-index' };
 
+  // /motif/by/<handle> — one curator's shelf, same page as the global index.
+  if (segments[0] === 'motif' && segments.length === 3 && segments[1] === 'by') {
+    return proxyStatic('/motif/mixtape-index', request);
+  }
+
   if (segments[0] === 'motif' && segments.length === 2 && MOTIF_PAGES[segments[1]]) {
     return proxyStatic(MOTIF_PAGES[segments[1]], request);
   }

@@ -126,6 +126,7 @@ async function rebuildManifest(fresh, dropSlug) {
       date: entry.date || '',
       cover_image_url: entry.cover_image_url || null,
       track_count: entry.tracks.length,
+      no: entry.no || 'T',
       // The index will eventually group by curator, and it reads only this
       // manifest — so it carries authorship from the start.
       curator: normaliseCurator(entry.curator),
@@ -195,10 +196,26 @@ function validateEntry(entry, slug) {
       return 'curator.name must be 60 characters or fewer';
     }
   }
-  if (entry.side_b_starts_at !== undefined) {
-    const sb = entry.side_b_starts_at;
-    if (!Number.isInteger(sb) || sb < 1 || sb >= entry.tracks.length) {
-      return 'side_b_starts_at must be a whole number between 1 and ' + (entry.tracks.length - 1);
+  /* sides[] declares the tape's sides. It replaced side_b_starts_at on
+     2026-09-15: the declared form carries labels as data and generalises past
+     two sides, which the split index could not. The totals must account for
+     every track — a partial declaration would strand the remainder in a side
+     that never renders, and the player would stop at a boundary it can never
+     cross. */
+  if (entry.sides !== undefined) {
+    const sd = entry.sides;
+    if (!Array.isArray(sd) || !sd.length) return 'sides must be a non-empty array if present';
+    let sum = 0;
+    for (const side of sd) {
+      if (!side || typeof side !== 'object') return 'each side must be an object';
+      if (!Number.isInteger(side.total) || side.total < 1) return 'each side needs a whole total of at least 1';
+      if (side.label !== undefined && !/^[A-Za-z0-9]{1,4}$/.test(String(side.label))) {
+        return 'a side label must be 1-4 letters or numbers';
+      }
+      sum += side.total;
+    }
+    if (sum !== entry.tracks.length) {
+      return `sides must account for all ${entry.tracks.length} tracks (they total ${sum})`;
     }
   }
   return null;

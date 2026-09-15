@@ -25,68 +25,90 @@
           replays it. Detect the final track and stop.
      ============================================================ */
 
-  /* ── scatter table, matched to entry.js so the deck reads the same ── */
-  var SCATTER = [
-    { r: -8,  x: -22, y: 14  },
-    { r: 6,   x: 18,  y: -8  },
-    { r: -3,  x: -4,  y: 20  },
-    { r: 11,  x: 26,  y: 4   },
-    { r: -12, x: -30, y: -2  },
-    { r: 4,   x: 9,   y: 24  },
-    { r: -6,  x: -14, y: -12 },
-    { r: 9,   x: 30,  y: 16  },
-    { r: -10, x: -7,  y: 2   }
-  ];
-  var SPREAD = 2.5;
-  var DECK_Y = -14;
+  /* ============================================================
+     THE SIDES MODEL
 
-  /* ── platforms ──
-     Apple Music is the intended front door: it has no development-mode cap, so
-     anyone with a subscription can listen. Spotify stays as a side door for the
-     five people Niles can allowlist.
+     A tape declares its sides; nothing about them is hard-coded. Every label,
+     counter, tick row and deck block derives from this one declaration, which
+     is why pos() exists — nothing else in the player needs to know that sides
+     are a thing.
 
-     Enabled 2026-09-13, once the MusicKit adapter existed and the spike had
-     cleared all five PRD §9.2 checks on a locked iPhone. An entry still falls
-     back to Spotify-only if its tracks carry no apple_id, so switching this on
-     cannot strand an entry that predates Apple. */
-  var APPLE_ENABLED = true;
+       sides: [{ label: 'A', total: 9 }, { label: 'B', total: 9 }]
+       sides: [{ label: 'A', total: 18 }]            // one-sided, reads as before
+     ============================================================ */
 
-  function appleReady() {
-    return APPLE_ENABLED && tracks.some(function (t) { return t.apple_id; });
+  var sides = [];
+
+  function buildSides(e) {
+    var declared = e && e.sides;
+    if (Object.prototype.toString.call(declared) === '[object Array]' && declared.length) {
+      var sum = 0, out = [];
+      for (var i = 0; i < declared.length; i++) {
+        var t = Number(declared[i].total) || 0;
+        if (t <= 0) break;
+        out.push({ label: String(declared[i].label || String.fromCharCode(65 + i)), total: t });
+        sum += t;
+      }
+      // Only trust a declaration that accounts for every track; a partial one
+      // would strand the remainder in a side that never appears.
+      if (sum === tracks.length) return out;
+      trace('sides declaration does not sum to ' + tracks.length + ' — falling back to one side');
+    }
+    return [{ label: 'A', total: tracks.length }];
   }
 
-  /* ── state ── */
-  var entry = null;
-  var tracks = [];
-  var revealed = [];        // track indices, in the order they were revealed
-  var cardEls = {};         // track index → card element
-  var idx = 0;
-  var queuedUpTo = -1;
-  var focused = null;       // position within revealed[]
-  var flipped = false;
-  var dragDx = 0;
-  /* ── sides ──
-     side_b_starts_at is the index where side B begins; absent means a
-     single-sided tape and no flip. The flip is a deliberate stop: the queue
-     is not extended across the boundary, so playback runs out at the end of
-     side A and waits for a press.
-
-     This fights nothing. Rule 3 exists because iOS refuses to start a new
-     media source without a user activation, and a flip prompt is a stop that
-     requires a tap to resume — the constraint and the product moment want the
-     same thing, so resuming side B is an ordinary user-initiated seed. */
-  var sideBStart = null;
-  var awaitingFlip = false;
-
-  function lastOfSideA() { return sideBStart === null ? -1 : sideBStart - 1; }
-  function sideOf(i) { return (sideBStart !== null && i >= sideBStart) ? 'B' : 'A'; }
-  function sideBounds() {
-    if (sideBStart === null) return { from: 0, to: tracks.length };
-    return sideOf(idx) === 'A' ? { from: 0, to: sideBStart } : { from: sideBStart, to: tracks.length };
+  // Everything the view needs about where a song sits.
+  function pos(i) {
+    var run = 0;
+    for (var n = 0; n < sides.length; n++) {
+      if (i < run + sides[n].total) {
+        return {
+          index: i,
+          side: n,
+          label: sides[n].label,
+          inSide: i - run,
+          total: sides[n].total,
+          first: run,
+          sided: sides.length > 1
+        };
+      }
+      run += sides[n].total;
+    }
+    var last = sides.length - 1;
+    return { index: i, side: last, label: sides[last].label, inSide: sides[last].total - 1,
+             total: sides[last].total, first: run - sides[last].total, sided: sides.length > 1 };
   }
-  // True when the tape should stop rather than finish: side A just ran out.
+
+  function sideStart(n) {
+    var run = 0;
+    for (var i = 0; i < n; i++) run += sides[i].total;
+    return run;
+  }
+
+  // The last song of a side, and there is another side after it.
   function atSideBreak() {
-    return sideBStart !== null && !finished && idx === lastOfSideA() && sideBStart < tracks.length;
+    if (finished || sides.length < 2) return false;
+    var p = pos(idx);
+    return p.inSide === p.total - 1 && p.side < sides.length - 1;
+  }
+
+  /* ============================================================
+     THE CARD MODEL
+
+     Four independent curator overrides, all sixteen combinations legal.
+     Resolved in one place so no view re-derives the rules.
+     ============================================================ */
+
+  function face(t, artUrl) {
+    var c = (t && t.card) || {};
+    return {
+      src: c.front_image_url || artUrl || null,
+      // fit governs the FRONT. A back image is always contained: there is no
+      // cover mode for a poem you are meant to read.
+      contain: Boolean(c.front_image_url) && c.fit === 'contain',
+      img: c.back_image_url || null,
+      text: c.back_text || null
+    };
   }
 
   var service = 'spotify';   // 'spotify' | 'apple' — set by the splash choice
@@ -98,7 +120,7 @@
   var starting = false;
 
   var root = document.getElementById('listen-root');
-  var deckZone, npEl, transportEl, statusEl, playBtn, progressEl;
+  var npEl, transportEl, statusEl, playBtn;
 
   /* ── diagnostics ──
      A listener cannot open a console, and "Starting then Play" looks identical
@@ -181,8 +203,7 @@
       entry = e;
       tracks = e.tracks || [];
       if (!tracks.length) { fatal('this entry has no playlist yet'); return; }
-      var sb = e.side_b_starts_at;
-      if (typeof sb === 'number' && sb > 0 && sb < tracks.length) sideBStart = sb;
+      sides = buildSides(e);
       renderSplash();
     })
     .catch(function () { fatal('entry not found'); });
@@ -193,95 +214,145 @@
 
   function renderSplash() {
     root.innerHTML = '';
-    var wrap = el('div', 'splash');
 
-    if (entry.cover_image_url) {
-      var img = el('img', 'splash-cover');
-      img.src = entry.cover_image_url;
-      img.alt = '';
-      wrap.appendChild(img);
+    root.appendChild(deckHead({ empty: true }));
+
+    var wrap = el('div', 'splash');
+    var top = el('div', 'splash-top');
+
+    /* The label: cover art over a printed band. Four sleeves if there is no
+       cover image — the borrowed-art placeholder the design still calls
+       unsolved, but it is what exists. */
+    var label = el('div', 'label');
+    label.appendChild(coverArt('label-art'));
+    var band = el('div', 'label-band');
+    band.innerHTML = '<span>Motif · No. ' + esc(entry.no || 'T') + '</span><span>' +
+      (sides.length > 1 ? 'Side ' + esc(sides[0].label) : 'One side') + '</span>';
+    label.appendChild(band);
+    top.appendChild(label);
+
+    var title = el('div', 'splash-title');
+    title.appendChild(el('div', 'no', 'Memorex · mixtape'));
+    var h = document.createElement('h1');
+    h.textContent = entry.title || 'Untitled';
+    title.appendChild(h);
+
+    // Who it is from, above the blurb: the answer changes whether the blurb
+    // gets read at all. Quiet, and never absent.
+    var cur = entry.curator || {};
+    if (cur.name || cur.handle) {
+      var by = el('div', 'by');
+      by.innerHTML = '<span class="v">a mixtape by <b>' + esc(cur.name || cur.handle) + '</b></span>' +
+        (cur.handle ? '<span class="h">' + esc(cur.handle) + '</span>' : '');
+      title.appendChild(by);
     }
 
-    var no = el('div', 'splash-no');
-    no.textContent = 'motif' + (entry.no ? ' · ' + entry.no : '');
-    wrap.appendChild(no);
+    var blurb = document.createElement('p');
+    blurb.textContent = 'Played blind. Each song turns a card face up as it begins.';
+    title.appendChild(blurb);
+    top.appendChild(title);
+    wrap.appendChild(top);
+    wrap.appendChild(el('div', 'splash-slack'));
 
-    var h = el('h1', 'splash-title');
-    h.textContent = entry.title || 'Untitled';
-    wrap.appendChild(h);
-
-    var note = el('p', 'splash-note');
-    note.textContent = 'Played blind. Each song reveals a card when it begins.';
-    wrap.appendChild(note);
-
-    // Say what it costs before they spend a consent screen finding out. The
-    // music plays through the listener's own subscription, so this is a real
-    // prerequisite rather than a preference.
-    var needs = el('p', 'splash-needs');
-    needs.textContent = appleReady()
-      ? 'Plays through your own Apple Music.'
-      : 'Plays through your own Spotify Premium.';
-    wrap.appendChild(needs);
-
-    // Count and length both. A count says how many turns this takes without
-    // saying what any of them are — it shapes the listen rather than spoiling it.
+    /* Load-bearing: the requirement appears before the tap, never at a consent
+       screen halfway in. A real listener was lost for want of this line. */
+    var facts = el('div', 'facts');
+    facts.appendChild(fact('Requires', appleReady()
+      ? 'Plays through your own Apple Music'
+      : 'Plays through your own Spotify Premium'));
     var total = totalMs();
-    var rt = el('div', 'splash-no');
-    rt.textContent = tracks.length + ' songs' + (total ? ' · ' + roughLength(total) : '');
-    wrap.appendChild(rt);
+    facts.appendChild(fact('Length', tracks.length + ' songs' + (total ? ' · ' + roughLength(total) : '')));
+    if (sides.length > 1) {
+      facts.appendChild(fact('Sides', sides.map(function (x) { return x.label; }).join(' and ') +
+        ' — it stops between them'));
+    }
+    wrap.appendChild(facts);
 
-    playBtn = el('button', 'play-btn');
-    /* "Play side A" on a two-sided tape, decided 2026-09-15.
+    var doors = el('div', 'doors');
 
-       It does the disclosure and the framing in one move. The listener learns
-       a side B exists — which is all they learn, no songs, so the blind holds
-       — and the flip stops being an ambush. Someone who pressed "play side A"
-       has already been told the tape has sides; someone who pressed "play" and
-       then had the music stop in their pocket has been surprised by a bug.
+    if (authFlag === 'denied') {
+      doors.appendChild(notice('Permission declined',
+        'Memorex could not reach your music service, so nothing has played and nothing has been revealed. You can try again whenever you like.'));
+    } else if (authFlag === 'error') {
+      doors.appendChild(notice('Could not sign in',
+        'Something went wrong signing in. Try again.'));
+    }
 
-       The service moves off the button and onto the line directly above,
-       which already states it outright. That line is load-bearing after a real
-       listener failed for want of it, so it stays. */
-    playBtn.textContent = sideBStart !== null
-      ? 'Play side A'
-      : (appleReady() ? 'Play with Apple Music' : 'Play');
-    // Route through startWith rather than straight to the Spotify handler —
-    // the primary button IS Apple once the front door is open.
+    playBtn = el('button', 'key');
+    /* "Play side A" on a multi-side tape. It discloses that another side
+       exists and nothing else — no songs — so the blind holds, and the flip
+       stops being an ambush when it arrives. */
+    playBtn.textContent = sides.length > 1 ? 'Play side ' + sides[0].label : 'Start the tape';
     playBtn.addEventListener('click', function () {
       startWith(appleReady() ? 'apple' : 'spotify');
     });
-    wrap.appendChild(playBtn);
+    doors.appendChild(playBtn);
 
-    // Side door. Spotify only works for listeners Niles has added by hand, so
-    // say that plainly rather than letting them discover it at the consent
-    // screen or, worse, at a silent playback failure.
+    // The side door, stated as a plaque rather than a second button: it is a
+    // fact about access, not an equal choice.
+    var p2 = el('div', 'plaque');
+    var k = el('div', 'k');
+    k.innerHTML = '<span>Spotify · side door</span><span>5 seats · by hand</span>';
+    var v = el('div', 'v');
+    v.textContent = 'Spotify needs Niles to add you first — ask him.';
+    p2.appendChild(k); p2.appendChild(v);
     if (appleReady()) {
-      var side = el('div', 'side-door');
-      var link = document.createElement('button');
-      link.className = 'side-door-btn';
-      link.textContent = 'Use Spotify instead';
-      link.addEventListener('click', function () { startWith('spotify'); });
-      var why = el('p', 'side-door-note');
-      why.textContent = 'Spotify needs Niles to add you first — ask him.';
-      side.appendChild(link);
-      side.appendChild(why);
-      wrap.appendChild(side);
-    } else {
-      var only = el('p', 'side-door-note');
-      only.textContent = 'Spotify needs Niles to add you first — ask him.';
-      wrap.appendChild(only);
+      p2.style.cursor = 'pointer';
+      p2.addEventListener('click', function () { startWith('spotify'); });
     }
+    doors.appendChild(p2);
 
-    if (authFlag === 'denied') {
-      wrap.appendChild(errNote('Spotify access was declined. Playback needs it — the music plays through your own subscription.'));
-    } else if (authFlag === 'error') {
-      wrap.appendChild(errNote('Something went wrong signing in to Spotify. Try again.'));
-    }
-
+    wrap.appendChild(doors);
     root.appendChild(wrap);
-    statusEl = el('div', 'status');
+
+    statusEl = el('div', 'status-line');
     root.appendChild(statusEl);
     prepare();
+  }
+
+  function fact(k, v) {
+    var d = el('div', 'fact');
+    var a = el('span', 'k'); a.textContent = k;
+    var b = el('span', 'v'); b.textContent = v;
+    d.appendChild(a); d.appendChild(b);
+    return d;
+  }
+
+  function notice(h, b, id) {
+    var n = el('div', 'notice');
+    var x = el('div', 'h'); x.textContent = h;
+    var y = el('div', 'b'); y.textContent = b;
+    n.appendChild(x); n.appendChild(y);
+    if (id) { var z = el('div', 'id'); z.textContent = id; n.appendChild(z); }
+    return n;
+  }
+
+  /* The tape's own art: the cover if there is one, else the first four
+     sleeves. Used on the splash label, and on the flip's lock screen. */
+  function coverArt(cls) {
+    var art = el('div', cls);
+    if (entry.cover_image_url) {
+      art.className = cls + ' ' + cls + '--single';
+      var one = document.createElement('img');
+      one.src = entry.cover_image_url;
+      one.alt = '';
+      art.appendChild(one);
+      return art;
+    }
+    for (var i = 0; i < 4; i++) {
+      var im = document.createElement('img');
+      var t = tracks[i] || tracks[0];
+      im.src = (t && t.card && t.card.front_image_url) || '';
+      im.alt = '';
+      art.appendChild(im);
+    }
+    return art;
+  }
+
+  function esc(v) {
+    return String(v == null ? '' : v)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
   }
 
   // Connect the SDK while the listener is still reading the splash. Connecting
@@ -737,7 +808,8 @@
     var n = appleQueuedUpTo + 1;
     if (!music || n >= tracks.length) return Promise.resolve(false);
     // The whole flip: simply stop feeding the queue at the boundary.
-    if (sideBStart !== null && n === sideBStart && idx < sideBStart) {
+    // The whole flip: stop feeding the queue at the boundary and let it run out.
+    if (pos(n).side !== pos(idx).side) {
       trace('holding at side break — not queueing track ' + n);
       return Promise.resolve(false);
     }
@@ -833,7 +905,8 @@
   function appendNext() {
     var n = queuedUpTo + 1;
     if (!deviceId || n >= tracks.length) return Promise.resolve(false);
-    if (sideBStart !== null && n === sideBStart && idx < sideBStart) {
+    // The whole flip: stop feeding the queue at the boundary and let it run out.
+    if (pos(n).side !== pos(idx).side) {
       trace('holding at side break — not queueing track ' + n);
       return Promise.resolve(false);
     }
@@ -952,343 +1025,375 @@
   }
 
   /* ============================================================
-     DECK
+     DECK — one block per side, a grid of slots, cards as they play
      ============================================================ */
 
-  function reveal(trackIndex, now) {
-    if (revealed.indexOf(trackIndex) !== -1) {
-      // Already on the deck — bring it forward rather than stacking a second
-      // copy, which is what happened after going back and forward again.
-      promote(trackIndex);
-      return;
+  /* The transport panel: two reels and the ticks of the CURRENT side only.
+     A two-sided tape is two runs of nine, not one run of eighteen. */
+  function deckHead(opts) {
+    opts = opts || {};
+    var head = el('div', 'deck-head');
+
+    var supply = el('div', 'reel reel--supply');
+    var takeup = el('div', 'reel reel--takeup');
+    if (opts.spent) { supply.className = 'reel reel--empty'; takeup.className = 'reel reel--full'; }
+    supply.appendChild(document.createElement('i'));
+    takeup.appendChild(document.createElement('i'));
+
+    var counter = el('div', 'counter');
+    var ticks = el('div', 'ticks');
+    var line = el('div', 'counter-line');
+
+    var p = tracks.length ? pos(idx) : null;
+    var n = opts.empty ? (p ? p.total : tracks.length) : p.total;
+    for (var i = 0; i < n; i++) {
+      var t = document.createElement('span');
+      if (!opts.empty) {
+        // Ticks are derived from the played index, never from a clock, so the
+        // panel is correct on return from background with nothing running.
+        if (i < p.inSide) t.className = 'played';
+        else if (i === p.inSide && !opts.spent) t.className = 'current';
+        else if (opts.spent) t.className = 'played';
+      }
+      ticks.appendChild(t);
     }
-    dropCard(trackIndex); // clear any orphan from a previous pass
-    revealed.push(trackIndex);
-    var card = buildCard(trackIndex, now, revealed.length - 1);
-    cardEls[trackIndex] = card;
-    if (deckZone) {
-      deckZone.querySelector('.deck').appendChild(card);
-      card.classList.add('revealing');
-      layout();
-    }
-  }
 
-  // Move an already-revealed card to the top of the stack. Going back used to
-  // leave the later card on top, so the deck disagreed with what was playing.
-  function promote(trackIndex) {
-    var at = revealed.indexOf(trackIndex);
-    if (at === -1) return;
-    revealed.splice(at, 1);
-    revealed.push(trackIndex);
-    var card = cardEls[trackIndex];
-    if (card && deckZone) deckZone.querySelector('.deck').appendChild(card);
-    focused = null;
-    flipped = false;
-    layout();
-  }
-
-  function dropCard(trackIndex) {
-    var card = cardEls[trackIndex];
-    if (card && card.parentNode) card.parentNode.removeChild(card);
-    delete cardEls[trackIndex];
-  }
-
-  // Remove every card for a track after `keepThrough`. Filtering the revealed
-  // array alone left the elements in the DOM with stale z-indexes on top.
-  function trimCardsAfter(keepThrough) {
-    revealed.filter(function (ti) { return ti > keepThrough; }).forEach(dropCard);
-    revealed = revealed.filter(function (ti) { return ti <= keepThrough; });
-    focused = null;
-    flipped = false;
-    layout();
-  }
-
-  function buildCard(trackIndex, now, pos) {
-    var t = tracks[trackIndex];
-    var c = t.card || {};
-
-    var card = el('div', 'card');
-    card.setAttribute('data-pos', pos);
-    var inner = el('div', 'card-inner');
-
-    /* front — curator image if given, else the album art (PRD §6) */
-    var front = el('div', 'face face-front');
-    var frontUrl = c.front_image_url || (now && now.artUrl) || null;
-
-    if (frontUrl) {
-      var art = el('img', 'card-art');
-      if (c.fit && c.fit !== 'cover') art.style.objectFit = 'contain';
-      art.src = frontUrl;
-      art.alt = t.title || '';
-      front.appendChild(art);
+    if (opts.empty) {
+      line.innerHTML = '<span><b>Song —</b></span><span>of —</span>';
+    } else if (opts.spent) {
+      line.innerHTML = '<span><b>End of side ' + esc(p.label) + '</b></span><span>' +
+        p.total + ' of ' + p.total + '</span>';
     } else {
-      front.className += ' face-track';
-      var n1 = el('div', 't-name'); n1.textContent = t.title || '';
-      var a1 = el('div', 't-artist'); a1.textContent = t.artist || '';
-      front.appendChild(n1); front.appendChild(a1);
+      line.innerHTML = '<span><b>Song ' + String(p.inSide + 1).padStart(2, '0') + '</b></span><span>of ' +
+        p.total + (p.sided ? ' · side ' + esc(p.label) : '') + '</span>';
     }
-    front.appendChild(el('span', 'seal-dot'));
 
-    /* back — curator text and/or image, else title and artist */
-    var back = el('div', 'face face-back');
+    counter.appendChild(ticks); counter.appendChild(line);
+    head.appendChild(supply); head.appendChild(counter); head.appendChild(takeup);
+    return head;
+  }
 
-    var backTop = el('div', 'back-top');
-    var logo = el('img', 'back-logo');
-    logo.src = '/motif/nm-h-logo.png';
-    logo.alt = 'nm.h';
-    var no = el('span', 'back-no');
-    no.textContent = 'Motif · ' + (entry.no || '');
-    backTop.appendChild(logo); backTop.appendChild(no);
+  function buildDeck() {
+    var deck = el('div', 'deck');
 
-    var title = el('div', 'back-title');
-    title.textContent = t.title || '';
-
-    var body = el('div', 'back-body');
-    if (c.back_image_url) {
-      var bi = el('img', 'back-image');
-      bi.src = c.back_image_url;
-      bi.alt = '';
-      body.appendChild(bi);
+    if (mode === 'rest') {
+      var hint = el('div', 'deck-hint');
+      var p = pos(idx);
+      hint.innerHTML = '<span>Press the lit card to open it</span><b>' +
+        (p.inSide + 1) + ' / ' + p.total + '</b>';
+      deck.appendChild(hint);
     }
-    var typed = el('div', 'typed');
-    var text = c.back_text || t.artist || '';
-    String(text).split('\n').forEach(function (line) {
-      var ln = el('span', 'ln');
-      ln.textContent = line;
-      typed.appendChild(ln);
+
+    var blocks = el('div', 'deck-sides');
+    var run = 0;
+    for (var n = 0; n < sides.length; n++) {
+      var block = el('div', 'side-block');
+      var live = pos(idx).side === n;
+
+      /* Only labelled when there is more than one side — a one-sided tape
+         renders exactly as before. */
+      if (sides.length > 1) {
+        var lab = el('div', 'side-label' + (live ? ' side-label--live' : ''));
+        var done = revealed.filter(function (ti) { return pos(ti).side === n; }).length;
+        var status = live ? (awaitingFlip ? 'Complete' : 'Playing')
+                          : (done >= sides[n].total ? 'Complete' : (done ? 'Complete' : (n > pos(idx).side ? (awaitingFlip ? 'Waiting' : 'Not started') : 'Complete')));
+        lab.innerHTML = '<span>Side ' + esc(sides[n].label) + '</span><b>' + status + '</b>';
+        block.appendChild(lab);
+      }
+
+      var grid = el('div', 'grid');
+      for (var i = 0; i < sides[n].total; i++) {
+        grid.appendChild(slotFor(run + i));
+      }
+      block.appendChild(grid);
+      blocks.appendChild(block);
+      run += sides[n].total;
+    }
+    deck.appendChild(blocks);
+    return deck;
+  }
+
+  /* One tile. Unplayed slots are inert divs with no content and no handler —
+     no title, no art, no alt text. That is the blind. */
+  function slotFor(i) {
+    if (revealed.indexOf(i) === -1) return el('div', 'slot');
+
+    var t = tracks[i];
+    var f = face(t, artFor(i));
+    var isCurrent = (i === idx) && !awaitingFlip && !finished;
+
+    if (flippedInGrid[i]) return gridBack(i, t, f);
+
+    var card = el('div', 'card' + (f.contain ? ' card--contain' : '') + (isCurrent ? ' card--current' : ''));
+    if (f.src) {
+      var im = document.createElement('img');
+      im.src = f.src; im.alt = '';
+      card.appendChild(im);
+    } else {
+      card.className += ' card--back';
+      var nb = el('div', 'no');
+      nb.innerHTML = '<span>' + esc(entry.no || 'T') + '</span><span>' + String(i + 1).padStart(2, '0') + '</span>';
+      var tb = el('div', 't'); tb.textContent = t.title || '';
+      card.appendChild(nb); card.appendChild(tb);
+    }
+    card.addEventListener('click', function (e) {
+      e.stopPropagation();
+      // The spotlight is for the current song. Anything already played flips
+      // in place instead.
+      if (isCurrent) { mode = 'spot'; renderPlayer(); }
+      else { flippedInGrid[i] = !flippedInGrid[i]; renderPlayer(); }
     });
-    if (String(text).split('\n').length > 9) body.classList.add('back-body--long');
-    body.appendChild(typed);
-
-    var foot = el('div', 'back-foot');
-    var d = el('span', 'back-date');
-    d.textContent = t.artist || '';
-    foot.appendChild(d);
-
-    back.appendChild(backTop);
-    back.appendChild(title);
-    back.appendChild(body);
-    back.appendChild(foot);
-
-    inner.appendChild(front);
-    inner.appendChild(back);
-    card.appendChild(inner);
     return card;
   }
 
-  function layout() {
-    revealed.forEach(function (trackIndex, pos) {
-      var card = cardEls[trackIndex];
-      if (!card) return;
-      var s = SCATTER[pos % SCATTER.length];
-      var isFocused = focused === pos;
-      var isTop = pos === revealed.length - 1;
-      var dx = (isFocused || isTop) ? dragDx : 0;
-      var t;
-      if (isFocused) {
-        t = 'translate(' + dx + 'px, ' + (DECK_Y - 10) + 'px) rotate(0deg) scale(1.3)';
-      } else if (isTop) {
-        t = 'translate(' + (s.x * SPREAD + dx) + 'px, ' + (s.y * SPREAD - 26 + DECK_Y) + 'px) rotate(' + (s.r * SPREAD * 0.45) + 'deg) scale(1.04)';
-      } else {
-        t = 'translate(' + (s.x * SPREAD) + 'px, ' + (s.y * SPREAD + DECK_Y) + 'px) rotate(' + (s.r * SPREAD) + 'deg)';
+  function gridBack(i, t, f) {
+    var card = el('div', 'card card--back');
+    var nb = el('div', 'no');
+    nb.innerHTML = '<span>' + esc(entry.no || 'T') + '</span><span>' + String(i + 1).padStart(2, '0') + '</span>';
+    card.appendChild(nb);
+
+    if (f.img) {
+      /* At tile size an image and a note cannot both survive. The image wins;
+         the note is one press away on the full liner note. */
+      var fig = el('div', 'fig');
+      var im = document.createElement('img');
+      im.src = f.img; im.alt = '';
+      fig.appendChild(im);
+      card.appendChild(fig);
+    } else {
+      var body = el('div');
+      var tb = el('div', 't'); tb.textContent = t.title || '';
+      var ab = el('div', 'a'); ab.textContent = t.artist || '';
+      body.appendChild(tb); body.appendChild(ab);
+      if (f.text) {
+        var nn = el('div', 'n');
+        nn.textContent = f.text.length > 90 ? f.text.slice(0, 88) + '…' : f.text;
+        body.appendChild(nn);
       }
-      card.style.transform = t;
-      // Strictly by stack position. A card left over from a previous pass used
-      // to keep an old z-index and sit above the one actually playing.
-      card.style.zIndex = isFocused ? 200 : (isTop ? 100 : pos + 1);
-      card.classList.toggle('focused', isFocused);
-      card.classList.toggle('flipped', isFocused && flipped);
+      card.appendChild(body);
+    }
+    card.addEventListener('click', function (e) {
+      e.stopPropagation();
+      flippedInGrid[i] = false;
+      renderPlayer();
     });
-    if (deckZone) deckZone.classList.toggle('is-focused', focused !== null);
-    document.documentElement.classList.toggle('focus-lock', focused !== null);
+    return card;
   }
 
-  /* ── gestures ──
-     Swipe on the deck drives PLAYBACK, not focus: left is the next song,
-     right is the previous one. Both are user-initiated, so re-seeding on
-     "back" is safe — a gesture carries the activation iOS requires.
-     Tap flips the top card to its info side. Tap off the deck drops focus. ── */
-  function onDown(e) {
-    var startX = e.clientX, startY = e.clientY;
-    var moved = false;
-    var focusedAtDown = focused;
-    var axis = null;
+  /* ---- the spotlight: the deck becomes the card ---- */
 
-    function onMove(ev) {
-      var dx = ev.clientX - startX, dy = ev.clientY - startY;
-      if (!axis && (Math.abs(dx) > 6 || Math.abs(dy) > 6)) {
-        axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
-        moved = true;
-      }
-      if (axis === 'x') { dragDx = dx * 0.34; layout(); }
+  function buildStage() {
+    var stage = el('div', 'stage');
+    var t = tracks[idx];
+    var f = face(t, artFor(idx));
+    var p = pos(idx);
+
+    var bar = el('div', 'stage-bar');
+    bar.innerHTML = mode === 'spot'
+      ? '<span class="live">Song ' + (p.inSide + 1) + ' of ' + p.total + '</span><span>Close</span>'
+      : '<span class="live">Memorex · ' + esc(entry.no || 'T') + ' · ' + esc(p.label) +
+        String(p.inSide + 1).padStart(2, '0') + '</span><span>Close</span>';
+    bar.addEventListener('click', function (e) { e.stopPropagation(); mode = 'rest'; renderPlayer(); });
+    stage.appendChild(bar);
+
+    stage.appendChild(mode === 'spot' ? buildSleeve(t, f) : buildLiner(t, f, p));
+    return stage;
+  }
+
+  function buildSleeve(t, f) {
+    /* fit:"contain" drops the scrim and the dark caption band entirely — a
+       near-solid band across a sheet of paper reads as damage. The scrim
+       exists only because the listener's album art is arbitrary, and a
+       curator-supplied scan is not. */
+    var sl = el('div', 'sleeve' + (f.contain ? ' sleeve--paper' : ''));
+    if (f.contain) {
+      var holder = el('div', 'sleeve-art');
+      var im = document.createElement('img'); im.src = f.src || ''; im.alt = '';
+      holder.appendChild(im);
+      sl.appendChild(holder);
+    } else {
+      var im2 = document.createElement('img'); im2.src = f.src || ''; im2.alt = '';
+      sl.appendChild(im2);
+      sl.appendChild(el('div', 'sleeve-ramp'));
     }
+    var cap = el('div', 'sleeve-cap');
+    var tt = el('div', 't'); tt.textContent = t.title || '';
+    var aa = el('div', 'a'); aa.textContent = t.artist || '';
+    var hh = el('div', 'h'); hh.textContent = 'Press the sleeve to turn it over';
+    cap.appendChild(tt); cap.appendChild(aa); cap.appendChild(hh);
+    sl.appendChild(cap);
+    sl.addEventListener('click', function (e) { e.stopPropagation(); mode = 'turn'; renderPlayer(); });
+    return sl;
+  }
 
-    function onUp(ev) {
-      window.removeEventListener('pointermove', onMove);
-      window.removeEventListener('pointerup', onUp);
-      window.removeEventListener('pointercancel', onUp);
+  function buildLiner(t, f, p) {
+    var liner = el('div', 'liner' + (f.img ? ' liner--figured' : ''));
+    liner.appendChild(el('div', 'liner-rules'));
 
-      var dx = ev.clientX - startX, dy = ev.clientY - startY;
-      dragDx = 0;
+    var top = el('div', 'liner-band liner-band--top');
+    top.innerHTML = '<span>Memorex · No. ' + esc(entry.no || 'T') + '</span><span>' +
+      (p.sided ? 'Side ' + esc(p.label) + ' · ' : '') + String(p.inSide + 1).padStart(2, '0') + '</span>';
+    liner.appendChild(top);
 
-      if (moved && Math.abs(dx) > 34 && Math.abs(dx) > Math.abs(dy)) {
-        flipped = false;
-        focused = null;
-        layout();
-        if (dx < 0) goNext(); else goBack();
-        return;
-      }
-      if (moved) { layout(); return; }
+    var body = el('div', 'liner-body');
+    var head = document.createElement('div');
+    head.style.cssText = 'display:flex;flex-direction:column;gap:5px;flex:0 0 auto';
+    var tt = el('div', 't'); tt.textContent = t.title || '';
+    var aa = el('div', 'a'); aa.textContent = t.artist || '';
+    head.appendChild(tt); head.appendChild(aa);
+    body.appendChild(head);
 
-      var hit = document.elementFromPoint(ev.clientX, ev.clientY);
-      var cardEl = hit && hit.closest && hit.closest('.card');
-      if (cardEl) {
-        var pos = parseInt(cardEl.getAttribute('data-pos'), 10);
-        if (focusedAtDown === pos) {
-          flipped = !flipped;          // tap the focused card → info side
-        } else {
-          focused = pos; flipped = false;  // bring it forward first
-        }
-      } else if (focusedAtDown !== null) {
-        focused = null; flipped = false;
-      }
-      layout();
+    /* Order is not negotiable: image above text. A typed note under its
+       handwritten original reads as a transcription; the reverse reads as a
+       caption on a photo. */
+    if (f.img) {
+      var fig = el('div', 'liner-figure');
+      var im = document.createElement('img'); im.src = f.img; im.alt = '';
+      fig.appendChild(im);
+      body.appendChild(fig);
     }
+    body.appendChild(el('div', 'rule'));
+    if (f.text) { var nn = el('div', 'n'); nn.textContent = f.text; body.appendChild(nn); }
+    liner.appendChild(body);
 
-    window.addEventListener('pointermove', onMove);
-    window.addEventListener('pointerup', onUp);
-    window.addEventListener('pointercancel', onUp);
+    var bot = el('div', 'liner-band liner-band--bottom');
+    bot.innerHTML = '<span>Press to see the sleeve</span>';
+    var logo = document.createElement('img');
+    logo.src = '/motif/nm-h-logo.png'; logo.alt = '';
+    bot.appendChild(logo);
+    liner.appendChild(bot);
+
+    /* A long poem scrolls rather than being clipped, so a drag must not read
+       as a press. Movement threshold on the same handler. */
+    var sy = 0, sx = 0;
+    liner.addEventListener('pointerdown', function (e) { sy = e.clientY; sx = e.clientX; });
+    liner.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (Math.abs(e.clientY - sy) > 8 || Math.abs(e.clientX - sx) > 8) return;
+      mode = 'spot'; renderPlayer();
+    });
+    return liner;
+  }
+
+  // Album art for a track, from whichever service is playing.
+  var artCache = {};
+  function artFor(i) { return artCache[i] || null; }
+
+  function reveal(trackIndex, now) {
+    if (now && now.artUrl) artCache[trackIndex] = now.artUrl;
+    if (revealed.indexOf(trackIndex) === -1) revealed.push(trackIndex);
+    renderPlayer();
+  }
+
+  // Going back drops the cards after the target so the deck agrees with what
+  // is playing.
+  function trimCardsAfter(keepThrough) {
+    revealed = revealed.filter(function (ti) { return ti <= keepThrough; });
+    Object.keys(flippedInGrid).forEach(function (k) {
+      if (Number(k) > keepThrough) delete flippedInGrid[k];
+    });
+    mode = 'rest';
   }
 
   /* ============================================================
      PLAYER CHROME
      ============================================================ */
 
+  /* ============================================================
+     THE PLAYER — one render, four modes
+
+     mode is derivable from playback state alone: no timers, no persistence.
+     A listener who backgrounds at a side break and returns an hour later
+     finds the flip screen, not a dead player.
+     ============================================================ */
+
   function renderPlayer() {
-    pulse('start', 0);
     root.innerHTML = '';
+    headAt = idx;
 
-    npEl = el('div', 'np');
-    root.appendChild(npEl);
+    root.appendChild(deckHead({ spent: awaitingFlip }));
 
-    progressEl = el('div', 'progress');
-    progressEl.innerHTML =
-      '<span class="pr-now">1</span>' +
-      '<span class="pr-track"><span class="pr-fill"></span></span>' +
-      '<span class="pr-total">' + tracks.length + '</span>' +
-      '<span class="pr-side"></span>';
-    root.appendChild(progressEl);
-    updateProgress(0);
+    if (finished) { renderClosing(); return; }
+    if (awaitingFlip) { renderFlip(); return; }
 
-    deckZone = el('div', 'listen-deck-zone');
-    var deck = el('div', 'deck');
-    deckZone.appendChild(deck);
-    deckZone.appendChild(el('div', 'veil'));
-    var hint = el('div', 'deck-hint');
-    hint.textContent = 'swipe to change songs · tap a card for info';
-    deckZone.appendChild(hint);
+    if (mode === 'spot' || mode === 'turn') {
+      root.appendChild(buildStage());
+    } else {
+      npEl = el('div', 'np');
+      root.appendChild(npEl);
+      root.appendChild(buildDeck());
+      if (nowShowing) paintNowPlaying(nowShowing);
+    }
 
-    deckZone.addEventListener('pointerdown', function (e) {
-      deckZone.classList.add('touched');
-      onDown(e);
-    });
-    root.appendChild(deckZone);
-
-    statusEl = el('div', 'status');
+    statusEl = el('div', 'status-line');
     root.appendChild(statusEl);
 
     transportEl = el('div', 'transport');
     transportEl.appendChild(tbtn('t-back', 'Back', goBack));
-    transportEl.appendChild(tbtn('t-play', 'Pause', togglePlay));
+    transportEl.appendChild(tbtn('t-play', paused ? 'Play' : 'Pause', togglePlay));
     transportEl.appendChild(tbtn('t-next', 'Next', goNext));
     root.appendChild(transportEl);
-
-    // any cards already revealed before the chrome existed
-    revealed.forEach(function (ti) { if (cardEls[ti]) deck.appendChild(cardEls[ti]); });
-    layout();
+    updateTransport();
   }
+
+  /* Attached once, not per render: renderPlayer() runs on every track start
+     and root survives innerHTML = '', so binding here would stack a listener
+     per song. Pressing anywhere outside a card returns to the deck. */
+  root.addEventListener('click', function () {
+    if (!finished && !awaitingFlip && mode !== 'rest') { mode = 'rest'; renderPlayer(); }
+  });
 
   function tbtn(cls, label, fn) {
     var b = document.createElement('button');
     b.className = cls;
     b.textContent = label;
-    b.addEventListener('click', fn);
+    b.addEventListener('click', function (e) { e.stopPropagation(); fn(); });
     return b;
   }
 
   function updateTransport() {
     if (!transportEl) return;
-    var p = transportEl.querySelector('.t-play');
-    if (p) p.textContent = paused ? 'Play' : 'Pause';
-    var b = transportEl.querySelector('.t-back');
-    if (b) b.disabled = idx === 0;
+    var p = pos(idx);
+    var back = transportEl.querySelector('.t-back');
+    var next = transportEl.querySelector('.t-next');
+    var play = transportEl.querySelector('.t-play');
+    // Back at the first song of a side and next at the last disable rather
+    // than wrap. Next does NOT flip the tape: the flip is a deliberate act
+    // with its own key, and advancing into the next side by pressing next
+    // would defeat the stop entirely.
+    if (back) back.disabled = p.inSide === 0;
+    if (next) next.disabled = p.inSide === p.total - 1;
+    if (play) play.textContent = paused ? 'Play' : 'Pause';
   }
 
-  /* ---- runtime and progress ----
-     Deliberately no track numbers and no "3 of 12". Position within a known
-     length tells the listener this was composed and has an end — the thing a
-     radio stream cannot say — without telling them what is coming. ---- */
-
-  function totalMs() {
-    var sum = 0;
-    for (var i = 0; i < tracks.length; i++) {
-      if (!tracks[i].duration_ms) return 0;   // incomplete data, show nothing
-      sum += tracks[i].duration_ms;
-    }
-    return sum;
+  /* Progress lives in the transport panel, and the panel counts SONGS. This
+     fires on every playback tick, so it must do nothing unless the song has
+     actually changed — otherwise it rebuilds the head several times a second. */
+  var headAt = -1;
+  function updateProgress() {
+    if (!root || finished || awaitingFlip) return;
+    if (idx === headAt) return;
+    headAt = idx;
+    var head = root.querySelector('.deck-head');
+    if (head) root.replaceChild(deckHead({}), head);
   }
 
-  function roughLength(ms) {
-    var mins = Math.round(ms / 60000);
-    if (mins < 60) return 'about ' + mins + ' minutes';
-    var h = Math.floor(mins / 60), m = mins % 60;
-    return 'about ' + h + 'h ' + (m ? m + 'm' : '');
-  }
-
-  function clock(ms) {
-    var s = Math.max(0, Math.round(ms / 1000));
-    var m = Math.floor(s / 60);
-    return m + ':' + String(s % 60).padStart(2, '0');
-  }
-
-  // Position by track, not by clock. The bar still creeps within a song so it
-  // reads as alive rather than stepping, but the numbers are songs — which is
-  // what tells a listener where they are in something somebody sequenced.
-  /* Counts within the side being played, not the whole tape. A tape with
-     sides is two runs of nine, not one run of eighteen — that is the point of
-     splitting it. The side label is the only new disclosure: it tells the
-     listener a boundary exists, which is deliberate. */
-  function updateProgress(position, duration) {
-    if (!progressEl || !tracks.length) return;
-    var b = sideBounds();
-    var span = b.to - b.from;
-    var at = idx - b.from;
-    var within = (duration && position) ? Math.min(1, position / duration) : 0;
-    var pct = Math.max(0, Math.min(100, ((at + within) / span) * 100));
-    progressEl.querySelector('.pr-fill').style.width = pct + '%';
-    progressEl.querySelector('.pr-now').textContent = String(at + 1);
-    progressEl.querySelector('.pr-total').textContent = String(span);
-    var sideEl = progressEl.querySelector('.pr-side');
-    if (sideEl) sideEl.textContent = sideBStart === null ? '' : 'side ' + sideOf(idx);
-  }
+  var nowShowing = null;
 
   function renderNowPlaying(now) {
+    nowShowing = now;
+    paintNowPlaying(now);
+  }
+
+  function paintNowPlaying(now) {
     if (!npEl) return;
     npEl.innerHTML = '';
-    var l = el('div', 'np-label');
-    l.textContent = 'now playing';
-    var t = el('div', 'np-title');
-    t.textContent = now.title;
-    var a = el('div', 'np-artist');
-    a.textContent = now.artist;
+    var l = el('div', 'np-label'); l.textContent = 'Playing now';
+    var t = el('div', 'np-title'); t.textContent = now.title;
+    var a = el('div', 'np-artist'); a.textContent = now.artist;
     npEl.appendChild(l); npEl.appendChild(t); npEl.appendChild(a);
   }
 
-  /* ---------- transport, routed to whichever service is playing ----------
-     Every one of these asks the player what is actually happening rather than
-     trusting the cached flag. They can disagree: a stale "playing" made the
-     first press pause an already-paused player, so it took two presses to
-     start anything. That bug is service-agnostic and so is the fix. */
   function svcResume() {
     if (service === 'apple') { if (music) music.play(); return; }
     if (player) player.resume();
@@ -1366,51 +1471,95 @@
   function flipPrompt() {
     if (awaitingFlip || finished) return;
     awaitingFlip = true;
+    mode = 'rest';
     svcPause();
     releaseWakeLock();
     pulse('flip', idx);
     trace('side break reached at track ' + idx);
+    renderPlayer();
+    setFlipLockScreen();
+  }
 
-    if (npEl) npEl.innerHTML = '';
-    if (transportEl) transportEl.remove();
+  function renderFlip() {
+    var p = pos(idx);
+    var nextLabel = sides[p.side + 1] ? sides[p.side + 1].label : '';
 
-    var wrap = el('div', 'flip');
-    var lab = el('div', 'flip-label');
-    lab.textContent = 'end of side A';
-    var btn = el('button', 'play-btn');
-    btn.textContent = 'Flip the tape';
-    btn.addEventListener('click', function () {
+    var card = el('div', 'flip');
+    var k = el('div', 'k');
+    k.textContent = 'End of side ' + p.label;
+    card.appendChild(k);
+
+    /* The whole illustration: side B's chip upside down, because that is how
+       the label sits on a real cassette. No drawn tape, no icon. */
+    var chips = el('div', 'flip-sides');
+    var a = el('div', 'flip-chip flip-chip--done'); a.textContent = 'Side ' + p.label;
+    var arrow = el('div', 'flip-arrow'); arrow.textContent = '→';
+    var b = el('div', 'flip-chip flip-chip--next'); b.textContent = 'Side ' + nextLabel;
+    chips.appendChild(a); chips.appendChild(arrow); chips.appendChild(b);
+    card.appendChild(chips);
+
+    var line = el('div', 'b');
+    line.textContent = 'Side ' + nextLabel + ' is waiting. Nothing plays until you turn it over.';
+    card.appendChild(line);
+    root.appendChild(card);
+
+    // The waiting half of the deck is a second, quieter statement of the same
+    // fact. No hint row: there is no lit card to press.
+    root.appendChild(buildDeck());
+
+    statusEl = el('div', 'status-line');
+    root.appendChild(statusEl);
+
+    /* The card explains and the rail acts — the same division the completion
+       screen uses. A flip screen with a dead rail reads as one that has
+       crashed rather than one that is waiting. */
+    var rail = el('div', 'rail');
+    var key = el('button', 'key');
+    key.textContent = 'Flip the tape';
+    key.addEventListener('click', function (e) {
+      e.stopPropagation();
       // A tap is exactly what iOS needs to start a new media source, so
-      // resuming side B is an ordinary seed rather than a special case.
+      // side B is an ordinary seed rather than a special case.
       awaitingFlip = false;
-      wrap.remove();
-      root.appendChild(transportEl);
       requestWakeLock();
-      seedAny(sideBStart).catch(function (e) { say(friendly(e), true); });
+      seedAny(sideStart(pos(idx).side + 1)).catch(function (e2) { say(friendly(e2), true); });
     });
-    var note = el('p', 'flip-note');
-    note.textContent = 'Side B is waiting. Nothing plays until you turn it over.';
-    wrap.appendChild(lab); wrap.appendChild(btn); wrap.appendChild(note);
-    root.insertBefore(wrap, deckZone);
+    rail.appendChild(key);
+    root.appendChild(rail);
+  }
 
-    // The lock screen is where this will actually be met.
-    if ('mediaSession' in navigator) {
-      try {
-        navigator.mediaSession.metadata = new window.MediaMetadata({
-          title: 'End of side A — flip the tape',
-          artist: entry.title || 'Memorex',
-          album: 'Memorex'
-        });
-        navigator.mediaSession.playbackState = 'paused';
-        // Play from the lock screen should flip rather than do nothing.
-        navigator.mediaSession.setActionHandler('play', function () { btn.click(); });
-        navigator.mediaSession.setActionHandler('nexttrack', function () { btn.click(); });
-      } catch (_) {}
-    }
+  /* Most listeners meet the flip here first — the music simply stops. The
+     media item's own fields carry it, with no custom UI. Artwork is the
+     TAPE's cover, not the last song's sleeve: the song is over, the object
+     that needs an action is the tape. */
+  function setFlipLockScreen() {
+    if (!('mediaSession' in navigator)) return;
+    try {
+      var p = pos(idx);
+      var art = [];
+      if (entry.cover_image_url) {
+        art = [{ src: entry.cover_image_url, sizes: '512x512', type: 'image/jpeg' }];
+      }
+      navigator.mediaSession.metadata = new window.MediaMetadata({
+        // Lead with the reason: truncation must never cut "flip the tape"
+        // before the words that explain why.
+        title: 'End of side ' + p.label + ' — flip the tape',
+        artist: (entry.title || 'Memorex') + ((entry.curator && entry.curator.name) ? ' · ' + entry.curator.name : ''),
+        album: 'Memorex',
+        artwork: art
+      });
+      navigator.mediaSession.playbackState = 'paused';
+      var go = function () {
+        var k = root.querySelector('.rail .key');
+        if (k) k.click();
+      };
+      navigator.mediaSession.setActionHandler('play', go);
+      navigator.mediaSession.setActionHandler('nexttrack', go);
+    } catch (_) {}
   }
 
   /* ============================================================
-     COMPLETION (PRD §5.3)
+     COMPLETION
      ============================================================ */
 
   function finish() {
@@ -1419,78 +1568,67 @@
     pulse('complete', idx);
     svcPause();
     releaseWakeLock();
-    if (npEl) npEl.innerHTML = '';
-    if (transportEl) transportEl.remove();
+    mode = 'rest';
+    renderPlayer();
+  }
 
-    focused = null;
-    layout();
+  function renderClosing() {
+    var closing = el('div', 'closing');
+    var k = el('div', 'k'); k.textContent = 'That was the tape';
+    var t = el('div', 't'); t.textContent = entry.title || 'the mixtape';
+    closing.appendChild(k); closing.appendChild(t);
+    var cur = entry.curator || {};
+    if (cur.name) {
+      var sfoot = el('div', 's');
+      sfoot.textContent = 'a mixtape by ' + cur.name + ' · ' + tracks.length + ' songs' +
+        (sides.length > 1 ? ' · ' + sides.length + ' sides' : '');
+      closing.appendChild(sfoot);
+    }
+    root.appendChild(closing);
 
-    var done = el('div', 'done');
-    var h = el('div', 'done-h');
-    h.textContent = 'that was ' + (entry.title || 'the mixtape');
-    done.appendChild(h);
+    root.appendChild(buildDeck());
 
-    /* Matching service only — PRD §15 Q3, and the fallback that used to be
-       here was actively wrong: it offered an Apple listener the SPOTIFY
-       playlist, which is exactly the service they cannot use. Better to show
-       no call to action than one that leads nowhere they can go. If this is
-       missing, the entry needs an apple_playlist_url; the builder now says so. */
+    /* Matching service only. The fallback that used to be here offered an
+       Apple listener the Spotify playlist, which is the one service they
+       cannot use. */
     var url = service === 'apple' ? entry.apple_playlist_url : entry.spotify_playlist_url;
+
+    var rail = el('div', 'rail');
     if (url) {
       var a = document.createElement('a');
-      a.className = 'add-link';
+      a.className = 'key';
       a.href = url;
       a.target = '_blank';
       a.rel = 'noopener noreferrer';
+      a.style.textAlign = 'center';
+      a.style.textDecoration = 'none';
       a.textContent = 'Add this playlist';
-      done.appendChild(a);
+      rail.appendChild(a);
     }
-
-    var again = el('button', 'play-btn ghost');
+    var again = el('button', 'key' + (url ? ' key--quiet' : ''));
     again.textContent = 'Play again';
-    again.addEventListener('click', function () {
+    again.addEventListener('click', function (e) {
+      e.stopPropagation();
       revealed = [];
-      Object.keys(cardEls).forEach(dropCard);
-      cardEls = {};
+      flippedInGrid = {};
+      artCache = {};
       mediaFor = null;
-      var deck = deckZone.querySelector('.deck');
-      if (deck) deck.innerHTML = '';
-      done.remove();
-      root.appendChild(transportEl);
-      // seedAny, not seedAt — seedAt is the Spotify seeder and would fail
-      // outright on Apple. Never caught because nobody has reached this screen.
-      seedAny(0).catch(function (e) { say(friendly(e), true); });
+      finished = false;
+      awaitingFlip = false;
+      mode = 'rest';
+      idx = 0;
+      renderPlayer();
+      seedAny(0).catch(function (e2) { say(friendly(e2), true); });
     });
-    done.appendChild(again);
+    rail.appendChild(again);
 
-    /* Above the deck, not after it. Appending put the primary call to action
-       (PRD §5.3) below the whole deck, in the slot the transport had just
-       vacated — technically on screen, but the last thing the eye reaches on
-       the one screen that is asking for an action. Reported 2026-09-14 on the
-       first completion anyone has ever seen. Provisional: the completion
-       screen is part of the visual redesign. */
-    root.insertBefore(done, deckZone);
-  }
-
-  /* ============================================================
-     PLATFORM BITS
-     ============================================================ */
-
-  function setMediaSession(now) {
-    if (!('mediaSession' in navigator)) return;
-    try {
-      navigator.mediaSession.metadata = new window.MediaMetadata({
-        title: now.title,
-        artist: now.artist,
-        album: entry.title || 'Motif',
-        artwork: now.artwork || []
-      });
-      navigator.mediaSession.playbackState = paused ? 'paused' : 'playing';
-      navigator.mediaSession.setActionHandler('play', function () { svcResume(); });
-      navigator.mediaSession.setActionHandler('pause', function () { svcPause(); });
-      navigator.mediaSession.setActionHandler('nexttrack', goNext);
-      navigator.mediaSession.setActionHandler('previoustrack', goBack);
-    } catch (_) {}
+    // The primary's slot is spoken for rather than left empty.
+    if (!url) {
+      var note = el('div', 'rail-note');
+      note.textContent = 'No ' + (service === 'apple' ? 'Apple Music' : 'Spotify') + ' playlist link on this tape';
+      root.appendChild(note);
+    }
+    root.appendChild(rail);
   }
 
   // The screen lock cannot be re-taken silently after backgrounding — iOS
@@ -1509,7 +1647,7 @@
     if (wakeLock) { try { wakeLock.release(); } catch (_) {} wakeLock = null; }
   }
   document.addEventListener('pointerdown', function () {
-    if (!wakeLock && !finished && deckZone) requestWakeLock();
+    if (!wakeLock && !finished && !awaitingFlip) requestWakeLock();
   });
 
   /* ============================================================

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Motif — listen</title>
+  <title>Memorex — listen</title>
   <!--
     Blind playlist player. Served at /motif/:slug/listen via a vercel.json
     rewrite (the slug is read back off the pathname, same as entry.js).
@@ -14,12 +14,14 @@
   -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Caveat:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/motif/motif.css">
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!-- motif.css is deliberately NOT loaded. The Tape direction is its own
+       system: the player and the poetry archive are no longer siblings, and
+       inheriting the archive's tokens would half-apply both. -->
   <link rel="stylesheet" href="/motif/listen.css">
 </head>
 <body>
-  <div class="motif-root listen-root" id="listen-root"></div>
+  <div class="listen-root" id="listen-root"></div>
   <script src="/motif/listen.js"></script>
 </body>
 </html>
