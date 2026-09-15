@@ -51,6 +51,26 @@
     display: flex; align-items: center; gap: 10px; margin: 28px 0 10px;
   }
   .step::after { content: ""; flex: 1 1 auto; height: 1px; background: var(--hair); }
+  /* Collapsible: the page is unusable with every section open at once. The
+     caret is the affordance; the whole heading is the target. */
+  .step { cursor: pointer; user-select: none; -webkit-user-select: none; }
+  .step .caret {
+    flex: 0 0 auto; font-size: 8px; color: var(--muted);
+    transition: transform 0.15s ease; transform: rotate(90deg);
+  }
+  .step.closed .caret { transform: rotate(0deg); }
+  .step .tag {
+    flex: 0 0 auto; text-transform: none; letter-spacing: 0.04em;
+    font-size: 10px; color: var(--muted); opacity: 0.85;
+  }
+  .fold { overflow: hidden; }
+  .fold[hidden] { display: none; }
+  /* the share link for a saved tape */
+  .sharebox { display: flex; gap: 8px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
+  .sharebox input {
+    flex: 1 1 220px; font-size: 12px; padding: 9px 10px; background: var(--card-bg);
+  }
+  .sharebox button { flex: 0 0 auto; padding: 9px 14px; font-size: 10px; }
   textarea, input[type=text] {
     width: 100%; background: var(--card-bg); border: 1px solid var(--hair);
     border-radius: 6px; padding: 12px; font-family: var(--mono);
@@ -240,6 +260,12 @@
     <button id="load" class="ghost">Load existing</button>
   </div>
   <p class="note" id="saveNote" style="margin-top:8px">Commits <code>motif/data/&lt;slug&gt;.json</code> to the repo. Vercel redeploys, so it goes live about 40 seconds later.</p>
+  <div class="sharebox" id="shareBox" style="display:none">
+    <input type="text" id="shareUrl" readonly>
+    <button id="shareCopy" class="ghost">Copy link</button>
+    <button id="shareOpen" class="ghost">Open</button>
+  </div>
+  <p class="note" id="shareNote" style="margin-top:6px;display:none"></p>
 
   <div class="step">8 · or copy the JSON by hand</div>
   <textarea id="out" class="out" readonly placeholder="Confirm some matches and the JSON appears here."></textarea>
@@ -1108,6 +1134,7 @@
         currentSlug = slug;
         note('saveNote', (d.created ? 'created ' : 'updated ') + d.path +
           ' · live in ~40s at ' + d.listen);
+        showShare(slug);
         refreshEntries();
       })
       .catch(function (e) { note('saveNote', 'save failed: ' + e.message, true); })
@@ -1316,6 +1343,7 @@
           };
         });
         currentSlug = slug;
+        showShare(slug);
         render();
         summarise();
         renderEntries(lastList);
@@ -1345,6 +1373,88 @@
       btn.textContent = 'Re-check Spotify matches';
     });
   });
+
+  /* ---------- collapsible sections ----------
+     Wraps everything between one .step heading and the next, so the markup
+     did not have to be restructured. Steps 3, 5, 6 and 8 start closed: the
+     track list and the JSON are the two that make the page unusable, and the
+     others are set-once. */
+  (function foldSteps() {
+    var CLOSED = { '3': 1, '5': 1, '6': 1, '8': 1 };
+    var steps = [].slice.call(document.querySelectorAll('.step'));
+    steps.forEach(function (stepEl) {
+      var n = (stepEl.textContent.match(/^\s*(\d+)/) || [])[1];
+      var fold = document.createElement('div');
+      fold.className = 'fold';
+      var node = stepEl.nextSibling;
+      while (node && !(node.nodeType === 1 && node.classList && node.classList.contains('step'))) {
+        var next = node.nextSibling;
+        fold.appendChild(node);
+        node = next;
+      }
+      stepEl.parentNode.insertBefore(fold, stepEl.nextSibling);
+
+      var caret = document.createElement('span');
+      caret.className = 'caret';
+      caret.textContent = '▸';
+      stepEl.insertBefore(caret, stepEl.firstChild);
+
+      var tag = document.createElement('span');
+      tag.className = 'tag';
+      stepEl.appendChild(tag);
+      stepEl._tag = tag;
+
+      function set(closed) {
+        fold.hidden = closed;
+        stepEl.classList.toggle('closed', closed);
+      }
+      set(Boolean(CLOSED[n]));
+      stepEl.addEventListener('click', function () { set(!fold.hidden); });
+      stepEl._fold = fold;
+      stepEl._set = set;
+    });
+  })();
+
+  // Open a section from code — used when something needs attention in it.
+  function openStep(n) {
+    var steps = [].slice.call(document.querySelectorAll('.step'));
+    for (var i = 0; i < steps.length; i++) {
+      if ((steps[i].textContent.match(/(\d+)/) || [])[1] === String(n) && steps[i]._set) {
+        steps[i]._set(false);
+        return;
+      }
+    }
+  }
+
+  /* ---------- the share link ----------
+     An unlisted tape is off every shelf, so the link is the only way in and
+     the builder is the only place it exists. */
+  function showShare(slug) {
+    if (!slug) { $('shareBox').style.display = 'none'; $('shareNote').style.display = 'none'; return; }
+    var url = window.location.origin + '/motif/' + slug + '/listen';
+    $('shareUrl').value = url;
+    $('shareBox').style.display = 'flex';
+    var unlisted = $('unlisted').checked;
+    $('shareNote').style.display = '';
+    $('shareNote').textContent = unlisted
+      ? 'Unlisted — this link is the only way in. It is on no shelf.'
+      : 'Also listed on /motif/mixtape.';
+  }
+
+  $('shareCopy').addEventListener('click', function () {
+    var b = this;
+    if (!navigator.clipboard) { $('shareUrl').select(); return; }
+    navigator.clipboard.writeText($('shareUrl').value).then(function () {
+      b.textContent = 'Copied';
+      setTimeout(function () { b.textContent = 'Copy link'; }, 1600);
+    });
+  });
+
+  $('shareOpen').addEventListener('click', function () {
+    window.open($('shareUrl').value, '_blank', 'noopener');
+  });
+
+  $('unlisted').addEventListener('change', function () { showShare(currentSlug); });
 
   $('sideAuto').addEventListener('click', function () {
     var h = halfwayIndex();

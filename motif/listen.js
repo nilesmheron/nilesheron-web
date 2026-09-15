@@ -1131,7 +1131,10 @@
         block.appendChild(lab);
       }
 
-      var grid = el('div', 'grid');
+      // Three columns; two rows or fewer is a short side and must not stretch.
+      var rows = Math.ceil(sides[n].total / 3);
+      var grid = el('div', 'grid' + (rows <= 2 ? ' grid--short' : ''));
+      if (rows <= 2) block.className += ' side-block--short';
       for (var i = 0; i < sides[n].total; i++) {
         grid.appendChild(slotFor(run + i));
       }

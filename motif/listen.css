@@ -176,9 +176,17 @@ body {
   flex: 1 1 auto; min-height: 0;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  grid-auto-rows: 1fr;   /* load-bearing: rows stretch so the deck always fills */
+  grid-auto-rows: minmax(0, 1fr);   /* rows stretch so a full deck fills the column */
   gap: 7px;
 }
+/* A side of one or two rows must NOT stretch: at 1fr a single row expands to
+   fill half the screen and three songs render as three enormous tiles. The
+   handoff assumed eighteen, where six rows a side divide sensibly. Short
+   sides keep square tiles and let the slack be slack. */
+.grid--short { grid-auto-rows: auto; align-content: start; }
+.grid--short > * { aspect-ratio: 1; }
+.side-block--short { flex: 0 0 auto; }
+.deck-sides { justify-content: flex-start; }
 .slot { border-radius: var(--r-slot); background: var(--slot); }
 .card {
   border-radius: var(--r-slot);
@@ -335,7 +343,7 @@ body {
   box-shadow: 0 0 0 1px var(--line-2), 0 10px 20px -14px var(--shadow);
 }
 .label-art { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); }
-.label-art img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; filter: var(--past-art); }
+.label-art img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
 .label-art--single { display: block; }
 .label-art--single img { aspect-ratio: 1; }
 .label-band {
