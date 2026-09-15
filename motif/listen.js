@@ -65,6 +65,30 @@
   var focused = null;       // position within revealed[]
   var flipped = false;
   var dragDx = 0;
+  /* ── sides ──
+     side_b_starts_at is the index where side B begins; absent means a
+     single-sided tape and no flip. The flip is a deliberate stop: the queue
+     is not extended across the boundary, so playback runs out at the end of
+     side A and waits for a press.
+
+     This fights nothing. Rule 3 exists because iOS refuses to start a new
+     media source without a user activation, and a flip prompt is a stop that
+     requires a tap to resume — the constraint and the product moment want the
+     same thing, so resuming side B is an ordinary user-initiated seed. */
+  var sideBStart = null;
+  var awaitingFlip = false;
+
+  function lastOfSideA() { return sideBStart === null ? -1 : sideBStart - 1; }
+  function sideOf(i) { return (sideBStart !== null && i >= sideBStart) ? 'B' : 'A'; }
+  function sideBounds() {
+    if (sideBStart === null) return { from: 0, to: tracks.length };
+    return sideOf(idx) === 'A' ? { from: 0, to: sideBStart } : { from: sideBStart, to: tracks.length };
+  }
+  // True when the tape should stop rather than finish: side A just ran out.
+  function atSideBreak() {
+    return sideBStart !== null && !finished && idx === lastOfSideA() && sideBStart < tracks.length;
+  }
+
   var service = 'spotify';   // 'spotify' | 'apple' — set by the splash choice
   var player = null;
   var deviceId = null;
@@ -157,6 +181,8 @@
       entry = e;
       tracks = e.tracks || [];
       if (!tracks.length) { fatal('this entry has no playlist yet'); return; }
+      var sb = e.side_b_starts_at;
+      if (typeof sb === 'number' && sb > 0 && sb < tracks.length) sideBStart = sb;
       renderSplash();
     })
     .catch(function () { fatal('entry not found'); });
@@ -651,8 +677,10 @@
       var states = window.MusicKit.PlaybackStates || {};
       paused = e && (e.state === states.paused || e.state === states.stopped);
       updateTransport();
-      // Apple tells us the queue drained. No inference needed.
-      if (e && e.state === states.completed && !finished) {
+      // Apple tells us the queue drained. No inference needed — but a drained
+      // queue now means one of two things, and the index says which.
+      if (e && e.state === states.completed && !finished && !awaitingFlip) {
+        if (atSideBreak()) { trace('apple: side A ran out'); flipPrompt(); return; }
         trace('apple queue completed');
         finish();
       }
@@ -695,6 +723,11 @@
   function appleAppendNext() {
     var n = appleQueuedUpTo + 1;
     if (!music || n >= tracks.length) return Promise.resolve(false);
+    // The whole flip: simply stop feeding the queue at the boundary.
+    if (sideBStart !== null && n === sideBStart && idx < sideBStart) {
+      trace('holding at side break — not queueing track ' + n);
+      return Promise.resolve(false);
+    }
     var id = tracks[n].apple_id;
     if (!id) return Promise.resolve(false);
     return music.playLater({ songs: [String(id)] })
@@ -787,6 +820,10 @@
   function appendNext() {
     var n = queuedUpTo + 1;
     if (!deviceId || n >= tracks.length) return Promise.resolve(false);
+    if (sideBStart !== null && n === sideBStart && idx < sideBStart) {
+      trace('holding at side break — not queueing track ' + n);
+      return Promise.resolve(false);
+    }
     return api('/me/player/queue?device_id=' + deviceId +
                '&uri=' + encodeURIComponent(tracks[n].spotify_uri), { method: 'POST' })
       .then(function (r) {
@@ -821,7 +858,16 @@
       mediaFor = cur.uri;
       var known = indexOfUri(cur.uri);
 
-      // Rule 4: a drained queue replays the seed track. That is the end.
+      /* Rule 4: a drained queue replays the seed track. That used to mean the
+         end; with sides it can also mean side A ran out, because we stopped
+         feeding the queue at the boundary. Spotify gives the same signal for
+         both, so the index disambiguates — and the flip is checked first
+         because it is the earlier boundary. */
+      if (known === 0 && !finished && !awaitingFlip && atSideBreak()) {
+        svcPause();
+        flipPrompt();
+        return;
+      }
       if (known === 0 && revealed.length >= tracks.length && !finished) {
         finish();
         return;
@@ -838,6 +884,10 @@
       renderNowPlaying(now);
     }
 
+    if (state.paused && state.position === 0 && !finished && !awaitingFlip && atSideBreak()) {
+      flipPrompt();
+      return;
+    }
     if (state.paused && state.position === 0 && idx === tracks.length - 1 &&
         revealed.length >= tracks.length && !finished) {
       finish();
@@ -1112,7 +1162,8 @@
     progressEl.innerHTML =
       '<span class="pr-now">1</span>' +
       '<span class="pr-track"><span class="pr-fill"></span></span>' +
-      '<span class="pr-total">' + tracks.length + '</span>';
+      '<span class="pr-total">' + tracks.length + '</span>' +
+      '<span class="pr-side"></span>';
     root.appendChild(progressEl);
     updateProgress(0);
 
@@ -1190,13 +1241,22 @@
   // Position by track, not by clock. The bar still creeps within a song so it
   // reads as alive rather than stepping, but the numbers are songs — which is
   // what tells a listener where they are in something somebody sequenced.
+  /* Counts within the side being played, not the whole tape. A tape with
+     sides is two runs of nine, not one run of eighteen — that is the point of
+     splitting it. The side label is the only new disclosure: it tells the
+     listener a boundary exists, which is deliberate. */
   function updateProgress(position, duration) {
     if (!progressEl || !tracks.length) return;
+    var b = sideBounds();
+    var span = b.to - b.from;
+    var at = idx - b.from;
     var within = (duration && position) ? Math.min(1, position / duration) : 0;
-    var pct = Math.max(0, Math.min(100, ((idx + within) / tracks.length) * 100));
+    var pct = Math.max(0, Math.min(100, ((at + within) / span) * 100));
     progressEl.querySelector('.pr-fill').style.width = pct + '%';
-    progressEl.querySelector('.pr-now').textContent = String(idx + 1);
-    progressEl.querySelector('.pr-total').textContent = String(tracks.length);
+    progressEl.querySelector('.pr-now').textContent = String(at + 1);
+    progressEl.querySelector('.pr-total').textContent = String(span);
+    var sideEl = progressEl.querySelector('.pr-side');
+    if (sideEl) sideEl.textContent = sideBStart === null ? '' : 'side ' + sideOf(idx);
   }
 
   function renderNowPlaying(now) {
@@ -1272,6 +1332,62 @@
   // both — that is the path that has to survive a locked screen.
   function seedAny(i) {
     return service === 'apple' ? appleSeedAt(i) : seedAt(i);
+  }
+
+  /* ============================================================
+     THE FLIP
+
+     Side A has run out. The tape stops and waits. Niles accepted that this
+     will read as a bug the first time someone hits it, which is the honest
+     cost — the music stops in a pocket and does not restart until the phone
+     comes out. So the prompt has to be unmissable, and the lock screen has to
+     say something too, because that is where most listeners will be.
+     ============================================================ */
+
+  function flipPrompt() {
+    if (awaitingFlip || finished) return;
+    awaitingFlip = true;
+    svcPause();
+    releaseWakeLock();
+    pulse('flip', idx);
+    trace('side break reached at track ' + idx);
+
+    if (npEl) npEl.innerHTML = '';
+    if (transportEl) transportEl.remove();
+
+    var wrap = el('div', 'flip');
+    var lab = el('div', 'flip-label');
+    lab.textContent = 'end of side A';
+    var btn = el('button', 'play-btn');
+    btn.textContent = 'Flip the tape';
+    btn.addEventListener('click', function () {
+      // A tap is exactly what iOS needs to start a new media source, so
+      // resuming side B is an ordinary seed rather than a special case.
+      awaitingFlip = false;
+      wrap.remove();
+      root.appendChild(transportEl);
+      requestWakeLock();
+      seedAny(sideBStart).catch(function (e) { say(friendly(e), true); });
+    });
+    var note = el('p', 'flip-note');
+    note.textContent = 'Side B is waiting. Nothing plays until you turn it over.';
+    wrap.appendChild(lab); wrap.appendChild(btn); wrap.appendChild(note);
+    root.insertBefore(wrap, deckZone);
+
+    // The lock screen is where this will actually be met.
+    if ('mediaSession' in navigator) {
+      try {
+        navigator.mediaSession.metadata = new window.MediaMetadata({
+          title: 'End of side A — flip the tape',
+          artist: entry.title || 'Memorex',
+          album: 'Memorex'
+        });
+        navigator.mediaSession.playbackState = 'paused';
+        // Play from the lock screen should flip rather than do nothing.
+        navigator.mediaSession.setActionHandler('play', function () { btn.click(); });
+        navigator.mediaSession.setActionHandler('nexttrack', function () { btn.click(); });
+      } catch (_) {}
+    }
   }
 
   /* ============================================================

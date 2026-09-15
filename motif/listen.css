@@ -313,3 +313,39 @@
   min-height: 16px;
 }
 .status.bad { color: var(--amber); }
+
+/* ---- the flip: end of side A ----
+   Sits where the now-playing block was, above the deck. Loud on purpose:
+   the tape has stopped and nothing restarts until the listener acts. */
+.flip {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 22px 26px 18px;
+  text-align: center;
+}
+.flip-label {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+.flip-note {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+  max-width: 30ch;
+}
+/* side label on the progress row */
+.pr-side {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-left: 10px;
+}

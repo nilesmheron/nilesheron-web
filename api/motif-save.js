@@ -155,6 +155,14 @@ function validateEntry(entry, slug) {
   if (entry.unlisted !== undefined && typeof entry.unlisted !== 'boolean') {
     return 'unlisted must be true or false if present';
   }
+  // The side break. Out of range would either strand side B or make side A
+  // empty, and the player would stop at a boundary it can never cross.
+  if (entry.side_b_starts_at !== undefined) {
+    const sb = entry.side_b_starts_at;
+    if (!Number.isInteger(sb) || sb < 1 || sb >= entry.tracks.length) {
+      return 'side_b_starts_at must be a whole number between 1 and ' + (entry.tracks.length - 1);
+    }
+  }
   return null;
 }
 

@@ -204,7 +204,15 @@
     <span class="note" id="appleNote">Spotify is matched automatically as songs are confirmed. This only re-runs it.</span>
   </div>
 
-  <div class="step">4 · cover art</div>
+  <div class="step">4 · sides</div>
+  <div class="row">
+    <button id="sideAuto" class="ghost">Split at the halfway mark</button>
+    <button id="sideClear" class="ghost">One continuous side</button>
+  </div>
+  <p class="note" id="sidesNote" style="margin-top:8px">Confirm at least two songs to split the tape.</p>
+  <p class="note" style="margin-top:6px">Or press <em>side break</em> between any two songs above. At the end of side A the tape stops and waits to be flipped — nothing plays until the listener turns it over.</p>
+
+  <div class="step">5 · cover art</div>
   <div id="artpick"><p class="empty">Confirm some songs and their album art appears here to choose from.</p></div>
   <div class="row" style="margin-top:10px">
     <input type="text" id="cover" placeholder="or paste a cover image URL" style="flex:1 1 260px">
@@ -212,7 +220,7 @@
     <button class="ghost" id="gencover">Generate</button>
   </div>
 
-  <div class="step">5 · add-to-library links <span style="text-transform:none;letter-spacing:0">(optional, shown on the completion screen)</span></div>
+  <div class="step">6 · add-to-library links <span style="text-transform:none;letter-spacing:0">(optional, shown on the completion screen)</span></div>
   <div class="row">
     <input type="text" id="applePlaylistUrl" placeholder="public Apple Music playlist URL" style="flex:1 1 260px">
   </div>
@@ -221,14 +229,14 @@
     <input type="text" id="playlistUrl" placeholder="public Spotify playlist URL" style="flex:1 1 260px">
   </div>
 
-  <div class="step">6 · save it to the site</div>
+  <div class="step">7 · save it to the site</div>
   <div class="row">
     <button id="save">Save entry</button>
     <button id="load" class="ghost">Load existing</button>
   </div>
   <p class="note" id="saveNote" style="margin-top:8px">Commits <code>motif/data/&lt;slug&gt;.json</code> to the repo. Vercel redeploys, so it goes live about 40 seconds later.</p>
 
-  <div class="step">7 · or copy the JSON by hand</div>
+  <div class="step">8 · or copy the JSON by hand</div>
   <textarea id="out" class="out" readonly placeholder="Confirm some matches and the JSON appears here."></textarea>
   <div class="row">
     <button id="copy" class="ghost">Copy JSON</button>
@@ -505,6 +513,81 @@
     box.appendChild(hint);
   }
 
+  /* ---------- sides ----------
+     sideBStart is an index into the CONFIRMED tracks, not into state[], so a
+     skipped line never shifts the break. Stored as side_b_starts_at. */
+  var sideBStart = null;
+
+  function confirmedTracks() {
+    return state.filter(function (x) { return x.chosen !== null && x.candidates[x.chosen]; })
+                .map(function (x) { return x.candidates[x.chosen]; });
+  }
+
+  function fmtMins(ms) {
+    var s = Math.round(ms / 1000);
+    return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+  }
+
+  // The split closest to an even division of RUNTIME, which is what a real
+  // cassette forces. Not the middle of the list — a tape with one six-minute
+  // song and eleven short ones does not split at track six.
+  function halfwayIndex() {
+    var t = confirmedTracks();
+    if (t.length < 2) return null;
+    var total = t.reduce(function (a, x) { return a + (x.duration_ms || 0); }, 0);
+    var run = 0, best = 1, bestGap = Infinity;
+    for (var i = 0; i < t.length - 1; i++) {
+      run += t[i].duration_ms || 0;
+      var gap = Math.abs(run - (total - run));
+      if (gap < bestGap) { bestGap = gap; best = i + 1; }
+    }
+    return best;
+  }
+
+  function sideRuntimes() {
+    var t = confirmedTracks();
+    if (sideBStart === null) return null;
+    var a = 0, b = 0;
+    t.forEach(function (x, i) {
+      if (i < sideBStart) a += x.duration_ms || 0; else b += x.duration_ms || 0;
+    });
+    return { a: a, b: b, na: sideBStart, nb: t.length - sideBStart };
+  }
+
+  function summariseSides() {
+    var t = confirmedTracks();
+    if (t.length < 2) { note('sidesNote', 'Confirm at least two songs to split the tape.'); return; }
+    if (sideBStart === null) {
+      note('sidesNote', 'One continuous side. Set a break to make it a two-sided tape.');
+      return;
+    }
+    var r = sideRuntimes();
+    var skew = Math.abs(r.a - r.b) / 1000;
+
+    /* Judge the split against the BEST ACHIEVABLE one, not against zero. Song
+       lengths often make a perfectly even tape impossible — the real 18-track
+       mixtape cannot do better than about four minutes apart — and warning
+       about an imbalance the curator cannot fix is just noise. */
+    var best = halfwayIndex();
+    var t = confirmedTracks();
+    var total = t.reduce(function (a, x) { return a + (x.duration_ms || 0); }, 0);
+    var bestA = t.slice(0, best).reduce(function (a, x) { return a + (x.duration_ms || 0); }, 0);
+    var bestSkew = Math.abs(bestA - (total - bestA)) / 1000;
+    var worseBy = skew - bestSkew;
+
+    note('sidesNote',
+      'Side A ' + r.na + ' songs, ' + fmtMins(r.a) + '  ·  Side B ' + r.nb + ' songs, ' + fmtMins(r.b) +
+      (worseBy > 90
+        ? '  — ' + Math.round(worseBy / 60) + ' min further apart than this running order allows'
+        : '  — as even as these songs get'),
+      worseBy > 90);
+  }
+
+  function setSideBreak(i) {
+    sideBStart = i;
+    render(); emit(); summariseSides();
+  }
+
   function summariseSpotify() {
     var c = spotifyCounts();
     if (!c.total) { note('appleNote', 'Find some songs first.'); return; }
@@ -675,6 +758,34 @@
       div.appendChild(skip);
 
       box.appendChild(div);
+
+      /* Side break affordance, between confirmed tracks only. Indices here are
+         positions among CONFIRMED tracks so a skipped line cannot move it. */
+      if (item.chosen !== null && item.candidates[item.chosen]) {
+        var confirmedBefore = 0;
+        for (var q = 0; q <= i; q++) {
+          if (state[q].chosen !== null && state[q].candidates[state[q].chosen]) confirmedBefore++;
+        }
+        var totalConfirmed = confirmedTracks().length;
+        if (confirmedBefore < totalConfirmed) {
+          var brk = document.createElement('div');
+          var isHere = sideBStart === confirmedBefore;
+          brk.style.cssText = 'display:flex;align-items:center;gap:10px;margin:2px 0 12px;' +
+            'font-family:var(--mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;' +
+            'cursor:pointer;color:' + (isHere ? 'var(--amber)' : 'var(--muted)') +
+            ';opacity:' + (isHere ? '1' : '0.5');
+          var l1 = document.createElement('span');
+          l1.style.cssText = 'flex:1;height:1px;background:' + (isHere ? 'var(--amber)' : 'var(--hair)');
+          var t1 = document.createElement('span');
+          t1.textContent = isHere ? 'side B begins' : 'side break';
+          var l2 = l1.cloneNode();
+          brk.appendChild(l1); brk.appendChild(t1); brk.appendChild(l2);
+          brk.addEventListener('click', function (at) {
+            return function () { setSideBreak(sideBStart === at ? null : at); };
+          }(confirmedBefore));
+          box.appendChild(brk);
+        }
+      }
     });
     emit();
   }
@@ -888,6 +999,9 @@
     var cover = $('cover').value.trim();
     if (cover) out.cover_image_url = cover;
     if ($('unlisted').checked) out.unlisted = true;
+    if (sideBStart !== null && sideBStart > 0 && sideBStart < tracks.length) {
+      out.side_b_starts_at = sideBStart;
+    }
     var apurl = $('applePlaylistUrl').value.trim();
     if (apurl) out.apple_playlist_url = apurl;
     var purl = $('playlistUrl').value.trim();
@@ -1151,6 +1265,8 @@
         if (existingEntry.spotify_playlist_url) $('playlistUrl').value = existingEntry.spotify_playlist_url;
         if (existingEntry.apple_playlist_url) $('applePlaylistUrl').value = existingEntry.apple_playlist_url;
         $('unlisted').checked = existingEntry.unlisted === true;
+        sideBStart = (typeof existingEntry.side_b_starts_at === 'number')
+          ? existingEntry.side_b_starts_at : null;
 
         // Rebuild the pick list from the saved tracks so they can be edited.
         state = (existingEntry.tracks || []).map(function (t) {
@@ -1211,6 +1327,14 @@
       btn.textContent = 'Re-check Spotify matches';
     });
   });
+
+  $('sideAuto').addEventListener('click', function () {
+    var h = halfwayIndex();
+    if (h === null) { note('sidesNote', 'confirm at least two songs first', true); return; }
+    setSideBreak(h);
+  });
+
+  $('sideClear').addEventListener('click', function () { setSideBreak(null); });
 
   $('import').addEventListener('click', function () {
     var btn = this;
