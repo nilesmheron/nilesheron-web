@@ -277,9 +277,17 @@
       title.appendChild(by);
     }
 
+    /* Two lines, and they do different jobs. The first says what is about to
+       happen, because a listener one tap from music needs to know the rules.
+       The second says why it is worth it — without which "no track list"
+       reads as a missing feature rather than the whole point. */
     var blurb = document.createElement('p');
-    blurb.textContent = 'Played blind. Each song turns a card face up as it begins.';
+    blurb.textContent = 'Played blind. There is no track list — each song turns a card face up only as it starts.';
     title.appendChild(blurb);
+
+    var why = el('p', 'why');
+    why.textContent = 'This is what a mixtape used to do: a journey, not a list of destinations.';
+    title.appendChild(why);
     top.appendChild(title);
     wrap.appendChild(top);
     wrap.appendChild(el('div', 'splash-slack'));

@@ -29,6 +29,7 @@
   .index-head h1 { font-family: var(--serif-display); font-size: 36px; line-height: 1; font-weight: 400; margin: 0; }
   .index-head .handle { font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mute); }
   .index-head p { font-family: var(--serif-body); font-size: 14.5px; line-height: 1.55; color: var(--body); margin: 0; max-width: 30ch; text-wrap: pretty; }
+  .index-head p.why { font-size: 13.5px; font-style: italic; color: var(--soft); max-width: 34ch; }
 
   /* the shelf, from the handoff — rows are explicit so the shelf line always
      runs the full width: one tape reads as a tape on a shelf with room,
@@ -115,13 +116,17 @@
       h1.textContent = curator.name || handle;
       head.appendChild(h1);
       head.appendChild(el('div', 'handle', esc(curator.handle)));
-      head.appendChild(el('p', null, 'Blind tapes, in order. Nothing is named before it plays.'));
+      head.appendChild(el('p', null, 'Tapes by ' + esc(curator.name || handle) + ', played blind. Nothing is named before it plays.'));
+      head.appendChild(el('p', 'why', 'A journey, not a list of destinations.'));
     } else {
       head.appendChild(el('div', 'k', 'Motif'));
       var h2 = document.createElement('h1');
       h2.textContent = 'Mixtape';
       head.appendChild(h2);
-      head.appendChild(el('p', null, 'Blind tapes. Songs arrive one at a time and name themselves only once they start.'));
+      /* The shelf is the front door for anyone who has not been sent a link,
+         so it carries the reason as well as the rule. */
+      head.appendChild(el('p', null, 'Tapes you play without knowing what is next. Each song names itself only as it starts.'));
+      head.appendChild(el('p', 'why', 'A mixtape was a journey, not a list of destinations. These are built to feel like that again.'));
     }
     root.appendChild(head);
 
