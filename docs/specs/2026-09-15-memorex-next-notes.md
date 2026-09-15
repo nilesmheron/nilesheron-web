@@ -68,8 +68,44 @@ The cost is honest and worth stating: the tape stops in the listener's pocket an
 
 ---
 
+---
+
+## 5. Cassette length — C60 / C90 / C120 (future)
+
+Niles, 2026-09-15: eventually force the builder to pick a cassette length and hold each side to half of it.
+
+This turns the side break from a curator preference into a **constraint**, which is the more interesting version — a real tape tells you when you have run out of room, and that shapes the sequencing rather than describing it. A C90 gives 45 minutes a side; the 18-track tape at 61:46 is a C60 with about a minute to spare per side, or a comfortable C90.
+
+Implications when built:
+- The builder stops being "arrange songs, then split" and becomes "fill side A, then fill side B", with remaining room shown as you go.
+- Over-running a side becomes an error the curator must resolve, not a warning.
+- It may constrain track *choice*, not just order — a five-minute song that does not fit is a real editorial decision, which is the point.
+- The current `side_b_starts_at` model still works; the length is an additional field (`cassette: 'C60' | 'C90' | 'C120'`) that drives validation rather than structure.
+
+Not started. Recorded so the shape of the current split does not foreclose it — it does not.
+
+---
+
+## 6. Curator attribution — mixtapes by someone (future)
+
+Niles, 2026-09-15: long term, other people build their own mixtapes. "A mixtape by Niles", "a mixtape by Nick", each with their own box of tapes, regardless of whether individual tapes are public or unlisted.
+
+**Worth specifying before it is needed**, because it reaches further than it looks:
+
+- **Entry gains an author.** `curator: { handle, name }` or similar. Cheap now, expensive to retrofit across saved entries later.
+- **The index becomes plural.** `/motif/mixtape` is currently one global shelf. Attribution implies per-curator shelves — `/motif/by/<handle>` — and a decision about whether the global shelf survives alongside them.
+- **The builder gains identity.** Today it is one Basic Auth gate for one person. Per-curator means real accounts, which is the first genuine authentication in this product. `MOTIF_TOOLS_USER` does not extend to this.
+- **Writes need scoping.** `api/motif-save.js` commits to a fixed repo path with a single token. A second curator must not be able to overwrite the first's tapes.
+- **Unlisted stays orthogonal.** A curator's box lists their tapes; unlisted ones stay out of every shelf, including their own, and remain reachable by link. Niles confirmed this reading.
+- **Attribution is also a display decision** — "a mixtape by" belongs in the splash and the index, which are being designed right now. Worth mentioning to Claude Design in the current round even though the backing does not exist, so the layout has a place for it later.
+
+The minimum that avoids a painful migration: **add `curator` to the entry schema now**, defaulted to Niles, even while nothing reads it.
+
+---
+
 ## Open questions for Niles
 
-1. **Unlisted or private?** (§1) — unlisted is shipped; private is new surface.
+1. ~~Unlisted or private?~~ — **answered 2026-09-15: unlisted.** Shipped.
 2. **Does the splash state the A/B split**, or is the first side boundary a surprise? (§3)
-3. **Per-track side, or a single split index?** Leaning split index unless a tape might interleave.
+3. ~~Per-track side, or a split index?~~ — **built as a split index** (`side_b_starts_at`), 2026-09-15.
+4. **Should `curator` go into the schema now** as a defaulted field, ahead of anything reading it? (§6)
