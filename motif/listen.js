@@ -231,7 +231,20 @@
     wrap.appendChild(rt);
 
     playBtn = el('button', 'play-btn');
-    playBtn.textContent = appleReady() ? 'Play with Apple Music' : 'Play';
+    /* "Play side A" on a two-sided tape, decided 2026-09-15.
+
+       It does the disclosure and the framing in one move. The listener learns
+       a side B exists — which is all they learn, no songs, so the blind holds
+       — and the flip stops being an ambush. Someone who pressed "play side A"
+       has already been told the tape has sides; someone who pressed "play" and
+       then had the music stop in their pocket has been surprised by a bug.
+
+       The service moves off the button and onto the line directly above,
+       which already states it outright. That line is load-bearing after a real
+       listener failed for want of it, so it stays. */
+    playBtn.textContent = sideBStart !== null
+      ? 'Play side A'
+      : (appleReady() ? 'Play with Apple Music' : 'Play');
     // Route through startWith rather than straight to the Spotify handler —
     // the primary button IS Apple once the front door is open.
     playBtn.addEventListener('click', function () {
