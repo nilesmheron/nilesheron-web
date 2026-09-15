@@ -8,7 +8,16 @@
     "name": "NMH"
   },
   "unlisted": true,
-  "side_b_starts_at": 8,
+  "sides": [
+    {
+      "label": "A",
+      "total": 8
+    },
+    {
+      "label": "B",
+      "total": 9
+    }
+  ],
   "apple_playlist_url": "https://music.apple.com/us/playlist/motif-let-me-loveu-dawn/pl.u-b3b8WqgsXZ5R8",
   "poems": [],
   "tracks": [
