@@ -183,6 +183,15 @@ body {
    fill half the screen and three songs render as three enormous tiles. The
    handoff assumed eighteen, where six rows a side divide sensibly. Short
    sides keep square tiles and let the slack be slack. */
+/* When both sides cannot show at a sane tile size, the side that is not
+   playing gives up its grid and keeps only its label. The tape never
+   condenses: a squashed card is worse than a hidden one, and the listener is
+   looking at the side they are on. The label still says the other side is
+   there, so the flip stays legible. */
+.side-block--collapsed { flex: 0 0 auto; }
+.side-block--collapsed .grid { display: none; }
+.side-block--collapsed .side-label { box-shadow: none; padding-bottom: 0; }
+
 .grid--short { grid-auto-rows: auto; align-content: start; }
 .grid--short > * { aspect-ratio: 1; }
 .side-block--short { flex: 0 0 auto; }

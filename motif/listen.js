@@ -1129,6 +1129,8 @@
                           : (done >= sides[n].total ? 'Complete' : (done ? 'Complete' : (n > pos(idx).side ? (awaitingFlip ? 'Waiting' : 'Not started') : 'Complete')));
         lab.innerHTML = '<span>Side ' + esc(sides[n].label) + '</span><b>' + status + '</b>';
         block.appendChild(lab);
+        block.setAttribute('data-songs', sides[n].total);
+        block.setAttribute('data-live', live ? '1' : '0');
       }
 
       // Three columns; two rows or fewer is a short side and must not stretch.
@@ -1211,6 +1213,36 @@
       renderPlayer();
     });
     return card;
+  }
+
+  /* Measure once, then decide. A tile should be roughly square; when two
+     sides split the column there is often not enough height for that, and the
+     grid silently condenses into letterbox slivers. Rather than pick a
+     breakpoint, ask the layout: if the live side's tiles are squashed, collapse
+     the sides that are not playing and let it have the room. */
+  var SQUASH = 0.82;   // height/width below which a tile reads as condensed
+
+  function fitDeck() {
+    if (sides.length < 2 || awaitingFlip || finished) return;
+    var blocks = [].slice.call(root.querySelectorAll('.side-block'));
+    if (blocks.length < 2) return;
+
+    blocks.forEach(function (b) { b.classList.remove('side-block--collapsed'); });
+
+    var liveBlock = blocks.filter(function (b) { return b.getAttribute('data-live') === '1'; })[0];
+    if (!liveBlock) return;
+    var tile = liveBlock.querySelector('.grid > *');
+    if (!tile) return;
+
+    var r = tile.getBoundingClientRect();
+    if (!r.width || r.height >= r.width * SQUASH) return;   // fits; leave both open
+
+    blocks.forEach(function (b) {
+      if (b === liveBlock) return;
+      b.classList.add('side-block--collapsed');
+      var lab = b.querySelector('.side-label b');
+      if (lab) lab.textContent = b.getAttribute('data-songs') + ' songs · ' + lab.textContent.toLowerCase();
+    });
   }
 
   /* ---- the spotlight: the deck becomes the card ---- */
@@ -1356,6 +1388,7 @@
       root.appendChild(npEl);
       root.appendChild(buildDeck());
       if (nowShowing) paintNowPlaying(nowShowing);
+      fitDeck();
     }
 
     statusEl = el('div', 'status-line');
@@ -1368,6 +1401,10 @@
     root.appendChild(transportEl);
     updateTransport();
   }
+
+  /* Orientation and window changes move the threshold, so the decision is
+     re-taken rather than baked in at first render. */
+  window.addEventListener('resize', function () { fitDeck(); });
 
   /* Attached once, not per render: renderPlayer() runs on every track start
      and root survives innerHTML = '', so binding here would stack a listener
