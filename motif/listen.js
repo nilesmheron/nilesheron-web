@@ -1325,9 +1325,15 @@
   // play call needs. Automatic transitions still ride the queue — that is the
   // path that has to survive a locked screen, and it is untouched.
   function goNext() {
-    if (finished) return;
+    if (finished || awaitingFlip) return;
     if (service !== 'apple' && !player) return;
     if (idx >= tracks.length - 1) { finish(); return; }
+    /* You cannot fast-forward past the end of a side. Next at the last track
+       of side A used to cross the boundary silently, which was the only way
+       left to reach side B without flipping — and side B is not somewhere a
+       listener should arrive by accident (decided 2026-09-15). The flip is
+       now the sole entrance, from the splash onward. */
+    if (atSideBreak()) { flipPrompt(); return; }
     seedAny(idx + 1).catch(function (e) { say(friendly(e), true); });
   }
 
