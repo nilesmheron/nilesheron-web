@@ -116,12 +116,64 @@ export default async function middleware(request) {
     return proxyStatic('/motif/entry', request);
   }
 
+  /* Link previews.
+
+     A shared mixtape link is the default way in — texted, or posted — and a
+     bare URL with no card is a link nobody taps. The player page is static,
+     so the tags cannot be per-tape in the file; they are injected here, where
+     the slug is already known. Subrequests inside middleware bypass
+     middleware, so reading the entry JSON is safe.
+
+     Failure is silent on purpose: a missing preview must never cost a play. */
+  async function withPreview(path, request, slug) {
+    const res = await fetch(new URL(path, request.url));
+    let html = await res.text();
+    try {
+      const data = await fetch(new URL('/motif/data/' + slug + '.json', request.url));
+      if (data.ok) {
+        const e = await data.json();
+        const esc = (v) => String(v == null ? '' : v)
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        const title = esc(e.title || 'A mixtape');
+        const by = e.curator && e.curator.name ? ' by ' + esc(e.curator.name) : '';
+        const desc = 'A mixtape' + by +
+          ', played blind. You cannot see what is next — each song turns a card face up as it starts.';
+        const img = e.cover_image_url ? esc(e.cover_image_url) : '';
+        const url = esc(request.url.split('?')[0]);
+
+        const tags = [
+          `<meta property="og:type" content="music.playlist">`,
+          `<meta property="og:site_name" content="Memorex">`,
+          `<meta property="og:title" content="${title}">`,
+          `<meta property="og:description" content="${desc}">`,
+          `<meta property="og:url" content="${url}">`,
+          img ? `<meta property="og:image" content="${img}">` : '',
+          img ? `<meta property="og:image:width" content="1000">` : '',
+          img ? `<meta property="og:image:height" content="1000">` : '',
+          `<meta name="twitter:card" content="${img ? 'summary_large_image' : 'summary'}">`,
+          `<meta name="twitter:title" content="${title}">`,
+          `<meta name="twitter:description" content="${desc}">`,
+          img ? `<meta name="twitter:image" content="${img}">` : '',
+          `<meta name="description" content="${desc}">`,
+        ].filter(Boolean).join('\n  ');
+
+        html = html.includes('</head>') ? html.replace('</head>', '  ' + tags + '\n</head>') : html;
+      }
+    } catch (_) {
+      // no preview rather than no page
+    }
+    return new Response(html, {
+      status: 200,
+      headers: { 'content-type': 'text/html; charset=utf-8' },
+    });
+  }
+
   // Serve /motif/:slug/listen (the blind player) the same way. A vercel.json
   // rewrite was tried first and 404s for the same reason as above — verified
   // live 2026-09-09 — so PRD §10's instruction to add a rewrite does not work
   // and this mirrors the existing mechanism instead.
   if (segments[0] === 'motif' && segments.length === 3 && segments[2] === 'listen') {
-    return proxyStatic('/motif/listen', request);
+    return withPreview('/motif/listen', request, segments[1]);
   }
 
   const gate = GATES.find(

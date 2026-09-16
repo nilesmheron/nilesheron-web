@@ -433,3 +433,28 @@ body {
   padding: 40px 26px; text-align: center;
   font-family: var(--serif-body); font-size: 15px; line-height: 1.55; color: var(--soft);
 }
+
+/* ---- "what is this?" — the drawer for a listener arriving cold ---- */
+.about {
+  flex: 0 0 auto;
+  margin-top: 16px;
+  padding-top: 14px;
+  box-shadow: inset 0 1px 0 var(--line);
+}
+.about-head {
+  appearance: none; border: none; background: none; width: 100%;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 4px 0; cursor: pointer;
+  font-family: var(--mono); font-size: var(--micro);
+  letter-spacing: var(--micro-track); text-transform: uppercase; color: var(--mute);
+  -webkit-tap-highlight-color: transparent;
+}
+.about-head .caret { transition: transform 0.15s ease; font-size: 8px; }
+.about.open .about-head .caret { transform: rotate(90deg); }
+.about-head:hover { color: var(--ink); }
+.about-body { padding: 6px 0 2px; display: flex; flex-direction: column; gap: 10px; }
+.about-body[hidden] { display: none; }
+.about-body p {
+  margin: 0; font-family: var(--serif-body); font-size: 13.5px;
+  line-height: 1.55; color: var(--soft); text-wrap: pretty;
+}

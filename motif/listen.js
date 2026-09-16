@@ -135,7 +135,12 @@
   var mode = 'rest';        // 'rest' | 'spot' | 'turn'
   var spotIdx = 0;          // which track the spotlight is showing
 
-  var service = 'spotify';   // 'spotify' | 'apple' — set by the splash choice
+  /* null until the listener actually picks a door. It used to default to
+     'spotify', which meant every bounce off the splash — someone who opened
+     the link and never pressed anything — was recorded as a Spotify session.
+     Half a day of pulse data read as "Spotify is broken" when nothing had
+     been tried at all. */
+  var service = null;        // null | 'spotify' | 'apple'
   var player = null;
   var deviceId = null;
   var paused = false;
@@ -178,7 +183,7 @@
       t: Math.round((Date.now() - t0) / 1000),
       ev: ev,
       i: (i === undefined ? null : i),
-      svc: service
+      svc: service            // null when nothing was chosen: a bounce, not a play
     });
     // 'complete' and 'leave' are the two that must not be lost, so they go at
     // once and by beacon; the rest ride along in batches.
@@ -207,7 +212,9 @@
   // the easiest to lose. pagehide fires where unload does not on iOS.
   window.addEventListener('pagehide', function () {
     if (finished) return;
-    pulse('leave', idx);
+    // 'bounce' is leaving before a door was ever chosen; 'leave' is leaving
+    // mid-listen. Collapsing the two made the splash look like a failure.
+    pulse(service ? 'leave' : 'bounce', service ? idx : null);
   });
 
   /* ── routing: /motif/<slug>/listen ── */
@@ -306,6 +313,32 @@
     }
     wrap.appendChild(facts);
 
+    /* "What is this?" — a drawer, closed by default.
+
+       Nearly everyone arrives from a link someone texted them, with no idea
+       what Memorex is, and the splash cannot explain itself at length without
+       burying the button. A drawer lets the curious read and everyone else
+       press play. Closed is the right default: the two lines above already
+       say what happens. */
+    var about = el('div', 'about');
+    var aboutHead = el('button', 'about-head');
+    aboutHead.innerHTML = '<span>What is this?</span><span class="caret">▸</span>';
+    var aboutBody = el('div', 'about-body');
+    aboutBody.hidden = true;
+    ABOUT.forEach(function (para) {
+      var q = document.createElement('p');
+      q.textContent = para;
+      aboutBody.appendChild(q);
+    });
+    aboutHead.addEventListener('click', function (e) {
+      e.stopPropagation();
+      aboutBody.hidden = !aboutBody.hidden;
+      about.classList.toggle('open', !aboutBody.hidden);
+    });
+    about.appendChild(aboutHead);
+    about.appendChild(aboutBody);
+    wrap.appendChild(about);
+
     var doors = el('div', 'doors');
 
     if (authFlag === 'denied') {
@@ -347,6 +380,17 @@
     root.appendChild(statusEl);
     prepare();
   }
+
+  /* Kept as data rather than markup so the wording is in one place. The
+     privacy paragraph is not boilerplate: the tap that follows opens a
+     sign-in sheet for someone's music account, and a listener who does not
+     know what we keep will reasonably assume the worst. */
+  var ABOUT = [
+    'Someone made you a mixtape. It plays in order, and you cannot see what is coming — each song turns a card face up only as it starts. At the end you have the whole deck, and you can add the playlist to your own library.',
+    'It plays through your own Apple Music or Spotify subscription, because that is how the songs stay licensed. You sign in to them, not to us.',
+    'We never see your password, and we do not store your account, your email, or what you listen to. Apple hands the page a pass that lets it play music while the tab is open; close it and that is the end of it. Nothing about you is kept.',
+    'No account to make, nothing to install. If you press play and it stops when you lock your phone, it is not meant to — tell whoever sent you this.'
+  ];
 
   function fact(k, v) {
     var d = el('div', 'fact');
@@ -440,13 +484,18 @@
      already know about. Never an error box: nothing is wrong with the mixtape
      and Apple is sitting right there. */
   function markSideDoorClosed(e) {
-    var note = root.querySelector('.side-door-note');
-    if (!note) return;
-    note.textContent = (e && e.message === 'premium_required')
-      ? 'Spotify needs its own Premium subscription — use Apple Music above.'
-      : 'Spotify is not available right now — use Apple Music above.';
-    var btn = root.querySelector('.side-door-btn');
-    if (btn) btn.style.opacity = '0.45';
+    var plaque = root.querySelector('.plaque');
+    if (!plaque) return;
+    var v = plaque.querySelector('.v');
+    var k = plaque.querySelector('.k');
+    if (v) {
+      v.textContent = (e && e.message === 'premium_required')
+        ? 'Spotify needs its own Premium subscription, and this account does not have one. Use Apple Music above.'
+        : 'The Spotify side door is not available right now. Apple Music is unaffected.';
+    }
+    if (k) k.innerHTML = '<span>Spotify · side door</span><span>unavailable</span>';
+    plaque.style.opacity = '0.62';
+    plaque.style.cursor = 'default';
   }
 
   function errNote(text) {
@@ -532,22 +581,30 @@
     } catch (_) {}
   }
 
+  /* The splash has a designed slot for this: a .notice above the key, on
+     card stock with an amber heading. The old box was styled by classes the
+     Tape rewrite removed, so a real failure rendered unstyled at the bottom
+     of a scrolling page — below the fold on a phone, which is exactly where
+     a listener who cannot play will not look. */
   function blockedNote(e) {
     say('');
     trace('blocked: ' + (e && e.message));
     reportFailure(e);
-    var wrap = root.querySelector('.splash');
-    if (!wrap) { say(friendly(e), true); return; }
-    var old = wrap.querySelector('.splash-err');
+
+    var doors = root.querySelector('.doors');
+    if (!doors) { say(friendly(e), true); return; }
+    var old = doors.querySelector('.notice');
     if (old) old.remove();
 
-    var box = errNote(friendly(e));
+    var box = notice(headlineFor(e), friendly(e));
+
     var copy = document.createElement('button');
-    copy.className = 'play-btn ghost';
-    copy.style.marginTop = '14px';
+    copy.className = 'key key--quiet';
+    copy.style.marginTop = '4px';
     copy.textContent = 'Copy details';
-    copy.addEventListener('click', function () {
-      var text = 'MOTIF PLAYER — ' + (entry && entry.slug) + '\n' + diag.join('\n');
+    copy.addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      var text = 'MEMOREX — ' + (entry && entry.slug) + '\n' + diag.join('\n');
       if (navigator.clipboard) {
         navigator.clipboard.writeText(text).then(
           function () { copy.textContent = 'Copied — send these to Niles'; },
@@ -557,12 +614,18 @@
         showRaw(box, text);
       }
     });
-    box.appendChild(document.createElement('br'));
     box.appendChild(copy);
-    wrap.appendChild(box);
+    doors.insertBefore(box, doors.firstChild);
   }
 
-  // Clipboard is blocked in some in-app browsers; fall back to selectable text.
+  function headlineFor(e) {
+    var m = e && e.message;
+    if (m === 'premium_required') return 'Spotify Premium required';
+    if (m === 'apple_subscription_required') return 'Previews only';
+    if (m === 'not_authenticated') return 'Not signed in';
+    return 'Could not start the tape';
+  }
+
   function showRaw(box, text) {
     var pre = document.createElement('textarea');
     pre.readOnly = true;
@@ -1724,7 +1787,7 @@
     /* Matching service only. The fallback that used to be here offered an
        Apple listener the Spotify playlist, which is the one service they
        cannot use. */
-    var url = service === 'apple' ? entry.apple_playlist_url : entry.spotify_playlist_url;
+    var url = service === 'spotify' ? entry.spotify_playlist_url : entry.apple_playlist_url;
 
     var rail = el('div', 'rail');
     if (url) {
@@ -1758,7 +1821,7 @@
     // The primary's slot is spoken for rather than left empty.
     if (!url) {
       var note = el('div', 'rail-note');
-      note.textContent = 'No ' + (service === 'apple' ? 'Apple Music' : 'Spotify') + ' playlist link on this tape';
+      note.textContent = 'No ' + (service === 'spotify' ? 'Spotify' : 'Apple Music') + ' playlist link on this tape';
       root.appendChild(note);
     }
     root.appendChild(rail);
