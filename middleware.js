@@ -157,7 +157,13 @@ export default async function middleware(request) {
           `<meta name="description" content="${desc}">`,
         ].filter(Boolean).join('\n  ');
 
-        html = html.includes('</head>') ? html.replace('</head>', '  ' + tags + '\n</head>') : html;
+        /* Injected at the TOP of <head>, not before </head>. Several link
+           scrapers — iMessage among them — read only the first few kilobytes,
+           and the page's head opens with a long comment block and three font
+           links. Tags that lead are tags that get read. */
+        html = html.includes('<head>')
+          ? html.replace('<head>', '<head>\n  ' + tags)
+          : html.replace('</head>', '  ' + tags + '\n</head>');
       }
     } catch (_) {
       // no preview rather than no page
