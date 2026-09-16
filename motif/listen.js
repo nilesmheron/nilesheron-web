@@ -36,6 +36,32 @@
     return APPLE_ENABLED && tracks.some(function (t) { return t.apple_id; });
   }
 
+  /* Coverage. A tape is resolved per service, and the two catalogues do not
+     agree: three of seventeen songs on the first real tape had no Spotify
+     match at all. Track 1 was one of them, so the side door sent Spotify
+     `uris: [undefined]` and got a 400 before a note played. */
+  function playable(i) {
+    var t = tracks[i];
+    if (!t) return false;
+    return service === 'spotify' ? Boolean(t.spotify_uri) : Boolean(t.apple_id);
+  }
+
+  function spotifyMissing() {
+    var n = 0;
+    for (var i = 0; i < tracks.length; i++) if (!tracks[i].spotify_uri) n++;
+    return n;
+  }
+
+  function spotifyAny() { return spotifyMissing() < tracks.length; }
+
+  // The next index this service can actually play, in either direction.
+  function nextPlayable(from, step) {
+    for (var i = from; i >= 0 && i < tracks.length; i += step) {
+      if (playable(i)) return i;
+    }
+    return -1;
+  }
+
   /* ============================================================
      THE SIDES MODEL
 
@@ -359,15 +385,31 @@
     });
     doors.appendChild(playBtn);
 
-    // The side door, stated as a plaque rather than a second button: it is a
-    // fact about access, not an equal choice.
+    /* The side door, stated as a plaque rather than a second button: it is a
+       fact about access, not an equal choice. It now also states COVERAGE,
+       because the two catalogues do not agree and a listener should learn
+       that here rather than from a failed play call. The count is safe to
+       disclose — it says how much is missing, never which songs. */
+    var missing = spotifyMissing();
+    var anySpotify = spotifyAny();
+
     var p2 = el('div', 'plaque');
     var k = el('div', 'k');
-    k.innerHTML = '<span>Spotify · side door</span><span>5 seats · by hand</span>';
     var v = el('div', 'v');
-    v.textContent = 'Spotify needs Niles to add you first — ask him.';
+
+    if (!anySpotify) {
+      k.innerHTML = '<span>Spotify · side door</span><span>not available</span>';
+      v.textContent = 'None of this tape is on Spotify. It plays on Apple Music only.';
+      p2.style.opacity = '0.62';
+    } else {
+      k.innerHTML = '<span>Spotify · side door</span><span>5 seats · by hand</span>';
+      v.textContent = 'Spotify needs Niles to add you first — ask him.' +
+        (missing ? ' ' + missing + ' of these ' + tracks.length +
+                   ' songs are not on Spotify and will be skipped.' : '');
+    }
+
     p2.appendChild(k); p2.appendChild(v);
-    if (appleReady()) {
+    if (appleReady() && anySpotify) {
       p2.style.cursor = 'pointer';
       p2.addEventListener('click', function () { startWith('spotify'); });
     }
@@ -986,6 +1028,14 @@
   /* ── Rule 1: seed the context with exactly ONE track. Only ever called
      from a user gesture (first play, back, replay). ── */
   function seedAt(i) {
+    /* Step over anything this service cannot play rather than asking it to
+       play nothing. The listener was told on the splash how many songs are
+       missing; skipping them is the honest version of a partial tape, and it
+       is better than a 400 with no explanation. */
+    var at = nextPlayable(i, 1);
+    if (at === -1) at = nextPlayable(i, -1);
+    if (at === -1) return Promise.reject(new Error('not_on_spotify'));
+    i = at;
     idx = i;
     queuedUpTo = i;
     finished = false;
@@ -1005,6 +1055,7 @@
   /* ── Rule 2: keep exactly one track queued ahead. ── */
   function appendNext() {
     var n = queuedUpTo + 1;
+    while (n < tracks.length && !playable(n)) n++;   // step over gaps
     if (!deviceId || n >= tracks.length) return Promise.resolve(false);
     // The whole flip: stop feeding the queue at the boundary and let it run out.
     if (pos(n).side !== pos(idx).side) {
@@ -1609,7 +1660,7 @@
   function goNext() {
     if (finished || awaitingFlip) return;
     if (service !== 'apple' && !player) return;
-    if (idx >= tracks.length - 1) { finish(); return; }
+    if (nextPlayable(idx + 1, 1) === -1) { finish(); return; }
     /* You cannot fast-forward past the end of a side. Next at the last track
        of side A used to cross the boundary silently, which was the only way
        left to reach side B without flipping — and side B is not somewhere a
@@ -1620,8 +1671,9 @@
   }
 
   function goBack() {
-    if (idx === 0 || finished) return;
-    var target = idx - 1;
+    if (finished) return;
+    var target = nextPlayable(idx - 1, -1);
+    if (target === -1) return;
     trimCardsAfter(target);
     seedAny(target).catch(function (e) { say(friendly(e), true); });
   }
@@ -1881,6 +1933,9 @@
     if (e && e.message === 'apple_subscription_required') {
       return 'This Apple ID does not have an Apple Music subscription, so Apple only ' +
              'allows 30-second previews. A mixtape needs the full songs.';
+    }
+    if (e && e.message === 'not_on_spotify') {
+      return 'None of this tape is on Spotify. Use Apple Music instead.';
     }
     if (e && e.message === 'apple_token') {
       return 'Could not start Apple Music. Try again in a moment.';
