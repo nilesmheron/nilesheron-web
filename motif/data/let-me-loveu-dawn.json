@@ -24,6 +24,7 @@
     {
       "id": "ill-take-care-of-u",
       "apple_id": "418185936",
+      "spotify_uri": "spotify:track:2572py1x7iUokGnB7PDVLf",
       "title": "I'll Take Care of U",
       "artist": "Gil Scott-Heron & Jamie xx",
       "duration_ms": 282907,
@@ -113,6 +114,7 @@
     {
       "id": "reach-out",
       "apple_id": "6791645438",
+      "spotify_uri": "spotify:track:7utED0KJFDNKvCdVZmHHKa",
       "title": "Reach Out",
       "artist": "Victoria Monét",
       "duration_ms": 159494,
@@ -130,6 +132,7 @@
     {
       "id": "break-my-soul-will-i-am-remix",
       "apple_id": "1637806492",
+      "spotify_uri": "spotify:track:5EooBH2mT6qcsPY8ZgZPVW",
       "title": "BREAK MY SOUL (will.i.am Remix)",
       "artist": "Beyoncé & will.i.am",
       "duration_ms": 238732,
