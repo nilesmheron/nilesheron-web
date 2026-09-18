@@ -1218,7 +1218,7 @@
       title: title,
       artist: artist,
       artUrl: at(1000),
-      artwork: art
+      artwork: artObj
         ? [256, 512, 1000].map(function (px) {
             return { src: at(px), sizes: px + 'x' + px, type: 'image/jpeg' };
           })
@@ -1303,6 +1303,7 @@
         block.appendChild(lab);
         block.setAttribute('data-songs', sides[n].total);
         block.setAttribute('data-live', live ? '1' : '0');
+        block.setAttribute('data-status', status);
       }
 
       // Three columns; two rows or fewer is a short side and must not stretch.
@@ -1426,7 +1427,13 @@
       if (b === liveBlock) return;
       b.classList.add('side-block--collapsed');
       var lab = b.querySelector('.side-label b');
-      if (lab) lab.textContent = b.getAttribute('data-songs') + ' songs · ' + lab.textContent.toLowerCase();
+      // Rebuild from the status stored at render time, never from the label's
+      // own text: fitDeck runs on every render and was prefixing the count
+      // onto its own previous output.
+      if (lab) {
+        lab.textContent = b.getAttribute('data-songs') + ' songs · ' +
+          String(b.getAttribute('data-status') || '').toLowerCase();
+      }
     });
   }
 

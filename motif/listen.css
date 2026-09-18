@@ -108,8 +108,19 @@ body {
   flex-direction: column;
   background: var(--bg);
   color: var(--ink);
-  overflow: hidden;
+  overflow-x: hidden;
+  max-width: 100%;
 }
+/* A single element wider than the viewport makes the layout viewport wider
+   than the visual one, and iOS answers by zooming the whole page out until it
+   fits — which reads as "the page loaded at the wrong size". These are the
+   flex children holding arbitrary text: a title, an artist, a curator's name. */
+.splash, .splash-title, .fact, .fact .v, .by, .notice, .plaque,
+.counter, .counter-line, .np, .np-title, .np-artist,
+.deck-hint, .side-label, .about-body, .about-body p { min-width: 0; }
+.splash-title h1, .np-title, .closing .t { overflow-wrap: anywhere; }
+.fact .v, .plaque .v, .notice .b { overflow-wrap: break-word; }
+img { max-width: 100%; }
 
 /* ---- transport panel: two reels and the side's ticks ---- */
 .deck-head {
