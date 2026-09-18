@@ -697,6 +697,53 @@
       .catch(function (err) { trace('account lookup failed: ' + (err && err.message)); });
   }
 
+  /* Mid-listen failures were invisible.
+
+     reportFailure only covers failures to START — it is guarded by `reported`
+     and wired to the splash. When a ReferenceError fired inside a playback
+     handler on 2026-09-18 the beacon produced nothing and the bug arrived as
+     a screenshot. These are the more dangerous kind: the listener is already
+     playing, so a throw stops the music with no error screen to explain it.
+
+     Reported separately from the start-up beacon, and never more than twice a
+     listen — a handler that throws once usually throws on every event, and a
+     loop of beacons would be its own outage. */
+  var midReported = 0;
+
+  function reportMidListen(where, err) {
+    var msg = (err && (err.message || err)) || 'unknown';
+    trace('ERROR in ' + where + ': ' + msg);
+    if (midReported >= 2) return;
+    midReported++;
+    var payload = JSON.stringify({
+      slug: entry && entry.slug,
+      reason: 'mid-listen ' + where + ': ' + msg,
+      diag: diag
+    });
+    pulse('fail', idx);
+    try {
+      if (navigator.sendBeacon &&
+          navigator.sendBeacon('/api/motif-report', new Blob([payload], { type: 'application/json' }))) {
+        return;
+      }
+      fetch('/api/motif-report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload,
+        keepalive: true
+      }).catch(function () {});
+    } catch (_) {}
+  }
+
+  // Wrap a playback handler so a throw is reported rather than swallowed by
+  // the SDK's event dispatcher.
+  function guarded(where, fn) {
+    return function () {
+      try { return fn.apply(this, arguments); }
+      catch (e) { reportMidListen(where, e); }
+    };
+  }
+
   function headlineFor(e) {
     var m = e && e.message;
     if (m === 'premium_required') return 'Spotify Premium required';
@@ -816,7 +863,7 @@
           if (!settled) { settled = true; clearTimeout(timer); resolve(true); }
         });
         player.addListener('not_ready', function () { trace('not_ready'); deviceId = null; });
-        player.addListener('player_state_changed', onStateChange);
+        player.addListener('player_state_changed', guarded('spotify:state', onStateChange));
 
         // These have to settle the promise, not just log. A free account fires
         // account_error and then never becomes ready, so leaving it unsettled
@@ -917,7 +964,7 @@
   function wireApple() {
     var E = window.MusicKit.Events;
 
-    music.addEventListener(E.nowPlayingItemDidChange, function () {
+    music.addEventListener(E.nowPlayingItemDidChange, guarded('apple:nowPlaying', function () {
       var item = music.nowPlayingItem;
       if (!item) return;
       var now = normApple(item);
@@ -935,9 +982,9 @@
       setMediaSession(now);
       renderNowPlaying(now);
       updateTransport();
-    });
+    }));
 
-    music.addEventListener(E.playbackStateDidChange, function (e) {
+    music.addEventListener(E.playbackStateDidChange, guarded('apple:state', function (e) {
       var states = window.MusicKit.PlaybackStates || {};
       paused = e && (e.state === states.paused || e.state === states.stopped);
       updateTransport();
@@ -948,11 +995,11 @@
         trace('apple queue completed');
         finish();
       }
-    });
+    }));
 
-    music.addEventListener(E.playbackTimeDidChange, function () {
+    music.addEventListener(E.playbackTimeDidChange, guarded('apple:time', function () {
       updateProgress(music.currentPlaybackTime || 0, music.currentPlaybackDuration || 0);
-    });
+    }));
 
     music.addEventListener(E.mediaPlaybackError, function (e) {
       trace('apple playback error: ' + JSON.stringify((e && e.error) || e).slice(0, 160));
