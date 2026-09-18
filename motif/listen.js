@@ -1155,10 +1155,23 @@
   }
 
   function normApple(item) {
-    // MusicKit exposes artwork as a template with {w}/{h} placeholders.
-    var art = null;
-    try { art = item.artwork && item.artwork.url; } catch (_) { art = null; }
-    function at(px) { return art ? art.replace('{w}', px).replace('{h}', px) : null; }
+    /* Artwork is a template. MusicKit ships its own formatter and it knows
+       the token set — hand-replacing {w} and {h} works for {w}x{h}bb.jpg but
+       silently produces a 404 for any template carrying {c} or {f}. Use
+       theirs when it exists and keep the manual path as a fallback. */
+    var artObj = null;
+    try { artObj = item.artwork || null; } catch (_) { artObj = null; }
+    function at(px) {
+      if (!artObj) return null;
+      try {
+        if (window.MusicKit && window.MusicKit.formatArtworkURL) {
+          return window.MusicKit.formatArtworkURL(artObj, px, px);
+        }
+      } catch (_) {}
+      var u = artObj.url;
+      return u ? String(u).replace('{w}', px).replace('{h}', px)
+                          .replace('{c}', '').replace('{f}', 'jpg') : null;
+    }
     var title = '';
     var artist = '';
     try { title = item.title || (item.attributes && item.attributes.name) || ''; } catch (_) {}
@@ -1282,7 +1295,16 @@
     var card = el('div', 'card' + (f.contain ? ' card--contain' : '') + (isCurrent ? ' card--current' : ''));
     if (f.src) {
       var im = document.createElement('img');
-      im.src = f.src; im.alt = '';
+      im.alt = '';
+      /* A 404 used to paint the platform's broken-image placeholder — a grey
+         square in a deck of sleeves. Drop the cache entry, fall back to type,
+         and let the catalogue try to recover it. */
+      im.addEventListener('error', function () {
+        delete artCache[i];
+        artTried[i] = false;
+        ensureArt(i);
+      });
+      im.src = f.src;
       card.appendChild(im);
     } else {
       card.className += ' card--back';
@@ -1472,14 +1494,61 @@
     return liner;
   }
 
-  // Album art for a track, from whichever service is playing.
+  /* Album art.
+
+     The playback item's artwork is a hint, not a source. The first track of a
+     tape is the one handed to setQueue rather than appended with playLater,
+     and its item can arrive without usable artwork — which showed as a single
+     broken grey tile in a deck where every other card was fine.
+
+     So the catalogue is the source of truth: any revealed track without art
+     fetches its own, once, and repaints that tile. Failures are silent and
+     the card falls back to type. */
   var artCache = {};
+  var artTried = {};
+  var appleDevToken = null;
+
   function artFor(i) { return artCache[i] || null; }
+
+  function ensureArt(i) {
+    var t = tracks[i];
+    if (!t || !t.apple_id || artCache[i] || artTried[i]) return;
+    artTried[i] = true;
+
+    var tok = appleDevToken
+      ? Promise.resolve(appleDevToken)
+      : fetch('/api/motif-apple-token', { credentials: 'same-origin' })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (d) { appleDevToken = d && d.token; return appleDevToken; });
+
+    tok.then(function (token) {
+      if (!token) return null;
+      return fetch('https://api.music.apple.com/v1/catalog/us/songs/' + encodeURIComponent(t.apple_id), {
+        headers: { Authorization: 'Bearer ' + token }
+      }).then(function (r) { return r.ok ? r.json() : null; });
+    }).then(function (d) {
+      var a = d && d.data && d.data[0] && d.data[0].attributes;
+      var url = a && a.artwork && a.artwork.url;
+      if (!url) return;
+      artCache[i] = String(url).replace('{w}', 1000).replace('{h}', 1000)
+                               .replace('{c}', '').replace('{f}', 'jpg');
+      trace('art recovered from catalogue for track ' + (i + 1));
+      repaintTile(i);
+    }).catch(function () { /* the card falls back to type */ });
+  }
+
+  // Swap one tile in place rather than re-rendering the deck mid-listen.
+  function repaintTile(i) {
+    if (!root || mode !== 'rest' || finished || awaitingFlip) return;
+    var tiles = root.querySelectorAll('.deck-sides .grid > *');
+    if (tiles[i] && tiles[i].parentNode) tiles[i].parentNode.replaceChild(slotFor(i), tiles[i]);
+  }
 
   var lastLive = -1;
 
   function reveal(trackIndex, now) {
     if (now && now.artUrl) artCache[trackIndex] = now.artUrl;
+    ensureArt(trackIndex);
     if (revealed.indexOf(trackIndex) === -1) revealed.push(trackIndex);
 
     /* If the open card was the song that was playing, follow the music. If it
@@ -1860,6 +1929,7 @@
       revealed = [];
       spotIdx = 0;
       artCache = {};
+      artTried = {};
       mediaFor = null;
       finished = false;
       awaitingFlip = false;
