@@ -211,9 +211,12 @@
       i: (i === undefined ? null : i),
       svc: service            // null when nothing was chosen: a bounce, not a play
     });
-    // 'complete' and 'leave' are the two that must not be lost, so they go at
-    // once and by beacon; the rest ride along in batches.
-    if (ev === 'complete' || ev === 'leave') flushPulse(true);
+    /* Anything terminal goes at once and by beacon; the rest ride in batches.
+       'bounce' was added to this list late and not to this condition, so every
+       abandoned splash — the single most common outcome — buffered a lone
+       event and died with the page. Eight hours of Spotify failures reported
+       nothing at all. */
+    if (ev === 'complete' || ev === 'leave' || ev === 'bounce' || ev === 'fail') flushPulse(true);
     else if (pulseBox.length >= 6) flushPulse(false);
   }
 
@@ -512,6 +515,9 @@
         if (appleReady()) {
           trace('spotify side door unavailable: ' + (e && e.message));
           markSideDoorClosed(e);
+          // Silent to the listener, not to us. This is the path that tells
+          // someone they need Premium, so it is the one we most need to see.
+          spotifyAccountDetail().then(function () { reportFailure(e, true); });
           return;
         }
         // A permanent refusal is worth surfacing before they tap and wait.
@@ -602,23 +608,38 @@
         playBtn.textContent = 'Play';
         // A one-line status under the deck is too easy to miss when the button
         // just springs back. Blocking reasons belong on the splash itself.
-        blockedNote(e);
+        if (service === 'spotify' && e && e.message === 'premium_required') {
+          spotifyAccountDetail().then(function () { blockedNote(e); });
+        } else {
+          blockedNote(e);
+        }
       });
   }
 
   var reported = false;
-  function reportFailure(e) {
+  /* A failure report races the listener closing the tab, so it goes by
+     beacon with a keepalive fetch behind it. Plain fetch was being cancelled
+     on navigation. `silent` reports a failure the listener was NOT shown —
+     the side-door warm-up — which we still need to see. */
+  function reportFailure(e, silent) {
     if (reported) return;
     reported = true;
+    var payload = JSON.stringify({
+      slug: entry && entry.slug,
+      reason: ((e && e.message) || 'unknown') + (silent ? ' (warm-up, not shown)' : ''),
+      diag: diag
+    });
+    pulse('fail', null);
     try {
+      if (navigator.sendBeacon &&
+          navigator.sendBeacon('/api/motif-report', new Blob([payload], { type: 'application/json' }))) {
+        return;
+      }
       fetch('/api/motif-report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          slug: entry && entry.slug,
-          reason: (e && e.message) || 'unknown',
-          diag: diag
-        })
+        body: payload,
+        keepalive: true
       }).catch(function () {});
     } catch (_) {}
   }
@@ -658,6 +679,22 @@
     });
     box.appendChild(copy);
     doors.insertBefore(box, doors.firstChild);
+  }
+
+  /* Spotify's account_error says only "premium users only". Testers who do
+     have Premium have hit it, and the documented cause is that the Web
+     Playback SDK excludes mobile-only Premium tiers — which /v1/me can tell
+     us apart. Ask before reporting, so the trace carries the answer rather
+     than the argument. */
+  function spotifyAccountDetail() {
+    return api('/me')
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (me) {
+        if (!me) { trace('account: could not read /me'); return; }
+        trace('account: product=' + me.product + ' country=' + me.country +
+              ' explicit_ok=' + (me.explicit_content ? !me.explicit_content.filter_enabled : 'n/a'));
+      })
+      .catch(function (err) { trace('account lookup failed: ' + (err && err.message)); });
   }
 
   function headlineFor(e) {

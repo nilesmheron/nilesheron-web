@@ -30,7 +30,11 @@ const DEFAULT_ALLOWED_ORIGINS = ['https://dev.nilesheron.com'];
 
 // start · track · complete · leave. Anything else is dropped rather than
 // logged, so a future caller cannot quietly widen what this collects.
-const EVENTS = new Set(['start', 'track', 'complete', 'leave']);
+// 'bounce' = left before choosing a door. 'fail' = playback refused.
+// Unknown names are still dropped rather than logged, so the shape cannot be
+// widened by a careless caller — but a name the client sends and the server
+// discards is a silent hole, which is what these two were.
+const EVENTS = new Set(['start', 'track', 'complete', 'leave', 'bounce', 'fail']);
 const MAX_BATCH = 40;
 
 function parseList(envValue, fallback) {
