@@ -406,7 +406,11 @@
     var missing = spotifyMissing();
     var anySpotify = spotifyAny();
 
-    var p2 = el('div', 'plaque');
+    var p2 = el(appleReady() && spotifyAny() ? 'button' : 'div', 'plaque');
+    if (p2.tagName === 'BUTTON') {
+      p2.type = 'button';
+      p2.setAttribute('aria-label', 'Play with Spotify instead');
+    }
     var k = el('div', 'k');
     var v = el('div', 'v');
 
@@ -1344,6 +1348,7 @@
         e.stopPropagation();
         spotIdx = idx;
         mode = 'card';
+        focusNext = 'stage';
         renderPlayer();
       });
       var count = document.createElement('b');
@@ -1390,13 +1395,23 @@
   /* One tile. Unplayed slots are inert divs with no content and no handler —
      no title, no art, no alt text. That is the blind. */
   function slotFor(i) {
-    if (revealed.indexOf(i) === -1) return el('div', 'slot');
+    if (revealed.indexOf(i) === -1) {
+      var empty = el('div', 'slot');
+      // No name, no role, not focusable. An unplayed slot must disclose
+      // nothing — to a screen reader the deck is the songs heard so far.
+      empty.setAttribute('aria-hidden', 'true');
+      return empty;
+    }
 
     var t = tracks[i];
     var f = face(t, artFor(i));
     var isCurrent = (i === idx) && !awaitingFlip && !finished;
 
-    var card = el('div', 'card' + (f.contain ? ' card--contain' : '') + (isCurrent ? ' card--current' : ''));
+    var card = el('button', 'card' + (f.contain ? ' card--contain' : '') + (isCurrent ? ' card--current' : ''));
+    card.type = 'button';
+    card.setAttribute('aria-label',
+      'Song ' + (i + 1) + ', ' + (t.title || 'untitled') +
+      (t.artist ? ' by ' + t.artist : '') + (isCurrent ? ', now playing' : ''));
     if (f.src) {
       var im = document.createElement('img');
       im.alt = '';
@@ -1426,6 +1441,7 @@
       e.stopPropagation();
       spotIdx = i;
       mode = 'card';
+      focusNext = 'stage';
       renderPlayer();
     });
     return card;
@@ -1433,7 +1449,10 @@
 
   // Kept for the no-artwork fallback only; the in-place flip is gone.
   function gridBack(i, t, f) {
-    var card = el('div', 'card card--back');
+    var card = el('button', 'card card--back');
+    card.type = 'button';
+    card.setAttribute('aria-label',
+      'Song ' + (i + 1) + ', ' + (t.title || 'untitled') + (t.artist ? ' by ' + t.artist : ''));
     var nb = el('div', 'no');
     nb.innerHTML = '<span>' + esc(entry.no || 'T') + '</span><span>' + String(i + 1).padStart(2, '0') + '</span>';
     card.appendChild(nb);
@@ -1516,13 +1535,17 @@
     var live = (i === idx) && !finished && !awaitingFlip;
     var cls = live ? 'live' : '';
 
-    var bar = el('div', 'stage-bar');
+    var bar = el('button', 'stage-bar');
+    bar.type = 'button';
+    bar.setAttribute('aria-label', 'Show tape view');
     bar.innerHTML = mode === 'card'
       ? '<span class="' + cls + '">Song ' + (p.inSide + 1) + ' of ' + p.total +
         (p.sided ? ' · side ' + esc(p.label) : '') + '</span><span>Tape view ▸</span>'
       : '<span class="' + cls + '">Memorex · ' + esc(entry.no || 'T') + ' · ' + esc(p.label) +
         String(p.inSide + 1).padStart(2, '0') + '</span><span>Tape view ▸</span>';
-    bar.addEventListener('click', function (e) { e.stopPropagation(); mode = 'tape'; renderPlayer(); });
+    bar.addEventListener('click', function (e) {
+      e.stopPropagation(); mode = 'tape'; focusNext = 'deck'; renderPlayer();
+    });
     stage.appendChild(bar);
 
     stage.appendChild(mode === 'card' ? buildSleeve(t, f) : buildLiner(t, f, p));
@@ -1538,7 +1561,9 @@
        face rather than an empty frame; the sleeve is the default view now, so
        a broken one is the whole screen rather than one tile. */
     if (!f.src) {
-      var bare = el('div', 'sleeve sleeve--paper');
+      var bare = el('button', 'sleeve sleeve--paper');
+      bare.type = 'button';
+      bare.setAttribute('aria-label', 'Turn the card over to read the liner note');
       var cap0 = el('div', 'sleeve-cap');
       var t0 = el('div', 't'); t0.textContent = t.title || '';
       var a0 = el('div', 'a'); a0.textContent = t.artist || '';
@@ -1550,7 +1575,9 @@
       return bare;
     }
 
-    var sl = el('div', 'sleeve' + (f.contain ? ' sleeve--paper' : ''));
+    var sl = el('button', 'sleeve' + (f.contain ? ' sleeve--paper' : ''));
+    sl.type = 'button';
+    sl.setAttribute('aria-label', 'Turn the card over to read the liner note');
     if (f.contain) {
       var holder = el('div', 'sleeve-art');
       var im = document.createElement('img'); im.src = f.src || ''; im.alt = '';
@@ -1572,7 +1599,9 @@
   }
 
   function buildLiner(t, f, p) {
-    var liner = el('div', 'liner' + (f.img ? ' liner--figured' : ''));
+    var liner = el('button', 'liner' + (f.img ? ' liner--figured' : ''));
+    liner.type = 'button';
+    liner.setAttribute('aria-label', 'Turn the card back to the sleeve');
     liner.appendChild(el('div', 'liner-rules'));
 
     var top = el('div', 'liner-band liner-band--top');
@@ -1734,6 +1763,7 @@
         root.appendChild(transportEl);
         updateTransport();
       }
+      applyFocus();
       return;
     }
 
@@ -1768,6 +1798,48 @@
      per song. Pressing anywhere outside a card returns to the deck. */
   /* No click-to-close. The card is the default view rather than an overlay,
      so a stray press must not dismiss it — the stage bar is the affordance. */
+
+  /* ---- keyboard ----
+     Every press target is a button, so Enter and Space already work and the
+     deck is tabbable in reading order. These are the transport shortcuts a
+     keyboard listener expects on top of that.
+
+     Space is deliberately not hijacked while a button has focus: the browser
+     already activates the focused control with it, and stealing it would mean
+     pressing Space on a card paused the tape instead of opening it. */
+  document.addEventListener('keydown', function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    var t = e.target;
+    var onControl = t && (t.tagName === 'BUTTON' || t.tagName === 'INPUT' ||
+                          t.tagName === 'TEXTAREA' || t.isContentEditable);
+
+    if (e.key === 'Escape') {
+      if (mode === 'turn') { mode = 'card'; focusNext = 'stage'; renderPlayer(); e.preventDefault(); }
+      else if (mode === 'card' && revealed.length) { mode = 'tape'; focusNext = 'deck'; renderPlayer(); e.preventDefault(); }
+      return;
+    }
+
+    if (!playBtn && !transportEl) return;     // still on the splash
+    if (finished || awaitingFlip) return;
+
+    if (e.key === ' ' && !onControl) { togglePlay(); e.preventDefault(); return; }
+    if (e.key === 'ArrowRight') { goNext(); e.preventDefault(); return; }
+    if (e.key === 'ArrowLeft') { goBack(); e.preventDefault(); return; }
+  });
+
+  /* Where focus should land after a view change the listener asked for. Not
+     set by a track change: moving focus because the music moved would take
+     the page away from someone mid-read. */
+  var focusNext = null;
+
+  function applyFocus() {
+    if (!focusNext) return;
+    var target = focusNext === 'stage'
+      ? root.querySelector('.stage-bar')
+      : root.querySelector('.deck-sides .card');
+    focusNext = null;
+    if (target && target.focus) { try { target.focus(); } catch (_) {} }
+  }
 
   function tbtn(cls, label, fn) {
     var b = document.createElement('button');

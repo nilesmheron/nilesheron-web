@@ -534,3 +534,41 @@ img { max-width: 100%; }
   .card--current { transition: transform 0.15s ease; }
   .card--current:hover { transform: translateY(-2px); }
 }
+
+/* ============================================================
+   KEYBOARD AND FOCUS
+
+   Every press target is a <button>, so they are tabbable and Enter/Space
+   activate them. These rules strip the browser chrome a button brings and
+   give focus a visible mark that belongs to the system — the same amber ring
+   the live card already uses, so being focused looks like being chosen.
+   ============================================================ */
+button.card, button.sleeve, button.liner, button.stage-bar, button.plaque {
+  appearance: none;
+  border: none;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+  width: 100%;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+button.card { padding: 0; display: block; }
+button.card.card--contain { padding: 5px; }
+button.card.card--back { padding: 9px; display: flex; }
+button.plaque { display: flex; }
+
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--amber);
+}
+.card:focus-visible {
+  box-shadow: 0 0 0 1px var(--lit-edge), 0 0 0 4px var(--amber),
+              0 6px 14px -8px var(--shadow);
+}
+.sleeve:focus-visible, .liner:focus-visible {
+  box-shadow: 0 0 0 2px var(--amber), 0 22px 40px -26px var(--shadow);
+}
+@media (prefers-reduced-motion: reduce) {
+  .card--current, .card--current:hover { transition: none; transform: none; }
+}
