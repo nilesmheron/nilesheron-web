@@ -482,3 +482,55 @@ img { max-width: 100%; }
 /* the stage bar's right-hand action reads as a destination, not a dismissal */
 .stage-bar span:last-child { color: var(--mute); }
 .stage-bar:hover span:last-child { color: var(--ink); }
+
+/* ============================================================
+   WIDE SCREENS
+
+   Everything below sits inside a media query on purpose: the phone
+   experience must be byte-identical, and the surest way to guarantee that is
+   for none of these rules to exist under 560px.
+
+   This is a floor, not a desktop design. It stops the player stretching —
+   a 1400px transport panel with two reels marooned at either end, and a
+   sleeve letterboxed to a band by object-fit: cover. A tape player is a small
+   object, so it is presented as one, centred on the page. A layout that uses
+   the extra space properly (card and deck at once, which a phone cannot do)
+   is a separate piece of design work.
+   ============================================================ */
+@media (min-width: 560px) {
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100dvh;
+    padding: 24px;
+    /* a slightly deeper ground so the column reads as an object on a surface
+       rather than a stranded strip of page */
+    background:
+      radial-gradient(120% 80% at 50% 0%, rgba(0,0,0,0.035), transparent 60%),
+      var(--bg);
+  }
+
+  .listen-root {
+    width: 100%;
+    max-width: 430px;
+    min-height: 0;
+    height: min(calc(100dvh - 48px), 920px);
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow:
+      0 0 0 1px var(--line-2),
+      0 40px 80px -40px var(--shadow);
+  }
+
+  /* the safe-area insets are a phone concern and add dead space here */
+  .deck-head { margin-top: 16px; }
+  .transport, .rail { padding-bottom: 18px; }
+  .doors { padding-bottom: 20px; }
+  .shelves { padding-bottom: 24px; }
+  .index-head { padding-top: 26px; }
+
+  /* hover is reachable now */
+  .card--current { transition: transform 0.15s ease; }
+  .card--current:hover { transform: translateY(-2px); }
+}
