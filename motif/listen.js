@@ -158,7 +158,17 @@
   var idx = 0;
   var queuedUpTo = -1;
   var awaitingFlip = false;
-  var mode = 'rest';        // 'rest' | 'spot' | 'turn'
+  /* The card is the default view, not the deck.
+
+     The deck-first arrangement came from the handoff, where the grid was home
+     and the card was something you opened. Inverted 2026-09-19: the song
+     playing is what a listener is here for, so it fills the screen, and the
+     deck — everything heard so far — is a place you go. It also makes the
+     reveal land harder: a new song replaces the whole card rather than
+     lighting a tile.
+
+     'card' sleeve · 'turn' liner note · 'tape' the grid */
+  var mode = 'card';
   var spotIdx = 0;          // which track the spotlight is showing
 
   /* null until the listener actually picks a door. It used to default to
@@ -1325,11 +1335,20 @@
   function buildDeck() {
     var deck = el('div', 'deck');
 
-    if (mode === 'rest') {
+    if (mode === 'tape' && !awaitingFlip && !finished) {
       var hint = el('div', 'deck-hint');
       var p = pos(idx);
-      hint.innerHTML = '<span>Press the lit card to open it</span><b>' +
-        (p.inSide + 1) + ' / ' + p.total + '</b>';
+      var back = el('button', 'hint-back');
+      back.textContent = '◂ Now playing';
+      back.addEventListener('click', function (e) {
+        e.stopPropagation();
+        spotIdx = idx;
+        mode = 'card';
+        renderPlayer();
+      });
+      var count = document.createElement('b');
+      count.textContent = (p.inSide + 1) + ' / ' + p.total;
+      hint.appendChild(back); hint.appendChild(count);
       deck.appendChild(hint);
     }
 
@@ -1406,7 +1425,7 @@
     card.addEventListener('click', function (e) {
       e.stopPropagation();
       spotIdx = i;
-      mode = 'spot';
+      mode = 'card';
       renderPlayer();
     });
     return card;
@@ -1442,7 +1461,7 @@
     card.addEventListener('click', function (e) {
       e.stopPropagation();
       spotIdx = i;
-      mode = 'spot';
+      mode = 'card';
       renderPlayer();
     });
     return card;
@@ -1498,15 +1517,15 @@
     var cls = live ? 'live' : '';
 
     var bar = el('div', 'stage-bar');
-    bar.innerHTML = mode === 'spot'
+    bar.innerHTML = mode === 'card'
       ? '<span class="' + cls + '">Song ' + (p.inSide + 1) + ' of ' + p.total +
-        (p.sided ? ' · side ' + esc(p.label) : '') + '</span><span>Close</span>'
+        (p.sided ? ' · side ' + esc(p.label) : '') + '</span><span>Tape view ▸</span>'
       : '<span class="' + cls + '">Memorex · ' + esc(entry.no || 'T') + ' · ' + esc(p.label) +
-        String(p.inSide + 1).padStart(2, '0') + '</span><span>Close</span>';
-    bar.addEventListener('click', function (e) { e.stopPropagation(); mode = 'rest'; renderPlayer(); });
+        String(p.inSide + 1).padStart(2, '0') + '</span><span>Tape view ▸</span>';
+    bar.addEventListener('click', function (e) { e.stopPropagation(); mode = 'tape'; renderPlayer(); });
     stage.appendChild(bar);
 
-    stage.appendChild(mode === 'spot' ? buildSleeve(t, f) : buildLiner(t, f, p));
+    stage.appendChild(mode === 'card' ? buildSleeve(t, f) : buildLiner(t, f, p));
     return stage;
   }
 
@@ -1515,6 +1534,22 @@
        near-solid band across a sheet of paper reads as damage. The scrim
        exists only because the listener's album art is arbitrary, and a
        curator-supplied scan is not. */
+    /* No artwork at all — a track whose art never resolved. Show the typeset
+       face rather than an empty frame; the sleeve is the default view now, so
+       a broken one is the whole screen rather than one tile. */
+    if (!f.src) {
+      var bare = el('div', 'sleeve sleeve--paper');
+      var cap0 = el('div', 'sleeve-cap');
+      var t0 = el('div', 't'); t0.textContent = t.title || '';
+      var a0 = el('div', 'a'); a0.textContent = t.artist || '';
+      var h0 = el('div', 'h'); h0.textContent = 'Press to turn it over';
+      cap0.appendChild(t0); cap0.appendChild(a0); cap0.appendChild(h0);
+      bare.style.justifyContent = 'flex-end';
+      bare.appendChild(cap0);
+      bare.addEventListener('click', function (e) { e.stopPropagation(); mode = 'turn'; renderPlayer(); });
+      return bare;
+    }
+
     var sl = el('div', 'sleeve' + (f.contain ? ' sleeve--paper' : ''));
     if (f.contain) {
       var holder = el('div', 'sleeve-art');
@@ -1580,7 +1615,7 @@
     liner.addEventListener('click', function (e) {
       e.stopPropagation();
       if (Math.abs(e.clientY - sy) > 8 || Math.abs(e.clientX - sx) > 8) return;
-      mode = 'spot'; renderPlayer();
+      mode = 'card'; renderPlayer();
     });
     return liner;
   }
@@ -1630,7 +1665,7 @@
 
   // Swap one tile in place rather than re-rendering the deck mid-listen.
   function repaintTile(i) {
-    if (!root || mode !== 'rest' || finished || awaitingFlip) return;
+    if (!root || mode !== 'tape' || finished || awaitingFlip) return;
     var tiles = root.querySelectorAll('.deck-sides .grid > *');
     if (tiles[i] && tiles[i].parentNode) tiles[i].parentNode.replaceChild(slotFor(i), tiles[i]);
   }
@@ -1646,7 +1681,7 @@
        was one the listener pulled up deliberately from earlier in the tape,
        leave it alone — they are reading it, and yanking them forward on a
        track change would be the player taking the page back. */
-    if (mode !== 'rest' && spotIdx === lastLive) spotIdx = trackIndex;
+    if (mode !== 'tape' && spotIdx === lastLive) spotIdx = trackIndex;
     lastLive = trackIndex;
 
     renderPlayer();
@@ -1657,7 +1692,10 @@
   function trimCardsAfter(keepThrough) {
     revealed = revealed.filter(function (ti) { return ti <= keepThrough; });
     if (spotIdx > keepThrough) spotIdx = keepThrough;
-    mode = 'rest';
+    // Skipping back is a transport action; it must not eject the listener
+    // from the view they are in. Only the liner note follows, since its
+    // contents just changed underneath it.
+    if (mode === 'turn') mode = 'card';
   }
 
   /* ============================================================
@@ -1678,11 +1716,12 @@
 
     root.appendChild(deckHead({ spent: awaitingFlip }));
 
-    /* The spotlight outranks the terminal screens. A finished tape is meant to
-       be browsable (PRD §5.3) and a flip screen shows a completed side — in
-       both, pressing a card must open it rather than do nothing. Closing
-       returns to whichever screen was underneath. */
-    if (mode === 'spot' || mode === 'turn') {
+    /* The card outranks the terminal screens, so a finished tape stays
+       browsable (PRD §5.3) and a card can be opened from the flip screen.
+       The side end forces tape view by setting the mode rather than by being
+       checked first — which is what makes "it switches to tape view and
+       prompts the flip" a state change and not a special case here. */
+    if (mode === 'card' || mode === 'turn') {
       npEl = null;   // not drawn in this mode; do not paint into a detached node
       root.appendChild(buildStage());
       statusEl = el('div', 'status-line');
@@ -1727,9 +1766,8 @@
   /* Attached once, not per render: renderPlayer() runs on every track start
      and root survives innerHTML = '', so binding here would stack a listener
      per song. Pressing anywhere outside a card returns to the deck. */
-  root.addEventListener('click', function () {
-    if (!finished && !awaitingFlip && mode !== 'rest') { mode = 'rest'; renderPlayer(); }
-  });
+  /* No click-to-close. The card is the default view rather than an overlay,
+     so a stray press must not dismiss it — the stage bar is the affordance. */
 
   function tbtn(cls, label, fn) {
     var b = document.createElement('button');
@@ -1879,7 +1917,7 @@
   function flipPrompt() {
     if (awaitingFlip || finished) return;
     awaitingFlip = true;
-    mode = 'rest';
+    mode = 'tape';
     svcPause();
     releaseWakeLock();
     pulse('flip', idx);
@@ -1976,7 +2014,7 @@
     pulse('complete', idx);
     svcPause();
     releaseWakeLock();
-    mode = 'rest';
+    mode = 'tape';
     renderPlayer();
   }
 
@@ -2024,7 +2062,7 @@
       mediaFor = null;
       finished = false;
       awaitingFlip = false;
-      mode = 'rest';
+      mode = 'card';
       idx = 0;
       renderPlayer();
       seedAny(0).catch(function (e2) { say(friendly(e2), true); });
