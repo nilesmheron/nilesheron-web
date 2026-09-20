@@ -74,6 +74,53 @@
   }
   .index-foot a { color: var(--mute); text-decoration: none; }
   .index-foot a:hover { color: var(--ink); }
+
+  /* ============================================================
+     WIDE — the shelf is a room, not an object
+
+     listen.css holds the player to a 430px column on a wide screen on
+     purpose: a tape player is a small thing you work with one hand, and a
+     1600px cassette is not a better cassette. The shelf is the other kind of
+     surface. It exists to be browsed, and the same column leaves one tape
+     marooned in a half-empty row with a shelf line that stops short of the
+     wall.
+
+     So this widens the room and lets the tapes keep their size — the tiles
+     are capped rather than stretched, and the row runs the full width
+     underneath them, which is what makes a lone tape read as a tape with
+     room beside it rather than a broken grid. Row length comes from
+     --per-row, set in script so the chunking and the columns can never
+     disagree.
+
+     Everything here is inside the media query. Below 560px the shelf is
+     byte-for-byte what it was.
+     ============================================================ */
+  @media (min-width: 560px) {
+    /* a long shelf should scroll the page, not a box inside it */
+    body { align-items: flex-start; }
+    .listen-root {
+      max-width: min(1100px, 100%);
+      height: auto;
+      /* hugs its shelves. Holding the box to the viewport left a short shelf
+         sitting above 200px of nothing, which reads as a vacancy rather than
+         as room. */
+      min-height: 0;
+      overflow: visible;
+    }
+    .shelves { overflow: visible; }
+    .index-head, .shelves, .index-foot { padding-left: 34px; padding-right: 34px; }
+    .index-head p { max-width: 48ch; }
+    .index-head p.why { max-width: 52ch; }
+
+    .shelf {
+      grid-template-columns: repeat(var(--per-row, 2), minmax(0, 236px));
+      justify-content: start;
+      gap: 22px;
+      padding-bottom: 18px;
+      margin-bottom: 30px;
+    }
+    .tape-label .t { font-size: 17px; }
+  }
 </style>
 </head>
 <body>
@@ -101,12 +148,34 @@
   var m = window.location.pathname.match(/^\/motif\/by\/([a-z0-9-]+)\/?$/);
   var handle = m ? m[1] : null;
 
+  /* How many tapes stand on one shelf. Rows are built here rather than left
+     to the grid to wrap, because the shelf line is drawn on the row — a
+     wrapping grid would give one line under the whole block instead of one
+     under each shelf. The CSS reads the same number back out of --per-row,
+     so the columns and the chunking cannot drift apart. */
+  function perRow() {
+    var w = window.innerWidth;
+    if (w >= 1000) return 4;
+    if (w >= 760) return 3;
+    return 2;
+  }
+
+  var shown = [];
+  var shownPerRow = 0;
+
   fetch('/motif/data/mixtapes.json')
     .then(function (r) { return r.ok ? r.json() : []; })
     .then(render)
     .catch(function () { render([]); });
 
+  /* Re-render only when the shelf actually changes length. A resize that does
+     not cross a breakpoint costs nothing, and on a phone this never fires. */
+  window.addEventListener('resize', function () {
+    if (perRow() !== shownPerRow) render(shown);
+  });
+
   function render(all) {
+    shown = all;
     var list = handle
       ? all.filter(function (x) { return x.curator && x.curator.handle === handle; })
       : all;
@@ -148,10 +217,14 @@
         (handle ? 'No tapes on this shelf yet.' : 'No mixtapes yet.') + '</span>'));
     }
 
-    for (var r = 0; r < Math.ceil(list.length / 2); r++) {
+    var n = perRow();
+    shownPerRow = n;
+    root.style.setProperty('--per-row', String(n));
+
+    for (var r = 0; r < Math.ceil(list.length / n); r++) {
       var shelf = el('div', 'shelf');
-      for (var c = 0; c < 2; c++) {
-        var i = r * 2 + c;
+      for (var c = 0; c < n; c++) {
+        var i = r * n + c;
         if (i >= list.length) break;
         shelf.appendChild(tile(list[i], Boolean(curator)));
       }

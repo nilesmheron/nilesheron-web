@@ -493,9 +493,14 @@ img { max-width: 100%; }
    This is a floor, not a desktop design. It stops the player stretching —
    a 1400px transport panel with two reels marooned at either end, and a
    sleeve letterboxed to a band by object-fit: cover. A tape player is a small
-   object, so it is presented as one, centred on the page. A layout that uses
-   the extra space properly (card and deck at once, which a phone cannot do)
-   is a separate piece of design work.
+   object, so it is presented as one, centred on the page.
+
+   This is the answer for the player, not a placeholder for a wider one. The
+   obvious desktop move — card and deck side by side, which a phone cannot do
+   — makes the player a dashboard, and a dashboard is the opposite of a tape:
+   the deck is meant to be somewhere you go, briefly, not something you
+   monitor. The shelf is the surface that should use the width, and it does;
+   see the wide block in mixtape-index.html.
    ============================================================ */
 @media (min-width: 560px) {
   body {
