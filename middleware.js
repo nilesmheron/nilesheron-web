@@ -164,6 +164,26 @@ export default async function middleware(request) {
         html = html.includes('<head>')
           ? html.replace('<head>', '<head>\n  ' + tags)
           : html.replace('</head>', '  ' + tags + '\n</head>');
+
+        /* The empty tape's rail. listen.html paints before its script loads,
+           and its ticks should already be side A's count so the splash lands
+           without a jump. Mirrors buildSides() in listen.js: a sides
+           declaration is trusted only if it accounts for every track. The
+           count is already public on the splash, so this discloses nothing. */
+        const n = Array.isArray(e.tracks) ? e.tracks.length : 0;
+        let first = n;
+        if (Array.isArray(e.sides) && e.sides.length) {
+          let sum = 0;
+          const totals = [];
+          for (const sd of e.sides) {
+            const t = Number(sd && sd.total) || 0;
+            if (t <= 0) break;
+            totals.push(t);
+            sum += t;
+          }
+          if (sum === n && totals.length) first = totals[0];
+        }
+        html = html.replace('<!--memorex:ticks-->', '<span></span>'.repeat(Math.min(first, 200)));
       }
     } catch (_) {
       // no preview rather than no page

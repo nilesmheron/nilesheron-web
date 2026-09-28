@@ -294,7 +294,8 @@
      ============================================================ */
 
   function renderSplash() {
-    root.innerHTML = '';
+    root.innerHTML = '';          // the empty tape from listen.html goes here
+    root.removeAttribute('aria-busy');
 
     root.appendChild(deckHead({ empty: true }));
 
@@ -2172,6 +2173,7 @@
 
   function fatal(msg) {
     root.innerHTML = '';
+    root.removeAttribute('aria-busy');
     var wrap = el('div', 'splash');
     var p = el('p', 'splash-err');
     p.textContent = msg;

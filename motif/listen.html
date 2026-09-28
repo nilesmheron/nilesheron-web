@@ -20,7 +20,44 @@
   <link rel="stylesheet" href="/motif/listen.css">
 </head>
 <body>
-  <div class="listen-root" id="listen-root"></div>
+  <!-- The empty tape: the loading state, painted from HTML alone so the page
+       lands before listen.js (the slow part of a cold load) or the entry JSON
+       arrives. It is the splash's own shape with nothing on it, so the swap
+       does not jump. The middleware replaces the ticks marker with side A's
+       tick count; if it cannot read the entry the rail is simply bare.
+
+       It must never say anything about the tape — no title, no curator, no
+       songs. renderSplash() and fatal() clear it, and aria-busy with it. -->
+  <div class="listen-root" id="listen-root" aria-busy="true">
+    <div class="deck-head">
+      <div class="reel reel--supply"><i></i></div>
+      <div class="counter">
+        <div class="ticks"><!--memorex:ticks--></div>
+        <div class="counter-line"><span><b>Song —</b></span><span>of —</span></div>
+      </div>
+      <div class="reel reel--takeup"><i></i></div>
+    </div>
+    <div class="splash splash--loading">
+      <div class="splash-top" aria-hidden="true">
+        <div class="label"><div class="skel skel-art"></div><div class="label-band"><span>&nbsp;</span></div></div>
+        <div class="splash-title">
+          <div class="skel skel-no"></div>
+          <div class="skel skel-h1"></div>
+          <div class="skel skel-h1 skel-h1--short"></div>
+          <div class="skel skel-by"></div>
+          <div class="skel skel-p"></div>
+          <div class="skel skel-p skel-p--short"></div>
+        </div>
+      </div>
+      <div class="splash-slack"></div>
+      <div class="facts" aria-hidden="true">
+        <div class="fact"><span class="k"><span class="skel skel-k"></span></span><span class="skel skel-v"></span></div>
+        <div class="fact"><span class="k"><span class="skel skel-k"></span></span><span class="skel skel-v skel-v--short"></span></div>
+      </div>
+      <div class="about" aria-hidden="true"><div class="skel skel-about"></div></div>
+      <div class="doors"><button class="key" type="button" disabled>Loading</button></div>
+    </div>
+  </div>
   <script src="/motif/listen.js"></script>
 </body>
 </html>
