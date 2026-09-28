@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>TBP + Venture 313 Directory</title>
+<style>
+  :root {
+    --paper: #F5F3EE;
+    --card: #FFFFFF;
+    --ink: #1A1F1C;
+    --ink-2: #4A544E;
+    --ink-3: #7C877F;
+    --rule: #DCDFD8;
+    --green: #1B6B52;
+    --green-deep: #0E4D3C;
+    --green-wash: #E4EBE7;
+    --blue: #1C4E6E;
+    --blue-wash: #E3EDF4;
+    --gold: #8A6A10;
+    --gold-wash: #FDF3C4;
+    --red: #8A2E24;
+    --red-wash: #F6E3E0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #121614;
+      --card: #1A201D;
+      --ink: #E8ECE9;
+      --ink-2: #B4BEB8;
+      --ink-3: #85918A;
+      --rule: #2C3531;
+      --green: #6CC7A4;
+      --green-deep: #9FDDC4;
+      --green-wash: #1D3129;
+      --blue: #8EC0E2;
+      --blue-wash: #1B2A35;
+      --gold: #E8C865;
+      --gold-wash: #3A3217;
+      --red: #F0A89D;
+      --red-wash: #3A211D;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 56px 24px 80px; }
+  header .eyebrow {
+    font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--green); font-weight: 600; margin: 0 0 10px;
+  }
+  h1 { font-size: clamp(1.7rem, 3.4vw, 2.3rem); line-height: 1.15; margin: 0 0 12px; letter-spacing: -.01em; }
+  .lede { color: var(--ink-2); max-width: 640px; margin: 0 0 28px; }
+
+  .controls {
+    position: sticky; top: 0; z-index: 5;
+    background: var(--paper);
+    padding: 14px 0 12px;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 8px;
+  }
+  .search {
+    width: 100%; font: inherit; font-size: 16px;
+    padding: 11px 14px; border-radius: 8px;
+    border: 1px solid var(--rule); background: var(--card); color: var(--ink);
+  }
+  .search:focus { outline: 2px solid var(--green); outline-offset: 1px; border-color: transparent; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .chip {
+    font: inherit; font-size: 12.5px; padding: 5px 11px; border-radius: 999px;
+    border: 1px solid var(--rule); background: var(--card); color: var(--ink-2); cursor: pointer;
+  }
+  .chip[aria-pressed="true"] { background: var(--green); border-color: var(--green); color: var(--paper); }
+  .count { font-size: 12.5px; color: var(--ink-3); margin-top: 8px; }
+
+  section { margin-top: 40px; }
+  section h2 {
+    font-size: 13px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--ink-3); font-weight: 600; margin: 0 0 4px;
+  }
+  section .sec-note { color: var(--ink-2); font-size: 14px; margin: 0 0 14px; max-width: 700px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px; }
+
+  .card {
+    display: flex; flex-direction: column; gap: 8px;
+    background: var(--card); border: 1px solid var(--rule); border-radius: 10px;
+    padding: 16px 18px 14px; text-decoration: none; color: inherit;
+    transition: border-color .15s, transform .15s;
+    min-width: 0;
+  }
+  .card:hover { border-color: var(--green); }
+  .card:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+  .card h3 { font-size: 15.5px; margin: 0; line-height: 1.3; }
+  .card p { margin: 0; color: var(--ink-2); font-size: 13.5px; }
+  .url {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px;
+    color: var(--green-deep); word-break: break-all;
+  }
+  .meta { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; margin-top: auto; padding-top: 4px; }
+  .tag {
+    font-size: 11px; padding: 2px 8px; border-radius: 999px;
+    background: var(--green-wash); color: var(--green-deep); white-space: nowrap;
+  }
+  .tag.aud { background: var(--blue-wash); color: var(--blue); }
+  .tag.flag { background: var(--gold-wash); color: var(--gold); }
+  .tag.lock { background: var(--red-wash); color: var(--red); }
+  .date { font-size: 11px; color: var(--ink-3); margin-left: auto; white-space: nowrap; }
+
+  .links { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--card); border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+  .links td { padding: 10px 14px; border-top: 1px solid var(--rule); vertical-align: top; }
+  .links tr:first-child td { border-top: 0; }
+  .links td:first-child { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; white-space: nowrap; }
+  .links a { color: var(--green-deep); }
+  .links .to { color: var(--ink-2); }
+
+  .empty { display: none; color: var(--ink-3); padding: 32px 0; }
+  footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--rule); color: var(--ink-3); font-size: 12.5px; }
+  footer p { margin: 0 0 6px; }
+
+  @media (max-width: 560px) {
+    .wrap { padding: 36px 16px 64px; }
+    .grid { grid-template-columns: 1fr; }
+    .links td:first-child { white-space: normal; word-break: break-all; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">TechTown Detroit · Tech-Based Programs · Venture 313</p>
+    <h1>Pages, tools, and assets directory</h1>
+    <p class="lede">Every one-pager, deck, calendar, and tool we've built and hosted on dev.nilesheron.com and venture313.com, in one place. Search or filter, then open the one you need. Share a link with a partner only if its audience tag says that's who it's for.</p>
+  </header>
+
+  <div class="controls">
+    <input class="search" id="q" type="search" placeholder="Search by name, program, or keyword" aria-label="Search the directory" autocomplete="off">
+    <div class="chips" id="chips" role="group" aria-label="Filter by audience"></div>
+    <div class="count" id="count" aria-live="polite"></div>
+  </div>
+
+  <div id="sections"></div>
+  <p class="empty" id="empty">Nothing matches that search.</p>
+
+  <section id="shortlinks">
+    <h2>Short links</h2>
+    <p class="sec-note">Redirects that live in the venture313.com config. Several are printed on QR codes, so they have to keep working.</p>
+    <table class="links">
+      <tbody>
+        <tr><td><a href="https://venture313.com/bts-capitalworkshop" target="_blank" rel="noopener">venture313.com/bts-capitalworkshop</a></td><td class="to">Growth Capital Strategy playbook (BTS × Michigan Central QR, permanent)</td></tr>
+        <tr><td><a href="https://venture313.com/mtw-2026" target="_blank" rel="noopener">venture313.com/mtw-2026</a></td><td class="to">Agentic Search Optimization playbook (Michigan Tech Week QR, permanent)</td></tr>
+        <tr><td><a href="https://venture313.com/pitch26/apply" target="_blank" rel="noopener">venture313.com/pitch26/apply</a></td><td class="to">Pitch 26 Phase I application on Airtable (temporary; repoint when Phase I closes Oct 21)</td></tr>
+        <tr><td><a href="https://venture313.com/poll" target="_blank" rel="noopener">venture313.com/poll</a></td><td class="to">Live in-room poll on Zoho Survey (temporary; repoint to the next poll)</td></tr>
+        <tr><td><a href="https://venture313.com/build2026/signup" target="_blank" rel="noopener">venture313.com/build2026/signup</a></td><td class="to">Buildathon 2026 registration on TechTown events (temporary; event has ended)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <footer>
+    <p>Sources: <a href="https://github.com/nilesmheron/nilesheron-web">nilesmheron/nilesheron-web</a> (dev.nilesheron.com) and TechTown-313/venture313-web (venture313.com). Last reviewed September 28, 2026.</p>
+    <p>Not listed here: personal projects, Verse &amp; Hook work, Mothership/CTE materials, and client previews hosted on the same domains.</p>
+  </footer>
+</div>
+
+<script>
+  const DEV = 'https://dev.nilesheron.com';
+  const V313 = 'https://venture313.com';
+
+  // audience: internal | partner | founder | public
+  const SECTIONS = [
+    {
+      title: 'Start Studio: ID',
+      note: 'Program materials for the Ideation & Discovery track.',
+      items: [
+        { t: 'Program Brief', d: 'The 2026 one-page case for Start Studio: ID: the problem, the program design, and who it serves at the pre-product stage.', u: DEV + '/tbp/program-brief', type: 'One-pager', aud: ['internal', 'partner'], date: '2026-08-06' },
+        { t: 'Curriculum Calendar', d: 'ID Bootcamp into the Start Studio working group, week by week, with phase gates.', u: DEV + '/tbp/curriculum-calendar', type: 'Calendar', aud: ['internal', 'founder'], date: '2026-08-06' },
+        { t: '2026 Program Calendar', d: 'Three-path program architecture across the year: orientation, app review, checkpoints, thesis defense, lectures, showcase. Hover events for details.', u: DEV + '/tbp/program-calendar', type: 'Calendar', aud: ['internal'], date: '2026-04-08' },
+        { t: 'Lean Canvas Deck', d: '12-slide Lean Canvas pitch deck template for ID founders. Arrow through it or export to PDF.', u: DEV + '/tbp/lean-canvas-deck', type: 'Deck template', aud: ['founder'], date: '2026-05-19' }
+      ]
+    },
+    {
+      title: 'Tech-Based Programs',
+      note: 'Department-level maps and process documents.',
+      items: [
+        { t: 'Program Pipeline', d: 'How founders move from referral and funnel (MAIN, MedHealth, external) through incubation to acceleration.', u: DEV + '/tbp/program-pipeline', type: 'One-pager', aud: ['internal', 'partner'], date: '2026-08-06' },
+        { t: 'BAF Process Map', d: 'Business Accelerator Fund flow, lead intake through engagement closure, with eligibility and satisfaction decision points. Facilitated via SBDC / MEDC SmartZone.', u: DEV + '/tbp/baf', type: 'Process map', aud: ['internal'], date: '2026-05-07' }
+      ]
+    },
+    {
+      title: 'Venture 313',
+      note: 'Program structure, recognition, and competitions.',
+      items: [
+        { t: 'Direct Founder Allocation 2026', d: '$400,000 in direct-to-founder capital from GFF across three programs, and how it was restructured from the prior $450,000 cycle.', u: DEV + '/tbp/v313-direct2026', type: 'One-pager', aud: ['internal', 'partner'], date: '2026-08-06' },
+        { t: 'Pitch 26', d: 'Landing page for the Pitch 26 competition: $100K in non-dilutive prizes, eligibility, two-phase timeline, and the Apply link. Phase I closes Oct 21.', u: V313 + '/pitch26', type: 'Landing page', aud: ['public', 'founder'], date: '2026-09-28' },
+        { t: 'Tech Founders to Watch 2026', d: 'Eleven founders across ten Detroit companies, each with a profile page.', u: V313 + '/ftw26', type: 'Feature', aud: ['public'], date: '2026-09-21' },
+        { t: 'FTW26 share cards', d: 'Downloadable social cards for each honoree in portrait, square, and story formats. Send honorees here.', u: V313 + '/ftw26/assets', type: 'Asset kit', aud: ['founder', 'partner'], flags: ['noindex'], date: '2026-09-24' }
+      ]
+    },
+    {
+      title: 'Buildathon 2026',
+      note: 'September 17–22 civic build event with the City of Detroit. Pre-event overviews and post-event readouts.',
+      items: [
+        { t: 'City of Detroit partner overview', d: 'The August version of the Buildathon overview written for City partners.', u: DEV + '/tbp/v313/build2026', type: 'One-pager', aud: ['partner'], date: '2026-08-11' },
+        { t: 'Program overview', d: 'Public-facing overview: five days, coders and non-coders, challenge pillars drawn from what 8,000+ residents told the City.', u: V313 + '/build2026/overview.html', type: 'One-pager', aud: ['public', 'partner'], date: '2026-09-18' },
+        { t: 'Overview & partnership opportunities', d: 'The program overview plus sponsorship and partnership options. Use this one for prospective partners.', u: V313 + '/build2026/partners.html', type: 'One-pager', aud: ['partner'], date: '2026-09-18' },
+        { t: 'Buildathon analysis', d: 'What 62 submitted products show about who built, what they built, and what Detroiters keep asking for. 206 registered, 119 checked in.', u: V313 + '/build2026/analysis.html', type: 'Report', aud: ['public', 'partner'], date: '2026-09-27' },
+        { t: 'Internal readout', d: 'Participant-level detail and internal notes. Team password required; don’t forward outside TechTown.', u: V313 + '/build2026/internal-analysis.html', type: 'Report', aud: ['internal'], flags: ['password'], date: '2026-09-28' }
+      ]
+    },
+    {
+      title: 'Founder playbooks',
+      note: 'Workshop sessions packaged as a hub page, a live deck, and a one-page cheat sheet built to print or screenshot.',
+      items: [
+        { t: 'Playbooks index', d: 'Field guides for founders building with AI. The front door to everything below.', u: V313 + '/playbook', type: 'Index', aud: ['public', 'founder'], date: '2026-09-27' },
+        { t: 'Growth Capital Strategy', d: 'Two-bucket framework, CAC:LTV and duty cycles, and every capital source priced against the net profit dollar. BTS × Michigan Central cohort.', u: V313 + '/playbook/capital-strategy', type: 'Playbook hub', aud: ['founder'], flags: ['noindex'], date: '2026-09-27' },
+        { t: 'Growth Capital Strategy · slides', d: '24-slide live deck. Arrows or space to advance.', u: V313 + '/playbook/capital-strategy/slides', type: 'Deck', aud: ['founder'], date: '2026-09-09' },
+        { t: 'Growth Capital Strategy · pricing sheet', d: 'Capital sources priced side by side, duty-cycle templates, and the Detroit ecosystem map.', u: V313 + '/playbook/capital-strategy/cheatsheet', type: 'Cheat sheet', aud: ['founder'], date: '2026-09-27' },
+        { t: 'Agentic Search Optimization', d: 'Staying discoverable when machines do the searching. Michigan Tech Week 2026 session with site-audit skills.', u: V313 + '/playbook/agentic-search-optimization', type: 'Playbook hub', aud: ['founder', 'public'], date: '2026-09-27' },
+        { t: 'Agentic Search Optimization · slides', d: '“SEO is fading. AEO is how you get found now.” Live deck.', u: V313 + '/playbook/agentic-search-optimization/slides', type: 'Deck', aud: ['founder'], date: '2026-05-25' },
+        { t: 'Agentic Search Optimization · cheat sheet', d: 'The five questions, the on-site moves, and the across-the-web moves, with copyable prompts.', u: V313 + '/playbook/agentic-search-optimization/cheatsheet', type: 'Cheat sheet', aud: ['founder'], date: '2026-09-27' },
+        { t: 'Connectors & MCP', d: 'How the Model Context Protocol works and how to build a connector: MCP Jam, n8n, and MCP UI apps.', u: V313 + '/playbook/connectors-and-mcp', type: 'Playbook hub', aud: ['founder', 'public'], date: '2026-09-27' },
+        { t: 'Connectors & MCP · slides', d: 'Live deck on MCP. Arrows or space to advance.', u: V313 + '/playbook/connectors-and-mcp/slides', type: 'Deck', aud: ['founder'], date: '2026-05-25' },
+        { t: 'Connectors & MCP · cheat sheet', d: 'Your first AI workflow in five steps: n8n signup through wiring n8n into Claude Code.', u: V313 + '/playbook/connectors-and-mcp/cheatsheet', type: 'Cheat sheet', aud: ['founder'], date: '2026-09-27' },
+        { t: 'Connectors & MCP · bring your own keys', d: 'Quick links for the OpenAI and n8n keys attendees need before the workshop.', u: V313 + '/playbook/connectors-and-mcp/event-keys', type: 'Event handout', aud: ['founder'], date: '2026-09-27' }
+      ]
+    },
+    {
+      title: 'AI working-system templates',
+      note: 'Guides a colleague loads into Claude to set up their own AI workflow. Each one carries a copyable prompt.',
+      items: [
+        { t: 'Templates index', d: 'All four guides in order, with the tools each one touches.', u: DEV + '/templates', type: 'Index', aud: ['internal'], date: '2026-04-15' },
+        { t: 'Colleague AI Onboarding Guide', d: 'Step 1. Build a GitHub-based AI corpus: profile, repo structure, Claude integration, tool connections. 30 to 45 minutes.', u: DEV + '/templates/onboarding', type: 'Guide', aud: ['internal'], date: '2026-04-15' },
+        { t: 'Task Management System', d: 'Step 2. Task dashboard, context file, inbox, and session workflow, pulling from Slack, Gmail, and Granola.', u: DEV + '/templates/task-management', type: 'Guide', aud: ['internal'], date: '2026-04-08' },
+        { t: 'Profile Versioning Guide', d: 'When to update your AI profile, how to version it, and how to run an audit with Claude.', u: DEV + '/templates/profile-versioning', type: 'Guide', aud: ['internal'], date: '2026-04-08' },
+        { t: 'Cross-Platform Context Packager', d: 'Claude packages your context for Gemini, ChatGPT, or Perplexity, and outputs come back to Claude for commit.', u: DEV + '/templates/cross-platform-packager', type: 'Guide', aud: ['internal'], date: '2026-04-08' }
+      ]
+    },
+    {
+      title: 'Archive',
+      note: 'Superseded, but kept for reference. Early design directions for venture313.com before the current site launched.',
+      items: [
+        { t: 'V313 site mock 1 · hero directions', d: 'Side-by-side hero comparisons.', u: DEV + '/v313/web-mock-1', type: 'Mockup', aud: ['internal'], flags: ['superseded'], date: '2026-04-21' },
+        { t: 'V313 site mock 2 · event-forward', d: 'Event-forward homepage direction.', u: DEV + '/v313/web-mock-2', type: 'Mockup', aud: ['internal'], flags: ['superseded'], date: '2026-04-21' },
+        { t: 'V313 site mock 3 · simplified', d: 'Event-forward, simplified.', u: DEV + '/v313/web-mock-3', type: 'Mockup', aud: ['internal'], flags: ['superseded'], date: '2026-04-21' },
+        { t: 'V313 site mock 4 · analytics', d: 'Event-forward with analytics blocks.', u: DEV + '/v313/web-mock-4', type: 'Mockup', aud: ['internal'], flags: ['superseded'], date: '2026-04-21' },
+        { t: 'V313 site mock 5 · photo-forward', d: 'v5a.2, the photo-forward direction closest to what shipped.', u: DEV + '/v313/web-mock-5', type: 'Mockup', aud: ['internal'], flags: ['superseded'], date: '2026-04-22' }
+      ]
+    }
+  ];
+
+  const AUD_LABEL = { internal: 'Internal', partner: 'Partners', founder: 'Founders', public: 'Public' };
+  const FLAG_LABEL = { password: 'Password', noindex: 'Unlisted', superseded: 'Superseded' };
+  const FILTERS = ['all', 'internal', 'partner', 'founder', 'public'];
+
+  let query = '';
+  let aud = 'all';
+
+  function fmtDate(iso) {
+    const [y, m, d] = iso.split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  function el(tag, cls, text) {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+
+  function matches(item, sectionTitle) {
+    if (aud !== 'all' && !item.aud.includes(aud)) return false;
+    if (!query) return true;
+    const hay = [item.t, item.d, item.type, item.u, sectionTitle, ...item.aud.map(a => AUD_LABEL[a])].join(' ').toLowerCase();
+    return query.split(/\s+/).every(w => hay.includes(w));
+  }
+
+  function render() {
+    const root = document.getElementById('sections');
+    root.replaceChildren();
+    let shown = 0, total = 0;
+
+    SECTIONS.forEach(sec => {
+      total += sec.items.length;
+      const items = sec.items.filter(i => matches(i, sec.title));
+      if (!items.length) return;
+      shown += items.length;
+
+      const s = el('section');
+      s.appendChild(el('h2', null, sec.title));
+      if (sec.note) s.appendChild(el('p', 'sec-note', sec.note));
+      const grid = el('div', 'grid');
+
+      items.forEach(i => {
+        const a = el('a', 'card');
+        a.href = i.u;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        a.appendChild(el('h3', null, i.t));
+        a.appendChild(el('p', null, i.d));
+        a.appendChild(el('span', 'url', i.u.replace(/^https:\/\//, '')));
+        const meta = el('div', 'meta');
+        meta.appendChild(el('span', 'tag', i.type));
+        i.aud.forEach(x => meta.appendChild(el('span', 'tag aud', AUD_LABEL[x])));
+        (i.flags || []).forEach(f => meta.appendChild(el('span', f === 'password' ? 'tag lock' : 'tag flag', FLAG_LABEL[f])));
+        meta.appendChild(el('span', 'date', 'Updated ' + fmtDate(i.date)));
+        a.appendChild(meta);
+        grid.appendChild(a);
+      });
+
+      s.appendChild(grid);
+      root.appendChild(s);
+    });
+
+    document.getElementById('count').textContent =
+      shown === total ? total + ' items' : shown + ' of ' + total + ' items';
+    document.getElementById('empty').style.display = shown ? 'none' : 'block';
+    document.getElementById('shortlinks').style.display = (query || aud !== 'all') ? 'none' : '';
+  }
+
+  const chips = document.getElementById('chips');
+  FILTERS.forEach(f => {
+    const b = el('button', 'chip', f === 'all' ? 'Everything' : AUD_LABEL[f]);
+    b.type = 'button';
+    b.setAttribute('aria-pressed', String(f === aud));
+    b.addEventListener('click', () => {
+      aud = f;
+      chips.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', 'false'));
+      b.setAttribute('aria-pressed', 'true');
+      render();
+    });
+    chips.appendChild(b);
+  });
+
+  document.getElementById('q').addEventListener('input', e => {
+    query = e.target.value.trim().toLowerCase();
+    render();
+  });
+
+  render();
+</script>
+</body>
+</html>
