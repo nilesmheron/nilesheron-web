@@ -8,9 +8,8 @@
     Blind playlist player. Served at /motif/:slug/listen via a vercel.json
     rewrite (the slug is read back off the pathname, same as entry.js).
 
-    The Spotify Web Playback SDK is loaded from Spotify's official CDN,
-    authorized for the player page only by PRD §9.3. It is loaded lazily, on
-    the listener's first tap, so the splash costs nothing.
+    Plays through Apple Music (MusicKit JS) only. The Spotify side door was
+    closed to listeners on 2026-09-28; the player no longer loads its SDK.
   -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

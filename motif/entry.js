@@ -75,7 +75,9 @@
 
   /* ── "listen here" drawer: the teaser at the bottom of the hero ── */
   function renderListenDrawer(entry, parent) {
-    if (!entry.apple_music_url && !entry.spotify_url) return;
+    // Apple only. The Spotify embed was removed 2026-09-28, with the Memorex
+    // side door; spotify_url may still sit in the data and is ignored.
+    if (!entry.apple_music_url) return;
 
     listenDrawer = document.createElement('div');
     listenDrawer.className = 'listen-drawer';
@@ -86,10 +88,7 @@
 
     var services = document.createElement('span');
     services.className = 'listen-services';
-    var parts = [];
-    if (entry.apple_music_url) parts.push('Apple Music');
-    if (entry.spotify_url) parts.push('Spotify');
-    services.textContent = parts.join(' · ');
+    services.textContent = 'Apple Music';
 
     listenDrawer.appendChild(label);
     listenDrawer.appendChild(services);
@@ -100,10 +99,9 @@
   /* ── audio zone: collapsed below the hero; embed builds on first open ── */
   function renderAudioZone(entry) {
     var appleUrl = entry.apple_music_url || '';
-    var spotifyUrl = entry.spotify_url || '';
-    if (!appleUrl && !spotifyUrl) return;
+    if (!appleUrl) return;
 
-    audioUrls = { apple: appleUrl, spotify: spotifyUrl };
+    audioUrls = { apple: appleUrl };
     audioZone = document.createElement('div');
     audioZone.className = 'audio-zone';
     root.appendChild(audioZone);
@@ -113,9 +111,6 @@
     if (audioBuilt) return;
     audioBuilt = true;
 
-    var appleUrl = audioUrls.apple, spotifyUrl = audioUrls.spotify;
-    var hasBoth = appleUrl && spotifyUrl;
-
     var back = document.createElement('button');
     back.className = 'audio-back';
     back.textContent = '↑ back to the poems';
@@ -124,37 +119,7 @@
     });
     audioZone.appendChild(back);
 
-    if (hasBoth) {
-      var toggle = document.createElement('div');
-      toggle.className = 'audio-service-toggle';
-
-      var appleBtn = document.createElement('button');
-      appleBtn.textContent = 'Apple Music';
-      appleBtn.className = 'active';
-
-      var spotBtn = document.createElement('button');
-      spotBtn.textContent = 'Spotify';
-
-      toggle.appendChild(appleBtn);
-      toggle.appendChild(spotBtn);
-      audioZone.appendChild(toggle);
-
-      var iframe = buildIframe(appleUrl); // Apple is the full-playback default
-      audioZone.appendChild(iframe);
-
-      spotBtn.addEventListener('click', function () {
-        iframe.src = spotifyUrl;
-        spotBtn.className = 'active';
-        appleBtn.className = '';
-      });
-      appleBtn.addEventListener('click', function () {
-        iframe.src = appleUrl;
-        appleBtn.className = 'active';
-        spotBtn.className = '';
-      });
-    } else {
-      audioZone.appendChild(buildIframe(appleUrl || spotifyUrl));
-    }
+    audioZone.appendChild(buildIframe(audioUrls.apple));
   }
 
   function toggleAudio() {

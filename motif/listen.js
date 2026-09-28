@@ -26,10 +26,15 @@
      ============================================================ */
 
   /* ── platforms ──
-     Apple Music is the front door: no development-mode cap, so anyone with a
-     subscription can listen. Spotify is the side door for the five people
-     Niles can allowlist by hand. An entry whose tracks carry no apple_id
-     falls back to Spotify-only, so nothing that predates Apple is stranded. */
+     Apple Music is the only door: no development-mode cap, so anyone with a
+     subscription can listen.
+
+     The Spotify side door (five hand-allowlisted listeners) was CLOSED TO
+     LISTENERS on 2026-09-28. The splash no longer offers it and prepare() no
+     longer reaches Spotify, but the adapter, its rules above and the failure
+     reporting are kept, deliberately, and are simply unreachable. An entry
+     with no apple_id says it is not playable rather than falling back. The
+     backend (resolver, auth endpoints, builder matching) is untouched. */
   var APPLE_ENABLED = true;
 
   function appleReady() {
@@ -341,9 +346,7 @@
     /* Load-bearing: the requirement appears before the tap, never at a consent
        screen halfway in. A real listener was lost for want of this line. */
     var facts = el('div', 'facts');
-    facts.appendChild(fact('Requires', appleReady()
-      ? 'Plays through your own Apple Music'
-      : 'Plays through your own Spotify Premium'));
+    facts.appendChild(fact('Requires', 'Plays through your own Apple Music'));
     var total = totalMs();
     facts.appendChild(fact('Length', tracks.length + ' songs' + (total ? ' · ' + roughLength(total) : '')));
     if (sides.length > 1) {
@@ -388,49 +391,22 @@
         'Something went wrong signing in. Try again.'));
     }
 
-    playBtn = el('button', 'key');
-    /* "Play side A" on a multi-side tape. It discloses that another side
-       exists and nothing else — no songs — so the blind holds, and the flip
-       stops being an ambush when it arrives. */
-    playBtn.textContent = sides.length > 1 ? 'Play side ' + sides[0].label : 'Start the tape';
-    playBtn.addEventListener('click', function () {
-      startWith(appleReady() ? 'apple' : 'spotify');
-    });
-    doors.appendChild(playBtn);
-
-    /* The side door, stated as a plaque rather than a second button: it is a
-       fact about access, not an equal choice. It now also states COVERAGE,
-       because the two catalogues do not agree and a listener should learn
-       that here rather than from a failed play call. The count is safe to
-       disclose — it says how much is missing, never which songs. */
-    var missing = spotifyMissing();
-    var anySpotify = spotifyAny();
-
-    var p2 = el(appleReady() && spotifyAny() ? 'button' : 'div', 'plaque');
-    if (p2.tagName === 'BUTTON') {
-      p2.type = 'button';
-      p2.setAttribute('aria-label', 'Play with Spotify instead');
-    }
-    var k = el('div', 'k');
-    var v = el('div', 'v');
-
-    if (!anySpotify) {
-      k.innerHTML = '<span>Spotify · side door</span><span>not available</span>';
-      v.textContent = 'None of this tape is on Spotify. It plays on Apple Music only.';
-      p2.style.opacity = '0.62';
+    /* Apple Music is the only door. The Spotify side door was closed to
+       listeners on 2026-09-28 — its adapter below is kept but unreachable.
+       A tape with no Apple ids therefore has nothing to play, and says so
+       in place of the key rather than offering a tap that cannot work. */
+    if (!appleReady()) {
+      doors.appendChild(notice('Not playable yet',
+        'This tape isn\u2019t on Apple Music yet. Nothing has played and nothing has been revealed.'));
     } else {
-      k.innerHTML = '<span>Spotify · side door</span><span>5 seats · by hand</span>';
-      v.textContent = 'Spotify needs Niles to add you first — ask him.' +
-        (missing ? ' ' + missing + ' of these ' + tracks.length +
-                   ' songs are not on Spotify and will be skipped.' : '');
+      playBtn = el('button', 'key');
+      /* "Play side A" on a multi-side tape. It discloses that another side
+         exists and nothing else — no songs — so the blind holds, and the flip
+         stops being an ambush when it arrives. */
+      playBtn.textContent = sides.length > 1 ? 'Play side ' + sides[0].label : 'Start the tape';
+      playBtn.addEventListener('click', function () { startWith('apple'); });
+      doors.appendChild(playBtn);
     }
-
-    p2.appendChild(k); p2.appendChild(v);
-    if (appleReady() && anySpotify) {
-      p2.style.cursor = 'pointer';
-      p2.addEventListener('click', function () { startWith('spotify'); });
-    }
-    doors.appendChild(p2);
 
     wrap.appendChild(doors);
     root.appendChild(wrap);
@@ -446,7 +422,7 @@
      know what we keep will reasonably assume the worst. */
   var ABOUT = [
     'Someone made you a mixtape. It plays in order, and you cannot see what is coming — each song turns a card face up only as it starts. At the end you have the whole deck, and you can add the playlist to your own library.',
-    'It plays through your own Apple Music or Spotify subscription, because that is how the songs stay licensed. You sign in to them, not to us.',
+    'It plays through your own Apple Music subscription, because that is how the songs stay licensed. You sign in to Apple, not to us.',
     'We never see your password, and we do not store your account, your email, or what you listen to. Apple hands the page a pass that lets it play music while the tab is open; close it and that is the end of it. Nothing about you is kept.',
     'No account to make, nothing to install. If you press play and it stops when you lock your phone, it is not meant to — tell whoever sent you this.'
   ];
@@ -496,49 +472,18 @@
       .replace(/"/g, '&quot;');
   }
 
-  // Connect the SDK while the listener is still reading the splash. Connecting
-  // needs no gesture; only starting audio does. Without this the first tap is
-  // spent loading the SDK and appears to do nothing.
+  // Warm MusicKit while the listener is still reading the splash. Configuring
+  // it needs no gesture and takes a moment; doing it now means the first tap
+  // spends itself on playback rather than on setup.
+  //
+  // Apple only. Until 2026-09-28 this also checked for a Spotify sign-in and
+  // loaded the Spotify SDK on every splash, to keep the side door warm. The
+  // side door is closed to listeners, so the player no longer reaches Spotify
+  // at all.
   function prepare() {
-    // Warm whichever front door this entry actually opens. Configuring
-    // MusicKit needs no gesture and takes a moment; doing it now means the
-    // first tap spends itself on playback rather than on setup.
     if (appleReady()) {
       ensureMusic().catch(function (e) { trace('apple warm failed: ' + (e && e.message)); });
-      // Deliberately NOT returning. The Spotify side door needs its SDK warm
-      // too, or the first tap on "Use Spotify instead" is spent loading it and
-      // appears to do nothing — the exact failure the note below describes.
-      // A listener who never touches the side door pays one idle SDK load.
     }
-    ensureAuth().then(function (ok) {
-      if (!ok) return; // first tap sends them to Spotify instead
-      // Warm the SDK quietly. The button stays live the whole time — tapping
-      // during connection is fine now, it simply waits. Disabling it here is
-      // what made the button look like it was cycling for no reason.
-      ensurePlayer().catch(function (e) {
-        // On an Apple-first entry this is only the SIDE DOOR warming up, and a
-        // failure here must stay silent. A listener with Apple Music and no
-        // Spotify Premium was being shown "needs Spotify Premium" on the
-        // splash of a mixtape that plays perfectly well on Apple — which is
-        // exactly the audience Apple exists to reach. Observed 2026-09-13/14:
-        // the same listener bounced four times.
-        //
-        // ensurePlayer() remembers a terminal refusal and rejects immediately
-        // on the next call, so if they do choose Spotify they still get the
-        // real reason, at the moment it is actually true for them.
-        if (appleReady()) {
-          trace('spotify side door unavailable: ' + (e && e.message));
-          markSideDoorClosed(e);
-          // Silent to the listener, not to us. This is the path that tells
-          // someone they need Premium, so it is the one we most need to see.
-          spotifyAccountDetail().then(function () { reportFailure(e, true); });
-          return;
-        }
-        // A permanent refusal is worth surfacing before they tap and wait.
-        if (terminalReason) blockedNote(e);
-        else say(friendly(e), true);
-      });
-    });
   }
 
   /* The side door is not available to this listener. Say so quietly, on the
