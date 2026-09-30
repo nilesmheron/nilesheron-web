@@ -109,7 +109,10 @@
       "title": "Transatlanticism",
       "artist": "Death Cab for Cutie",
       "duration_ms": 475093,
-      "card": {}
+      "card": {
+        "front_image_url": "https://gdellbtfpcmdsfogxqwf.supabase.co/storage/v1/object/public/motif-images/mixtape/motif-redstrings/munh2hbc-162269321994.jpg",
+        "back_text": "Transatlanticism x Death Cab For Cutie\n\n//\n\nAnd when you tidal /\n\nI'm just asking if you can /\n\nbring waves past my shore."
+      }
     },
     {
       "id": "need-you",
@@ -118,7 +121,10 @@
       "title": "NEED YOU",
       "artist": "Seinabo Sey",
       "duration_ms": 249301,
-      "card": {}
+      "card": {
+        "front_image_url": "https://gdellbtfpcmdsfogxqwf.supabase.co/storage/v1/object/public/motif-images/mixtape/motif-redstrings/munhansr-162074859799.jpg",
+        "back_text": "NEED YOU x Seinabo Sey\n\n//\n\nwe sat up all night\nalone; together\npraying that maybe just this once,\nmaybe just because it had\nfinally began to believe in us;\nthe sunrise wouldn't take so long\npulling darkness and dawn\napart"
+      }
     },
     {
       "id": "stand-still",
@@ -127,7 +133,11 @@
       "title": "Stand Still",
       "artist": "Sabrina Claudio",
       "duration_ms": 283236,
-      "card": {}
+      "card": {
+        "front_image_url": "https://gdellbtfpcmdsfogxqwf.supabase.co/storage/v1/object/public/motif-images/mixtape/motif-redstrings/munhflnf-156769003484.jpg",
+        "fit": "contain",
+        "back_text": "Stand Still x Sabrina Claudio\n//\n\nTrying to paint you\nwithin the margins\nalways felt like\nan act of \noppression,\nand you look so much\nbetter free.\n\n(nmh)"
+      }
     },
     {
       "id": "lost-found",
@@ -136,7 +146,10 @@
       "title": "Lost & Found",
       "artist": "Lianne La Havas",
       "duration_ms": 267747,
-      "card": {}
+      "card": {
+        "front_image_url": "https://gdellbtfpcmdsfogxqwf.supabase.co/storage/v1/object/public/motif-images/mixtape/motif-redstrings/munhmk2y-156612033314.jpg",
+        "back_text": "Lost & Found x Lianne La Havas\n//\n\nEven after all these years,\nI still get butterflies when I come\nacross pages\nthat seem fit to hold you.\n\n(nmh)"
+      }
     },
     {
       "id": "holy",
@@ -145,7 +158,11 @@
       "title": "Holy",
       "artist": "Jamila Woods",
       "duration_ms": 192401,
-      "card": {}
+      "card": {
+        "front_image_url": "https://gdellbtfpcmdsfogxqwf.supabase.co/storage/v1/object/public/motif-images/mixtape/motif-redstrings/munhqydx-155426804014.jpg",
+        "fit": "contain",
+        "back_text": "Holy x Jamila Woods\n//\n\nand even after I, too, have gone --\nlower you rear to my lips\nlisten for your name echoing like\nforever in sea shells\nlike hope clinging to pews\nlike baptized dreams refusing\nto hollow the walls of\nan abandoned church\nthis place is still sacred\n\n(nmh, fragment)"
+      }
     },
     {
       "id": "a-case-of-you-piano-a-microphone-1983-ve",
@@ -154,7 +171,11 @@
       "title": "A Case of You (Piano & a Microphone 1983 Version)",
       "artist": "Prince",
       "duration_ms": 100554,
-      "card": {}
+      "card": {
+        "front_image_url": "https://gdellbtfpcmdsfogxqwf.supabase.co/storage/v1/object/public/motif-images/mixtape/motif-redstrings/munhtvs0-114038509249.jpg",
+        "fit": "contain",
+        "back_text": "A Case Of You x Prince \n//\n\nHave you ever\nlooked at a cliff,\nor a ledge, or\na box-cutter, or a\ncar crash; a \nset of lips getting ready to smile,\nor a set of hands getting\nready to hold you\nand said...\n\n\ni have to?"
+      }
     }
   ]
 }
