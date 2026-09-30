@@ -98,6 +98,7 @@
   }
   .line-h strong { color: var(--ink); font-weight: 500; }
   .flag { color: var(--amber); }
+  button.mv { padding: 1px 8px; margin-left: 6px; font-size: 12px; letter-spacing: 0; }
   label.cand {
     display: flex; gap: 10px; align-items: flex-start;
     padding: 7px 0; cursor: pointer; font-size: 13.5px; line-height: 1.4;
@@ -690,6 +691,29 @@
       .finally(function () { btn.disabled = false; btn.textContent = prev; });
   }
 
+  /* Reorder. The side break is a count of side-A songs, so it stays put and a
+     song moved across it simply changes sides. The card travels with the
+     song because it lives on the same state entry. */
+  function moveLine(i, dir) {
+    var j = i + dir;
+    if (j < 0 || j >= state.length) return;
+    var t = state[i]; state[i] = state[j]; state[j] = t;
+    render();
+    summarise();
+  }
+
+  function moveBtn(label, title, i, dir) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'ghost mv';
+    b.textContent = label;
+    b.title = title;
+    b.setAttribute('aria-label', title);
+    b.disabled = (i + dir < 0) || (i + dir >= state.length);
+    b.addEventListener('click', function () { moveLine(i, dir); });
+    return b;
+  }
+
   function render() {
     var box = $('results');
     box.innerHTML = '';
@@ -709,7 +733,11 @@
       right.textContent = item.direct
         ? (item.confident ? 'exact link' : 'link not found')
         : (item.confident ? 'confident' : 'check this one');
-      h.appendChild(left); h.appendChild(right);
+      var tools = document.createElement('span');
+      tools.appendChild(right);
+      tools.appendChild(moveBtn('\u2191', 'Move up', i, -1));
+      tools.appendChild(moveBtn('\u2193', 'Move down', i, 1));
+      h.appendChild(left); h.appendChild(tools);
       div.appendChild(h);
 
       if (!item.candidates.length) {
@@ -794,8 +822,10 @@
          positions among CONFIRMED tracks so a skipped line cannot move it. */
       if (item.chosen !== null && item.candidates[item.chosen]) {
         var confirmedBefore = 0;
-        for (var q = 0; q <= i; q++) {
-          if (state[q].chosen !== null && state[q].candidates[state[q].chosen]) confirmedBefore++;
+        // Not q: that name is the Swap input above, and a var here re-binds it
+        // for Swap's click handler, which then searched for undefined.
+        for (var k = 0; k <= i; k++) {
+          if (state[k].chosen !== null && state[k].candidates[state[k].chosen]) confirmedBefore++;
         }
         var totalConfirmed = confirmedTracks().length;
         if (confirmedBefore < totalConfirmed) {
