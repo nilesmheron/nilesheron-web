@@ -1,0 +1,139 @@
+{
+  "slug": "motif-redstrings",
+  "no": "T",
+  "title": "Motif / Joy, Swings, From, RedStrings",
+  "cover_image_url": "https://gdellbtfpcmdsfogxqwf.supabase.co/storage/v1/object/public/motif-images/mixtape/motif-redstrings/mung9ocp-20985386935.jpg",
+  "curator": {
+    "handle": "nmh",
+    "name": "nmh"
+  },
+  "sides": [
+    {
+      "label": "A",
+      "total": 6
+    },
+    {
+      "label": "B",
+      "total": 7
+    }
+  ],
+  "apple_playlist_url": "https://music.apple.com/us/playlist/motif-joy-swings-from-redstrings/pl.u-RRbVP6JCX2zNa",
+  "poems": [],
+  "tracks": [
+    {
+      "id": "you-send-me",
+      "apple_id": "933583591",
+      "spotify_uri": "spotify:track:4VijLEUxHEzbWKYL5u9wuN",
+      "title": "You Send Me",
+      "artist": "Aretha Franklin",
+      "duration_ms": 148233,
+      "card": {}
+    },
+    {
+      "id": "cashmere-cage",
+      "apple_id": "1821308776",
+      "spotify_uri": "spotify:track:1Pn0kQ4EGj3RWXwCWH8LJg",
+      "title": "Cashmere Cage",
+      "artist": "rum.gold",
+      "duration_ms": 179965,
+      "card": {}
+    },
+    {
+      "id": "lovesick-feat-jarreau-vandal",
+      "apple_id": "1621161953",
+      "title": "Lovesick (feat. Jarreau Vandal)",
+      "artist": "Jerome Thomas",
+      "duration_ms": 228070,
+      "card": {}
+    },
+    {
+      "id": "human-nature-trio-extension-with-stephan",
+      "apple_id": "499542625",
+      "title": "Human Nature (Trio Extension) [with Stephan Crump & Marcus Gilmore]",
+      "artist": "Vijay Iyer",
+      "duration_ms": 579160,
+      "card": {}
+    },
+    {
+      "id": "the-root",
+      "apple_id": "1440841906",
+      "spotify_uri": "spotify:track:2Qmkg3JVW6e0w55HQudjSW",
+      "title": "The Root",
+      "artist": "D'Angelo",
+      "duration_ms": 390958,
+      "card": {}
+    },
+    {
+      "id": "honour",
+      "apple_id": "1877948224",
+      "spotify_uri": "spotify:track:3ZutfABtOFwuY0QTt1QVfi",
+      "title": "Honour",
+      "artist": "Elmiene",
+      "duration_ms": 250152,
+      "card": {}
+    },
+    {
+      "id": "perceptions-feat-jason-moran",
+      "apple_id": "1677237564",
+      "spotify_uri": "spotify:track:7kf9xa23coORkct0znOFBR",
+      "title": "Perceptions (feat. Jason Moran)",
+      "artist": "Meshell Ndegeocello",
+      "duration_ms": 134118,
+      "card": {}
+    },
+    {
+      "id": "transatlanticism",
+      "apple_id": "718938270",
+      "spotify_uri": "spotify:track:4LF1dMlOHe8VfmMut7YiIs",
+      "title": "Transatlanticism",
+      "artist": "Death Cab for Cutie",
+      "duration_ms": 475093,
+      "card": {}
+    },
+    {
+      "id": "need-you",
+      "apple_id": "1687936785",
+      "spotify_uri": "spotify:track:6OrlttcA9XTqr5nANCDkdP",
+      "title": "NEED YOU",
+      "artist": "Seinabo Sey",
+      "duration_ms": 249301,
+      "card": {}
+    },
+    {
+      "id": "stand-still",
+      "apple_id": "1291440789",
+      "spotify_uri": "spotify:track:66H06L8hktjhduwRDWntDT",
+      "title": "Stand Still",
+      "artist": "Sabrina Claudio",
+      "duration_ms": 283236,
+      "card": {}
+    },
+    {
+      "id": "lost-found",
+      "apple_id": "536321380",
+      "spotify_uri": "spotify:track:3grtd7DDleOmNWE4xdXJfZ",
+      "title": "Lost & Found",
+      "artist": "Lianne La Havas",
+      "duration_ms": 267747,
+      "card": {}
+    },
+    {
+      "id": "holy",
+      "apple_id": "1264798369",
+      "spotify_uri": "spotify:track:0yfVAnObp9F3Y32Rbl6pes",
+      "title": "Holy",
+      "artist": "Jamila Woods",
+      "duration_ms": 192401,
+      "card": {}
+    },
+    {
+      "id": "a-case-of-you-piano-a-microphone-1983-ve",
+      "apple_id": "1393183798",
+      "spotify_uri": "spotify:track:6RxDswZiVaCJDYZ1W9ASE8",
+      "title": "A Case of You (Piano & a Microphone 1983 Version)",
+      "artist": "Prince",
+      "duration_ms": 100554,
+      "card": {}
+    }
+  ]
+}
