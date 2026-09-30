@@ -27,7 +27,11 @@
       "title": "You Send Me",
       "artist": "Aretha Franklin",
       "duration_ms": 148233,
-      "card": {}
+      "card": {
+        "front_image_url": "https://gdellbtfpcmdsfogxqwf.supabase.co/storage/v1/object/public/motif-images/mixtape/motif-redstrings/mungdp83-187316043369.jpg",
+        "fit": "contain",
+        "back_text": "You Send Me x Aretha Franklin \n\nI'm not a dreamer /\nI talk to God before bed /\nI am a prayer\n\n(nmh)"
+      }
     },
     {
       "id": "cashmere-cage",
@@ -36,7 +40,11 @@
       "title": "Cashmere Cage",
       "artist": "rum.gold",
       "duration_ms": 179965,
-      "card": {}
+      "card": {
+        "front_image_url": "https://gdellbtfpcmdsfogxqwf.supabase.co/storage/v1/object/public/motif-images/mixtape/motif-redstrings/mungf2o8-182902298054.jpg",
+        "fit": "contain",
+        "back_text": "Cashmere Cage x rum.gold\n//\n\nThe (hardest) scariest part /\nof (loving) in love is believing /\nyou deserve it back.\n\n(nmh)"
+      }
     },
     {
       "id": "lovesick-feat-jarreau-vandal",
@@ -44,7 +52,11 @@
       "title": "Lovesick (feat. Jarreau Vandal)",
       "artist": "Jerome Thomas",
       "duration_ms": 228070,
-      "card": {}
+      "card": {
+        "front_image_url": "https://gdellbtfpcmdsfogxqwf.supabase.co/storage/v1/object/public/motif-images/mixtape/motif-redstrings/mungir5z-169980354754.jpg",
+        "fit": "contain",
+        "back_text": "Lovesick (feat. Jarreau Vandal) x Jerome Thomas\n//\n\nShe looked at me, lost / \nasked: \"where are we going?\" I /\nsmiled: \"Anywhere.\"\n\n(nmh)"
+      }
     },
     {
       "id": "human-nature-trio-extension-with-stephan",
@@ -52,7 +64,10 @@
       "title": "Human Nature (Trio Extension) [with Stephan Crump & Marcus Gilmore]",
       "artist": "Vijay Iyer",
       "duration_ms": 579160,
-      "card": {}
+      "card": {
+        "front_image_url": "https://gdellbtfpcmdsfogxqwf.supabase.co/storage/v1/object/public/motif-images/mixtape/motif-redstrings/mungkxij-167459584189.png",
+        "back_text": "Human Nature (Trio Extension) [with Stephan Crump & Marcus Gilmore] x Vijay Iyer\n//\n\nThere's a space\nbetween\nwhen we dream\nand\nwhen we live --\nan overlap,\nan open field\nstill wet from the\nlast war --\n\nthis is where I \nlearned to love you.\n\n(nmh)"
+      }
     },
     {
       "id": "the-root",
@@ -61,7 +76,10 @@
       "title": "The Root",
       "artist": "D'Angelo",
       "duration_ms": 390958,
-      "card": {}
+      "card": {
+        "front_image_url": "https://gdellbtfpcmdsfogxqwf.supabase.co/storage/v1/object/public/motif-images/mixtape/motif-redstrings/mungo4c0-164013672134.png",
+        "back_text": "The Root x D'Angelo\n//\n\nBig Ol' Moon\nshe pulled \nthe clouds up, (covers), past\nher head, and\nturned (the sky) her bed into \na pillowfort -- glowing\nas (we read eachother) she taught me to read.\n\n(nmh)"
+      }
     },
     {
       "id": "honour",
@@ -70,7 +88,10 @@
       "title": "Honour",
       "artist": "Elmiene",
       "duration_ms": 250152,
-      "card": {}
+      "card": {
+        "front_image_url": "https://gdellbtfpcmdsfogxqwf.supabase.co/storage/v1/object/public/motif-images/mixtape/motif-redstrings/mungrr40-163204582419.png",
+        "back_text": "Honour x Elmiene\n//\n(I wonder if) I'm scared that I've\ngone so long \nwithout a home\nthat (I'm) I'll no longer\n(be) able to become \none.\n\n(nmh)"
+      }
     },
     {
       "id": "perceptions-feat-jason-moran",
