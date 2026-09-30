@@ -173,12 +173,11 @@
       }
     },
     {
-      "id": "a-case-of-you-piano-a-microphone-1983-ve",
-      "apple_id": "1393183798",
-      "spotify_uri": "spotify:track:6RxDswZiVaCJDYZ1W9ASE8",
-      "title": "A Case of You (Piano & a Microphone 1983 Version)",
-      "artist": "Prince",
-      "duration_ms": 100554,
+      "id": "think-it-over",
+      "apple_id": "386038829",
+      "title": "Think It Over",
+      "artist": "Bilal",
+      "duration_ms": 229693,
       "card": {
         "front_image_url": "https://gdellbtfpcmdsfogxqwf.supabase.co/storage/v1/object/public/motif-images/mixtape/motif-redstrings/munhtvs0-114038509249.jpg",
         "fit": "contain",
