@@ -66,6 +66,7 @@
       "duration_ms": 579160,
       "card": {
         "front_image_url": "https://gdellbtfpcmdsfogxqwf.supabase.co/storage/v1/object/public/motif-images/mixtape/motif-redstrings/mungkxij-167459584189.png",
+        "fit": "contain",
         "back_text": "Human Nature (Trio Extension) [with Stephan Crump & Marcus Gilmore] x Vijay Iyer\n//\n\nThere's a space\nbetween\nwhen we dream\nand\nwhen we live --\nan overlap,\nan open field\nstill wet from the\nlast war --\n\nthis is where I \nlearned to love you.\n\n(nmh)"
       }
     },
@@ -78,6 +79,7 @@
       "duration_ms": 390958,
       "card": {
         "front_image_url": "https://gdellbtfpcmdsfogxqwf.supabase.co/storage/v1/object/public/motif-images/mixtape/motif-redstrings/mungo4c0-164013672134.png",
+        "fit": "contain",
         "back_text": "The Root x D'Angelo\n//\n\nBig Ol' Moon\nshe pulled \nthe clouds up, (covers), past\nher head, and\nturned (the sky) her bed into \na pillowfort -- glowing\nas (we read eachother) she taught me to read.\n\n(nmh)"
       }
     },
@@ -90,6 +92,7 @@
       "duration_ms": 250152,
       "card": {
         "front_image_url": "https://gdellbtfpcmdsfogxqwf.supabase.co/storage/v1/object/public/motif-images/mixtape/motif-redstrings/mungrr40-163204582419.png",
+        "fit": "contain",
         "back_text": "Honour x Elmiene\n//\n(I wonder if) I'm scared that I've\ngone so long \nwithout a home\nthat (I'm) I'll no longer\n(be) able to become \none.\n\n(nmh)"
       }
     },
@@ -100,7 +103,11 @@
       "title": "Perceptions (feat. Jason Moran)",
       "artist": "Meshell Ndegeocello",
       "duration_ms": 134118,
-      "card": {}
+      "card": {
+        "front_image_url": "https://gdellbtfpcmdsfogxqwf.supabase.co/storage/v1/object/public/motif-images/mixtape/motif-redstrings/muni90if-154324149599.jpg",
+        "fit": "contain",
+        "back_text": "Perceptions (feat. Jason Moran) x Meshell Ndegeocello\n//\n\nLoving someone still \nlearning their magic\nis accepting that \nsome nights\nyou're the rabbit,\nand some nights\nyou're the \none being sawed\nin half."
+      }
     },
     {
       "id": "transatlanticism",
