@@ -929,10 +929,20 @@
       if (!item) return;
       var now = normApple(item);
       if (now.key === mediaFor) return;
-      mediaFor = now.key;
 
       var known = indexOfAppleId(now.key);
       trace('apple now playing [' + known + '] ' + now.title);
+      /* Only a seed or the queue moving forward may move the tape. Once the
+         tape has stopped (flip or end) or when Apple reports an EARLIER song
+         we did not seed, it is MusicKit resetting its drained queue, and
+         following it made the end of a tape jump back before stopping.
+         appleSeedAt clears mediaFor, which is how a seeded back gets through. */
+      var seeded = mediaFor === null;
+      if (finished || awaitingFlip || (!seeded && known > -1 && known < idx)) {
+        trace('apple: ignoring now-playing [' + known + '] — not a forward move');
+        return;
+      }
+      mediaFor = now.key;
       if (known > -1) {
         idx = known;
         pulse('track', known);
@@ -1812,12 +1822,12 @@
     var back = transportEl.querySelector('.t-back');
     var next = transportEl.querySelector('.t-next');
     var play = transportEl.querySelector('.t-play');
-    // Back at the first song of a side and next at the last disable rather
-    // than wrap. Next does NOT flip the tape: the flip is a deliberate act
-    // with its own key, and advancing into the next side by pressing next
-    // would defeat the stop entirely.
+    // Back at the first song of a side disables rather than wraps. Next at the
+    // last song of a side stays live but only brings up the flip prompt
+    // (goNext) — it never crosses into the next side, so the flip is still
+    // the one way in. Next disables only at the very end of the tape.
     if (back) back.disabled = p.inSide === 0;
-    if (next) next.disabled = p.inSide === p.total - 1;
+    if (next) next.disabled = p.inSide === p.total - 1 && !atSideBreak();
     if (play) play.textContent = paused ? 'Play' : 'Pause';
   }
 
