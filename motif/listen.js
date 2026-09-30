@@ -1015,6 +1015,9 @@
   function appleAppendOne() {
     var n = appleQueuedUpTo + 1;
     if (!music || n >= tracks.length) return Promise.resolve(false);
+    // The second of the two racing callers finds one already queued and stops
+    // here, so the queue stays one song ahead rather than two.
+    if (n > idx + 1) return Promise.resolve(false);
     // The whole flip: simply stop feeding the queue at the boundary.
     // The whole flip: stop feeding the queue at the boundary and let it run out.
     if (pos(n).side !== pos(idx).side) {
