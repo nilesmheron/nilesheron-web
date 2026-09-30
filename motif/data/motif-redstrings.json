@@ -118,6 +118,7 @@
       "duration_ms": 475093,
       "card": {
         "front_image_url": "https://gdellbtfpcmdsfogxqwf.supabase.co/storage/v1/object/public/motif-images/mixtape/motif-redstrings/munh2hbc-162269321994.jpg",
+        "fit": "contain",
         "back_text": "Transatlanticism x Death Cab For Cutie\n\n//\n\nAnd when you tidal /\n\nI'm just asking if you can /\n\nbring waves past my shore."
       }
     },
