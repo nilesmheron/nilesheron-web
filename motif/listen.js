@@ -991,7 +991,18 @@
   // One song ahead, appended as each starts. Confirmed working while hidden,
   // which is what makes the blind hold at depth two rather than needing the
   // whole list handed over up front.
+  //
+  // Appends run one at a time. Two callers race after every seed: the seed
+  // itself, and nowPlayingItemDidChange for the seeded track. Both read
+  // appleQueuedUpTo before either playLater resolved, so both queued the same
+  // next song and it played twice (seen on laptops, 2026-09-29).
+  var appleAppendChain = Promise.resolve();
   function appleAppendNext() {
+    appleAppendChain = appleAppendChain.then(appleAppendOne, appleAppendOne);
+    return appleAppendChain;
+  }
+
+  function appleAppendOne() {
     var n = appleQueuedUpTo + 1;
     if (!music || n >= tracks.length) return Promise.resolve(false);
     // The whole flip: simply stop feeding the queue at the boundary.
