@@ -34,7 +34,9 @@ const DEFAULT_ALLOWED_ORIGINS = ['https://dev.nilesheron.com'];
 // Unknown names are still dropped rather than logged, so the shape cannot be
 // widened by a careless caller — but a name the client sends and the server
 // discards is a silent hole, which is what these two were.
-const EVENTS = new Set(['start', 'track', 'complete', 'leave', 'bounce', 'fail']);
+// 'flip' = a side ran out and the tape stopped for the flip. Sent since
+// 2026-09-15, dropped here until 2026-09-29 — the same hole a third time.
+const EVENTS = new Set(['start', 'track', 'complete', 'leave', 'bounce', 'fail', 'flip']);
 const MAX_BATCH = 40;
 
 function parseList(envValue, fallback) {
