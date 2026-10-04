@@ -582,10 +582,22 @@ img { max-width: 100%; }
    activate them. These rules strip the browser chrome a button brings and
    give focus a visible mark that belongs to the system — the same amber ring
    the live card already uses, so being focused looks like being chosen.
+
+   The reset is wrapped in :where() so it has NO specificity. Written as
+   button.stage-bar (0,1,1) it outranked .stage-bar (0,1,0): font: inherit
+   wiped the bar's 8.5px size and colour, and with no background reset the
+   browser's grey button showed through — a large grey bar on every card view
+   from 2026-09-19 until 2026-10-04. Author styles beat the browser's own at
+   any specificity, so this still strips the chrome while every component
+   rule wins. It returns each button to the div it replaced: no background,
+   padding or margin unless the component asks for one.
    ============================================================ */
-button.card, button.sleeve, button.liner, button.stage-bar, button.plaque {
+:where(button.card, button.sleeve, button.liner, button.stage-bar, button.plaque) {
   appearance: none;
   border: none;
+  margin: 0;
+  padding: 0;
+  background: none;
   font: inherit;
   color: inherit;
   text-align: inherit;
