@@ -48,3 +48,13 @@ select cron.schedule(
   '17 * * * *',
   $$delete from public.motif_errors where created_at < now() - interval '90 days'$$
 );
+
+-- The email throttle folds repeats into the row that got the alert. Several
+-- function instances can do it at once, so the increment happens here, in one
+-- statement, rather than as a REST read-then-write. Service role only.
+create or replace function public.motif_error_suppress(p_id bigint)
+returns void language sql as $$
+  update public.motif_errors set suppressed = suppressed + 1 where id = p_id;
+$$;
+revoke execute on function public.motif_error_suppress(bigint) from public, anon, authenticated;
+grant execute on function public.motif_error_suppress(bigint) to service_role;
