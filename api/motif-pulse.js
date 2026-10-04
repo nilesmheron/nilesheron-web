@@ -36,7 +36,13 @@ const DEFAULT_ALLOWED_ORIGINS = ['https://dev.nilesheron.com'];
 // discards is a silent hole, which is what these two were.
 // 'flip' = a side ran out and the tape stopped for the flip. Sent since
 // 2026-09-15, dropped here until 2026-09-29 — the same hole a third time.
-const EVENTS = new Set(['start', 'track', 'complete', 'leave', 'bounce', 'fail', 'flip']);
+// 'interrupt' = something else took the audio (a call, another app) and the
+// tape is waiting for a tap. 'resume' = a listener picked a tape back up after
+// the page was reloaded. Both added 2026-10-03, client and server in the SAME
+// commit, because a name the client sends and this set lacks is dropped
+// silently — the hole 'bounce', 'fail' and 'flip' each fell into.
+const EVENTS = new Set(['start', 'track', 'complete', 'leave', 'bounce', 'fail', 'flip',
+  'interrupt', 'resume']);
 const MAX_BATCH = 40;
 
 function parseList(envValue, fallback) {
@@ -92,7 +98,7 @@ export default async function handler(req, res) {
     console.log(
       tag + '  ' + String(e.seq).padStart(4, '0') +
       ' ' + String(e.t).padStart(5) + 's ' +
-      e.ev.padEnd(8) +
+      e.ev.padEnd(9) +
       (e.i === null ? '' : ' track ' + String(e.i + 1).padStart(2)) +
       (e.svc ? ' · ' + e.svc : '')
     );

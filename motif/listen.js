@@ -231,7 +231,11 @@
        abandoned splash — the single most common outcome — buffered a lone
        event and died with the page. Eight hours of Spotify failures reported
        nothing at all. */
-    if (ev === 'complete' || ev === 'leave' || ev === 'bounce' || ev === 'fail') flushPulse(true);
+    /* 'interrupt' goes at once too: it is the event most likely to be the
+       last thing this page ever does. A call takes the audio, the tab is
+       already in the background, and iOS may discard it without pagehide. */
+    if (ev === 'complete' || ev === 'leave' || ev === 'bounce' || ev === 'fail' ||
+        ev === 'interrupt') flushPulse(true);
     else if (pulseBox.length >= 6) flushPulse(false);
   }
 
@@ -251,6 +255,16 @@
       }).catch(function () {});
     } catch (_) { /* never let telemetry break playback */ }
   }
+
+  /* Flush whatever is buffered the moment the page is hidden. pagehide is not
+     enough: iOS can discard a backgrounded tab without ever firing it, and up
+     to five batched events died with it. Seen 2026-10-03 — an Apple listener
+     took a call after track 6 and the log simply stops, no 'leave'. Hidden is
+     the last moment the page reliably gets to run. It sends nothing new and
+     claims nothing: a hidden tab may well come back. */
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden') flushPulse(true);
+  });
 
   // A listener who closes the tab mid-tape is the most informative case and
   // the easiest to lose. pagehide fires where unload does not on iOS.
