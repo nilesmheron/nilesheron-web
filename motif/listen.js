@@ -95,6 +95,7 @@
       // would strand the remainder in a side that never appears.
       if (sum === tracks.length) return out;
       trace('sides declaration does not sum to ' + tracks.length + ' — falling back to one side');
+      reportError('sides_mismatch', 'declared ' + sum + ', tape has ' + tracks.length);
     }
     return [{ label: 'A', total: tracks.length }];
   }
@@ -272,6 +273,19 @@
     } catch (_) { /* never let telemetry break playback */ }
   }
 
+  /* Errors nothing caught. A cross-origin script (MusicKit) arrives as the
+     opaque "Script error." with no details — reported anyway; that it
+     happened at all is the information. Resource load errors do not bubble
+     to window, so this sees script errors only. */
+  window.addEventListener('error', function (e) {
+    var where = e && e.filename ? ' @ ' + String(e.filename).split('/').pop() + ':' + (e.lineno || 0) : '';
+    reportError('uncaught', ((e && e.message) || 'Script error.') + where);
+  });
+  window.addEventListener('unhandledrejection', function (e) {
+    var r = e && e.reason;
+    reportError('unhandled_rejection', (r && (r.message || String(r))) || 'no reason given');
+  });
+
   /* Flush whatever is buffered the moment the page is hidden. pagehide is not
      enough: iOS can discard a backgrounded tab without ever firing it, and up
      to five batched events died with it. Seen 2026-10-03 — an Apple listener
@@ -296,7 +310,7 @@
   /* ── routing: /motif/<slug>/listen ── */
   var m = window.location.pathname.match(/^\/motif\/([^/]+)\/listen\/?$/);
   var slug = m ? m[1] : '';
-  if (!slug) { fatal('no entry in this URL'); return; }
+  if (!slug) { fatal('bad_url'); return; }
 
   var params = new URLSearchParams(window.location.search);
   var authFlag = params.get('auth');
@@ -311,12 +325,12 @@
      the wrong thing entirely. */
   fetch('/motif/data/' + slug + '.json')
     .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
-    .catch(function () { fatal('entry not found'); return null; })
+    .catch(function () { fatal('entry_not_found'); return null; })
     .then(function (e) {
       if (!e) return;
       entry = e;
       tracks = e.tracks || [];
-      if (!tracks.length) { fatal('this entry has no playlist yet'); return; }
+      if (!tracks.length) { fatal('entry_empty'); return; }
       sides = buildSides(e);
       renderSplash();
     });
@@ -429,8 +443,10 @@
        A tape with no Apple ids therefore has nothing to play, and says so
        in place of the key rather than offering a tap that cannot work. */
     if (!appleReady()) {
-      doors.appendChild(notice('Not playable yet',
+      var na = copyFor({ message: 'tape_not_on_apple' });
+      doors.appendChild(notice(na ? na.headline : 'Not playable yet', na ? na.message :
         'This tape isn\u2019t on Apple Music yet. Nothing has played and nothing has been revealed.'));
+      reportError('tape_not_on_apple');
     } else {
       playBtn = el('button', 'key');
       /* "Play side A" on a multi-side tape. It discloses that another side
@@ -517,7 +533,12 @@
     if (appleReady()) {
       ensureMusic()
         .then(lookupResume)
-        .catch(function (e) { trace('apple warm failed: ' + (e && e.message)); });
+        .catch(function (e) {
+          // Silent to the listener — nothing is wrong on screen yet — but the
+          // tap that follows may fail, so Niles hears about it now.
+          trace('apple warm failed: ' + (e && e.message));
+          reportError('apple_warm_failed', (e && e.message) || String(e));
+        });
     }
   }
 
@@ -677,7 +698,7 @@
     ensureMusic()
       .then(function () {
         if (music.isAuthorized) return true;
-        return music.authorize().then(function () { return true; });
+        return music.authorize().then(function () { return true; }, authUnfinished);
       })
       .then(function () {
         var modes = window.MusicKit.PlaybackMode || {};
@@ -776,20 +797,48 @@
       });
   }
 
-  var reported = false;
-  /* A failure report races the listener closing the tab, so it goes by
-     beacon with a keepalive fetch behind it. Plain fetch was being cancelled
-     on navigation. `silent` reports a failure the listener was NOT shown —
-     the side-door warm-up — which we still need to see. */
-  function reportFailure(e, silent) {
-    if (reported) return;
-    reported = true;
+  /* ── one reporting path ──
+     Every failure goes through reportError(code, detail), with a code from
+     motif/errors.js — never one invented here. It replaced two functions
+     that had drifted apart: reportFailure (once per page, start-up only) and
+     reportMidListen (twice per listen). Each distinct failure now reports;
+     repeats of the SAME code stop at 3 per page load, so a handler that
+     throws on every event cannot flood the endpoint.
+
+     A report races the listener closing the tab, so it goes by beacon with a
+     keepalive fetch behind it. `fail: true` also sends pulse 'fail' — for a
+     listen that actually failed, not for the silent reports (warm-up, sides,
+     queue) where the listener was shown nothing. */
+  var reportCounts = {};
+  var REPORT_CAP = 3;
+
+  function codeFor(msg) {
+    var E = window.MotifErrors;
+    return E && E.has(msg) ? msg : 'unknown';
+  }
+
+  function reportError(code, detail, opts) {
+    var E = window.MotifErrors;
+    // Without the catalog (errors.js failed to load) the code goes as given
+    // and the server resolves it.
+    if (E && !E.has(code)) { detail = code + (detail ? ': ' + detail : ''); code = 'unknown'; }
+    var n = (reportCounts[code] || 0) + 1;
+    reportCounts[code] = n;
+    if (n > REPORT_CAP) return;
+    if (opts && opts.fail) pulse('fail', service ? idx : null);
+    var p = tracks.length && sides.length ? pos(idx) : null;
     var payload = JSON.stringify({
-      slug: entry && entry.slug,
-      reason: ((e && e.message) || 'unknown') + (silent ? ' (warm-up, not shown)' : ''),
+      slug: slug || null,
+      code: code,
+      detail: String(detail == null ? '' : detail).slice(0, 300),
+      listen: listenId,
+      service: service,
+      idx: tracks.length ? idx : null,
+      side: p ? p.label : null,
+      elapsed: Math.round((Date.now() - t0) / 1000),
+      attempt: n,
       diag: diag
     });
-    pulse('fail', null);
     try {
       if (navigator.sendBeacon &&
           navigator.sendBeacon('/api/motif-report', new Blob([payload], { type: 'application/json' }))) {
@@ -801,7 +850,7 @@
         body: payload,
         keepalive: true
       }).catch(function () {});
-    } catch (_) {}
+    } catch (_) { /* never let reporting break playback */ }
   }
 
   /* The splash has a designed slot for this: a .notice above the key, on
@@ -812,7 +861,8 @@
   function blockedNote(e) {
     say('');
     trace('blocked: ' + (e && e.message));
-    reportFailure(e);
+    var m = (e && e.message) || '';
+    reportError(codeFor(m), (e && e.detail) || m, { fail: true });
 
     var doors = root.querySelector('.doors');
     if (!doors) { say(friendly(e), true); return; }
@@ -857,59 +907,34 @@
       .catch(function (err) { trace('account lookup failed: ' + (err && err.message)); });
   }
 
-  /* Mid-listen failures were invisible.
-
-     reportFailure only covers failures to START — it is guarded by `reported`
-     and wired to the splash. When a ReferenceError fired inside a playback
-     handler on 2026-09-18 the beacon produced nothing and the bug arrived as
-     a screenshot. These are the more dangerous kind: the listener is already
-     playing, so a throw stops the music with no error screen to explain it.
-
-     Reported separately from the start-up beacon, and never more than twice a
-     listen — a handler that throws once usually throws on every event, and a
-     loop of beacons would be its own outage. */
-  var midReported = 0;
-
-  function reportMidListen(where, err) {
-    var msg = (err && (err.message || err)) || 'unknown';
-    trace('ERROR in ' + where + ': ' + msg);
-    if (midReported >= 2) return;
-    midReported++;
-    var payload = JSON.stringify({
-      slug: entry && entry.slug,
-      reason: 'mid-listen ' + where + ': ' + msg,
-      diag: diag
-    });
-    pulse('fail', idx);
-    try {
-      if (navigator.sendBeacon &&
-          navigator.sendBeacon('/api/motif-report', new Blob([payload], { type: 'application/json' }))) {
-        return;
-      }
-      fetch('/api/motif-report', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: payload,
-        keepalive: true
-      }).catch(function () {});
-    } catch (_) {}
-  }
-
   // Wrap a playback handler so a throw is reported rather than swallowed by
   // the SDK's event dispatcher.
   function guarded(where, fn) {
     return function () {
       try { return fn.apply(this, arguments); }
-      catch (e) { reportMidListen(where, e); }
+      catch (e) {
+        /* Mid-listen failures used to be invisible: a ReferenceError inside a
+           playback handler on 2026-09-18 produced nothing and arrived as a
+           screenshot. The music may have stopped with no message, so this is
+           reported even though the listener is shown nothing. */
+        var msg = (e && (e.message || e)) || 'unknown';
+        trace('ERROR in ' + where + ': ' + msg);
+        reportError('mid_listen', where + ': ' + msg, { fail: true });
+      }
     };
   }
 
+  // Listener copy comes from the catalog, so what a listener reads and what
+  // Niles is told cannot drift apart. The literals are only for the case
+  // where errors.js itself failed to load.
+  function copyFor(e) {
+    var E = window.MotifErrors;
+    return E ? E.lookup(e && e.message) : null;
+  }
+
   function headlineFor(e) {
-    var m = e && e.message;
-    if (m === 'premium_required') return 'Spotify Premium required';
-    if (m === 'apple_subscription_required') return 'Previews only';
-    if (m === 'not_authenticated') return 'Not signed in';
-    return 'Could not start the tape';
+    var c = copyFor(e);
+    return (c && c.headline) || 'Could not start the tape';
   }
 
   function showRaw(box, text) {
@@ -1183,7 +1208,9 @@
     }));
 
     music.addEventListener(E.mediaPlaybackError, function (e) {
-      trace('apple playback error: ' + JSON.stringify((e && e.error) || e).slice(0, 160));
+      var d = JSON.stringify((e && e.error) || e).slice(0, 160);
+      trace('apple playback error: ' + d);
+      reportError('apple_playback_error', d);
     });
   }
 
@@ -1246,7 +1273,21 @@
     if (!id) return Promise.resolve(false);
     return music.playLater({ songs: [String(id)] })
       .then(function () { appleQueuedUpTo = n; return true; })
-      .catch(function (e) { trace('playLater failed: ' + (e && e.message)); return false; });
+      .catch(function (e) {
+        trace('playLater failed: ' + (e && e.message));
+        reportError('queue_failed', 'track ' + n + ': ' + ((e && e.message) || e));
+        return false;
+      });
+  }
+
+  // MusicKit's authorize() rejects with things like "Unauthorized" when the
+  // Apple sign-in sheet is closed, blocked or fails. Name it, and keep the
+  // original for the report.
+  function authUnfinished(err) {
+    var x = new Error('apple_auth_unfinished');
+    x.detail = (err && err.message) || String(err);
+    trace('apple authorize rejected: ' + x.detail);
+    throw x;
   }
 
   function onApplePlayTap() {
@@ -1263,7 +1304,7 @@
         // survives and the activation with it. The spike confirmed one tap is
         // enough — unlike Spotify, whose redirect destroys the gesture.
         if (music.isAuthorized) return true;
-        return music.authorize().then(function () { return true; });
+        return music.authorize().then(function () { return true; }, authUnfinished);
       })
       .then(function () {
         var modes = window.MusicKit.PlaybackMode || {};
@@ -2476,36 +2517,20 @@
   }
 
   function friendly(e) {
-    if (e && e.message === 'apple_subscription_required') {
-      return 'This Apple ID does not have an Apple Music subscription, so Apple only ' +
-             'allows 30-second previews. A mixtape needs the full songs.';
-    }
-    if (e && e.message === 'not_on_spotify') {
-      return 'None of this tape is on Spotify. Use Apple Music instead.';
-    }
-    if (e && e.message === 'apple_token') {
-      return 'Could not start Apple Music. Try again in a moment.';
-    }
-    var k = (e && e.message) || '';
-    if (k === 'premium_required') {
-      return 'This needs a Spotify Premium account. The music plays through your own ' +
-             'subscription, and Spotify does not allow free accounts to stream this way. ' +
-             'Premium Duo and Family work; mobile-only Premium plans do not.';
-    }
-    if (k === 'not_authenticated') return 'Your Spotify sign-in expired. Reload the page and press play again.';
-    if (k === 'token_failed') return 'Could not get a playback token from Spotify. Reload and try again.';
-    if (k === 'device_lost') return 'Lost the connection to Spotify. Reload to start again.';
-    if (k === 'sdk_timeout') return 'Spotify did not respond. Check your connection, or try reloading.';
-    if (k === 'sdk_load') return 'Could not load Spotify. Check your connection and try again.';
-    return 'Something went wrong starting playback. Try again, and tell Niles if it keeps happening.';
+    var c = copyFor(e);
+    return (c && c.message) ||
+      'Something went wrong starting playback. Try again, and tell Niles if it keeps happening.';
   }
 
-  function fatal(msg) {
+  // Takes a catalog code: entry_not_found, entry_empty or bad_url.
+  function fatal(code) {
+    reportError(code);
+    var c = copyFor({ message: code });
     root.innerHTML = '';
     root.removeAttribute('aria-busy');
     var wrap = el('div', 'splash');
     var p = el('p', 'splash-err');
-    p.textContent = msg;
+    p.textContent = (c && c.message) || code;
     wrap.appendChild(p);
     root.appendChild(wrap);
   }
