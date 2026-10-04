@@ -502,6 +502,16 @@ img { max-width: 100%; }
    monitor. The shelf is the surface that should use the width, and it does;
    see the wide block in mixtape-index.html.
    ============================================================ */
+/* "Tap to continue" — an interruption, on the card-stock notice. It is a
+   button because it is the one thing to press; the chrome is stripped so it
+   keeps the notice's look. */
+.interrupt {
+  appearance: none; -webkit-appearance: none; border: 0; font: inherit;
+  display: flex; text-align: left; cursor: pointer;
+  margin: 0 20px 12px; width: calc(100% - 40px);
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* ============================================================
    LOADING — the empty tape (markup lives in listen.html)
    The splash's own shape with nothing on it: every surface is a --slot

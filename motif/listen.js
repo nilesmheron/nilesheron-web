@@ -186,6 +186,22 @@
   var deviceId = null;
   var paused = false;
   var finished = false;
+
+  /* ── interrupted, but alive ──
+     A call or another app taking the audio puts MusicKit in paused or
+     stopped, and iOS will not let web audio start again without a tap. That
+     used to look exactly like the listener pausing. So we record intent:
+     every pause WE ask for sets pauseIntent, and a seed sets seeding while
+     MusicKit swaps the queue. A paused/stopped with neither, that is not the
+     tape running out, and that is still true after a short settle, is an
+     interruption. Apple only — the dormant Spotify path is not touched. */
+  var pauseIntent = false;
+  var seeding = false;
+  var interrupted = false;
+  var interruptTimer = null;
+  var confirmTimer = null;
+  var INTERRUPT_SETTLE_MS = 1500;   // rides out MusicKit's transient stops
+  var RESUME_CONFIRM_MS = 3000;     // play() resolved but nothing came back
   var mediaFor = null;
   var starting = false;
 
@@ -264,6 +280,8 @@
      claims nothing: a hidden tab may well come back. */
   document.addEventListener('visibilitychange', function () {
     if (document.visibilityState === 'hidden') flushPulse(true);
+    // Back from the call: decide now rather than after the settle.
+    else if (typeof checkInterrupted === 'function') checkInterrupted(true);
   });
 
   // A listener who closes the tab mid-tape is the most informative case and
@@ -971,6 +989,16 @@
     music.addEventListener(E.playbackStateDidChange, guarded('apple:state', function (e) {
       var states = window.MusicKit.PlaybackStates || {};
       paused = e && (e.state === states.paused || e.state === states.stopped);
+      if (e && e.state === states.playing) {
+        // Playing again clears every flag; an interruption is over.
+        pauseIntent = false;
+        seeding = false;
+        clearTimeout(interruptTimer);
+        clearTimeout(confirmTimer);
+        if (interrupted) { interrupted = false; trace('apple: playing again after interruption'); renderPlayer(); }
+      } else if (paused) {
+        checkInterrupted(false);
+      }
       updateTransport();
       // Apple tells us the queue drained. No inference needed — but a drained
       // queue now means one of two things, and the index says which.
@@ -1002,6 +1030,10 @@
     appleQueuedUpTo = i;
     finished = false;
     mediaFor = null;
+    // MusicKit passes through stopped while it swaps the queue. That stop is
+    // ours; the playing state that follows clears this.
+    seeding = true;
+    pauseIntent = false;
     return music.setQueue({
       songs: [String(tracks[i].apple_id)],
       startPlaying: true,
@@ -1009,6 +1041,9 @@
     }).then(function () {
       paused = false;
       return appleAppendNext();
+    }, function (e) {
+      seeding = false;
+      throw e;
     });
   }
 
@@ -1739,6 +1774,7 @@
       root.appendChild(buildStage());
       statusEl = el('div', 'status-line');
       root.appendChild(statusEl);
+      if (interrupted) root.appendChild(interruptNotice());
       if (!finished && !awaitingFlip) {
         transportEl = el('div', 'transport');
         transportEl.appendChild(tbtn('t-back', 'Back', goBack));
@@ -1764,6 +1800,7 @@
 
     statusEl = el('div', 'status-line');
     root.appendChild(statusEl);
+    if (interrupted) root.appendChild(interruptNotice());
 
     transportEl = el('div', 'transport');
     transportEl.appendChild(tbtn('t-back', 'Back', goBack));
@@ -1876,13 +1913,89 @@
     npEl.appendChild(l); npEl.appendChild(t); npEl.appendChild(a);
   }
 
+  /* Is MusicKit stopped for a reason that was not ours? `now` skips the settle
+     — used when the listener comes back to the tab, which is the moment they
+     return from the call and the answer should already be on screen. */
+  function checkInterrupted(now) {
+    if (!looksInterrupted()) return;
+    clearTimeout(interruptTimer);
+    if (now) { declareInterrupted(); return; }
+    interruptTimer = setTimeout(function () {
+      if (looksInterrupted()) declareInterrupted();
+    }, INTERRUPT_SETTLE_MS);
+  }
+
+  function looksInterrupted() {
+    if (service !== 'apple' || !music) return false;
+    if (finished || awaitingFlip || interrupted || pauseIntent || seeding) return false;
+    var states = (window.MusicKit && MusicKit.PlaybackStates) || {};
+    var st = music.playbackState;
+    if (st !== states.paused && st !== states.stopped) return false;
+    /* The last song of a side or of the tape ending is the tape running out,
+       not a call — the completed state that follows is handled by the flip
+       and finish. A call DURING that song still counts. */
+    if (atSideBreak() || idx === tracks.length - 1) {
+      var d = music.currentPlaybackDuration || 0;
+      var t = music.currentPlaybackTime || 0;
+      if (d && t >= d - 2) return false;
+    }
+    return true;
+  }
+
+  function declareInterrupted() {
+    interrupted = true;
+    paused = true;
+    trace('apple: interrupted at track ' + idx);
+    pulse('interrupt', idx);
+    try { if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'; } catch (_) {}
+    renderPlayer();
+  }
+
+  /* The tap. play() first: it keeps the song where it stopped. If iOS refuses
+     it, or it resolves and nothing comes back within a few seconds, restart
+     the current song from the top — still on the back of this tap. */
+  function continueAfterInterrupt() {
+    if (!music) return;
+    var restarted = false;
+    function restart(why) {
+      if (restarted || !interrupted) return;
+      restarted = true;
+      clearTimeout(confirmTimer);
+      trace('apple: continue fell back to reseeding (' + why + ')');
+      appleSeedAt(idx).catch(function (e) { say(friendly(e), true); });
+    }
+    clearTimeout(confirmTimer);
+    confirmTimer = setTimeout(function () { restart('nothing played'); }, RESUME_CONFIRM_MS);
+    var p;
+    try { p = music.play(); } catch (e) { restart('play threw'); return; }
+    if (p && p.catch) p.catch(function () { restart('play refused'); });
+  }
+
+  function interruptNotice() {
+    var b = el('button', 'notice interrupt');
+    b.type = 'button';
+    var h = el('div', 'h'); h.textContent = 'Tap to continue';
+    var t = el('div', 'b');
+    t.textContent = 'Something else took the sound — a call, or another app. The tape is waiting where it stopped.';
+    b.appendChild(h); b.appendChild(t);
+    b.addEventListener('click', function (e) { e.stopPropagation(); continueAfterInterrupt(); });
+    return b;
+  }
+
   function svcResume() {
-    if (service === 'apple') { if (music) music.play(); return; }
+    if (service === 'apple') {
+      if (!music) return;
+      if (interrupted) { continueAfterInterrupt(); return; }
+      music.play();
+      return;
+    }
     if (player) player.resume();
   }
 
+  // Every caller is a pause we chose: the lock-screen handler, the flip, the
+  // end of the tape.
   function svcPause() {
-    if (service === 'apple') { if (music) music.pause(); return; }
+    if (service === 'apple') { if (music) { pauseIntent = true; music.pause(); } return; }
     if (player) player.pause();
   }
 
@@ -1891,9 +2004,10 @@
       if (!music) return;
       var states = (window.MusicKit && MusicKit.PlaybackStates) || {};
       var playing = music.playbackState === states.playing;
+      if (!playing && interrupted) { continueAfterInterrupt(); return; }
       paused = playing;           // about to become paused
       updateTransport();
-      if (playing) music.pause(); else music.play();
+      if (playing) { pauseIntent = true; music.pause(); } else music.play();
       return;
     }
     if (!player) return;
