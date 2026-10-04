@@ -301,7 +301,7 @@
   var params = new URLSearchParams(window.location.search);
   var authFlag = params.get('auth');
   if (authFlag) {
-    history.replaceState({}, '', window.location.pathname);
+    history.replaceState({}, '', window.location.pathname + window.location.hash);
   }
 
   /* The render is deliberately OUTSIDE the fetch chain. Calling it inside a
@@ -456,7 +456,7 @@
   var ABOUT = [
     'Someone made you a mixtape. It plays in order, and you cannot see what is coming — each song turns a card face up only as it starts. At the end you have the whole deck, and you can add the playlist to your own library.',
     'It plays through your own Apple Music subscription, because that is how the songs stay licensed. You sign in to Apple, not to us.',
-    'We never see your password, and we do not store your account, your email, or what you listen to. Apple hands the page a pass that lets it play music while the tab is open; close it and that is the end of it. Nothing about you is kept.',
+    'We never see your password, and we do not store your account or your email. So that you can pick up where you left off if the page reloads, we keep your place in this tape — which song you were on, under an anonymous code made from your Apple sign-in — for 48 hours after you last listened, then delete it. Nothing else about you is kept.',
     'No account to make, nothing to install. If you press play and it stops when you lock your phone, it is not meant to — tell whoever sent you this.'
   ];
 
@@ -515,7 +515,9 @@
   // at all.
   function prepare() {
     if (appleReady()) {
-      ensureMusic().catch(function (e) { trace('apple warm failed: ' + (e && e.message)); });
+      ensureMusic()
+        .then(lookupResume)
+        .catch(function (e) { trace('apple warm failed: ' + (e && e.message)); });
     }
   }
 
@@ -542,6 +544,172 @@
     var p = el('p', 'splash-err');
     p.textContent = text;
     return p;
+  }
+
+  /* ============================================================
+     RESUME — picking a tape back up after the page reloads
+
+     iOS discards a backgrounded tab (a phone call is enough) and Safari
+     reloads it from scratch. The place is held server-side for 48 hours under
+     sha256(Music User Token | slug): MusicKit restores the token itself after
+     a reload, so the splash can recompute the key before any tap. A new token
+     (re-authorisation) is a new session and a fresh start — accepted. Nothing
+     is stored in the browser by our code, and the key never rides with pulse.
+     See api/motif-position.js.
+     ============================================================ */
+
+  var sessionPromise = null;
+  var fpPromise = null;
+
+  // Never throws synchronously: a missing API anywhere becomes a rejection,
+  // which every caller already treats as "no session".
+  function sha256Hex(text) {
+    return Promise.resolve().then(function () {
+      return crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+    }).then(function (buf) {
+      return Array.prototype.map.call(new Uint8Array(buf), function (b) {
+        return ('0' + b.toString(16)).slice(-2);
+      }).join('');
+    });
+  }
+
+  function ensureSession() {
+    if (sessionPromise) return sessionPromise;
+    if (!music || !music.musicUserToken || !window.crypto || !crypto.subtle) return Promise.resolve(null);
+    sessionPromise = sha256Hex(music.musicUserToken + '|' + slug);
+    return sessionPromise;
+  }
+
+  // The song order, so a tape the curator has since edited is not resumed into
+  // the wrong song. Numbers only — ids, never titles.
+  function tapeFingerprint() {
+    if (!fpPromise) {
+      fpPromise = sha256Hex(tracks.map(function (t) { return t.apple_id || ''; }).join(','))
+        .then(function (h) { return h.slice(0, 16); });
+    }
+    return fpPromise;
+  }
+
+  function positionCall(method, body) {
+    return fetch('/api/motif-position', {
+      method: method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      credentials: 'same-origin',
+      keepalive: true
+    });
+  }
+
+  function savePosition() {
+    if (service !== 'apple' || finished) return;
+    var at = idx, flip = awaitingFlip;
+    Promise.all([ensureSession(), tapeFingerprint()]).then(function (r) {
+      if (!r[0]) return;
+      return positionCall('POST', { session: r[0], slug: slug, idx: at, flip: flip, fp: r[1] });
+    }).catch(function () { /* never let this break playback */ });
+  }
+
+  function clearPosition() {
+    return ensureSession().then(function (s) {
+      if (!s) return;
+      return positionCall('DELETE', { session: s, slug: slug });
+    }).catch(function () {});
+  }
+
+  function lookupResume() {
+    if (service || !music || !music.isAuthorized || !music.musicUserToken) return;
+    return Promise.all([ensureSession(), tapeFingerprint()]).then(function (r) {
+      if (!r[0]) return null;
+      return fetch('/api/motif-position?session=' + r[0] + '&slug=' + encodeURIComponent(slug),
+        { credentials: 'same-origin' })
+        .then(function (res) { return res.ok ? res.json() : null; })
+        .then(function (row) {
+          if (!row) return;
+          if (row.fp !== r[1]) { trace('resume: tape changed since — ignoring saved place'); return; }
+          if (!(row.idx >= 0 && row.idx < tracks.length)) return;
+          if (service) return;            // they pressed play while we looked
+          offerResume(row);
+        });
+    }).catch(function (e) { trace('resume lookup failed: ' + (e && e.message)); });
+  }
+
+  /* Two choices in place of the play key. The label names a side and a song
+     NUMBER — the same disclosure the counter makes — never a title. */
+  function offerResume(row) {
+    var doors = root.querySelector('.doors');
+    if (!doors || !playBtn || !doors.contains(playBtn)) return;
+    var p = pos(row.idx);
+    var label = row.flip
+      ? 'Resume at the end of side ' + p.label
+      : (p.sided ? 'Resume side ' + p.label + ', song ' + (p.inSide + 1) : 'Resume at song ' + (row.idx + 1));
+
+    var resume = el('button', 'key');
+    resume.type = 'button';
+    resume.textContent = label;
+    var over = el('button', 'key key--quiet');
+    over.type = 'button';
+    over.textContent = 'Start over';
+
+    resume.addEventListener('click', function () { playBtn = resume; over.disabled = true; resumeFrom(row); });
+    over.addEventListener('click', function () {
+      playBtn = over;
+      resume.disabled = true;
+      clearPosition();
+      startWith('apple');
+    });
+    doors.replaceChild(resume, playBtn);
+    doors.insertBefore(over, resume.nextSibling);
+    playBtn = resume;
+    trace('resume offered at track ' + row.idx + (row.flip ? ' (flip)' : ''));
+  }
+
+  /* The tap is the user gesture iOS needs, so playback starts in this same
+     chain — exactly as the first Play does. The cards already heard come back
+     face up at once; the song itself starts from the top (no mid-song seek). */
+  function resumeFrom(row) {
+    if (starting) return;
+    starting = true;
+    service = 'apple';
+    playBtn.disabled = true;
+    playBtn.textContent = 'Starting';
+    say('');
+
+    ensureMusic()
+      .then(function () {
+        if (music.isAuthorized) return true;
+        return music.authorize().then(function () { return true; });
+      })
+      .then(function () {
+        var modes = window.MusicKit.PlaybackMode || {};
+        if (music.playbackMode === modes.PREVIEW_ONLY) throw new Error('apple_subscription_required');
+
+        idx = row.idx;
+        var through = row.flip ? row.idx : row.idx - 1;
+        revealed = [];
+        for (var i = 0; i <= through; i++) { revealed.push(i); ensureArt(i); }
+        spotIdx = lastLive = row.flip ? row.idx : Math.max(0, row.idx - 1);
+        pulse('resume', row.idx);
+
+        if (row.flip) {
+          // Side A was finished; land where it stopped. The flip key seeds side B.
+          awaitingFlip = true;
+          mode = 'tape';
+          renderPlayer();
+          setFlipLockScreen();
+          return;
+        }
+        return appleSeedAt(row.idx).then(function () {
+          renderPlayer();
+          requestWakeLock();
+        });
+      })
+      .catch(function (e) {
+        starting = false;
+        playBtn.disabled = false;
+        playBtn.textContent = 'Play';
+        trace('resume failed: ' + (e && e.message));
+        blockedNote(e);
+      });
   }
 
   /* ============================================================
@@ -980,6 +1148,7 @@
         pulse('track', known);
         reveal(known, now);
         appleAppendNext();
+        savePosition();
       }
       setMediaSession(now);
       renderNowPlaying(now);
@@ -2091,6 +2260,7 @@
     svcPause();
     releaseWakeLock();
     pulse('flip', idx);
+    savePosition();
     trace('side break reached at track ' + idx);
     renderPlayer();
     setFlipLockScreen();
@@ -2182,6 +2352,7 @@
     if (finished) return;
     finished = true;
     pulse('complete', idx);
+    clearPosition();
     svcPause();
     releaseWakeLock();
     mode = 'tape';
