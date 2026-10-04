@@ -1270,6 +1270,11 @@
         if (music.playbackMode === modes.PREVIEW_ONLY) {
           throw new Error('apple_subscription_required');
         }
+        /* A listen begins. Lost in the Tape rewrite (0f6df9a), when the old
+           renderPlayer() that sent it was replaced; restored 2026-10-04.
+           Sent here, past the subscription check, so a refused start is a
+           'fail' and not a 'start'. Resume sends 'resume' instead. */
+        pulse('start', 0);
         idx = 0;
         return appleSeedAt(0);
       })
@@ -2405,6 +2410,7 @@
       awaitingFlip = false;
       mode = 'card';
       idx = 0;
+      pulse('start', 0);          // a new listen-through
       renderPlayer();
       seedAny(0).catch(function (e2) { say(friendly(e2), true); });
     });
