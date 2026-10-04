@@ -304,6 +304,75 @@ function pausedEmail(stored) {
   };
 }
 
+/* ============================================================
+   SERVER-SIDE ERRORS — the other api/motif-* routes
+
+   Wrap a route's handler and any 5xx it sends is recorded as server_error
+   (endpoint, status and the error text in detail) before the response goes
+   out. The response itself is untouched. A throw is recorded and rethrown,
+   so Vercel answers exactly as it did before.
+
+   The report is awaited BEFORE the response is sent, because a serverless
+   function may be frozen the moment it responds. It costs one database
+   round trip, on error responses only.
+
+     export default reportingServerErrors('motif-save', handler);
+   ============================================================ */
+export async function reportServerError(endpoint, status, detail, req) {
+  return recordError({
+    source: 'server',
+    slug: null,
+    code: 'server_error',
+    severity: errors.lookup('server_error').severity,
+    detail: (endpoint + ' ' + status + (detail ? ': ' + detail : '')).slice(0, 500),
+    service: null,
+    track_index: null,
+    side: null,
+    elapsed_s: null,
+    attempt: null,
+    listen_id: null,
+    user_agent: req && req.headers ? String(req.headers['user-agent'] || '').slice(0, 400) || null : null,
+    trace: [],
+  });
+}
+
+function summarise(body) {
+  if (body === undefined || body === null) return '';
+  if (typeof body === 'string') {
+    try { const o = JSON.parse(body); if (o && o.error) return String(o.error); } catch (_) {}
+    return body.slice(0, 200);
+  }
+  if (typeof body === 'object' && body.error) return String(body.error);
+  try { return JSON.stringify(body).slice(0, 200); } catch (_) { return ''; }
+}
+
+export function reportingServerErrors(endpoint, handler) {
+  return async function (req, res) {
+    let pending = null;
+    for (const m of ['json', 'send', 'end']) {
+      const orig = res[m];
+      if (typeof orig !== 'function') continue;
+      res[m] = function (...args) {
+        // json → send → end all pass through here; only the first reports.
+        if (!pending && (res.statusCode || 0) >= 500) {
+          pending = reportServerError(endpoint, res.statusCode, summarise(args[0]), req)
+            .catch(() => {})
+            .then(() => orig.apply(res, args));
+          return pending;
+        }
+        return orig.apply(res, args);
+      };
+    }
+    try {
+      await handler(req, res);
+    } catch (e) {
+      await reportServerError(endpoint, 500, 'threw: ' + ((e && e.message) || e), req).catch(() => {});
+      throw e;
+    }
+    if (pending) await pending;
+  };
+}
+
 export default function handler(req, res) {
   return res.status(404).json({ error: 'not found' });
 }

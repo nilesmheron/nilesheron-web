@@ -11,6 +11,7 @@
 // uses its own vars and stays independent of the pending consolidation:
 //   MOTIF_SUPABASE_URL, MOTIF_SUPABASE_SERVICE_KEY
 
+import { reportingServerErrors } from './motif-alert.js';
 import { requireCurator, validSlug } from './motif-tools-guard.js';
 
 const BUCKET = process.env.MOTIF_MEDIA_BUCKET || 'motif-images';
@@ -35,7 +36,7 @@ function safeName(name, contentType) {
   return `${base}.${ext}`;
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (!requireCurator(req, res)) return;
 
   const url = process.env.MOTIF_SUPABASE_URL;
@@ -94,3 +95,7 @@ export default async function handler(req, res) {
 
   return res.status(200).json({ uploadUrl, publicUrl, path });
 }
+
+// Any 5xx is recorded as server_error (see api/motif-alert.js); the response
+// is unchanged.
+export default reportingServerErrors('motif-upload', handler);

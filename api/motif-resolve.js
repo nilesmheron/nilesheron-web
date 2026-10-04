@@ -34,6 +34,7 @@
 //
 // Consumer: motif/tools/build.html (Basic Auth gated via middleware.js).
 
+import { reportingServerErrors } from './motif-alert.js';
 import { appleDeveloperToken, MISSING_ENV as APPLE_MISSING_ENV } from './motif-apple-token.js';
 
 const DEFAULT_ALLOWED_ORIGINS = ['https://dev.nilesheron.com'];
@@ -509,7 +510,7 @@ function badRequest(res, msg) {
   return res.status(400).json({ error: msg });
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   const allowed = parseList(process.env.CHAT_ALLOWED_ORIGINS, DEFAULT_ALLOWED_ORIGINS);
   const origin = req.headers.origin;
   if (origin && !allowed.includes(origin)) {
@@ -604,3 +605,7 @@ export default async function handler(req, res) {
   }
   return res.status(200).json({ service: 'apple', results });
 }
+
+// Any 5xx is recorded as server_error (see api/motif-alert.js); the response
+// is unchanged.
+export default reportingServerErrors('motif-resolve', handler);

@@ -11,6 +11,7 @@
 // Requires GITHUB_TOKEN: a fine-grained PAT with Contents: read and write on
 // this repo only.
 
+import { reportingServerErrors } from './motif-alert.js';
 import { requireCurator, validSlug } from './motif-tools-guard.js';
 
 const REPO = process.env.MOTIF_REPO || 'nilesmheron/nilesheron-web';
@@ -221,7 +222,7 @@ function validateEntry(entry, slug) {
   return null;
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (!requireCurator(req, res)) return;
 
   if (!process.env.GITHUB_TOKEN) {
@@ -369,3 +370,7 @@ export default async function handler(req, res) {
     listen: `/motif/${slug}/listen`,
   });
 }
+
+// Any 5xx is recorded as server_error (see api/motif-alert.js); the response
+// is unchanged.
+export default reportingServerErrors('motif-save', handler);

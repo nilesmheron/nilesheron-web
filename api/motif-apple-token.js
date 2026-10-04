@@ -18,6 +18,7 @@
 // `Origin: https://dev.nilesheron.com` explicitly, or use a token minted
 // without the claim.
 
+import { reportingServerErrors } from './motif-alert.js';
 import crypto from 'crypto';
 
 const DEFAULT_ORIGINS = ['https://dev.nilesheron.com'];
@@ -90,7 +91,7 @@ export function appleDeveloperToken() {
   return { token: cached.token, expiresIn: cached.expiresAt - now };
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   const missing = MISSING_ENV();
   if (missing.length) {
     return res.status(503).json({ error: 'not configured: ' + missing.join(', ') });
@@ -110,3 +111,7 @@ export default async function handler(req, res) {
     expires_in: cached.expiresAt - now,
   });
 }
+
+// Any 5xx is recorded as server_error (see api/motif-alert.js); the response
+// is unchanged.
+export default reportingServerErrors('motif-apple-token', handler);

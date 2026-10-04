@@ -5,6 +5,7 @@
 // token server-side. Token expiry is a recoverable state — the SDK simply
 // calls getOAuthToken again and gets a new one.
 
+import { reportingServerErrors } from './motif-alert.js';
 import {
   TOKEN_URL,
   RT_COOKIE,
@@ -13,7 +14,7 @@ import {
   basicAuthHeader,
 } from './motif-auth.js';
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (!process.env.SPOTIFY_CLIENT_ID || !process.env.SPOTIFY_CLIENT_SECRET) {
     return res.status(503).json({ error: 'Spotify credentials not configured' });
   }
@@ -62,3 +63,7 @@ export default async function handler(req, res) {
     expires_in: data.expires_in,
   });
 }
+
+// Any 5xx is recorded as server_error (see api/motif-alert.js); the response
+// is unchanged.
+export default reportingServerErrors('motif-token', handler);

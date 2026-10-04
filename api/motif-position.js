@@ -29,6 +29,7 @@
 // Table: public.motif_positions in the Motif Supabase project (RLS on, no
 // policies — only this service key reaches it).
 
+import { reportingServerErrors } from './motif-alert.js';
 const DEFAULT_ALLOWED_ORIGINS = ['https://dev.nilesheron.com'];
 const TTL_HOURS = 48;
 const TABLE = 'motif_positions';
@@ -49,7 +50,7 @@ function readBody(req) {
   return b || {};
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   const allowed = parseList(process.env.CHAT_ALLOWED_ORIGINS, DEFAULT_ALLOWED_ORIGINS);
   const origin = req.headers && req.headers.origin;
   if (origin && !allowed.includes(origin)) {
@@ -112,3 +113,7 @@ export default async function handler(req, res) {
     return res.status(502).json({ error: 'store unavailable' });
   }
 }
+
+// Any 5xx is recorded as server_error (see api/motif-alert.js); the response
+// is unchanged.
+export default reportingServerErrors('motif-position', handler);
