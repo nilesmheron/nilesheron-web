@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mausoleum — mmh</title>
+  <meta name="description" content="There’s a mausoleum along Route 86…">
+  <meta property="og:title" content="Mausoleum">
+  <meta property="og:description" content="There’s a mausoleum along Route 86…">
+  <meta property="og:image" content="https://dev.nilesheron.com/poem/mausoleum.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #e8e8e8;
+      --text: #444444;
+      --muted: #999999;
+      --frame: #2b2724;
+      --mat: #fbfaf7;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: Georgia, serif;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      justify-content: center;
+      padding: 56px 20px 96px;
+    }
+    main { width: 100%; max-width: 560px; }
+
+    .frame {
+      background: var(--frame);
+      padding: 12px;
+      border-radius: 2px;
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.08) inset,
+        0 2px 4px rgba(0, 0, 0, 0.12),
+        0 24px 48px -20px rgba(0, 0, 0, 0.45);
+    }
+    .mat {
+      background: var(--mat);
+      padding: clamp(20px, 7%, 44px);
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06), inset 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+    .mat img {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 3 / 4;
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
+    }
+
+    figcaption {
+      margin: 48px auto 0;
+      max-width: 440px;
+      font-size: 17px;
+      line-height: 1.85;
+      text-wrap: pretty;
+    }
+    figcaption p { margin: 0 0 0.45em; }
+    figcaption p:last-child { margin-bottom: 0; }
+    .lead { font-family: 'Lora', serif; }
+    .quoted { font-style: italic; color: #8a4f86; }
+
+    .mark {
+      margin-top: 48px;
+      font-family: Menlo, Monaco, 'Courier New', monospace;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    @media (min-width: 640px) {
+      body { padding-top: 80px; }
+      .frame { padding: 16px; }
+      figcaption { font-size: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <figure style="margin:0">
+      <div class="frame">
+        <div class="mat">
+          <img src="/poem/mausoleum.jpg" width="1536" height="2048"
+               alt="Handwritten poem in blue ink, with one line in pink: There’s a mausoleum along Route 86. “Our first date can’t be at a gravesite.” Keep driving to the field a few miles past it; to the garden I planted. I need help naming these flowers, otherwise I’ll call them all “you.” Signed mmh, 10/7/26.">
+        </div>
+      </div>
+      <figcaption>
+        <p class="lead">There’s a mausoleum along Route 86…</p>
+        <p class="quoted">“Our first date can’t be at a gravesite…”</p>
+        <p>keep driving to the field a few miles past it;</p>
+        <p>to the garden i planted — i need help naming</p>
+        <p>these flowers, otherwise</p>
+        <p>i’ll call them all “you.”</p>
+        <div class="mark">mmh · 10.07.26</div>
+      </figcaption>
+    </figure>
+  </main>
+</body>
+</html>
