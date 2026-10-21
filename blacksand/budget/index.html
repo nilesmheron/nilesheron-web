@@ -535,7 +535,8 @@ tr:hover .delete-btn { opacity: 1; }
         <span>W-2 burden <input type="text" id="rate-burden" class="rate-input" aria-label="W-2 burden percent">%</span>
         <span>Lead allowance <input type="text" id="rate-lead" class="rate-input" aria-label="Program lead benefits allowance percent">%</span>
         <span>DFC fee <input type="text" id="rate-dfc" class="rate-input" aria-label="DFC fiduciary fee percent">%</span>
-        <span style="color:#999;">Burden loads W-2 lines; allowance loads the lead line; the DFC fee is added on top of all selected lines.</span>
+        <span><label><input type="checkbox" id="rate-dfc-ontop"> Fee carried by Song above the commitment</label></span>
+        <span style="color:#999;">Burden loads W-2 lines; allowance loads the lead line; the DFC fee is shown on all selected lines and excluded from totals when Song carries it.</span>
       </div>
     </div>
     <div class="header-total">
@@ -638,8 +639,8 @@ tr:hover .delete-btn { opacity: 1; }
   <p><strong>Compound</strong>: Y2 applies on top of Y1's dollar value, Y3 applies on top of Y2's. Good for salaries (3%/yr raises) or anything growing steadily. Off (independent): each year's modifier applies directly to the base. Good for partial-year starts, one-time costs, or anything that doesn't compound.</p>
   <p>All fields are editable. Click name, note, base, or modifier to edit. Click × to delete a line. Use "Add line" below the table.</p>
   <p><strong>Scale badges</strong> (e.g. ×50% (preset)) indicate items running at a partial rate in the current scenario. Switch presets to clear them.</p>
-  <p><strong>Burden and fees.</strong> Lines marked (W-2) are shown loaded with the W-2 burden rate in the header; the program lead line is loaded with the lead allowance. The DFC fiduciary fee is applied to the sum of all selected lines and shown as its own row. All three rates are placeholders until confirmed.</p>
-  <p><strong>Floor ($1.5M).</strong> What a $1.5M three-year commitment buys once the program lead's loaded fee and the DFC fee come off the top: roughly $150K a year of program. Two funder-to-funder rooms, two partnered events, light travel, accounting, Y1 legal and D&O. No founder rooms, no leasehold, no staff, no pilots, no marketing. A casting year run from partner spaces.</p>
+  <p><strong>Burden and fees.</strong> Lines marked (W-2) are shown loaded with the W-2 burden rate in the header. The program lead line carries no allowance by default (the fee is the lead's, whole; comp terms are a separate document). The DFC fiduciary fee is computed on all selected lines and shown as its own row; by default Song carries it above the commitment and it is excluded from totals. Untick the box to fold it in. Rates are placeholders until confirmed.</p>
+  <p><strong>Floor ($1.5M).</strong> What a $1.5M three-year commitment buys with the program lead at $250K and the DFC fee carried by Song above the commitment: about $250K a year of program. Two funder-to-funder rooms, one funder-to-founder room, two partnered events, travel, owned channels, a light brand, accounting, Y1 legal and D&O. No staff, no leasehold, no pilots, no partner agreements. A casting year run from partner spaces.</p>
   <p><strong>Levels.</strong> Base is what has to work on Song Foundation's commitment alone. Mid adds the first staff and the full cohort programs on the first joint raise. Full is the staff complement, direct capital, GP back office, and a physical-home option reserve in Y3. Levels nest; each preset turns on the lines of the levels below it.</p>
   <p>Source labels in notes follow the project convention: [YOURS] = Niles' stated position, [EXTRAPOLATION] = projected from his logic and open to confirmation, [GAP] = no position yet.</p>
 </div>
@@ -649,7 +650,7 @@ tr:hover .delete-btn { opacity: 1; }
 // DEFAULT ITEMS
 // =====================
 const DEFAULT_ITEMS = [
-  {"id": "lead", "category": "Leadership & Staff", "name": "Program lead (CEO) — contractor fee", "note": "[YOURS] $250K base plus burden, contractor via DFC. The burden allowance is the 'Lead allowance %' in the header. Raises compound.", "isBase": true, "tier": 1, "baseCost": 250000, "modifiers": {"y1": 0, "y2": 4, "y3": 4}, "compound": true, "lead": true},
+  {"id": "lead", "category": "Leadership & Staff", "name": "Program lead (CEO) — contractor fee", "note": "[YOURS] $250K, contractor via DFC; 'my number will be all mine.' No burden allowance and no raise in the program budget. Comp terms live in the separate proposal.", "isBase": true, "tier": 1, "baseCost": 250000, "modifiers": {"y1": 0, "y2": 0, "y3": 0}, "compound": false, "lead": true},
   {"id": "program_coord", "category": "Leadership & Staff", "name": "(1099) Program coordination contractor", "note": "Runs logistics for the rooms when there is no W-2 staff. April: Y1 bridge only. In the base tier it runs all three years.", "isBase": true, "tier": 1, "baseCost": 50000, "modifiers": {"y1": 0, "y2": 3, "y3": 6}, "compound": false},
   {"id": "cos", "category": "Leadership & Staff", "name": "(W-2) Program Director / Chief of Staff", "note": "Ops, compliance, stakeholder coordination. Starts mid-Y1 (Aug 2027) on first joint fundraising. Carries W-2 burden from the header.", "isBase": false, "tier": 2, "baseCost": 110000, "modifiers": {"y1": -50, "y2": 4, "y3": 8}, "compound": false, "w2": true},
   {"id": "events_coord", "category": "Leadership & Staff", "name": "(W-2) Events / Program Coordinator", "note": "Runs the convening calendar. Starts Y2. More important under a convening model, not less.", "isBase": false, "tier": 2, "baseCost": 80000, "modifiers": {"y1": -100, "y2": 0, "y3": 4}, "compound": false, "w2": true},
@@ -697,10 +698,10 @@ const DEFAULT_ITEMS = [
 // =====================
 // Global rates (percent). Burden applies to lines flagged w2; lead allowance to lines flagged lead;
 // the DFC fee applies to the sum of all selected lines and is shown as its own row in the totals.
-const DEFAULT_RATES = { burden: 25, lead: 20, dfc: 8 };
+const DEFAULT_RATES = { burden: 25, lead: 0, dfc: 8, dfcOnTop: true };
 
 const presets = {
-  floor: { enable: ["lead", "accounting", "legal", "insurance", "tech", "f2f", "partnered", "travel_support", "lead_travel"], tierOverrides: {}, scales: {"accounting": 0.5, "legal": 0.6, "insurance": 0.67, "tech": 0.4, "travel_support": 0.4, "lead_travel": 0.4} },
+  floor: { enable: ["lead", "accounting", "legal", "insurance", "tech", "f2f", "f2founder", "partnered", "travel_support", "lead_travel", "thought_leadership", "brand"], tierOverrides: {}, scales: {"accounting": 0.5, "legal": 0.6, "insurance": 0.67, "tech": 0.4, "f2founder": 0.5, "travel_support": 0.6, "lead_travel": 0.5, "brand": 0.25} },
   base: { enable: ["lead", "program_coord", "accounting", "legal", "insurance", "leasehold", "tech", "research", "supplies", "contingency", "f2f", "f2founder", "partnered", "travel_support", "lead_travel", "partners", "cortex", "cohort_pilots", "tech_layer", "brand", "marketing", "content_capture", "thought_leadership"], tierOverrides: {}, scales: {} },
   mid: { enable: ["lead", "program_coord", "cos", "events_coord", "analyst", "accounting", "legal", "insurance", "leasehold", "tech", "research", "supplies", "contingency", "f2f", "f2founder", "partnered", "travel_support", "lead_travel", "more_rooms_mid", "more_travel_mid", "partners", "cortex", "cohort_pilots", "tech_layer", "founder_cohort", "gp_accelerator", "lp_network", "brand", "marketing", "content_capture", "thought_leadership", "dfc_content"], tierOverrides: {}, scales: {"legal": 2, "insurance": 1.67, "leasehold": 1.5, "tech": 2, "contingency": 2, "cortex": 2.25, "tech_layer": 3} },
   full: { enable: ["lead", "program_coord", "cos", "events_coord", "analyst", "dir_community", "dir_capital", "exec_admin", "accounting", "legal", "insurance", "leasehold", "tech", "research", "supplies", "contingency", "home_reserve", "f2f", "f2founder", "partnered", "travel_support", "lead_travel", "more_rooms_mid", "more_travel_mid", "more_rooms_full", "partners", "cortex", "cohort_pilots", "tech_layer", "founder_cohort", "gp_accelerator", "lp_network", "gp_backoffice", "catalyst", "capital_reserve", "brand", "marketing", "content_capture", "thought_leadership", "dfc_content", "marketing_spend"], tierOverrides: {}, scales: {"legal": 2, "insurance": 1.67, "leasehold": 2, "tech": 2, "contingency": 4, "cortex": 2.25, "tech_layer": 3, "research": 1.5} },
@@ -908,9 +909,16 @@ function renderRates() {
   const b = document.getElementById('rate-burden'); if (b) b.value = r.burden;
   const l = document.getElementById('rate-lead'); if (l) l.value = r.lead;
   const d = document.getElementById('rate-dfc'); if (d) d.value = r.dfc;
+  const t = document.getElementById('rate-dfc-ontop'); if (t) t.checked = !!r.dfcOnTop;
 }
 
 function attachRateHandlers() {
+  const t = document.getElementById('rate-dfc-ontop');
+  if (t) t.addEventListener('change', e => {
+    if (!state.rates) state.rates = Object.assign({}, DEFAULT_RATES);
+    state.rates.dfcOnTop = !!e.target.checked;
+    save(); render(); renderSummary();
+  });
   [['rate-burden', 'burden'], ['rate-lead', 'lead'], ['rate-dfc', 'dfc']].forEach(([elId, key]) => {
     const el = document.getElementById(elId);
     if (!el) return;
@@ -1191,8 +1199,9 @@ function renderSummary() {
   document.getElementById('dfc-y1').textContent = fmt(f1);
   document.getElementById('dfc-y2').textContent = fmt(f2);
   document.getElementById('dfc-y3').textContent = fmt(f3);
-  document.getElementById('dfc-rate-label').textContent = (Math.round(dr * 1000) / 10) + '%';
-  y1 += f1; y2 += f2; y3 += f3;
+  const onTop = !!((state.rates || DEFAULT_RATES).dfcOnTop);
+  document.getElementById('dfc-rate-label').textContent = (Math.round(dr * 1000) / 10) + '%' + (onTop ? ', carried by Song above the commitment' : '');
+  if (!onTop) { y1 += f1; y2 += f2; y3 += f3; }
   document.getElementById('total-y1').textContent = fmt(y1);
   document.getElementById('total-y2').textContent = fmt(y2);
   document.getElementById('total-y3').textContent = fmt(y3);
@@ -1202,7 +1211,7 @@ function renderSummary() {
   document.getElementById('header-y2').textContent = fmt(y2);
   document.getElementById('header-y3').textContent = fmt(y3);
   document.getElementById('header-total').textContent = fmt(y1 + y2 + y3);
-  if (dr > 0) catSums.set('DFC fiduciary fee', f1 + f2 + f3);
+  if (dr > 0 && !onTop) catSums.set('DFC fiduciary fee', f1 + f2 + f3);
 
   let breakdownHtml = '';
   for (const [cat, sum] of catSums) {
@@ -1474,8 +1483,9 @@ function buildExportRows() {
   const f1 = ty1 * dr, f2 = ty2 * dr, f3 = ty3 * dr;
   rows.push([]);
   rows.push(['SUBTOTAL (program lines)', '', '', '', '', '', '', '', ty1, ty2, ty3, ty1 + ty2 + ty3, '']);
-  rows.push(['DFC fiduciary fee', `${Math.round(dr * 1000) / 10}% of subtotal`, '', '', '', '', '', '', f1, f2, f3, f1 + f2 + f3, 'Rate is a placeholder until DFC confirms in writing.']);
-  ty1 += f1; ty2 += f2; ty3 += f3;
+  const onTop = !!((state.rates || DEFAULT_RATES).dfcOnTop);
+  rows.push([onTop ? 'DFC fiduciary fee (carried by Song above the commitment; not in total)' : 'DFC fiduciary fee', `${Math.round(dr * 1000) / 10}% of subtotal`, '', '', '', '', '', '', f1, f2, f3, f1 + f2 + f3, 'Rate is a placeholder until DFC confirms in writing.']);
+  if (!onTop) { ty1 += f1; ty2 += f2; ty3 += f3; }
   rows.push(['TOTAL', '', '', '', '', '', '', '', ty1, ty2, ty3, ty1 + ty2 + ty3, '']);
   return { rows, ty1, ty2, ty3 };
 }
@@ -1549,7 +1559,7 @@ function buildSummarySheet(ty1, ty2, ty3, tAll) {
     ['', ''],
     ['Generated', today],
     ['Configuration', 'Custom (edit-in-place)'],
-    ['W-2 burden / lead allowance / DFC fee', `${(state.rates || DEFAULT_RATES).burden}% / ${(state.rates || DEFAULT_RATES).lead}% / ${(state.rates || DEFAULT_RATES).dfc}%`],
+    ['W-2 burden / lead allowance / DFC fee', `${(state.rates || DEFAULT_RATES).burden}% / ${(state.rates || DEFAULT_RATES).lead}% / ${(state.rates || DEFAULT_RATES).dfc}%${(state.rates || DEFAULT_RATES).dfcOnTop ? ' (fee carried by Song above the commitment)' : ''}`],
     ['', ''],
     ['Period', 'Amount'],
     ['Year 1 (Feb 2027 – Jan 2028)', ty1],
@@ -1621,10 +1631,11 @@ function buildDetailSheet(ty1, ty2, ty3, tAll) {
   });
 
   const dr = dfcRate();
-  const s1 = ty1 / (1 + dr), s2 = ty2 / (1 + dr), s3 = ty3 / (1 + dr);
+  const onTop = !!((state.rates || DEFAULT_RATES).dfcOnTop);
+  const s1 = onTop ? ty1 : ty1 / (1 + dr), s2 = onTop ? ty2 : ty2 / (1 + dr), s3 = onTop ? ty3 : ty3 / (1 + dr);
   rows.push(['SUBTOTAL (program lines)', '', '', '', '', '', '', '', s1, s2, s3, s1 + s2 + s3, '']);
   styles.push(['txt', 'txt', 'txt', 'txt', 'txt', 'txt', 'txt', 'txt', 'money', 'money', 'money', 'money', 'txt']);
-  rows.push(['DFC fiduciary fee', `${Math.round(dr * 1000) / 10}% of subtotal`, '', '', '', '', '', '', ty1 - s1, ty2 - s2, ty3 - s3, tAll - (s1 + s2 + s3), 'Rate is a placeholder until DFC confirms in writing.']);
+  rows.push([onTop ? 'DFC fiduciary fee (carried by Song above the commitment; not in total)' : 'DFC fiduciary fee', `${Math.round(dr * 1000) / 10}% of subtotal`, '', '', '', '', '', '', s1 * dr, s2 * dr, s3 * dr, (s1 + s2 + s3) * dr, 'Rate is a placeholder until DFC confirms in writing.']);
   styles.push(['txt', 'txt', 'txt', 'txt', 'txt', 'txt', 'txt', 'txt', 'money', 'money', 'money', 'money', 'note']);
   rows.push(['TOTAL', '', '', '', '', '', '', '', ty1, ty2, ty3, tAll, '']);
   styles.push(['totalTxt', 'totalTxt', 'totalTxt', 'totalTxt', 'totalTxt', 'totalTxt', 'totalTxt', 'totalTxt', 'totalMoney', 'totalMoney', 'totalMoney', 'totalMoney', 'totalTxt']);
@@ -1650,7 +1661,7 @@ document.getElementById('export-xlsx').addEventListener('click', () => {
     }
   });
   const dr = dfcRate();
-  ty1 *= (1 + dr); ty2 *= (1 + dr); ty3 *= (1 + dr);
+  if (!((state.rates || DEFAULT_RATES).dfcOnTop)) { ty1 *= (1 + dr); ty2 *= (1 + dr); ty3 *= (1 + dr); }
   const tAll = ty1 + ty2 + ty3;
 
   const wb = XLSX.utils.book_new();
