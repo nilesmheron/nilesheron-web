@@ -549,6 +549,7 @@ tr:hover .delete-btn { opacity: 1; }
 <div class="controls">
   <span class="controls-label">Scenarios:</span>
   <span id="preset-buttons">
+    <button class="preset-btn" data-preset="floor">Floor ($1.5M)</button>
     <button class="preset-btn active" data-preset="base">Base (Song alone)</button>
     <button class="preset-btn" data-preset="mid">Mid (first joint raise)</button>
     <button class="preset-btn" data-preset="full">Full</button>
@@ -638,6 +639,7 @@ tr:hover .delete-btn { opacity: 1; }
   <p>All fields are editable. Click name, note, base, or modifier to edit. Click × to delete a line. Use "Add line" below the table.</p>
   <p><strong>Scale badges</strong> (e.g. ×50% (preset)) indicate items running at a partial rate in the current scenario. Switch presets to clear them.</p>
   <p><strong>Burden and fees.</strong> Lines marked (W-2) are shown loaded with the W-2 burden rate in the header; the program lead line is loaded with the lead allowance. The DFC fiduciary fee is applied to the sum of all selected lines and shown as its own row. All three rates are placeholders until confirmed.</p>
+  <p><strong>Floor ($1.5M).</strong> What a $1.5M three-year commitment buys once the program lead's loaded fee and the DFC fee come off the top: roughly $150K a year of program. Two funder-to-funder rooms, two partnered events, light travel, accounting, Y1 legal and D&O. No founder rooms, no leasehold, no staff, no pilots, no marketing. A casting year run from partner spaces.</p>
   <p><strong>Levels.</strong> Base is what has to work on Song Foundation's commitment alone. Mid adds the first staff and the full cohort programs on the first joint raise. Full is the staff complement, direct capital, GP back office, and a physical-home option reserve in Y3. Levels nest; each preset turns on the lines of the levels below it.</p>
   <p>Source labels in notes follow the project convention: [YOURS] = Niles' stated position, [EXTRAPOLATION] = projected from his logic and open to confirmation, [GAP] = no position yet.</p>
 </div>
@@ -698,6 +700,7 @@ const DEFAULT_ITEMS = [
 const DEFAULT_RATES = { burden: 25, lead: 20, dfc: 8 };
 
 const presets = {
+  floor: { enable: ["lead", "accounting", "legal", "insurance", "tech", "f2f", "partnered", "travel_support", "lead_travel"], tierOverrides: {}, scales: {"accounting": 0.5, "legal": 0.6, "insurance": 0.67, "tech": 0.4, "travel_support": 0.4, "lead_travel": 0.4} },
   base: { enable: ["lead", "program_coord", "accounting", "legal", "insurance", "leasehold", "tech", "research", "supplies", "contingency", "f2f", "f2founder", "partnered", "travel_support", "lead_travel", "partners", "cortex", "cohort_pilots", "tech_layer", "brand", "marketing", "content_capture", "thought_leadership"], tierOverrides: {}, scales: {} },
   mid: { enable: ["lead", "program_coord", "cos", "events_coord", "analyst", "accounting", "legal", "insurance", "leasehold", "tech", "research", "supplies", "contingency", "f2f", "f2founder", "partnered", "travel_support", "lead_travel", "more_rooms_mid", "more_travel_mid", "partners", "cortex", "cohort_pilots", "tech_layer", "founder_cohort", "gp_accelerator", "lp_network", "brand", "marketing", "content_capture", "thought_leadership", "dfc_content"], tierOverrides: {}, scales: {"legal": 2, "insurance": 1.67, "leasehold": 1.5, "tech": 2, "contingency": 2, "cortex": 2.25, "tech_layer": 3} },
   full: { enable: ["lead", "program_coord", "cos", "events_coord", "analyst", "dir_community", "dir_capital", "exec_admin", "accounting", "legal", "insurance", "leasehold", "tech", "research", "supplies", "contingency", "home_reserve", "f2f", "f2founder", "partnered", "travel_support", "lead_travel", "more_rooms_mid", "more_travel_mid", "more_rooms_full", "partners", "cortex", "cohort_pilots", "tech_layer", "founder_cohort", "gp_accelerator", "lp_network", "gp_backoffice", "catalyst", "capital_reserve", "brand", "marketing", "content_capture", "thought_leadership", "dfc_content", "marketing_spend"], tierOverrides: {}, scales: {"legal": 2, "insurance": 1.67, "leasehold": 2, "tech": 2, "contingency": 4, "cortex": 2.25, "tech_layer": 3, "research": 1.5} },
