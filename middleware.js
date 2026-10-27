@@ -17,12 +17,11 @@ const GATES = [
     // both user and password checked
   },
   {
-    prefix: '/blacksand',
+    prefix: '/blacksand/budget',
     userEnv: 'BLACKSAND_BUDGET_USER',
     passwordEnv: 'BLACKSAND_BUDGET_PASSWORD',
-    realm: 'Black Sand preview',
-    // both user and password checked. Covers the strategy summary at
-    // /blacksand and the budget builder at /blacksand/budget with one login.
+    realm: 'Black Sand budget preview',
+    // both user and password checked. The strategy summary at /blacksand is open.
   },
   {
     prefix: '/motif/tools',
@@ -44,8 +43,8 @@ export const config = {
     '/grav/:path*',
     '/mothership/budget',
     '/mothership/budget/:path*',
-    '/blacksand',
-    '/blacksand/:path*',
+    '/blacksand/budget',
+    '/blacksand/budget/:path*',
     '/motif/:path*',
   ],
 };
