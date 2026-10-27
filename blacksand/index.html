@@ -7,11 +7,11 @@
 <title>Black Sand — Strategy Summary</title>
 <meta name="description" content="Black Sand: a capital-led program to make Detroit the epicenter of early-stage venture for underrepresented founders and investors.">
 <style>
-@font-face{font-family:'Syne';font-weight:800;src:url('fonts/syne-latin-800-normal.woff2') format('woff2');font-display:swap}
-@font-face{font-family:'Syne';font-weight:700;src:url('fonts/syne-latin-700-normal.woff2') format('woff2');font-display:swap}
-@font-face{font-family:'Archivo';font-weight:400;src:url('fonts/archivo-latin-400-normal.woff2') format('woff2');font-display:swap}
-@font-face{font-family:'Archivo';font-weight:600;src:url('fonts/archivo-latin-600-normal.woff2') format('woff2');font-display:swap}
-@font-face{font-family:'Space Mono';font-weight:400;src:url('fonts/space-mono-latin-400-normal.woff2') format('woff2');font-display:swap}
+@font-face{font-family:'Syne';font-weight:800;src:url('/blacksand/fonts/syne-latin-800-normal.woff2') format('woff2');font-display:swap}
+@font-face{font-family:'Syne';font-weight:700;src:url('/blacksand/fonts/syne-latin-700-normal.woff2') format('woff2');font-display:swap}
+@font-face{font-family:'Archivo';font-weight:400;src:url('/blacksand/fonts/archivo-latin-400-normal.woff2') format('woff2');font-display:swap}
+@font-face{font-family:'Archivo';font-weight:600;src:url('/blacksand/fonts/archivo-latin-600-normal.woff2') format('woff2');font-display:swap}
+@font-face{font-family:'Space Mono';font-weight:400;src:url('/blacksand/fonts/space-mono-latin-400-normal.woff2') format('woff2');font-display:swap}
 :root{--black:#0F0E0C;--ink:#F2EADB;--egg:#F3EDE0;--sand:#E7D8B4;--quiet:#9A8F78;--quietl:#6F665A;--gold:#D9A441;--goldl:#C98F2C;--blue:#5B7BFF;--bluel:#3F5FE6;--coral:#FF7A59;--corall:#E0633F;--line:#2E2B26}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;scroll-padding-top:56px}
@@ -61,7 +61,7 @@ nav a.n.cur{color:var(--gold);border-color:var(--gold)}
 /* swarm */
 .swarm circle{transform-box:fill-box;transform-origin:center;transform:scale(0);transition:transform .7s cubic-bezier(.2,.8,.2,1)}
 .swarm.in circle{transform:scale(1)}
-.fig{display:block;width:100%;height:auto;margin:1rem 0 2rem}
+.fig{display:block;width:100%;max-width:720px;height:auto;margin:1rem 0 2rem}
 /* reveal */
 .reveal{opacity:0;transform:translateY(14px);transition:opacity .6s ease,transform .6s ease}
 .reveal.in{opacity:1;transform:none}
