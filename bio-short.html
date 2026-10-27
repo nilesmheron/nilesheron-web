@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- bio-short.html | Last updated: 2026-10-26 20:30 EDT -->
+<!-- bio-short.html | Last updated: 2026-10-26 20:35 EDT -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -24,8 +24,8 @@
     .wrap{max-width:1100px;margin:0 auto;padding:0 24px;}
 
     nav{padding:48px 0 16px;}
-    nav .wrap{display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;}
-    .wordmark{font-family:'Lora',serif;font-size:20px;text-decoration:none;color:var(--color-text);}
+    nav .wrap{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;}
+    .wordmark{display:block;width:64px;opacity:.9;transition:opacity .3s;}.wordmark:hover{opacity:1;}.wordmark img{display:block;width:100%;height:auto;}
     nav ul{display:flex;gap:32px;list-style:none;margin:0;padding:0;}
     nav ul a{font-size:11px;letter-spacing:0.15em;text-transform:uppercase;text-decoration:none;color:var(--color-muted);transition:color .3s;}
     nav ul a:hover,nav ul a[aria-current]{color:var(--color-primary);}
@@ -60,6 +60,7 @@
     .actions a{text-decoration:none;}
     .actions a:hover{color:var(--color-primary);}
 
+    .foot-mark{display:block;width:40px;height:auto;margin:0 auto 16px;opacity:.5;}
     footer{border-top:1px solid var(--color-border);padding:48px 0;text-align:center;}
 
     .fade-in{animation:fadeIn 1s ease-out forwards;opacity:0;}
@@ -71,7 +72,7 @@
 <body>
   <nav>
     <div class="wrap">
-      <a class="wordmark" href="/bio">Niles Heron</a>
+      <a class="wordmark" href="/bio"><img src="/assets/mmh-logo.png" alt="Niles Heron" width="600" height="383"></a>
       <ul>
         <li><a href="/bio">Full bio</a></li>
         <li><a href="/bio-short" aria-current="page">Short bio</a></li>
@@ -106,7 +107,7 @@
     </div>
   </main>
 
-  <footer><div class="mono">&copy; 2026 Niles Heron</div></footer>
+  <footer><img class="foot-mark" src="/assets/mmh-logo.png" alt="" width="600" height="383"><div class="mono">&copy; 2026 Niles Heron</div></footer>
 
   <script>
     document.querySelectorAll('[data-copy]').forEach(function (btn) {

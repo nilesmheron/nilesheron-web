@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- bio.html | Last updated: 2026-10-26 20:30 EDT -->
+<!-- bio.html | Last updated: 2026-10-26 20:35 EDT -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -24,8 +24,8 @@
     .wrap{max-width:1100px;margin:0 auto;padding:0 24px;}
 
     nav{padding:48px 0 16px;}
-    nav .wrap{display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;}
-    .wordmark{font-family:'Lora',serif;font-size:20px;text-decoration:none;color:var(--color-text);}
+    nav .wrap{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;}
+    .wordmark{display:block;width:64px;opacity:.9;transition:opacity .3s;}.wordmark:hover{opacity:1;}.wordmark img{display:block;width:100%;height:auto;}
     nav ul{display:flex;gap:32px;list-style:none;margin:0;padding:0;}
     nav ul a{font-size:11px;letter-spacing:0.15em;text-transform:uppercase;text-decoration:none;color:var(--color-muted);transition:color .3s;}
     nav ul a:hover,nav ul a[aria-current]{color:var(--color-primary);}
@@ -69,6 +69,7 @@
     .gallery a:hover{border-color:var(--color-primary);}
     .gallery img{display:block;width:100%;height:auto;}
 
+    .foot-mark{display:block;width:40px;height:auto;margin:0 auto 16px;opacity:.5;}
     footer{border-top:1px solid var(--color-border);padding:48px 0;text-align:center;}
 
     .fade-in{animation:fadeIn 1s ease-out forwards;opacity:0;}
@@ -80,7 +81,7 @@
 <body>
   <nav>
     <div class="wrap">
-      <a class="wordmark" href="/bio">Niles Heron</a>
+      <a class="wordmark" href="/bio"><img src="/assets/mmh-logo.png" alt="Niles Heron" width="600" height="383"></a>
       <ul>
         <li><a href="/bio" aria-current="page">Full bio</a></li>
         <li><a href="/bio-short">Short bio</a></li>
@@ -122,17 +123,24 @@
           <a href="/assets/bio/eastside-early.jpg"><img src="/assets/bio/eastside-early.jpg" alt="Niles as a young child in a white cardigan and plaid shirt" width="644" height="1400" loading="lazy" decoding="async"></a>
           <a href="/assets/bio/porch.jpg"><img src="/assets/bio/porch.jpg" alt="Niles smiling on a porch in front of a brick wall" width="933" height="1400" loading="lazy" decoding="async"></a>
           <a href="/assets/bio/crains-40-under-40.jpg"><img src="/assets/bio/crains-40-under-40.jpg" alt="Niles receiving a Crain's Detroit Business 40 Under 40 award on stage" width="1400" height="934" loading="lazy" decoding="async"></a>
+          <a href="/assets/bio/crains-power-breakfast-room.jpg"><img src="/assets/bio/crains-power-breakfast-room.jpg" alt="Niles on stage with fellow panelists at Crain's Power Breakfast" width="1400" height="934" loading="lazy" decoding="async"></a>
+          <a href="/assets/bio/founder-house-podium.jpg"><img src="/assets/bio/founder-house-podium.jpg" alt="Niles speaking at a podium at Founder House" width="1400" height="933" loading="lazy" decoding="async"></a>
+          <a href="/assets/bio/speaking-bw.jpg"><img src="/assets/bio/speaking-bw.jpg" alt="Black and white photo of Niles speaking and gesturing" width="1050" height="1400" loading="lazy" decoding="async"></a>
+          <a href="/assets/bio/crains-power-breakfast-close.jpg"><img src="/assets/bio/crains-power-breakfast-close.jpg" alt="Niles making a point during a Crain's panel discussion" width="1400" height="934" loading="lazy" decoding="async"></a>
           <a href="/assets/bio/speaking-tech-week.jpg"><img src="/assets/bio/speaking-tech-week.jpg" alt="Niles speaking to an audience in front of a large screen" width="1400" height="933" loading="lazy" decoding="async"></a>
-          <a href="/assets/bio/newlab.jpg"><img src="/assets/bio/newlab.jpg" alt="Niles leaning on a railing outside Newlab in Detroit" width="1400" height="933" loading="lazy" decoding="async"></a>
           <a href="/assets/bio/decks.jpg"><img src="/assets/bio/decks.jpg" alt="Niles DJing in a studio lit in red and purple" width="787" height="1400" loading="lazy" decoding="async"></a>
+          <a href="/assets/bio/panel-flag.jpg"><img src="/assets/bio/panel-flag.jpg" alt="Niles seated on stage with a microphone during a panel" width="1400" height="933" loading="lazy" decoding="async"></a>
+          <a href="/assets/bio/newlab.jpg"><img src="/assets/bio/newlab.jpg" alt="Niles leaning on a railing outside Newlab in Detroit" width="1400" height="933" loading="lazy" decoding="async"></a>
+          <a href="/assets/bio/founder-house-v313.jpg"><img src="/assets/bio/founder-house-v313.jpg" alt="Niles speaking with a microphone at a Founder House and Venture 313 event" width="933" height="1400" loading="lazy" decoding="async"></a>
           <a href="/assets/bio/speaking.jpg"><img src="/assets/bio/speaking.jpg" alt="Niles speaking into a microphone in front of a presentation slide" width="933" height="1400" loading="lazy" decoding="async"></a>
+          <a href="/assets/bio/crains-power-breakfast-panel.jpg"><img src="/assets/bio/crains-power-breakfast-panel.jpg" alt="Niles speaking on a panel in a red sweater at Crain's Power Breakfast" width="1400" height="934" loading="lazy" decoding="async"></a>
           <a href="/assets/bio/techtown-tile.jpg"><img src="/assets/bio/techtown-tile.jpg" alt="An illustrated tile of Niles on the TechTown Detroit wall" width="788" height="1400" loading="lazy" decoding="async"></a>
           <a href="/assets/bio/illustration.jpg"><img src="/assets/bio/illustration.jpg" alt="An illustrated portrait of Niles with arms crossed on a red background" width="1024" height="1323" loading="lazy" decoding="async"></a>
         </div>
       </section>
   </main>
 
-  <footer><div class="mono">&copy; 2026 Niles Heron</div></footer>
+  <footer><img class="foot-mark" src="/assets/mmh-logo.png" alt="" width="600" height="383"><div class="mono">&copy; 2026 Niles Heron</div></footer>
 
   <script>
     document.querySelectorAll('[data-copy]').forEach(function (btn) {
