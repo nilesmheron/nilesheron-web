@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- bio.html | Last updated: 2026-10-26 20:35 EDT -->
+<!-- bio.html | Last updated: 2026-10-26 20:40 EDT -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -62,6 +62,7 @@
 
 
     .photos{margin-top:96px;}
+    .photo-note{font-family:'Lora',serif;font-style:italic;font-size:18px;line-height:1.6;color:#666;margin:-8px 0 32px;max-width:640px;}
     .gallery{columns:2 160px;column-gap:16px;}
     @media(min-width:900px){.gallery{columns:3;column-gap:24px;}}
     .gallery a{display:block;break-inside:avoid;margin:0 0 16px;border:1px solid var(--color-border);padding:8px;background:var(--color-bg);box-shadow:2px 2px 0 rgba(212,212,212,0.5);transition:border-color .3s;}
@@ -117,25 +118,26 @@
         </div>
       </section>
     </div>
-      <section class="photos wrap fade-in d3" aria-label="Photos">
+      <section class="photos wrap fade-in d3" id="photos" aria-label="Photos">
         <div class="rule"><span>photos</span><div></div></div>
+        <p class="photo-note">I hate headshots, so pick whichever of these works for you. Click any photo to download it.</p>
         <div class="gallery">
-          <a href="/assets/bio/eastside-early.jpg"><img src="/assets/bio/eastside-early.jpg" alt="Niles as a young child in a white cardigan and plaid shirt" width="644" height="1400" loading="lazy" decoding="async"></a>
-          <a href="/assets/bio/porch.jpg"><img src="/assets/bio/porch.jpg" alt="Niles smiling on a porch in front of a brick wall" width="933" height="1400" loading="lazy" decoding="async"></a>
-          <a href="/assets/bio/crains-40-under-40.jpg"><img src="/assets/bio/crains-40-under-40.jpg" alt="Niles receiving a Crain's Detroit Business 40 Under 40 award on stage" width="1400" height="934" loading="lazy" decoding="async"></a>
-          <a href="/assets/bio/crains-power-breakfast-room.jpg"><img src="/assets/bio/crains-power-breakfast-room.jpg" alt="Niles on stage with fellow panelists at Crain's Power Breakfast" width="1400" height="934" loading="lazy" decoding="async"></a>
-          <a href="/assets/bio/founder-house-podium.jpg"><img src="/assets/bio/founder-house-podium.jpg" alt="Niles speaking at a podium at Founder House" width="1400" height="933" loading="lazy" decoding="async"></a>
-          <a href="/assets/bio/speaking-bw.jpg"><img src="/assets/bio/speaking-bw.jpg" alt="Black and white photo of Niles speaking and gesturing" width="1050" height="1400" loading="lazy" decoding="async"></a>
-          <a href="/assets/bio/crains-power-breakfast-close.jpg"><img src="/assets/bio/crains-power-breakfast-close.jpg" alt="Niles making a point during a Crain's panel discussion" width="1400" height="934" loading="lazy" decoding="async"></a>
-          <a href="/assets/bio/speaking-tech-week.jpg"><img src="/assets/bio/speaking-tech-week.jpg" alt="Niles speaking to an audience in front of a large screen" width="1400" height="933" loading="lazy" decoding="async"></a>
-          <a href="/assets/bio/decks.jpg"><img src="/assets/bio/decks.jpg" alt="Niles DJing in a studio lit in red and purple" width="787" height="1400" loading="lazy" decoding="async"></a>
-          <a href="/assets/bio/panel-flag.jpg"><img src="/assets/bio/panel-flag.jpg" alt="Niles seated on stage with a microphone during a panel" width="1400" height="933" loading="lazy" decoding="async"></a>
-          <a href="/assets/bio/newlab.jpg"><img src="/assets/bio/newlab.jpg" alt="Niles leaning on a railing outside Newlab in Detroit" width="1400" height="933" loading="lazy" decoding="async"></a>
-          <a href="/assets/bio/founder-house-v313.jpg"><img src="/assets/bio/founder-house-v313.jpg" alt="Niles speaking with a microphone at a Founder House and Venture 313 event" width="933" height="1400" loading="lazy" decoding="async"></a>
-          <a href="/assets/bio/speaking.jpg"><img src="/assets/bio/speaking.jpg" alt="Niles speaking into a microphone in front of a presentation slide" width="933" height="1400" loading="lazy" decoding="async"></a>
-          <a href="/assets/bio/crains-power-breakfast-panel.jpg"><img src="/assets/bio/crains-power-breakfast-panel.jpg" alt="Niles speaking on a panel in a red sweater at Crain's Power Breakfast" width="1400" height="934" loading="lazy" decoding="async"></a>
-          <a href="/assets/bio/techtown-tile.jpg"><img src="/assets/bio/techtown-tile.jpg" alt="An illustrated tile of Niles on the TechTown Detroit wall" width="788" height="1400" loading="lazy" decoding="async"></a>
-          <a href="/assets/bio/illustration.jpg"><img src="/assets/bio/illustration.jpg" alt="An illustrated portrait of Niles with arms crossed on a red background" width="1024" height="1323" loading="lazy" decoding="async"></a>
+          <a href="/assets/bio/eastside-early.jpg" download="Niles-Heron-eastside-early.jpg"><img src="/assets/bio/eastside-early.jpg" alt="Niles as a young child in a white cardigan and plaid shirt" width="644" height="1400" loading="lazy" decoding="async"></a>
+          <a href="/assets/bio/porch.jpg" download="Niles-Heron-porch.jpg"><img src="/assets/bio/porch.jpg" alt="Niles smiling on a porch in front of a brick wall" width="933" height="1400" loading="lazy" decoding="async"></a>
+          <a href="/assets/bio/crains-40-under-40.jpg" download="Niles-Heron-crains-40-under-40.jpg"><img src="/assets/bio/crains-40-under-40.jpg" alt="Niles receiving a Crain's Detroit Business 40 Under 40 award on stage" width="1400" height="934" loading="lazy" decoding="async"></a>
+          <a href="/assets/bio/crains-power-breakfast-room.jpg" download="Niles-Heron-crains-power-breakfast-room.jpg"><img src="/assets/bio/crains-power-breakfast-room.jpg" alt="Niles on stage with fellow panelists at Crain's Power Breakfast" width="1400" height="934" loading="lazy" decoding="async"></a>
+          <a href="/assets/bio/founder-house-podium.jpg" download="Niles-Heron-founder-house-podium.jpg"><img src="/assets/bio/founder-house-podium.jpg" alt="Niles speaking at a podium at Founder House" width="1400" height="933" loading="lazy" decoding="async"></a>
+          <a href="/assets/bio/speaking-bw.jpg" download="Niles-Heron-speaking-bw.jpg"><img src="/assets/bio/speaking-bw.jpg" alt="Black and white photo of Niles speaking and gesturing" width="1050" height="1400" loading="lazy" decoding="async"></a>
+          <a href="/assets/bio/crains-power-breakfast-close.jpg" download="Niles-Heron-crains-power-breakfast-close.jpg"><img src="/assets/bio/crains-power-breakfast-close.jpg" alt="Niles making a point during a Crain's panel discussion" width="1400" height="934" loading="lazy" decoding="async"></a>
+          <a href="/assets/bio/speaking-tech-week.jpg" download="Niles-Heron-speaking-tech-week.jpg"><img src="/assets/bio/speaking-tech-week.jpg" alt="Niles speaking to an audience in front of a large screen" width="1400" height="933" loading="lazy" decoding="async"></a>
+          <a href="/assets/bio/decks.jpg" download="Niles-Heron-decks.jpg"><img src="/assets/bio/decks.jpg" alt="Niles DJing in a studio lit in red and purple" width="787" height="1400" loading="lazy" decoding="async"></a>
+          <a href="/assets/bio/panel-flag.jpg" download="Niles-Heron-panel-flag.jpg"><img src="/assets/bio/panel-flag.jpg" alt="Niles seated on stage with a microphone during a panel" width="1400" height="933" loading="lazy" decoding="async"></a>
+          <a href="/assets/bio/newlab.jpg" download="Niles-Heron-newlab.jpg"><img src="/assets/bio/newlab.jpg" alt="Niles leaning on a railing outside Newlab in Detroit" width="1400" height="933" loading="lazy" decoding="async"></a>
+          <a href="/assets/bio/founder-house-v313.jpg" download="Niles-Heron-founder-house-v313.jpg"><img src="/assets/bio/founder-house-v313.jpg" alt="Niles speaking with a microphone at a Founder House and Venture 313 event" width="933" height="1400" loading="lazy" decoding="async"></a>
+          <a href="/assets/bio/speaking.jpg" download="Niles-Heron-speaking.jpg"><img src="/assets/bio/speaking.jpg" alt="Niles speaking into a microphone in front of a presentation slide" width="933" height="1400" loading="lazy" decoding="async"></a>
+          <a href="/assets/bio/crains-power-breakfast-panel.jpg" download="Niles-Heron-crains-power-breakfast-panel.jpg"><img src="/assets/bio/crains-power-breakfast-panel.jpg" alt="Niles speaking on a panel in a red sweater at Crain's Power Breakfast" width="1400" height="934" loading="lazy" decoding="async"></a>
+          <a href="/assets/bio/techtown-tile.jpg" download="Niles-Heron-techtown-tile.jpg"><img src="/assets/bio/techtown-tile.jpg" alt="An illustrated tile of Niles on the TechTown Detroit wall" width="788" height="1400" loading="lazy" decoding="async"></a>
+          <a href="/assets/bio/illustration.jpg" download="Niles-Heron-illustration.jpg"><img src="/assets/bio/illustration.jpg" alt="An illustrated portrait of Niles with arms crossed on a red background" width="1024" height="1323" loading="lazy" decoding="async"></a>
         </div>
       </section>
   </main>
