@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<!-- bio-short.html | Last updated: 2026-10-26 20:30 EDT -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Niles Heron | Short Bio</title>
+  <meta name="description" content="Niles Heron is Senior Director of Tech-Based Entrepreneurship at TechTown Detroit.">
+  <meta property="og:type" content="profile">
+  <meta property="og:title" content="Niles Heron | Short Bio">
+  <meta property="og:description" content="Senior Director of Tech-Based Entrepreneurship at TechTown Detroit.">
+  <meta property="og:image" content="https://dev.nilesheron.com/assets/bio/niles-heron.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root{--color-primary:#b5793e;--color-bg:#e8e8e8;--color-text:#444444;--color-muted:#999999;--color-border:#d4d4d4;}
+    *{box-sizing:border-box;}
+    html,body{margin:0;padding:0;}
+    body{background:var(--color-bg);color:var(--color-text);font-family:Georgia,serif;-webkit-font-smoothing:antialiased;}
+    ::selection{background:rgba(181,121,62,0.2);color:var(--color-primary);}
+    a{color:inherit;}
+    .mono{font-family:Menlo,Monaco,'Courier New',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--color-muted);}
+    .wrap{max-width:1100px;margin:0 auto;padding:0 24px;}
+
+    nav{padding:48px 0 16px;}
+    nav .wrap{display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;}
+    .wordmark{font-family:'Lora',serif;font-size:20px;text-decoration:none;color:var(--color-text);}
+    nav ul{display:flex;gap:32px;list-style:none;margin:0;padding:0;}
+    nav ul a{font-size:11px;letter-spacing:0.15em;text-transform:uppercase;text-decoration:none;color:var(--color-muted);transition:color .3s;}
+    nav ul a:hover,nav ul a[aria-current]{color:var(--color-primary);}
+
+    main{padding:64px 0 120px;}
+    .grid{display:grid;grid-template-columns:1fr;gap:48px;}
+    @media(min-width:900px){.grid{grid-template-columns:340px 1fr;gap:80px;}}
+
+    .portrait{position:relative;}
+    @media(min-width:900px){.portrait-inner{position:sticky;top:48px;}}
+    @media(max-width:899px){.frame{max-width:320px;}}
+    .frame{border:1px solid var(--color-border);background:var(--color-bg);padding:12px;box-shadow:2px 2px 0 rgba(212,212,212,0.5);}
+    .frame img{display:block;width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;filter:saturate(0.95);}
+    .portrait .note{font-family:'Caveat',cursive;font-size:24px;color:var(--color-primary);margin-top:16px;transform:rotate(-2deg);opacity:.85;}
+    .portrait .dl{display:inline-block;margin-top:12px;text-decoration:none;}
+    .portrait .dl:hover{color:var(--color-primary);}
+
+    h1{font-family:'Lora',serif;font-weight:400;font-size:40px;line-height:1.15;margin:0 0 8px;}
+    @media(min-width:900px){h1{font-size:52px;}}
+    .role{font-family:'Lora',serif;font-style:italic;font-size:18px;color:#666;margin:0 0 40px;}
+    .rule{display:flex;align-items:center;gap:16px;margin:0 0 32px;}
+    .rule span{font-family:'Caveat',cursive;font-size:24px;color:var(--color-primary);white-space:nowrap;}
+    .rule div{height:1px;background:var(--color-border);flex:1;}
+
+    article p{font-size:18px;line-height:1.85;margin:0 0 24px;}
+    article p:first-child{font-size:20px;color:var(--color-text);}
+    article p + p{color:#555;}
+
+    .actions{display:flex;gap:24px;align-items:center;flex-wrap:wrap;margin-top:40px;padding-top:24px;border-top:1px solid var(--color-border);}
+    .btn{font-family:Menlo,Monaco,'Courier New',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;background:none;border:1px solid var(--color-primary);color:var(--color-primary);padding:12px 18px;cursor:pointer;transition:background .3s,color .3s;}
+    .btn:hover{background:var(--color-primary);color:#fff;}
+    .actions a{text-decoration:none;}
+    .actions a:hover{color:var(--color-primary);}
+
+    footer{border-top:1px solid var(--color-border);padding:48px 0;text-align:center;}
+
+    .fade-in{animation:fadeIn 1s ease-out forwards;opacity:0;}
+    @keyframes fadeIn{to{opacity:1;}}
+    .d1{animation-delay:.1s}.d2{animation-delay:.2s}.d3{animation-delay:.3s}
+    @media(prefers-reduced-motion:reduce){.fade-in{animation:none;opacity:1;}}
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="wrap">
+      <a class="wordmark" href="/bio">Niles Heron</a>
+      <ul>
+        <li><a href="/bio">Full bio</a></li>
+        <li><a href="/bio-short" aria-current="page">Short bio</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main>
+    <div class="wrap grid">
+      <aside class="portrait fade-in d1">
+        <div class="portrait-inner">
+          <div class="frame"><img src="/assets/bio/niles-heron.jpg" alt="Portrait of Niles Heron" width="800" height="1000"></div>
+          <div class="note">Detroit, Eastside</div>
+          <a class="dl mono" href="/assets/bio/niles-heron-headshot-full.jpg" download="Niles-Heron-headshot.jpg">Download headshot &rarr;</a>
+        </div>
+      </aside>
+
+      <section class="fade-in d2">
+        <h1>Niles Heron</h1>
+        <p class="role">Senior Director of Tech-Based Entrepreneurship, TechTown Detroit</p>
+        <div class="rule"><span>short bio, 75 words</span><div></div></div>
+
+        <article id="bio-text">
+          <p>A proud product of the Eastside, Niles Heron is Senior Director of Tech-Based Entrepreneurship at TechTown Detroit, leading Venture 313, the Mobility Accelerator Innovation Network, Gateway, and TechTown's Core Programs, representing over $30 million in philanthropic commitment. He previously helped guide gaming and livestreaming firm Loaded to $30 million in equity investment and nearly $500 million in revenue. He is a Crain's Detroit Business 20 in their 20s (2015) and 40 Under 40 (2025) honoree.</p>
+        </article>
+
+        <div class="actions">
+          <button class="btn" type="button" data-copy="bio-text">Copy short bio</button>
+          <a class="mono" href="/bio">Read the full bio &rarr;</a>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer><div class="mono">&copy; 2026 Niles Heron</div></footer>
+
+  <script>
+    document.querySelectorAll('[data-copy]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var src = document.getElementById(btn.getAttribute('data-copy'));
+        var text = Array.prototype.map.call(src.querySelectorAll('p'), function (p) { return p.textContent.trim(); }).join('\n\n');
+        var label = btn.textContent;
+        var done = function (msg) { btn.textContent = msg; setTimeout(function () { btn.textContent = label; }, 1800); };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(function () { done('Copied'); }, function () { done('Select and copy'); });
+        } else { done('Select and copy'); }
+      });
+    });
+  </script>
+</body>
+</html>
