@@ -103,14 +103,14 @@ S2=sec('02',t2,'light', hl('Sand Hill Road,','without the structural barriers an
 LP=p3[1].replace('**Limited partners.** ',''); GP=p3[2].replace('**General partners.** ',''); FO=p3[3].replace('**Founders.** ','').replace(' The first task is to build this capital structure. Then more and more, the work is helping founders of color prepare to use it.',''); LIFT=p3[4]
 LP_E,LP_M=LP.split(' Emerging LPs are '); LP_M='Emerging LPs are '+LP_M; GP_E,GP_M=GP.split(' Emerging GPs are '); GP_M='Emerging GPs are '+GP_M
 LP_E=LP_E.replace('their peers,⁴','their peers,<sup>4</sup>')
-grid=f'''<div class="egrid reveal"><div class="eh"></div><div class="eh">→ Established</div><div class="eh">Emerging →</div>
+grid=f'''<div class="egrid reveal"><div class="eh"></div><div class="eh">→ Established</div><div class="eh">Emerging →</div><div class="erule"></div>
 <div class="en b">Limited partners<small>the supply</small></div><div class="ec"><span class="mh">Established</span>{LP_E}</div><div class="ec"><span class="mh">Emerging</span>{LP_M}</div>
 <div class="en g">General partners<small>the distribution</small></div><div class="ec"><span class="mh">Established</span>{GP_E}</div><div class="ec"><span class="mh">Emerging</span>{GP_M}</div></div>'''
 S3=sec('03',t3,'light', hl('Connect every layer to the ones above and below it.','Grow each one.')+f'<div class="prose reveal"><p>{p3[0]}</p></div>'+grid+f'<div class="rule"></div><div class="en c reveal" style="margin-top:1.5rem">Founders<small>the outcome</small></div><div class="prose cols reveal"><p>{FO}</p></div>'+pull('The first task is to build this capital structure.','Then more and more, the work is helping founders of color prepare to use it.','c')+f'<div class="prose cols reveal"><p><b>The lift.</b> {LIFT}</p></div><p class="sources reveal">4 &nbsp;Knight Foundation, <i>Knight Diversity of Asset Managers Research Series: Industry</i> (Lerner et al., December 2021).</p>')
 
 # 4
 rows=[('Limited partners','b','Take vetted emerging-GP meetings, show up to convenings, and soft-circle intent.','A curated, Detroit-based pipeline into funds they would not otherwise see.'),('Established GPs','g','Mentorship hours, name association, and presence.','LP access and first look at emerging-GP deal flow.'),('Emerging GPs','g','Raising with and through the platform.','LPs, mentors, and deal flow in one place.'),('Founders','c','Being platformed.','A room full of capital that came to Detroit to find them.')]
-ex='<div class="xgrid reveal"><div class="eh"></div><div class="eh ink">Commits</div><div class="eh sand">Gets</div>'+''.join(f'<div class="en {c}">{n}</div><div class="xc"><span class="mh">Commits</span>{a}</div><div class="xc sand"><span class="mh">Gets</span>{b}</div>' for n,c,a,b in rows)+'</div>'
+ex='<div class="xgrid reveal"><div class="eh"></div><div class="eh ink">Commits</div><div class="eh sand">Gets</div><div class="erule"></div>'+''.join(f'<div class="en {c}">{n}</div><div class="xc"><span class="mh">Commits</span>{a}</div><div class="xc sand"><span class="mh">Gets</span>{b}</div>' for n,c,a,b in rows)+'</div>'
 S4=sec('04',t4,'dark', hl('None of them will commit alone.','Year One is casting before it is programming.')+'<div class="prose cols reveal">'+''.join(P(p) for p in p4[:3])+'</div>'+ex+f'<p class="note reveal">{p4[4].strip("*")}</p><div class="figcap">Figure 2 · The exchange</div>')
 
 # 5
@@ -242,7 +242,8 @@ svg text[style*="Space Mono"]{{font-family:"Space Mono",monospace!important}}
 p.sources{{padding-left:0}}
 /* established/emerging grid */
 .egrid,.xgrid{{display:grid;grid-template-columns:170px 1fr 1fr;gap:1.25rem 2rem;margin:2rem 0;align-items:start}}
-.eh{{color:var(--quietl);padding-bottom:.5rem;border-bottom:2px solid var(--gold)}}
+.eh{{color:var(--quietl);padding-bottom:0}}
+.erule{{grid-column:1/-1;height:2px;background:var(--gold);margin-top:-.5rem}}
 .dark .eh{{color:var(--quiet)}}.eh.ink{{color:var(--ink)}}.eh.sand{{color:var(--sand)}}
 .en{{font-family:'Syne',sans-serif;font-weight:700;font-size:21px;line-height:1.1;letter-spacing:-.02em}}
 .en+.prose{{margin-top:1.25rem}}
@@ -251,7 +252,7 @@ p.sources{{padding-left:0}}
 .xgrid{{grid-template-columns:170px 1fr 1fr;row-gap:1.25rem}}
 .xgrid .en{{font-size:17px}}.xc{{border-top:1px solid var(--line);padding-top:.75rem}}.xgrid .en{{border-top:1px solid var(--line);padding-top:.75rem}}
 .mh{{display:none}}
-@media(max-width:700px){{.egrid,.xgrid{{grid-template-columns:1fr;gap:.75rem}}.eh{{display:none}}.mh{{display:block;color:var(--quietl);margin-bottom:.25rem}}.dark .mh{{color:var(--quiet)}}.en{{margin-top:1.25rem}}.xgrid .en,.xc{{border:0;padding-top:0}}}}
+@media(max-width:700px){{.egrid,.xgrid{{grid-template-columns:1fr;gap:.75rem}}.eh,.erule{{display:none}}.mh{{display:block;color:var(--quietl);margin-bottom:.25rem}}.dark .mh{{color:var(--quiet)}}.en{{margin-top:1.25rem}}.xgrid .en,.xc{{border:0;padding-top:0}}}}
 /* rooms */
 .rooms{{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1rem;margin:1.5rem 0 2.5rem}}
 .box{{border:1.5px solid currentColor;height:60px;display:flex;align-items:center;justify-content:center;gap:5px}}
