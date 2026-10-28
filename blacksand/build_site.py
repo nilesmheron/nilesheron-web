@@ -34,7 +34,7 @@ back_svg=hero_svg.replace('class="swarm mark"','class="swarm mark small"')
 # figure 1: capital stack
 sc=circles(B+'src/Stack16.body.html')
 T='font-family:Space Mono, monospace;letter-spacing:.14em;text-transform:uppercase'
-fig1=f'''<svg class="swarm fig" viewBox="64 212 688 540" aria-label="Figure 1, the capital stack">
+fig1=f'''<svg class="swarm fig" viewBox="64 212 688 588" aria-label="Figure 1, the capital stack">
 <text x="96" y="236" fill="{QUIET}" font-size="11" style="{T}">emerging →</text>
 <text x="752" y="236" fill="{SAND}" font-size="11" text-anchor="end" style="{T}">→ established</text>
 {svg_circles(sc)}
