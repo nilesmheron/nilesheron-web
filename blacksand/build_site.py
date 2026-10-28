@@ -97,7 +97,7 @@ FIG1=f'''<section id="fig1" class="chapter dark"><div class="wrap"><div class="k
 ns=p2[0].replace('**North Star.** ','').replace(' Sand Hill Road without the structural barriers and bias: a funding environment that values culture and understands that capacity does not present in only one way.','')
 ap=p2[2].replace('**Approach.** ','')
 tiles=[('⅓','c','What Black-founded startups raise in their first five years, against comparable non-Black startups. When a Black investor leads the round, the gap narrows by nearly fifty percentage points.','1'),('4–8×','g','The rate of Black and Hispanic investment partners at venture firms founded in the last decade, against older firms. That is where emerging managers come from.','2'),('0.32%','c','Share of US venture funding that went to Black-founded companies in 2025, down from 1.5 percent at the 2021 peak.','3')]
-S2=sec('02',t2,'light', hl('Sand Hill Road,','without the structural barriers and bias.')+f'<div class="prose reveal"><p><b>North Star.</b> {ns} A funding environment that values culture and understands that capacity does not present in only one way.</p></div><div class="rule"></div><div class="label reveal">Why the structure produces equity &nbsp;·&nbsp; the evidence is consistent</div><div class="tiles reveal">'+''.join(f'<div class="tile"><div class="num {c}">{n}<sup>{s}</sup></div><p>{l}</p></div>' for n,c,l,s in tiles)+'</div>'+pull('The program does not treat equity as a separate workstream. It builds the capital stack','so that equity is what the stack produces.')+f'<div class="prose reveal"><p><b>Approach.</b> {ap}</p></div><ol class="sources reveal"><li>Cook, Marx &amp; Yimfor, "Funding Black High-Growth Startups," <i>Journal of Finance</i> (forthcoming); Columbia Business School brief, July 2024.</li><li>NVCA, Deloitte &amp; Venture Forward, <i>VC Human Capital Survey</i>, 4th ed. (2022 data).</li><li>Crunchbase News, "Black-founded startups\' share of US venture funding," May 28, 2026.</li></ol>')
+S2=sec('02',t2,'light', hl('Sand Hill Road,','without the structural barriers and bias.')+f'<div class="prose cols reveal"><p><b>North Star.</b> {ns} A funding environment that values culture and understands that capacity does not present in only one way.</p></div><div class="rule"></div><div class="label reveal">Why the structure produces equity &nbsp;·&nbsp; the evidence is consistent</div><div class="tiles reveal">'+''.join(f'<div class="tile"><div class="num {c}">{n}<sup>{s}</sup></div><p>{l}</p></div>' for n,c,l,s in tiles)+'</div>'+pull('The program does not treat equity as a separate workstream. It builds the capital stack','so that equity is what the stack produces.')+f'<div class="prose cols reveal"><p><b>Approach.</b> {ap}</p></div><ol class="sources reveal"><li>Cook, Marx &amp; Yimfor, "Funding Black High-Growth Startups," <i>Journal of Finance</i> (forthcoming); Columbia Business School brief, July 2024.</li><li>NVCA, Deloitte &amp; Venture Forward, <i>VC Human Capital Survey</i>, 4th ed. (2022 data).</li><li>Crunchbase News, "Black-founded startups\' share of US venture funding," May 28, 2026.</li></ol>')
 
 # 3
 LP=p3[1].replace('**Limited partners.** ',''); GP=p3[2].replace('**General partners.** ',''); FO=p3[3].replace('**Founders.** ','').replace(' The first task is to build this capital structure. Then more and more, the work is helping founders of color prepare to use it.',''); LIFT=p3[4]
@@ -106,7 +106,7 @@ LP_E=LP_E.replace('their peers,⁴','their peers,<sup>4</sup>')
 grid=f'''<div class="egrid reveal"><div class="eh"></div><div class="eh">→ Established</div><div class="eh">Emerging →</div>
 <div class="en b">Limited partners<small>the supply</small></div><div class="ec"><span class="mh">Established</span>{LP_E}</div><div class="ec"><span class="mh">Emerging</span>{LP_M}</div>
 <div class="en g">General partners<small>the distribution</small></div><div class="ec"><span class="mh">Established</span>{GP_E}</div><div class="ec"><span class="mh">Emerging</span>{GP_M}</div></div>'''
-S3=sec('03',t3,'light', hl('Connect every layer to the ones above and below it.','Grow each one.')+f'<div class="prose reveal"><p>{p3[0]}</p></div>'+grid+f'<div class="rule"></div><div class="en c reveal" style="margin-top:1.5rem">Founders<small>the outcome</small></div><div class="prose lead reveal"><p>{FO}</p></div>'+pull('The first task is to build this capital structure.','Then more and more, the work is helping founders of color prepare to use it.','c')+f'<div class="prose reveal"><p><b>The lift.</b> {LIFT}</p></div><p class="sources reveal">4 &nbsp;Knight Foundation, <i>Knight Diversity of Asset Managers Research Series: Industry</i> (Lerner et al., December 2021).</p>')
+S3=sec('03',t3,'light', hl('Connect every layer to the ones above and below it.','Grow each one.')+f'<div class="prose reveal"><p>{p3[0]}</p></div>'+grid+f'<div class="rule"></div><div class="en c reveal" style="margin-top:1.5rem">Founders<small>the outcome</small></div><div class="prose cols reveal"><p>{FO}</p></div>'+pull('The first task is to build this capital structure.','Then more and more, the work is helping founders of color prepare to use it.','c')+f'<div class="prose cols reveal"><p><b>The lift.</b> {LIFT}</p></div><p class="sources reveal">4 &nbsp;Knight Foundation, <i>Knight Diversity of Asset Managers Research Series: Industry</i> (Lerner et al., December 2021).</p>')
 
 # 4
 rows=[('Limited partners','b','Take vetted emerging-GP meetings, show up to convenings, and soft-circle intent.','A curated, Detroit-based pipeline into funds they would not otherwise see.'),('Established GPs','g','Mentorship hours, name association, and presence.','LP access and first look at emerging-GP deal flow.'),('Emerging GPs','g','Raising with and through the platform.','LPs, mentors, and deal flow in one place.'),('Founders','c','Being platformed.','A room full of capital that came to Detroit to find them.')]
@@ -135,18 +135,18 @@ strip=f'''<div class="strip reveal"><div class="ticks"><span>Feb 2027</span><spa
 <div class="raise"><span>Raise window · Jan – Jul 2028</span></div>
 <div class="bar fund"><span>Funded programming · ramps from late Year Two</span></div>
 <p class="sand small">About $1.5M a year of additional programming, GP first, then LP, then founder, sized to the first joint raise.</p></div>'''
-S7=sec('07',t7,'dark', hl('Cast it. Prove it.','Raise on the proof.')+f'<div class="prose reveal sand"><p>{p7[0]} {p7[1]}</p></div><div class="phases">'+''.join(phases)+f'</div>{strip}<div class="prose reveal"><p>{p7[7]}</p></div><p class="note reveal">{p7[8].strip("*")}</p><div class="figcap">Figure 3 · Phases and resourcing</div>')
+S7=sec('07',t7,'dark', hl('Cast it. Prove it.','Raise on the proof.')+f'<div class="prose cols reveal sand"><p>{p7[0]} {p7[1]}</p></div><div class="phases">'+''.join(phases)+f'</div>{strip}<div class="prose cols reveal"><p>{p7[7]}</p></div><p class="note reveal">{p7[8].strip("*")}</p><div class="figcap">Figure 3 · Phases and resourcing</div>')
 
 # 8
 bul=[b[2:].strip() for b in p8[2].split('\n')]
 marks=['<i class="d b"></i><i class="d g"></i><i class="d c"></i>','<i class="d g"></i>','<i class="d g"></i>','<i class="d c"></i>','<i class="d c"></i>']
 ml='<ul class="metrics reveal">'+''.join(f'<li><span class="mk">{m}</span>{b}</li>' for m,b in zip(marks,bul))+'</ul>'
-S8=sec('08',t8,'light', hl("We're not targeting activity.","We're targeting outcomes.")+f'<div class="prose reveal"><p>{p8[0].replace("We\'re not targeting activity. We\'re targeting outcomes. ","")}</p><p>{p8[1].replace(" Tracking stats like:","")}</p></div><div class="rule"></div><div class="label reveal">Tracked from the first room</div>'+ml+f'<div class="split reveal"><div><div class="big g">$1.5B</div><div class="label">Aggregate capital influence</div></div><div class="prose"><p>{p8[3].replace("The long-run target is $1.5 billion in aggregate capital influence: the","The long-run target: the")}</p></div></div><div class="prose reveal"><p>{md(p8[4])}</p></div>'+pull('Not programs launched, events held, or people trained.','Founders funded, dollars raised, GPs investing, LPs investing.'))
+S8=sec('08',t8,'light', hl("We're not targeting activity.","We're targeting outcomes.")+f'<div class="prose cols reveal"><p>{p8[0].replace("We\'re not targeting activity. We\'re targeting outcomes. ","")}</p><p>{p8[1].replace(" Tracking stats like:","")}</p></div><div class="rule"></div><div class="label reveal">Tracked from the first room</div>'+ml+f'<div class="split reveal"><div><div class="big g">$1.5B</div><div class="label">Aggregate capital influence</div></div><div class="prose"><p>{p8[3].replace("The long-run target is $1.5 billion in aggregate capital influence: the","The long-run target: the")}</p></div></div><div class="prose reveal"><p>{md(p8[4])}</p></div>'+pull('Not programs launched, events held, or people trained.','Founders funded, dollars raised, GPs investing, LPs investing.'))
 
 # 9 + 10
 sup=p10[2].replace('**Support built for each community.** ',''); lead,rest=sup.split(' For emerging GPs, that is ')
 gp='For emerging GPs, that is '+rest.split(' For founders, it is ')[0]; fo='For founders, it is '+rest.split(' For founders, it is ')[1].split(' For LPs, it is ')[0]; lp='For LPs, it is '+rest.split(' For LPs, it is ')[1]
-S9=sec('09',t9,'light', hl('The playbook','is written in public.')+f'<div class="prose reveal"><p>{p9[0]}</p></div>')
+S9=sec('09',t9,'light', hl('The playbook','is written in public.')+f'<div class="prose cols reveal"><p>{p9[0]}</p></div>')
 S10=sec('10',t10,'light', hl('Infrastructure,','when it is time.')+f'<div class="prose cols reveal"><p>{md(p10[0])}</p><p>{md(p10[1])}</p></div><div class="rule"></div><div class="prose reveal"><p><b>Support built for each community.</b> {lead}</p></div><div class="three reveal"><div><h4 class="g">Emerging GPs</h4><p>{gp}</p></div><div><h4 class="c">Founders</h4><p>{fo}</p></div><div><h4 class="b">LPs</h4><p>{lp}</p></div></div>')
 
 # 11
@@ -154,7 +154,7 @@ lv=[]
 for name,amt,v,ph in zip(['Base','Mid','Full'],['$1.2M','$2.1–2.3M','$3.1–3.8M'],[1200,2200,3450],p11[1:4]):
     m=re.match(r'\*\*(.+?)\*\* (.*)',ph); tt,bb=m.groups()
     lv.append(f'<div class="lv reveal"><div class="ln"><div class="lname">{name}</div><div class="lamt">{amt} <span>a year</span></div><div class="lbar" style="width:{100*v/3450:.0f}%"></div></div><div class="lt"><b>{tt}</b> {bb}</div></div>')
-S11=sec('11','Budget','dark', hl('Each level is a complete program at its size.','The levels nest.')+f'<div class="prose reveal sand"><p>{p11[0]}</p></div><div class="levels">'+''.join(lv)+'</div>'+pull('','The Base is the first fundraising conversation, and it is the one this document is written to open.')+f'<div class="prose reveal"><p>{p11[5]}</p></div><p class="note reveal">{p11[6].strip("*")}</p><div class="figcap">Figure 4 · Three levels</div>')
+S11=sec('11','Budget','dark', hl('Each level is a complete program at its size.','The levels nest.')+f'<div class="prose reveal sand"><p>{p11[0]}</p></div><div class="levels">'+''.join(lv)+'</div>'+pull('','The Base is the first fundraising conversation, and it is the one this document is written to open.')+f'<div class="prose cols reveal"><p>{p11[5]}</p></div><p class="note reveal">{p11[6].strip("*")}</p><div class="figcap">Figure 4 · Three levels</div>')
 
 # 12
 pr=''.join((lambda m: f'<div><h4 class="g">{m.group(1)}</h4><p>{m.group(2)}</p></div>')(re.match(r'\*\*(.+?)\*\* (.*)',q)) for q in p12[1:5])
@@ -185,7 +185,7 @@ a{{color:inherit}}
 .mono,.kicker,.label,.figcap,.eh,.rl,.pd,.ticks,.lamt span,.mh{{font-family:'Space Mono',monospace;letter-spacing:.12em;text-transform:uppercase;font-size:12px}}
 .kicker{{color:var(--quiet);margin-bottom:1.25rem}}
 .light .kicker,.light .label,.light .figcap{{color:var(--quietl)}}
-.hl{{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(28px,4.6vw,50px);line-height:1.04;letter-spacing:-.025em;margin:0 0 1.5rem;max-width:22ch}}
+.hl{{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(28px,4.6vw,50px);line-height:1.04;letter-spacing:-.025em;margin:0 0 1.5rem;max-width:25ch}}
 .g{{color:var(--gold)}}.b{{color:var(--blue)}}.c{{color:var(--coral)}}
 .light .g{{color:var(--goldl)}}.light .b{{color:var(--bluel)}}.light .c{{color:var(--corall)}}
 .chapter{{padding:clamp(56px,9vw,120px) 0}}
@@ -196,7 +196,7 @@ a{{color:inherit}}
 .cols p{{break-inside:auto}}
 .cols p:only-child{{margin-bottom:0}}
 .sand{{color:var(--sand)}}
-.pull{{font-family:'Syne',sans-serif;font-weight:700;font-size:clamp(20px,2.4vw,28px);line-height:1.3;letter-spacing:-.01em;margin:2rem 0;max-width:30ch}}
+.pull{{font-family:'Syne',sans-serif;font-weight:700;font-size:clamp(20px,2.4vw,28px);line-height:1.3;letter-spacing:-.01em;margin:2rem 0;max-width:40ch}}
 .pull.catch{{max-width:none}}
 .rule{{height:2px;background:var(--gold);margin:2.5rem 0 1.25rem}}
 .label{{margin-bottom:1rem;color:var(--quiet)}}
@@ -280,14 +280,14 @@ p.sources{{padding-left:0}}
 .bar.fund{{margin:1.75rem 0 0 50%;width:50%;background:var(--coral);opacity:.9}}
 @media(max-width:600px){{.bar{{font-size:8px}}}}
 /* metrics */
-.metrics{{list-style:none;padding:0;margin:0 0 2.5rem;max-width:72ch}}
-.metrics li{{display:flex;gap:.9rem;align-items:flex-start;margin:0 0 .8rem;font-size:16px}}
+.metrics{{list-style:none;padding:0;margin:0 0 2.5rem;columns:2;column-gap:40px}}@media(max-width:760px){{.metrics{{columns:1}}}}
+.metrics li{{display:flex;gap:.9rem;align-items:flex-start;margin:0 0 .8rem;font-size:16px;break-inside:avoid}}
 .mk{{display:inline-flex;gap:3px;flex:0 0 auto;padding-top:6px}}.mk .d{{width:10px;height:10px}}
 .big{{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(56px,8vw,88px);line-height:1;letter-spacing:-.04em}}
 /* three / four */
 .three,.four{{display:grid;gap:2rem;margin:1.5rem 0}}
 .three{{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}}
-.four{{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}}
+.four{{grid-template-columns:repeat(2,1fr)}}@media(max-width:700px){{.four{{grid-template-columns:1fr}}}}
 .three h4,.four h4{{font-family:'Syne',sans-serif;font-weight:700;font-size:20px;letter-spacing:-.015em;margin:0 0 .5rem;line-height:1.15}}
 .three p,.four p{{margin:0;font-size:15.5px;line-height:1.5}}
 /* levels */
