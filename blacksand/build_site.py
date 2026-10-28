@@ -55,7 +55,7 @@ def map_svg():
     for n,(lon,lat) in cities.items():
         if n=='Detroit': continue
         x,y=proj(lon,lat); s+=f'<line x1="{x:.1f}" y1="{y:.1f}" x2="{dx:.1f}" y2="{dy:.1f}" stroke="currentColor" stroke-opacity=".3" stroke-dasharray="2 3"/>'
-    pins={'Oakland':(BLUE,'Kapor Capital · LP',(-6,14,'start')),'Los Angeles':(GOLD,'MaC Venture Capital · GP',(-6,14,'start')),'Tulsa':(CORAL,'ACT House · Founders',(0,16,'middle')),'Houston':(GOLD,'South Loop Ventures · GP',(0,14,'middle')),'Miami':(CORAL,'Node.Miami · Founders',(-12,4,'end')),'Washington':(GOLD,'100KM Ventures · GP',(12,4,'start'))}
+    pins={'Oakland':(BLUE,'Kapor Capital · LP',(-6,16,'start')),'Los Angeles':(GOLD,'MaC Venture Capital · GP',(-6,14,'start')),'Tulsa':(CORAL,'ACT House · Founders',(0,18,'middle')),'Houston':(GOLD,'South Loop Ventures · GP',(0,14,'middle')),'Miami':(CORAL,'Node.Miami · Founders',(-12,4,'end')),'Washington':(GOLD,'100KM Ventures · GP',(12,4,'start'))}
     for n,(lon,lat) in cities.items():
         x,y=proj(lon,lat)
         if n=='Detroit':
@@ -264,6 +264,7 @@ p.sources{{padding-left:0}}
 .split{{display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:start;margin:1.5rem 0}}
 @media(max-width:760px){{.split{{grid-template-columns:1fr;gap:1.5rem}}}}
 .map{{width:100%;height:auto;display:block;overflow:visible}}
+.map text{{paint-order:stroke;stroke:var(--egg);stroke-width:4px;stroke-linejoin:round}}
 .mapwrap{{color:var(--black)}}
 /* timeline */
 .phases{{margin:2.5rem 0 2rem}}
