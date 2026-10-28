@@ -47,7 +47,7 @@ fig1=f'''<svg class="swarm fig" viewBox="64 212 688 588" aria-label="Figure 1, t
 
 # map
 def map_svg():
-    W,Hh=360,300; X0,Y0,MW,MH=28,60,300,190
+    W,Hh=380,300; X0,Y0,MW,MH=24,60,272,190
     cities={'Detroit':(-83.05,42.33),'Oakland':(-122.27,37.80),'Los Angeles':(-118.24,32.6),'Tulsa':(-95.99,36.15),'Houston':(-95.37,29.76),'Miami':(-80.19,25.76),'Washington':(-77.04,38.91)}
     lons=[c[0] for c in cities.values()]; lats=[c[1] for c in cities.values()]
     def proj(lon,lat): return X0+(lon-min(lons))/(max(lons)-min(lons))*MW, Y0+(max(lats)-lat)/(max(lats)-min(lats))*MH
@@ -55,18 +55,18 @@ def map_svg():
     for n,(lon,lat) in cities.items():
         if n=='Detroit': continue
         x,y=proj(lon,lat); s+=f'<line x1="{x:.1f}" y1="{y:.1f}" x2="{dx:.1f}" y2="{dy:.1f}" stroke="currentColor" stroke-opacity=".3" stroke-dasharray="2 3"/>'
-    pins={'Oakland':(BLUE,'Kapor Capital · LP',(-6,14,'start')),'Los Angeles':(GOLD,'MaC Venture Capital · GP',(-6,14,'start')),'Tulsa':(CORAL,'ACT House · Founders',(0,16,'middle')),'Houston':(GOLD,'South Loop Ventures · GP',(0,14,'middle')),'Miami':(CORAL,'Node.Miami · Founders',(-6,4,'end')),'Washington':(GOLD,'100KM Ventures · GP',(4,16,'end'))}
+    pins={'Oakland':(BLUE,'Kapor Capital · LP',(-6,14,'start')),'Los Angeles':(GOLD,'MaC Venture Capital · GP',(-6,14,'start')),'Tulsa':(CORAL,'ACT House · Founders',(0,16,'middle')),'Houston':(GOLD,'South Loop Ventures · GP',(0,14,'middle')),'Miami':(CORAL,'Node.Miami · Founders',(-12,4,'end')),'Washington':(GOLD,'100KM Ventures · GP',(12,4,'start'))}
     for n,(lon,lat) in cities.items():
         x,y=proj(lon,lat)
         if n=='Detroit':
             s+=f'<circle cx="{x-22:.1f}" cy="{y:.1f}" r="6" fill="{BLUE}"/><circle cx="{x:.1f}" cy="{y:.1f}" r="6" fill="{GOLD}"/><path d="M {x:.1f} {y-6:.1f} A 6 6 0 0 0 {x:.1f} {y+6:.1f} Z" fill="{BLUE}"/><circle cx="{x+23:.1f}" cy="{y:.1f}" r="6" fill="{CORAL}"/>'
-            s+=f'<text x="{x:.1f}" y="{y+24:.1f}" text-anchor="middle" font-family="Syne, sans-serif" font-weight="700" font-size="14" fill="currentColor">Detroit</text>'
+            s+=f'<text x="{x+36:.1f}" y="{y+5:.1f}" text-anchor="start" font-family="Syne, sans-serif" font-weight="700" font-size="14" fill="currentColor">Detroit</text>'
             for k,t in enumerate(['U of M Endowment · LP','Song United · LP and GP','TechTown · Venture 313 · Black Tech Saturdays · Founder networks']):
                 s+=f'<text x="{W-4}" y="{y-40+12*k:.1f}" text-anchor="end" font-family="Archivo, sans-serif" font-size="9" fill="currentColor" opacity=".7">{t}</text>'
         else:
             c,lab,(ox,oy,anc)=pins[n]; s+=f'<circle cx="{x:.1f}" cy="{y:.1f}" r="5" fill="{c}"/>'
             if n=='Oakland': s+=f'<circle cx="{x+13:.1f}" cy="{y:.1f}" r="5" fill="{GOLD}"/><text x="{x+ox:.1f}" y="{y+oy+22:.1f}" font-family="Archivo, sans-serif" font-size="9" fill="currentColor" opacity=".7">Black Ops VC · GP</text>'
-            s+=f'<text x="{x+ox:.1f}" y="{y+oy:.1f}" text-anchor="{anc}" font-size="9" fill="currentColor" style="{T}">{n.upper()}</text><text x="{x+ox:.1f}" y="{y+oy+11:.1f}" text-anchor="{anc}" font-family="Archivo, sans-serif" font-size="9" fill="currentColor" opacity=".7">{lab}</text>'
+            s+=f'<text x="{x+ox:.1f}" y="{y+oy:.1f}" text-anchor="{anc}" font-size="9" fill="currentColor" style="{T}">{("Washington, DC" if n=="Washington" else n).upper()}</text><text x="{x+ox:.1f}" y="{y+oy+11:.1f}" text-anchor="{anc}" font-family="Archivo, sans-serif" font-size="9" fill="currentColor" opacity=".7">{lab}</text>'
     ly=Y0+MH+36
     for i,(c,t) in enumerate([(BLUE,'LPs'),(GOLD,'GPs'),(CORAL,'Founders')]): s+=f'<circle cx="{X0+i*78+5}" cy="{ly}" r="4" fill="{c}"/><text x="{X0+i*78+14}" y="{ly+3}" font-size="9" fill="currentColor" opacity=".7" style="{T}">{t.upper()}</text>'
     return s+'</svg>'
